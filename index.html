@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROMRx&#8482; | Built for Athletes</title>
+  <meta name="description" content="ROMRx&#8482; builds AI-powered Range of Motion assessment platforms for athletes. Know your body. Train smarter.">
+  <meta property="og:title" content="ROMRx&#8482; | Built for Athletes">
+  <meta property="og:description" content="AI-powered ROM assessment systems for every discipline. Know your body. Train smarter.">
+  <meta property="og:url" content="https://romrx.io">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://romrx.io">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #008080;
+      --gold: #FFB347;
+      --charcoal: #36454F;
+      --warm-white: #FAF9F6;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--charcoal);
+      color: var(--warm-white);
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .logo {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--teal);
+    }
+    .logo span { color: var(--gold); }
+    nav a {
+      color: rgba(250,249,246,0.7);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 28px;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--warm-white); }
+
+    /* ===== HERO ===== */
+    .hero {
+      text-align: center;
+      padding: 100px 24px 80px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+    .hero h1 span { color: var(--teal); }
+    .hero p {
+      font-size: 1.1rem;
+      color: rgba(250,249,246,0.7);
+      line-height: 1.7;
+      max-width: 560px;
+      margin: 0 auto 48px;
+    }
+
+    /* ===== PRODUCTS ===== */
+    .products {
+      padding: 0 24px 100px;
+    }
+    .products-label {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(250,249,246,0.35);
+      margin-bottom: 40px;
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .product-card {
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 18px;
+      padding: 36px 28px;
+      transition: border-color 0.25s, transform 0.25s;
+      position: relative;
+    }
+    .product-card:hover {
+      border-color: rgba(0,128,128,0.5);
+      transform: translateY(-4px);
+    }
+    .product-card.live { border-color: rgba(0,128,128,0.35); }
+    .product-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .status-live { background: rgba(0,128,128,0.2); color: var(--teal); border: 1px solid rgba(0,128,128,0.4); }
+    .status-soon { background: rgba(255,179,71,0.15); color: var(--gold); border: 1px solid rgba(255,179,71,0.3); }
+    .product-name {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    .product-name span { color: var(--teal); }
+    .product-tagline {
+      font-size: 0.88rem;
+      color: rgba(250,249,246,0.5);
+      margin-bottom: 20px;
+    }
+    .product-desc {
+      font-size: 0.92rem;
+      color: rgba(250,249,246,0.72);
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+    .product-link {
+      display: inline-block;
+      padding: 11px 24px;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .link-live { background: var(--teal); color: var(--warm-white); }
+    .link-live:hover { background: #006666; }
+    .link-soon { background: rgba(255,255,255,0.08); color: rgba(250,249,246,0.6); cursor: default; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .footer-logo {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--teal);
+      margin-bottom: 8px;
+    }
+    .footer-copy {
+      font-size: 0.78rem;
+      color: rgba(250,249,246,0.3);
+    }
+    .footer-copy a { color: rgba(250,249,246,0.4); text-decoration: none; }
+    .footer-copy a:hover { color: rgba(250,249,246,0.7); }
+
+    @media (max-width: 600px) {
+      header nav a { display: none; }
+      .hero { padding: 60px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">ROMRx<span>&#8482;</span></div>
+    <nav>
+      <a href="https://romrxbjj.com" target="_blank">ROMRxBJJ</a>
+      <a href="mailto:info@romrx.io">Contact</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <p class="hero-eyebrow">ROMRx LLC</p>
+    <h1>Built for <span>Athletes.</span><br>Powered by Your Body.</h1>
+    <p>ROMRx builds AI-powered Range of Motion assessment platforms for athletes. Know exactly which movements your body is ready for, and get the precise mobility protocol to unlock the rest.</p>
+  </section>
+
+  <section class="products">
+    <p class="products-label">Products</p>
+    <div class="products-grid">
+
+      <div class="product-card live">
+        <span class="product-status status-live">Live Now</span>
+        <div class="product-name">ROMRx<span>BJJ</span>&#8482;</div>
+        <div class="product-tagline">Brazilian Jiu-Jitsu</div>
+        <p class="product-desc">The only ROM assessment system built for BJJ. Get 124 White and Blue Belt techniques rated GREEN, YELLOW, or RED based on YOUR mobility. Athlete dashboard + Coach dashboard.</p>
+        <a href="https://romrxbjj.com" class="product-link link-live" target="_blank">Go to ROMRxBJJ &#8594;</a>
+      </div>
+
+      <div class="product-card">
+        <span class="product-status status-soon">Coming Soon</span>
+        <div class="product-name">ROMRx<span>BodyBuilding</span>&#8482;</div>
+        <div class="product-tagline">Hypertrophy + Powerlifting</div>
+        <p class="product-desc">ROM-based assessment for bodybuilders and powerlifters. Know which compound and isolation movements your joints support, and build the mobility to lift heavier, safer.</p>
+        <a class="product-link link-soon">In Development</a>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-logo">ROMRx&#8482;</div>
+    <p class="footer-copy">
+      &copy; 2026 ROMRx LLC &middot;
+      <a href="mailto:info@romrx.io">info@romrx.io</a>
+    </p>
+  </footer>
+
+</body>
+</html>
