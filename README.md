@@ -1,6 +1,6 @@
 # romrx-io-web
 
-Corporate marketing site for **ROMRx LLC** — the operating system for athletic mobility.
+Corporate marketing site for **ROMRx LLC**, the operating system for athletic mobility.
 
 Live: [romrx.io](https://romrx.io)
 
@@ -12,9 +12,9 @@ Plain HTML / CSS / JS. Client-side partial injection (nav, universe footer, lega
 
 | Route | Purpose |
 |---|---|
-| `/` | Home — Protocol-as-moat story, universe stack, investor band |
-| `/universe` | Full upgrade path — all sport packs (live + coming) |
-| `/platform` | Engine deep-dive — 14 joints, Protocol layer, ROMBot™, 6-Week Cycle |
+| `/` | Home, Protocol-as-moat story, universe stack, investor band |
+| `/universe` | Full upgrade path, all sport packs (live + coming) |
+| `/platform` | Engine deep-dive, 14 joints, Protocol layer, ROMBot™, 6-Week Cycle |
 | `/science` | Peer-reviewed citations |
 | `/investors` | Thesis, platform diagram, market, gated Request Access form |
 | `/partners` | 3 tracks (Federations / Academies / Tactical), inquiry form |
@@ -24,9 +24,9 @@ Plain HTML / CSS / JS. Client-side partial injection (nav, universe footer, lega
 
 ## Netlify Functions
 
-- `investor-request` — POST → Supabase `investor_requests` + email `investors@romrx.io`
-- `partner-inquiry` — POST → Supabase `partner_inquiries` + email `partners@romrx.io`
-- `waitlist` — POST → Supabase `sport_pack_waitlist`
+- `investor-request`, POST → Supabase `investor_requests` + email `investors@romrx.io`
+- `partner-inquiry`, POST → Supabase `partner_inquiries` + email `partners@romrx.io`
+- `waitlist`, POST → Supabase `sport_pack_waitlist`
 
 ## Required env vars (Netlify)
 
@@ -38,9 +38,9 @@ RESEND_API_KEY
 
 ## Supabase tables to create
 
-- `investor_requests` — name, email, firm, stage, notes, source, created_at
-- `partner_inquiries` — name, email, org, track, athletes, notes, source, created_at
-- `sport_pack_waitlist` — email, sport, sport_interest, notes, source, created_at (unique on email)
+- `investor_requests`, name, email, firm, stage, notes, source, created_at
+- `partner_inquiries`, name, email, org, track, athletes, notes, source, created_at
+- `sport_pack_waitlist`, email, sport, sport_interest, notes, source, created_at (unique on email)
 
 ## Google Workspace aliases to create
 

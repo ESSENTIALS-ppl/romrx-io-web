@@ -1,4 +1,4 @@
-// ROMRx — Sport Pack / Assessment Waitlist
+// ROMRx, Sport Pack / Assessment Waitlist
 // Persists to Supabase `sport_pack_waitlist`. Silent success on duplicate emails.
 
 exports.handler = async (event) => {
@@ -41,7 +41,7 @@ exports.handler = async (event) => {
         },
         body: JSON.stringify(record),
       });
-      // 409 (conflict) is fine — user already on list
+      // 409 (conflict) is fine, user already on list
       if (!res.ok && res.status !== 409) {
         console.error('Supabase waitlist non-ok:', res.status);
       }

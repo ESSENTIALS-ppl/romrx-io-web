@@ -1,4 +1,4 @@
-// ROMRx — Investor Access Request
+// ROMRx, Investor Access Request
 // Persists to Supabase `investor_requests` and emails investors@romrx.io via Resend.
 //
 // Required env vars (set in Netlify dashboard):
@@ -69,7 +69,7 @@ exports.handler = async (event) => {
           from: 'ROMRx <no-reply@romrx.io>',
           to: ['investors@romrx.io'],
           reply_to: email,
-          subject: `Investor request — ${name}${firm ? ` (${firm})` : ''}`,
+          subject: `Investor request, ${name}${firm ? ` (${firm})` : ''}`,
           text: [
             `Name:  ${name}`,
             `Email: ${email}`,
@@ -79,7 +79,7 @@ exports.handler = async (event) => {
             'Notes:',
             notes || '(none)',
             '',
-            '— romrx.io/investors',
+            '- romrx.io/investors',
           ].join('\n'),
         }),
       });

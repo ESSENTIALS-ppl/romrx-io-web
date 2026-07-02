@@ -1,4 +1,4 @@
-/* ROMRx corporate — shared partials injected client-side.
+/* ROMRx corporate, shared partials injected client-side.
    Each page marks slots with data-rx-slot="nav|universe|legal".
    This keeps partials DRY without a build step. */
 
@@ -69,7 +69,7 @@ const RX_LEGAL = `
   <div class="rx-trademarks">
     ROMRx™, ROMRx+BJJ™, ROMRx+BodyBuilding™, ROM Readiness Protocol™, Position Readiness Protocol™,
     Exercise Readiness Protocol™, ROMBot™, The 6-Week Reassessment Cycle™, Top 3 Priority Joints™
-    are trademarks of ROMRx LLC. All rights reserved. Beta software — content, features, and pricing subject to change.
+    are trademarks of ROMRx LLC. All rights reserved. Beta software, content, features, and pricing subject to change.
   </div>
 </footer>
 `;

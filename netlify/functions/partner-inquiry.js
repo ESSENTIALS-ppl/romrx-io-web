@@ -1,4 +1,4 @@
-// ROMRx — Partner Inquiry
+// ROMRx, Partner Inquiry
 // Persists to Supabase `partner_inquiries` and emails partners@romrx.io via Resend.
 
 exports.handler = async (event) => {
@@ -64,7 +64,7 @@ exports.handler = async (event) => {
           from: 'ROMRx <no-reply@romrx.io>',
           to: ['partners@romrx.io'],
           reply_to: email,
-          subject: `Partner inquiry — ${org} (${track || 'unspecified'})`,
+          subject: `Partner inquiry, ${org} (${track || 'unspecified'})`,
           text: [
             `Name:     ${name}`,
             `Email:    ${email}`,
@@ -75,7 +75,7 @@ exports.handler = async (event) => {
             'Notes:',
             notes || '(none)',
             '',
-            '— romrx.io/partners',
+            '- romrx.io/partners',
           ].join('\n'),
         }),
       });

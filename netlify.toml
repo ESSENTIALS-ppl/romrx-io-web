@@ -1,4 +1,4 @@
-# ROMRx corporate — Netlify config
+# ROMRx corporate, Netlify config
 [build]
   publish = "."
   functions = "netlify/functions"
@@ -17,7 +17,7 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Pretty URLs — allow /investors instead of /investors.html
+# Pretty URLs, allow /investors instead of /investors.html
 [[redirects]]
   from = "/investors"
   to = "/investors.html"
