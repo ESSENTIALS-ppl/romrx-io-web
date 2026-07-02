@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Start Free Assessment · ROMRx</title>
+  <meta name="description" content="Join the ROMRx Beta and be first to run your free ROM assessment.">
+  <meta property="og:title" content="ROMRx · Free Assessment">
+  <link rel="canonical" href="https://romrx.io/assessment">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230A1020' width='100' height='100' rx='18'/><text x='50' y='68' font-size='52' font-weight='800' font-family='sans-serif' fill='%233B5BFF' text-anchor='middle'>R</text></svg>">
+  <link rel="stylesheet" href="/assets/design-tokens.css">
+  <script defer src="/assets/partials.js"></script>
+</head>
+<body data-rx-here="romrx">
+  <div class="rx-ambient"></div>
+  <div data-rx-slot="nav"></div>
+
+  <section class="rx-section" style="padding-top: 72px;">
+    <div class="rx-container narrow rx-center">
+      <span class="rx-beta">Beta · Free during launch</span>
+      <p class="rx-eyebrow rx-mt-md">Start Free Assessment</p>
+      <h1 class="rx-h1">
+        Ten minutes.<br>
+        <span class="rx-grad">Three priority joints.</span>
+      </h1>
+      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
+        The public assessment app is rolling out cohort-by-cohort during Beta. Drop your
+        email and we'll send you your access link as soon as your cohort opens — usually
+        within a week.
+      </p>
+
+      <form class="rx-form rx-mt-lg" id="assess-form" action="/.netlify/functions/waitlist" method="POST" style="text-align:left;">
+        <input type="hidden" name="sport" value="base">
+        <div class="rx-field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@wherever.com">
+        </div>
+        <div class="rx-field">
+          <label for="sport-interest">Which sport pack do you want next? (optional)</label>
+          <select id="sport-interest" name="sport_interest">
+            <option value="">— No preference —</option>
+            <option value="bjj">+BJJ (live now)</option>
+            <option value="bodybuilding">+BodyBuilding (live now)</option>
+            <option value="powerlifting">+Powerlifting</option>
+            <option value="mma">+MMA</option>
+            <option value="yoga">+Yoga</option>
+            <option value="firstresponder">+FirstResponder</option>
+          </select>
+        </div>
+        <button type="submit" class="rx-cta primary" style="width:100%;">Get My Access Link →</button>
+        <p class="rx-form-msg" id="assess-msg"></p>
+      </form>
+
+      <p class="rx-fine rx-mt-md">
+        Already have a sport pack subscription?
+        <a class="rx-inline-link" href="https://romrxbjj.com">Sign in at romrxbjj.com</a> ·
+        <a class="rx-inline-link" href="https://romrxbodybuilding.com">Sign in at romrxbodybuilding.com</a>
+      </p>
+    </div>
+  </section>
+
+  <div data-rx-slot="universe"></div>
+  <div data-rx-slot="legal"></div>
+
+  <script>
+    document.getElementById('assess-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const msg = document.getElementById('assess-msg');
+      msg.textContent = 'Adding you…';
+      const data = Object.fromEntries(new FormData(form));
+      try {
+        const res = await fetch(form.action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (res.ok) { msg.textContent = 'You\'re on the list. Watch your inbox for your Beta access link.'; form.reset(); }
+        else { msg.textContent = 'Something went wrong. Please try again or email hello@romrx.io.'; }
+      } catch { msg.textContent = 'Network error. Please try again.'; }
+    });
+  </script>
+</body>
+</html>

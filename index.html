@@ -3,236 +3,216 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ROMRx&#8482; | Built for Athletes</title>
-  <meta name="description" content="ROMRx&#8482; builds AI-powered Range of Motion assessment platforms for athletes. Know your body. Train smarter.">
-  <meta property="og:title" content="ROMRx&#8482; | Built for Athletes">
-  <meta property="og:description" content="AI-powered ROM assessment systems for every discipline. Know your body. Train smarter.">
+  <title>ROMRx · The operating system for athletic mobility</title>
+  <meta name="description" content="ROMRx identifies your 3 top-priority joints in 10 minutes — then gives you the exact strength, stretching, and foam rolling protocol to unlock them. No 400-exercise overwhelm. Then add sport packs (+BJJ, +BodyBuilding, +more) to see which techniques your body is ready for.">
+  <meta property="og:title" content="ROMRx">
+  <meta property="og:description" content="Fix the 3 joints holding you back. Then master every sport. Free ROM assessment. Personalized daily protocol. Sport packs that stack.">
   <meta property="og:url" content="https://romrx.io">
+  <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ROMRx">
+  <meta name="twitter:description" content="Fix the 3 joints holding you back. Then master every sport.">
   <link rel="canonical" href="https://romrx.io">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --teal: #008080;
-      --gold: #FFB347;
-      --charcoal: #36454F;
-      --warm-white: #FAF9F6;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--charcoal);
-      color: var(--warm-white);
-      min-height: 100vh;
-    }
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    /* ===== HEADER ===== */
-    header {
-      padding: 24px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .logo {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 800;
-      font-size: 1.4rem;
-      color: var(--teal);
-    }
-    .logo span { color: var(--gold); }
-    nav a {
-      color: rgba(250,249,246,0.7);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      margin-left: 28px;
-      transition: color 0.2s;
-    }
-    nav a:hover { color: var(--warm-white); }
-
-    /* ===== HERO ===== */
-    .hero {
-      text-align: center;
-      padding: 100px 24px 80px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .hero-eyebrow {
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 20px;
-    }
-    .hero h1 {
-      font-family: 'Montserrat', sans-serif;
-      font-size: clamp(2.2rem, 5vw, 3.5rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 24px;
-    }
-    .hero h1 span { color: var(--teal); }
-    .hero p {
-      font-size: 1.1rem;
-      color: rgba(250,249,246,0.7);
-      line-height: 1.7;
-      max-width: 560px;
-      margin: 0 auto 48px;
-    }
-
-    /* ===== PRODUCTS ===== */
-    .products {
-      padding: 0 24px 100px;
-    }
-    .products-label {
-      text-align: center;
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(250,249,246,0.35);
-      margin-bottom: 40px;
-    }
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    .product-card {
-      background: rgba(255,255,255,0.04);
-      border: 1.5px solid rgba(255,255,255,0.1);
-      border-radius: 18px;
-      padding: 36px 28px;
-      transition: border-color 0.25s, transform 0.25s;
-      position: relative;
-    }
-    .product-card:hover {
-      border-color: rgba(0,128,128,0.5);
-      transform: translateY(-4px);
-    }
-    .product-card.live { border-color: rgba(0,128,128,0.35); }
-    .product-status {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-    .status-live { background: rgba(0,128,128,0.2); color: var(--teal); border: 1px solid rgba(0,128,128,0.4); }
-    .status-soon { background: rgba(255,179,71,0.15); color: var(--gold); border: 1px solid rgba(255,179,71,0.3); }
-    .product-name {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 800;
-      font-size: 1.5rem;
-      margin-bottom: 8px;
-    }
-    .product-name span { color: var(--teal); }
-    .product-tagline {
-      font-size: 0.88rem;
-      color: rgba(250,249,246,0.5);
-      margin-bottom: 20px;
-    }
-    .product-desc {
-      font-size: 0.92rem;
-      color: rgba(250,249,246,0.72);
-      line-height: 1.65;
-      margin-bottom: 28px;
-    }
-    .product-link {
-      display: inline-block;
-      padding: 11px 24px;
-      border-radius: 8px;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 700;
-      font-size: 0.88rem;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .link-live { background: var(--teal); color: var(--warm-white); }
-    .link-live:hover { background: #006666; }
-    .link-soon { background: rgba(255,255,255,0.08); color: rgba(250,249,246,0.6); cursor: default; }
-
-    /* ===== FOOTER ===== */
-    footer {
-      border-top: 1px solid rgba(255,255,255,0.08);
-      padding: 32px 24px;
-      text-align: center;
-    }
-    .footer-logo {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 800;
-      font-size: 1rem;
-      color: var(--teal);
-      margin-bottom: 8px;
-    }
-    .footer-copy {
-      font-size: 0.78rem;
-      color: rgba(250,249,246,0.3);
-    }
-    .footer-copy a { color: rgba(250,249,246,0.4); text-decoration: none; }
-    .footer-copy a:hover { color: rgba(250,249,246,0.7); }
-
-    @media (max-width: 600px) {
-      header nav a { display: none; }
-      .hero { padding: 60px 20px 60px; }
-    }
-  </style>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230A1020' width='100' height='100' rx='18'/><text x='50' y='68' font-size='52' font-weight='800' font-family='sans-serif' fill='%233B5BFF' text-anchor='middle'>R</text></svg>">
+  <link rel="stylesheet" href="/assets/design-tokens.css">
+  <script defer src="/assets/partials.js"></script>
 </head>
-<body>
+<body data-rx-here="romrx">
+  <div class="rx-ambient"></div>
 
-  <header>
-    <div class="logo">ROMRx<span>&#8482;</span></div>
-    <nav>
-      <a href="https://romrxbjj.com" target="_blank">ROMRxBJJ</a>
-      <a href="mailto:info@romrx.io">Contact</a>
-    </nav>
-  </header>
+  <!-- NAV -->
+  <div data-rx-slot="nav"></div>
 
-  <section class="hero">
-    <p class="hero-eyebrow">ROMRx LLC</p>
-    <h1>Built for <span>Athletes.</span><br>Powered by Your Body.</h1>
-    <p>ROMRx builds AI-powered Range of Motion assessment platforms for athletes. Know exactly which movements your body is ready for, and get the precise mobility protocol to unlock the rest.</p>
-  </section>
-
-  <section class="products">
-    <p class="products-label">Products</p>
-    <div class="products-grid">
-
-      <div class="product-card live">
-        <span class="product-status status-live">Live Now</span>
-        <div class="product-name">ROMRx<span>BJJ</span>&#8482;</div>
-        <div class="product-tagline">Brazilian Jiu-Jitsu</div>
-        <p class="product-desc">The only ROM assessment system built for BJJ. Get 124 White and Blue Belt techniques rated GREEN, YELLOW, or RED based on YOUR mobility. Athlete dashboard + Coach dashboard.</p>
-        <a href="https://romrxbjj.com" class="product-link link-live" target="_blank">Go to ROMRxBJJ &#8594;</a>
+  <!-- HERO -->
+  <section class="rx-section" style="padding-top: 80px;">
+    <div class="rx-container narrow rx-center">
+      <span class="rx-beta">Beta · 2 sport packs live</span>
+      <p class="rx-eyebrow rx-mt-md">The ROM Readiness Protocol™</p>
+      <h1 class="rx-h1">
+        Fix the 3 joints<br>
+        holding you back.<br>
+        <span class="rx-grad">Then master every sport.</span>
+      </h1>
+      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
+        ROMRx identifies your 3 top-priority joints in 10 minutes — then gives you the exact
+        strength, stretching, and foam rolling protocol to unlock them. No 400-exercise overwhelm.
+        Just what your body needs today.
+      </p>
+      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+        <a href="/assessment" class="rx-cta primary">Start Free Assessment →</a>
+        <a href="/universe" class="rx-cta ghost">See the Universe →</a>
       </div>
-
-      <div class="product-card">
-        <span class="product-status status-soon">Coming Soon</span>
-        <div class="product-name">ROMRx<span>BodyBuilding</span>&#8482;</div>
-        <div class="product-tagline">Hypertrophy + Powerlifting</div>
-        <p class="product-desc">ROM-based assessment for bodybuilders and powerlifters. Know which compound and isolation movements your joints support, and build the mobility to lift heavier, safer.</p>
-        <a class="product-link link-soon">In Development</a>
+      <div class="rx-chips">
+        <span class="rx-chip">10-min phone assessment</span>
+        <span class="rx-chip">14 joints · bilateral</span>
+        <span class="rx-chip">~150 peer-reviewed thresholds</span>
+        <span class="rx-chip">Zero wearables · zero clinic</span>
+        <span class="rx-chip">Free to start</span>
       </div>
-
     </div>
   </section>
 
-  <footer>
-    <div class="footer-logo">ROMRx&#8482;</div>
-    <p class="footer-copy">
-      &copy; 2026 ROMRx LLC &middot;
-      <a href="mailto:info@romrx.io">info@romrx.io</a>
-    </p>
-  </footer>
+  <!-- THE OVERWHELM PROBLEM -->
+  <section class="rx-section tight">
+    <div class="rx-container">
+      <div class="rx-card-grid">
+        <div class="rx-card">
+          <div class="rx-eyebrow">The problem</div>
+          <h3 class="rx-h3">400 exercises for "mobility"</h3>
+          <p class="rx-muted">Every mobility app dumps its full library on you and calls it personalized.
+            You open it, get overwhelmed, and quit in a week. Nothing changes.</p>
+        </div>
+        <div class="rx-card">
+          <div class="rx-eyebrow" style="color:var(--rx-yellow)">The gap</div>
+          <h3 class="rx-h3">Generic ≠ personal</h3>
+          <p class="rx-muted">You don't need every stretch ever invented. You need the specific ones
+            for the specific joints your body is limited in — today.</p>
+        </div>
+        <div class="rx-card" style="border-color: var(--rx-cobalt);">
+          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">The ROMRx way</div>
+          <h3 class="rx-h3">3 joints. 8-12 exercises. Done.</h3>
+          <p class="rx-muted">Measure 14 joints. Identify your top 3 priorities. Deliver 8-12 daily
+            exercises. Reassess in 6 weeks. Shift priorities. Repeat.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- HOW IT WORKS -->
+  <section class="rx-section">
+    <div class="rx-container">
+      <p class="rx-eyebrow rx-center">How it works</p>
+      <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">
+        One <span class="rx-grad">assessment.</span>
+        Every sport your body plays.
+      </h2>
+      <div class="rx-card-grid rx-mt-lg">
+        <div class="rx-card">
+          <div style="font-family:var(--rx-font-mono);color:var(--rx-cobalt-2);font-size:0.82rem;letter-spacing:2px;">STEP 01</div>
+          <h3 class="rx-h3 rx-mt-sm">Free ROM Assessment</h3>
+          <p class="rx-muted">10 minutes. Phone-only. 14 joints, both sides. Zero hardware, zero clinic.
+            Peer-reviewed thresholds tell us exactly where you're limited.</p>
+        </div>
+        <div class="rx-card">
+          <div style="font-family:var(--rx-font-mono);color:var(--rx-cobalt-2);font-size:0.82rem;letter-spacing:2px;">STEP 02</div>
+          <h3 class="rx-h3 rx-mt-sm">Top 3 Priority Joints™</h3>
+          <p class="rx-muted">We weight your asymmetries and deficits and identify the 3 joints holding
+            you back the most. Everything downstream builds from these three.</p>
+        </div>
+        <div class="rx-card">
+          <div style="font-family:var(--rx-font-mono);color:var(--rx-cobalt-2);font-size:0.82rem;letter-spacing:2px;">STEP 03</div>
+          <h3 class="rx-h3 rx-mt-sm">Your daily Protocol</h3>
+          <p class="rx-muted">Personalized strength, stretching, and foam rolling for your 3 joints.
+            ROMBot™ adapts as you improve. Reassess every 6 weeks — priorities shift automatically.</p>
+        </div>
+        <div class="rx-card">
+          <div style="font-family:var(--rx-font-mono);color:var(--rx-cobalt-2);font-size:0.82rem;letter-spacing:2px;">STEP 04</div>
+          <h3 class="rx-h3 rx-mt-sm">Add your sport</h3>
+          <p class="rx-muted">Same ROM data → sport-specific Readiness Protocol. +BJJ rates 130+
+            techniques. +BodyBuilding rates 274+ lifts. Every sport pack knows your body.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- READINESS SYSTEM -->
+  <section class="rx-section tight">
+    <div class="rx-container narrow rx-center">
+      <p class="rx-eyebrow">The Readiness Protocol™ family</p>
+      <h2 class="rx-h2">GREEN. YELLOW. RED.</h2>
+      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
+        Every sport pack applies your ROM data to that sport's movements.
+        Each movement is rated for your body — right now.
+      </p>
+      <div class="rx-card-grid rx-mt-md" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="rx-card" style="border-color:var(--rx-green);">
+          <div style="font-family:var(--rx-font-mono);color:var(--rx-green);font-weight:600;letter-spacing:2px;font-size:0.85rem;">GREEN</div>
+          <h3 class="rx-h3 rx-mt-sm">Train it.</h3>
+          <p class="rx-muted">Your joints clear the ROM thresholds this movement demands.</p>
+        </div>
+        <div class="rx-card" style="border-color:var(--rx-yellow);">
+          <div style="font-family:var(--rx-font-mono);color:var(--rx-yellow);font-weight:600;letter-spacing:2px;font-size:0.85rem;">YELLOW</div>
+          <h3 class="rx-h3 rx-mt-sm">Modify it.</h3>
+          <p class="rx-muted">You're close. Train the modification while you build the missing ROM.</p>
+        </div>
+        <div class="rx-card" style="border-color:var(--rx-red);">
+          <div style="font-family:var(--rx-font-mono);color:var(--rx-red);font-weight:600;letter-spacing:2px;font-size:0.85rem;">RED</div>
+          <h3 class="rx-h3 rx-mt-sm">Skip it for now.</h3>
+          <p class="rx-muted">The movement requires ROM you don't have yet. Forcing it is where injuries live.</p>
+        </div>
+      </div>
+      <p class="rx-mt-md rx-muted" style="max-width:520px;margin-left:auto;margin-right:auto;">
+        As your ROM improves, GREEN grows and RED shrinks.
+        That's how we know you're getting better — not just feeling better.
+      </p>
+    </div>
+  </section>
+
+  <!-- SPORT PACK STACK -->
+  <section class="rx-section">
+    <div class="rx-container">
+      <div class="rx-center">
+        <p class="rx-eyebrow">The stack</p>
+        <h2 class="rx-h2">Sport packs stack on top of your base.</h2>
+        <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
+          Base subscription unlocks the ROM Readiness Protocol™. Add each sport pack for that
+          sport's specific Readiness Protocol. Play multiple sports? Stack multiple packs.
+        </p>
+      </div>
+      <div class="rx-card-grid rx-mt-lg" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+        <div class="rx-card" style="border-color:var(--rx-cobalt);">
+          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Start here</div>
+          <h3 class="rx-h3 rx-mt-sm">ROMRx Base</h3>
+          <p style="font-family:var(--rx-font-mono);color:var(--rx-text-muted);font-size:0.9rem;">$60/yr · Free during Beta</p>
+          <p class="rx-muted rx-mt-sm">Free assessment + ROM Readiness Protocol™ + ROMBot™ + The 6-Week Reassessment Cycle™</p>
+          <a href="/assessment" class="rx-cta primary rx-mt-md" style="width:100%;justify-content:center;">Start Free Assessment →</a>
+        </div>
+        <div class="rx-card">
+          <div class="rx-eyebrow" style="color:var(--rx-green)">Live</div>
+          <h3 class="rx-h3 rx-mt-sm">ROMRx<span style="color:var(--rx-cobalt-2)">+BJJ</span></h3>
+          <p style="font-family:var(--rx-font-mono);color:var(--rx-text-muted);font-size:0.9rem;">$149/yr · Free during Beta</p>
+          <p class="rx-muted rx-mt-sm">Position Readiness Protocol™ · 130+ techniques rated GREEN/YELLOW/RED for your body.</p>
+          <a href="https://romrxbjj.com" class="rx-cta ghost rx-mt-md" style="width:100%;justify-content:center;">Visit ROMRx+BJJ ↗</a>
+        </div>
+        <div class="rx-card">
+          <div class="rx-eyebrow" style="color:var(--rx-green)">Live</div>
+          <h3 class="rx-h3 rx-mt-sm">ROMRx<span style="color:var(--rx-cobalt-2)">+BodyBuilding</span></h3>
+          <p style="font-family:var(--rx-font-mono);color:var(--rx-text-muted);font-size:0.9rem;">$149/yr · Free during Beta</p>
+          <p class="rx-muted rx-mt-sm">Exercise Readiness Protocol™ · 274+ lifts rated GREEN/YELLOW/RED for your body.</p>
+          <a href="https://romrxbodybuilding.com" class="rx-cta ghost rx-mt-md" style="width:100%;justify-content:center;">Visit ROMRx+BodyBuilding ↗</a>
+        </div>
+      </div>
+      <div class="rx-center rx-mt-md">
+        <a href="/universe" class="rx-cta text">See all sport packs (+Powerlifting, +MMA, +Yoga, +FirstResponder coming) →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- INVESTOR BAND -->
+  <section class="rx-section" style="background: linear-gradient(180deg, transparent 0%, rgba(59,91,255,0.06) 50%, transparent 100%);">
+    <div class="rx-container narrow rx-center">
+      <p class="rx-eyebrow">For investors + partners</p>
+      <h2 class="rx-h2">Building the operating system<br>for athletic mobility.</h2>
+      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
+        Free assessment funnel. $60/yr base subscription. $149/yr sport packs stacking on top.
+        Live in 2 verticals. 6 on the roadmap. Raising to scale the platform.
+      </p>
+      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+        <a href="/investors" class="rx-cta primary">For Investors →</a>
+        <a href="/partners" class="rx-cta ghost">For Partners →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- UNIVERSE FOOTER -->
+  <div data-rx-slot="universe"></div>
+
+  <!-- LEGAL FOOTER -->
+  <div data-rx-slot="legal"></div>
 </body>
 </html>
