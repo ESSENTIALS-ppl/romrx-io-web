@@ -608,3 +608,7 @@ img, svg { max-width: 100%; display: block; }
   background: transparent;
   border: 1px solid rgba(255,255,255,0.2);
 }
+
+/* Global +plus glyph highlight (fallback when not in a scoped parent) */
+.rx-plus { color: var(--rx-cobalt); font-weight: 800; }
+.rx-uni-card .rx-plus { color: var(--rx-violet); }
