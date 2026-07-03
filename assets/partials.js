@@ -8,11 +8,10 @@ const RX_NAV = `
     <a href="/" class="rx-wordmark">ROMRx</a>
     <div class="rx-nav-links">
       <a href="/universe" data-nav="universe">Universe</a>
-      <a href="/platform" data-nav="platform">Platform</a>
+      <a href="/dashboard" data-nav="dashboard">Dashboard</a>
       <a href="/science" data-nav="science">Science</a>
       <a href="/investors" data-nav="investors">Investors</a>
       <a href="/partners" data-nav="partners">Partners</a>
-      <a href="/about" data-nav="about">About</a>
     </div>
     <a href="/assessment" class="rx-cta primary mobile-hide-ok">Start Free Assessment →</a>
   </div>
@@ -85,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navSlot.outerHTML = RX_NAV;
     // Mark active nav link
     const path = window.location.pathname.replace(/\/$/, '') || '/';
-    const map = { '/universe': 'universe', '/platform': 'platform', '/science': 'science', '/investors': 'investors', '/partners': 'partners', '/about': 'about' };
+    const map = { '/universe': 'universe', '/dashboard': 'dashboard', '/platform': 'dashboard', '/science': 'science', '/investors': 'investors', '/partners': 'partners' };
     const activeKey = map[path];
     if (activeKey) {
       const el = document.querySelector(`[data-nav="${activeKey}"]`);

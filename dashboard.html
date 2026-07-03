@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard &middot; ROMRx</title>
+  <meta name="description" content="Inside the ROMRx dashboard: your baseline, your priority joints, your daily protocol, ROMBot, and every sport pack you stack, all in one place.">
+  <meta property="og:title" content="ROMRx &middot; Dashboard">
+  <link rel="canonical" href="https://romrx.io/dashboard">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230A1020' width='100' height='100' rx='18'/><text x='50' y='68' font-size='52' font-weight='800' font-family='sans-serif' fill='%233B5BFF' text-anchor='middle'>R</text></svg>">
+  <link rel="stylesheet" href="/assets/design-tokens.css">
+  <script defer src="/assets/partials.js"></script>
+  <style>
+    .rx-tab-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:24px; }
+    .rx-tab-chip {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:8px 14px; border-radius:999px;
+      background:rgba(59,91,255,0.08); border:1px solid rgba(59,91,255,0.25);
+      color:var(--rx-text-hi); font-size:0.85rem; font-weight:600;
+      font-family:var(--rx-font-mono);
+    }
+    .rx-tab-chip.sport { background:rgba(255,140,66,0.06); border-color:rgba(255,140,66,0.25); }
+    .rx-tab-card { padding:32px; }
+    .rx-tab-card h3 { margin-top:0; }
+    .rx-tab-meta { font-family:var(--rx-font-mono); color:var(--rx-cobalt); font-size:0.8rem; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:8px; }
+    .rx-tab-meta.sport { color:#FF8C42; }
+  </style>
+</head>
+<body data-rx-here="romrx">
+  <div class="rx-ambient"></div>
+  <div data-rx-slot="nav"></div>
+
+  <section class="rx-section" style="padding-top: 72px;">
+    <div class="rx-container narrow rx-center">
+      <p class="rx-eyebrow rx-mt-md">Dashboard</p>
+      <h1 class="rx-h1">
+        Everything in one place.<br>
+        <span class="rx-grad">Organized by what you actually do.</span>
+      </h1>
+      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
+        The ROMRx dashboard is where your assessment turns into action. Each tab is a distinct
+        job to be done, no digging, no dead ends. Sport packs add their own tabs when you stack them.
+      </p>
+      <div class="rx-tab-row rx-mt-md">
+        <span class="rx-tab-chip">Home</span>
+        <span class="rx-tab-chip">My Baseline</span>
+        <span class="rx-tab-chip">Priority Joints</span>
+        <span class="rx-tab-chip">Today's Protocol</span>
+        <span class="rx-tab-chip">Progress</span>
+        <span class="rx-tab-chip">ROMBot&trade;</span>
+        <span class="rx-tab-chip">Settings</span>
+        <span class="rx-tab-chip sport">+BJJ tabs</span>
+        <span class="rx-tab-chip sport">+BodyBuilding tabs</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORE TABS -->
+  <section class="rx-section alt">
+    <div class="rx-container">
+      <p class="rx-eyebrow rx-center">Base dashboard</p>
+      <h2 class="rx-h2 rx-center">The seven tabs you get with your free assessment.</h2>
+
+      <div class="rx-grid two rx-mt-lg">
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta">Tab 1</div>
+          <h3 class="rx-h3">Home</h3>
+          <p>Your snapshot for today. Overall ROM health score, current priority joints, streak count, and the single next action ROMBot wants you to take. Built to answer one question: "What am I doing right now?"</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta">Tab 2</div>
+          <h3 class="rx-h3">My Baseline</h3>
+          <p>All 14 joints, scored Green / Yellow / Red, with the exact ROM measurement behind each score. Compare your latest assessment to previous cycles. See where you started, where you are, and where you've moved.</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta">Tab 3</div>
+          <h3 class="rx-h3">Priority Joints</h3>
+          <p>Your Top 3 Priority Joints&trade; and why they were selected. See the downstream chain each joint unlocks. Understand which techniques, lifts, or daily movements are gated by these three.</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta">Tab 4</div>
+          <h3 class="rx-h3">Today's Protocol</h3>
+          <p>The 8 to 12 exercises you're doing today: strength, stretching, foam rolling. Video demos, sets, reps, hold times. Check off as you go. ROMBot uses your check-ins to shape tomorrow.</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta">Tab 5</div>
+          <h3 class="rx-h3">Progress</h3>
+          <p>Trend lines per joint over the last 6 weeks and across every Reassessment Cycle you've completed. Green count going up, red count going down. Proof the work is doing something.</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta">Tab 6</div>
+          <h3 class="rx-h3">ROMBot&trade;</h3>
+          <p>Your AI guide, always on. Ask about a movement, a pain, a sport-specific question, or your progress. ROMBot reads your live baseline, priority joints, sport pack data, and history so answers are yours, not generic.</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta">Tab 7</div>
+          <h3 class="rx-h3">Settings</h3>
+          <p>Sport packs, subscription, notifications, data export. Turn ambassador program on or off. Manage the account and control what data you share for the anonymous data flywheel.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SPORT-SPECIFIC TABS (GENERAL) -->
+  <section class="rx-section">
+    <div class="rx-container">
+      <p class="rx-eyebrow rx-center">Sport pack tabs</p>
+      <h2 class="rx-h2 rx-center">Stack a sport pack. Get its own set of tabs.</h2>
+      <p class="rx-lead rx-center" style="margin-left:auto;margin-right:auto;">
+        Every sport pack adds a dedicated section to your dashboard tuned to how that sport actually
+        trains. The tabs stay familiar (readiness, protocol, planning, progress) but the content is
+        specific to the discipline. General layout below, exact tabs and features are proprietary
+        to each sport pack.
+      </p>
+
+      <div class="rx-grid two rx-mt-lg">
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta sport">+Sport</div>
+          <h3 class="rx-h3">Readiness</h3>
+          <p>What your body can do in this sport today. Techniques, positions, or lifts rated Green / Yellow / Red based on your live ROM data. Updated automatically as your baseline changes.</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta sport">+Sport</div>
+          <h3 class="rx-h3">Sport Protocol</h3>
+          <p>The sport-specific supplement layer to your base protocol. Warm-ups, movement prep, and skill drills selected to match your priority joints and the demands of your training week.</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta sport">+Sport</div>
+          <h3 class="rx-h3">Session Planner</h3>
+          <p>Plan the training session against what your body is actually ready to load. Pick from your green list. Modify from your yellow list. Skip your red list without guilt. Coaches see this too.</p>
+        </div>
+
+        <div class="rx-card rx-tab-card">
+          <div class="rx-tab-meta sport">+Sport</div>
+          <h3 class="rx-h3">Sport Progress</h3>
+          <p>How many red movements moved to yellow. How many yellow moved to green. How the techniques or lifts you couldn't own six weeks ago look now. Sport-specific proof of progress.</p>
+        </div>
+
+      </div>
+
+      <div class="rx-center rx-mt-lg">
+        <a href="/universe" class="rx-cta ghost">See every sport pack &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="rx-section alt">
+    <div class="rx-container narrow rx-center">
+      <h2 class="rx-h2">Ready to see your dashboard fill in?</h2>
+      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
+        The assessment takes about ten minutes on your phone. Nothing else to buy, nothing to install if you're on iOS. Every tab above populates from that first ten-minute check-in.
+      </p>
+      <a href="/assessment" class="rx-cta primary">Start Free Assessment &rarr;</a>
+    </div>
+  </section>
+
+  <div data-rx-slot="legal"></div>
+</body>
+</html>

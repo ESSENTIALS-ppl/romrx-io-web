@@ -34,9 +34,14 @@
   status = 200
 
 [[redirects]]
-  from = "/platform"
-  to = "/platform.html"
+  from = "/dashboard"
+  to = "/dashboard.html"
   status = 200
+
+[[redirects]]
+  from = "/platform"
+  to = "/dashboard.html"
+  status = 301
 
 [[redirects]]
   from = "/science"
@@ -46,6 +51,11 @@
 [[redirects]]
   from = "/about"
   to = "/about.html"
+  status = 200
+
+[[redirects]]
+  from = "/ambassador"
+  to = "/ambassador.html"
   status = 200
 
 [[redirects]]
