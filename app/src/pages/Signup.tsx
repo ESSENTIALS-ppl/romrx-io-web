@@ -35,26 +35,32 @@ export function Signup() {
     })
 
     if (signUpErr) {
-      setError(signUpErr.message)
+      const msg = signUpErr.message || (signUpErr as any).error_description || JSON.stringify(signUpErr)
+      setError(msg && msg !== '{}' ? msg : 'Signup failed. This email may already be registered - try signing in instead.')
       setLoading(false)
       return
     }
 
     if (data.user) {
-      // Upsert user profile row. Account is created 'pending' / 'inactive'.
+      // Upsert user profile row. Account is created 'inactive'.
       // The user must complete Stripe checkout from /onboarding/results
       // before ProtectedRoute will admit them to any /dashboard/* page.
       // Do NOT seed 'trialing' or 'active' here - that bypasses the paywall.
-      await supabase.from('users').upsert({
+      // Let subscription_status, base_status, platforms, sports_enabled, active_sport
+      // use column defaults ('inactive', ['bjj']) - the webhook will set them properly
+      // after Stripe checkout.
+      const { error: upsertErr } = await supabase.from('users').upsert({
         id: data.user.id,
         email,
         full_name: fullName,
         portal_role: 'athlete',
-        subscription_status: 'pending',
-        base_status: 'inactive',
-        platforms: [],
-        sports_enabled: [],
       }, { onConflict: 'id' })
+
+      if (upsertErr) {
+        setError('Account created but profile setup failed: ' + (upsertErr.message || JSON.stringify(upsertErr)))
+        setLoading(false)
+        return
+      }
 
       // TODO(phase1): no lib/terms.ts / recordConsent helper exists yet in the
       // HQ app. Re-add consent logging here once that helper is ported.
