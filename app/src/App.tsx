@@ -17,7 +17,7 @@ import { Settings } from './pages/Settings'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/app">
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
