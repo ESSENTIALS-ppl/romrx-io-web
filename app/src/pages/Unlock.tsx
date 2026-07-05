@@ -92,7 +92,8 @@ export function Unlock() {
           return
         }
 
-        // Signed in: start Base checkout immediately
+        // Signed in: claim lead (copies assessment_data + marks converted)
+        // and start Base checkout in one edge fn call.
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -103,18 +104,26 @@ export function Unlock() {
         const res = await fetch(CHECKOUT_URL, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
+          body: JSON.stringify({
+            mode: 'base',
+            user_id: user.id,
+            email: user.email,
+            lead_token: token,
+          }),
         })
-        const data = await res.json()
+
+        let data: { url?: string; error?: string; message?: string } = {}
+        try { data = await res.json() } catch { /* non-JSON body */ }
+
         if (data.url) {
           window.location.href = data.url
           return
         }
         setStatus('error')
-        setMessage(data.error ?? 'Could not start Base checkout.')
-      } catch {
+        setMessage(data.message || data.error || `Could not start Base checkout (HTTP ${res.status}).`)
+      } catch (e) {
         setStatus('error')
-        setMessage('Something went wrong. Please try again.')
+        setMessage((e as Error)?.message || 'Something went wrong. Please try again.')
       }
     })()
   }, [token, authLoading, user, navigate])
