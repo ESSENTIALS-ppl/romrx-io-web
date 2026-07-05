@@ -1,38 +1,59 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
-
-const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
-
-// Maps sport slugs (as used in MySport.tsx "Add a sport" cards) to their
-// Stripe price IDs. TODO(phase1): replace placeholders with real Stripe
-// price IDs once the sport-pack products are created in Stripe.
-const SPORT_PRICE_IDS: Record<string, string> = {
-  bjj: 'price_bjj_annual_placeholder',
-  bodybuilding: 'price_bodybuilding_annual_placeholder',
-}
+import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
+import { CHECKOUT_URL, SPORT_PRICE_IDS } from '../lib/stripe'
 
 export function Unlock() {
   const { token } = useParams<{ token: string }>()
+  const navigate = useNavigate()
+  const { user, loading: authLoading } = useAuth()
   const [status, setStatus] = useState<'redirecting' | 'error'>('redirecting')
   const [message, setMessage] = useState('')
 
   useEffect(() => {
     if (!token) { setStatus('error'); setMessage('Missing unlock token.'); return }
+    if (authLoading) return
 
     const priceId = SPORT_PRICE_IDS[token] ?? null
 
     ;(async () => {
       try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        }
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
+
         const res = await fetch(CHECKOUT_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
+          headers,
           body: JSON.stringify({ token, price_id: priceId, mode: 'unlock' }),
         })
         const data = await res.json()
+
+        if (res.status === 409 && data.error === 'base_required') {
+          if (!user) {
+            navigate(`/login?next=/unlock/${token}`)
+            return
+          }
+          const baseRes = await fetch(CHECKOUT_URL, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
+          })
+          const baseData = await baseRes.json()
+          if (baseData.url) {
+            window.location.href = baseData.url
+            return
+          }
+          setStatus('error')
+          setMessage(baseData.error ?? 'Could not start Base checkout.')
+          return
+        }
+
         if (data.url) {
           window.location.href = data.url
           return
@@ -44,7 +65,7 @@ export function Unlock() {
         setMessage('Something went wrong. Please try again.')
       }
     })()
-  }, [token])
+  }, [token, authLoading, user, navigate])
 
   if (status === 'error') {
     return (
