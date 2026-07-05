@@ -35,6 +35,7 @@ export default function App() {
         {/* Protected dashboard routes under /dashboard/* */}
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Navigate to="/dashboard/my-body" replace />} />
             <Route path="/dashboard/my-body" element={<MyBody />} />
             <Route path="/dashboard/my-protocol" element={<MyProtocol />} />
             <Route path="/dashboard/my-sport" element={<MySport />} />
