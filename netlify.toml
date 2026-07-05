@@ -2,6 +2,28 @@
 [build]
   publish = "."
   functions = "netlify/functions"
+  # Build the HQ React app into app/dist/ (Vite base='/app/').
+  # Marketing HTML at repo root is served as-is.
+  command = "cd app && npm install && npm run build"
+
+# HQ React app static asset passthrough. Serves /app/assets/*, /app/index.html etc.
+# directly from app/dist/. This must come BEFORE the SPA fallback below.
+[[redirects]]
+  from = "/app/assets/*"
+  to = "/app/dist/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/app/favicon.ico"
+  to = "/app/dist/favicon.ico"
+  status = 200
+
+# SPA fallback: any /app/* URL that isn't a static asset falls back to the
+# built index.html so react-router-dom handles the route.
+[[redirects]]
+  from = "/app/*"
+  to = "/app/dist/index.html"
+  status = 200
 
 [[headers]]
   for = "/*"
