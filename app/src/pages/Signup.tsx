@@ -42,25 +42,12 @@ export function Signup() {
     }
 
     if (data.user) {
-      // Upsert user profile row. Account is created 'inactive'.
-      // The user must complete Stripe checkout from /onboarding/results
-      // before ProtectedRoute will admit them to any /dashboard/* page.
-      // Do NOT seed 'trialing' or 'active' here - that bypasses the paywall.
-      // Let subscription_status, base_status, platforms, sports_enabled, active_sport
-      // use column defaults ('inactive', ['bjj']) - the webhook will set them properly
-      // after Stripe checkout.
-      const { error: upsertErr } = await supabase.from('users').upsert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        portal_role: 'athlete',
-      }, { onConflict: 'id' })
-
-      if (upsertErr) {
-        setError('Account created but profile setup failed: ' + (upsertErr.message || JSON.stringify(upsertErr)))
-        setLoading(false)
-        return
-      }
+      // The public.users row is created by the on_auth_user_created trigger
+      // (handle_new_user function). It defaults to subscription_status='inactive',
+      // base_status='inactive', subscription_tier='free' - ProtectedRoute will
+      // block dashboard access until stripe-webhook flips these after checkout.
+      // Do NOT client-upsert here - there is no INSERT RLS policy on public.users
+      // and the trigger already handled it.
 
       // TODO(phase1): no lib/terms.ts / recordConsent helper exists yet in the
       // HQ app. Re-add consent logging here once that helper is ported.
