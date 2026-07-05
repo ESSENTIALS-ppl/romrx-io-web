@@ -1,14 +1,19 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Loader2, UserPlus } from 'lucide-react'
 
 export function Signup() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [searchParams] = useSearchParams()
+  const leadToken = searchParams.get('lead')
+  const leadEmail = searchParams.get('email')
+  const leadName = searchParams.get('name')
+  const redirectAfterSignup = leadToken ? `/unlock/${leadToken}` : '/dashboard/my-body'
+  const [email, setEmail] = useState(leadEmail ?? '')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [fullName, setFullName] = useState('')
+  const [fullName, setFullName] = useState(leadName ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
@@ -25,7 +30,7 @@ export function Signup() {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: `${window.location.origin}/app/auth/confirm?next=${encodeURIComponent(redirectAfterSignup)}${leadToken ? `&lead=${encodeURIComponent(leadToken)}` : ''}`,
       },
     })
 
@@ -54,7 +59,7 @@ export function Signup() {
       // TODO(phase1): no lib/terms.ts / recordConsent helper exists yet in the
       // HQ app. Re-add consent logging here once that helper is ported.
 
-      navigate('/onboarding/assessment', { replace: true })
+      navigate(leadToken ? redirectAfterSignup : '/onboarding/assessment', { replace: true })
       return
     }
 
@@ -85,7 +90,8 @@ export function Signup() {
             <input
               type="email" value={email} onChange={e => setEmail(e.target.value)}
               placeholder="you@example.com" required
-              className="input"
+              readOnly={!!leadEmail}
+              className={`input${leadEmail ? ' opacity-70 cursor-not-allowed' : ''}`}
             />
           </div>
 

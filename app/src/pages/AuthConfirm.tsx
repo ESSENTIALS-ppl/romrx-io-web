@@ -11,15 +11,24 @@ export function AuthConfirm() {
     const token_hash = params.get('token_hash')
     const type = params.get('type') as 'email' | 'recovery' | 'invite' | null
 
+    const next = params.get('next')
+    const leadToken = params.get('lead')
+
     if (token_hash && type) {
       supabase.auth.verifyOtp({ token_hash, type })
-        .then(({ data, error }) => {
+        .then(async ({ data, error }) => {
           if (error || !data.session) {
             console.error('Auth confirm error:', error?.message)
             navigate('/login?error=link_expired', { replace: true })
-          } else {
-            navigate('/dashboard/my-body', { replace: true })
+            return
           }
+
+          const authedUser = data.session.user
+          if (leadToken && authedUser) {
+            await supabase.from('leads').update({ converted_user_id: authedUser.id, converted_at: new Date().toISOString() }).eq('unlock_token', leadToken)
+          }
+
+          navigate(next ?? '/dashboard/my-body', { replace: true })
         })
     } else {
       navigate('/login', { replace: true })

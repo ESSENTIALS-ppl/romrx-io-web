@@ -16,10 +16,83 @@ export function Unlock() {
     if (!token) { setStatus('error'); setMessage('Missing unlock token.'); return }
     if (authLoading) return
 
-    const priceId = SPORT_PRICE_IDS[token] ?? null
+    // Is this a sport slug (existing path)?
+    const isSportSlug = token === 'bjj' || token === 'bodybuilding'
 
     ;(async () => {
       try {
+        if (isSportSlug) {
+          // Existing convenience path - handle as sport unlock
+          const priceId = SPORT_PRICE_IDS[token] ?? null
+
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          }
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
+
+          const res = await fetch(CHECKOUT_URL, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ token, price_id: priceId, mode: 'unlock' }),
+          })
+          const data = await res.json()
+
+          if (res.status === 409 && data.error === 'base_required') {
+            if (!user) {
+              navigate(`/login?next=/unlock/${token}`)
+              return
+            }
+            const baseRes = await fetch(CHECKOUT_URL, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
+            })
+            const baseData = await baseRes.json()
+            if (baseData.url) {
+              window.location.href = baseData.url
+              return
+            }
+            setStatus('error')
+            setMessage(baseData.error ?? 'Could not start Base checkout.')
+            return
+          }
+
+          if (data.url) {
+            window.location.href = data.url
+            return
+          }
+          setStatus('error')
+          setMessage(data.error ?? 'This unlock link is invalid or has expired.')
+          return
+        }
+
+        // NEW: treat as lead UUID
+        // Look up the leads row
+        const { data: lead, error: leadErr } = await supabase
+          .from('leads')
+          .select('id, email, full_name, prs_score, tier')
+          .eq('unlock_token', token)
+          .maybeSingle()
+
+        if (leadErr || !lead) {
+          setStatus('error'); setMessage('This unlock link is invalid or has expired.'); return
+        }
+
+        // If not signed in: bounce to signup with lead context
+        if (!user) {
+          // Encode the lead's email so Signup can pre-fill and mark the account as coming from this lead
+          const params = new URLSearchParams({
+            lead: token,
+            email: lead.email,
+            name: lead.full_name ?? '',
+          })
+          navigate(`/signup?${params.toString()}`)
+          return
+        }
+
+        // Signed in: start Base checkout immediately
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -30,36 +103,15 @@ export function Unlock() {
         const res = await fetch(CHECKOUT_URL, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ token, price_id: priceId, mode: 'unlock' }),
+          body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
         })
         const data = await res.json()
-
-        if (res.status === 409 && data.error === 'base_required') {
-          if (!user) {
-            navigate(`/login?next=/unlock/${token}`)
-            return
-          }
-          const baseRes = await fetch(CHECKOUT_URL, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
-          })
-          const baseData = await baseRes.json()
-          if (baseData.url) {
-            window.location.href = baseData.url
-            return
-          }
-          setStatus('error')
-          setMessage(baseData.error ?? 'Could not start Base checkout.')
-          return
-        }
-
         if (data.url) {
           window.location.href = data.url
           return
         }
         setStatus('error')
-        setMessage(data.error ?? 'This unlock link is invalid or has expired.')
+        setMessage(data.error ?? 'Could not start Base checkout.')
       } catch {
         setStatus('error')
         setMessage('Something went wrong. Please try again.')
