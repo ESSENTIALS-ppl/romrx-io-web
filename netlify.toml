@@ -20,6 +20,19 @@
 
 # SPA fallback: any /app/* URL that isn't a static asset falls back to the
 # built index.html so react-router-dom handles the route.
+# Two rules: bare /app (no slash) and /app/*. The bare /app rule must come
+# first because Netlify would otherwise serve the raw app/index.html from
+# the repo root due to publish=".".
+[[redirects]]
+  from = "/app"
+  to = "/app/dist/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/"
+  to = "/app/dist/index.html"
+  status = 200
+
 [[redirects]]
   from = "/app/*"
   to = "/app/dist/index.html"
