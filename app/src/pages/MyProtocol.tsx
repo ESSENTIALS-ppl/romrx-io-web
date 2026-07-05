@@ -7,50 +7,75 @@ import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { ClipboardList, RefreshCw, Loader2 } from 'lucide-react'
 
-// Working shell for Phase 1: lists protocol entries from the `protocols`
-// table for the current user and offers a "Generate protocol" action that
-// calls the existing `compute-tiers` edge function. The full BJJ prescription
-// library (exercise library, daily rotation, session tracking) stays in the
-// BJJ sport add-on app - it is BJJ-technique-specific and not sport-agnostic.
+// My Protocol - Phase 1 (rebuilt v2)
+// Reads real data from `technique_eligibility` (the table compute-tiers writes to).
+// "Generate protocol" fetches the latest assessment and passes the full record
+// to compute-tiers (which is how the DB trigger normally invokes it).
 const COMPUTE_TIERS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/compute-tiers`
 
-interface ProtocolEntry {
+interface EligibilityRow {
   id: string
-  joint: string
-  priority: number | null
-  exercise_name: string | null
-  dose: string | null
-  created_at: string
+  technique_code: string
+  tier: 'RED' | 'YELLOW' | 'GREEN'
+  limiting_joints: string[] | null
+  flag: string | null
+  sport: string
 }
+
+interface TierCounts { green: number; yellow: number; red: number; delay: number }
 
 export function MyProtocol() {
   const { user, session } = useAuth()
-  const [protocols, setProtocols] = useState<ProtocolEntry[]>([])
+  const [rows, setRows] = useState<EligibilityRow[]>([])
+  const [counts, setCounts] = useState<TierCounts>({ green: 0, yellow: 0, red: 0, delay: 0 })
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
 
-  async function loadProtocols() {
+  async function loadEligibility() {
     if (!user) return
     setLoading(true)
     const { data, error: err } = await supabase
-      .from('protocols')
-      .select('*')
+      .from('technique_eligibility')
+      .select('id, technique_code, tier, limiting_joints, flag, sport')
       .eq('user_id', user.id)
-      .order('priority', { ascending: true })
+      .order('tier', { ascending: true })
     if (err) {
-      console.error('protocols load error:', err.message)
+      console.error('technique_eligibility load error:', err.message)
     }
-    setProtocols(data ?? [])
+    const list = (data ?? []) as EligibilityRow[]
+    setRows(list)
+    const c: TierCounts = { green: 0, yellow: 0, red: 0, delay: 0 }
+    for (const r of list) {
+      if (r.flag === 'DELAY_TECHNIQUE') c.delay++
+      else if (r.tier === 'RED') c.red++
+      else if (r.tier === 'YELLOW') c.yellow++
+      else if (r.tier === 'GREEN') c.green++
+    }
+    setCounts(c)
     setLoading(false)
   }
 
-  useEffect(() => { loadProtocols() }, [user])
+  useEffect(() => { loadEligibility() }, [user])
 
   const handleGenerate = async () => {
-    if (!session) return
+    if (!session || !user) return
     setGenerating(true); setError('')
     try {
+      // Fetch the user's latest assessment so we can pass the full record
+      // to compute-tiers (matches DB-trigger invocation shape).
+      const { data: assessment, error: aerr } = await supabase
+        .from('assessments')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (aerr || !assessment) {
+        throw new Error('No assessment found. Complete your ROM assessment first.')
+      }
+
       const res = await fetch(COMPUTE_TIERS_URL, {
         method: 'POST',
         headers: {
@@ -58,11 +83,11 @@ export function MyProtocol() {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify({ user_id: user?.id }),
+        body: JSON.stringify({ record: assessment }),
       })
       const data = await res.json()
-      if (!data.ok) throw new Error(data.error ?? 'Could not generate protocol.')
-      await loadProtocols()
+      if (!data.success) throw new Error(data.error ?? 'Could not generate protocol.')
+      await loadEligibility()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -72,46 +97,83 @@ export function MyProtocol() {
 
   if (loading) return <Spinner />
 
+  const priority = rows
+    .filter(r => r.tier === 'RED' || r.flag === 'DELAY_TECHNIQUE')
+    .slice(0, 20)
+
+  const totalRated = counts.red + counts.yellow + counts.green + counts.delay
+
   return (
     <div className="space-y-5">
       <PageHeader
         title="My Protocol"
-        subtitle="Personalized mobility plan based on your latest assessment"
+        subtitle="Technique readiness based on your latest ROM assessment"
         action={
           <button onClick={handleGenerate} disabled={generating} className="btn-primary text-sm flex items-center gap-1.5">
             {generating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-            Generate protocol
+            {rows.length ? 'Recompute' : 'Generate protocol'}
           </button>
         }
       />
 
       {error && <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
-      {protocols.length === 0 ? (
+      {totalRated === 0 ? (
         <EmptyState
           icon={ClipboardList}
           title="No protocol yet"
-          description="Generate your personalized protocol from your latest ROM assessment to see priority joints and daily exercises."
+          description="Generate your personalized protocol from your latest ROM assessment to see technique readiness and priority joints."
           action={<button onClick={handleGenerate} disabled={generating} className="btn-primary text-sm">Generate protocol</button>}
         />
       ) : (
-        <SectionCard title="Priority Joints" subtitle="Ordered by priority - highest first">
-          <div className="divide-y divide-cobalt/10">
-            {protocols.map(p => (
-              <div key={p.id} className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-semibold text-cobalt-ink">{p.joint}</p>
-                  {p.exercise_name && <p className="text-xs text-slate-500 mt-0.5">{p.exercise_name}{p.dose ? ` - ${p.dose}` : ''}</p>}
-                </div>
-                {p.priority != null && (
-                  <span className="text-xs font-bold bg-cobalt-light text-cobalt px-2.5 py-1 rounded-full">
-                    Priority {p.priority}
-                  </span>
-                )}
+        <>
+          <SectionCard title="Technique Readiness" subtitle={`${totalRated} techniques rated`}>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="rounded-card bg-green-50 p-3 text-center">
+                <p className="text-2xl font-extrabold text-green-700">{counts.green}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-green-700 mt-0.5">Green</p>
               </div>
-            ))}
-          </div>
-        </SectionCard>
+              <div className="rounded-card bg-yellow-50 p-3 text-center">
+                <p className="text-2xl font-extrabold text-yellow-700">{counts.yellow}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-yellow-700 mt-0.5">Yellow</p>
+              </div>
+              <div className="rounded-card bg-red-50 p-3 text-center">
+                <p className="text-2xl font-extrabold text-red-700">{counts.red}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-red-700 mt-0.5">Red</p>
+              </div>
+              <div className="rounded-card bg-slate-100 p-3 text-center">
+                <p className="text-2xl font-extrabold text-slate-600">{counts.delay}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mt-0.5">Delay</p>
+              </div>
+            </div>
+          </SectionCard>
+
+          {priority.length > 0 && (
+            <SectionCard title="Priority Techniques" subtitle="Techniques flagged RED or DELAY - work on limiting joints first">
+              <div className="divide-y divide-cobalt/10">
+                {priority.map(p => (
+                  <div key={p.id} className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-cobalt-ink">{p.technique_code}</p>
+                      {p.limiting_joints && p.limiting_joints.length > 0 && (
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Limiting: {p.limiting_joints.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      p.flag === 'DELAY_TECHNIQUE'
+                        ? 'bg-slate-200 text-slate-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {p.flag === 'DELAY_TECHNIQUE' ? 'DELAY' : p.tier}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          )}
+        </>
       )}
     </div>
   )
