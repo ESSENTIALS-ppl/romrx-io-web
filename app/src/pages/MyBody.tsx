@@ -337,7 +337,7 @@ export function MyBody() {
             </div>
 
             <Link
-              to="/app/dashboard/my-protocol"
+              to="/dashboard/my-protocol"
               className="btn-primary text-sm w-full text-center block"
             >
               Start Today's Session →
