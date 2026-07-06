@@ -685,7 +685,8 @@ function IssueCard({ ranked, rxLibrary, rank }: {
   const rankLabel = rank === 1 ? '#1 Priority' : rank === 2 ? '#2 Priority' : '#3 Priority'
   const rankColor = rank === 1 ? 'bg-red-600 text-white' : rank === 2 ? 'bg-yellow-500 text-white' : 'bg-cobalt text-white'
 
-  const hasAsymmetry = left !== null && right !== null && asymmetry > 0
+  const isBilateral = left !== null && right !== null
+  const hasAsymmetry = isBilateral && asymmetry > 0
 
   return (
     <div className="bg-white rounded-card border border-cobalt/10 shadow-sm overflow-hidden">
@@ -714,7 +715,7 @@ function IssueCard({ ranked, rxLibrary, rank }: {
         </div>
 
         <div className="px-5 pb-4 flex flex-wrap gap-3">
-          {hasAsymmetry ? (
+          {isBilateral ? (
             <>
               <div className="bg-slate-50 rounded-xl px-3 py-1.5 text-center">
                 <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Left</p>
@@ -728,12 +729,14 @@ function IssueCard({ ranked, rxLibrary, rank }: {
                   {right}{def.unit}
                 </p>
               </div>
-              <div className="bg-yellow-50 rounded-xl px-3 py-1.5 text-center">
-                <p className="text-[10px] text-yellow-700 font-bold uppercase tracking-wide">Asymmetry</p>
-                <p className="text-sm font-bold text-yellow-700">{asymmetry}{def.unit} gap</p>
-              </div>
+              {hasAsymmetry && (
+                <div className="bg-yellow-50 rounded-xl px-3 py-1.5 text-center">
+                  <p className="text-[10px] text-yellow-700 font-bold uppercase tracking-wide">Asymmetry</p>
+                  <p className="text-sm font-bold text-yellow-700">{asymmetry}{def.unit} gap</p>
+                </div>
+              )}
             </>
-          ) : (
+          ) : single !== null ? (
             <>
               <div className="bg-slate-50 rounded-xl px-3 py-1.5">
                 <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Value</p>
@@ -748,7 +751,7 @@ function IssueCard({ ranked, rxLibrary, rank }: {
                 </div>
               )}
             </>
-          )}
+          ) : null}
           <div className="bg-slate-50 rounded-xl px-3 py-1.5">
             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Normal</p>
             <p className="text-xs font-semibold text-cobalt-ink">{def.normalMin}-{def.normalMax}{def.unit}</p>
