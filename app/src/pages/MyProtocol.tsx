@@ -248,11 +248,34 @@ function toRx(row: DbExercise): Rx {
   }
 }
 
+// Some exercises exist as more than one DB row for the same joint group
+// (either an exact duplicate row, or a row filed under a short joint_key
+// alias plus a matching row filed under the long-form alias, e.g. hip_flex
+// / hip_flexion). Both resolve into the same rxKey via JOINT_KEY_ALIASES,
+// so without deduping they render twice. Dedupe by name + exercise_type
+// within the scoped set and keep whichever row has richer prescription
+// data (sets present, then longer reps/cue text as a tiebreaker).
+function dedupeExercises(scoped: DbExercise[]): DbExercise[] {
+  const byKey = new Map<string, DbExercise>()
+  for (const row of scoped) {
+    const dedupeKey = `${row.name.trim().toLowerCase()}|${row.exercise_type}`
+    const existing = byKey.get(dedupeKey)
+    if (!existing) {
+      byKey.set(dedupeKey, row)
+      continue
+    }
+    const existingScore = (existing.sets ? 2 : 0) + (existing.reps?.length ?? 0) + (existing.coaching_cue?.length ?? 0)
+    const rowScore = (row.sets ? 2 : 0) + (row.reps?.length ?? 0) + (row.coaching_cue?.length ?? 0)
+    if (rowScore > existingScore) byKey.set(dedupeKey, row)
+  }
+  return Array.from(byKey.values())
+}
+
 function groupByJoint(rows: DbExercise[]): Record<string, Prescription> {
   const out: Record<string, Prescription> = {}
   for (const rxKey of Object.keys(JOINT_KEY_ALIASES)) {
     const aliases = JOINT_KEY_ALIASES[rxKey]
-    const scoped = rows.filter(r => aliases.includes(r.joint_key))
+    const scoped = dedupeExercises(rows.filter(r => aliases.includes(r.joint_key)))
     if (scoped.length === 0) continue
     out[rxKey] = {
       exercises: scoped.filter(r => r.exercise_type === 'resistance').map(toRx),
@@ -378,11 +401,31 @@ function TodayMovementCard({ rx, index }: { rx: Rx; index: number }) {
               {rx.dose}
             </span>
           )}
-          {open && rx.cue && (
+          {open && (
             <div className="mt-2.5 pt-2.5 border-t border-cobalt/10 space-y-2">
-              <p className="text-xs text-slate-600 leading-relaxed">
-                <span className="font-semibold text-cobalt-ink">Coaching cue: </span>{rx.cue}
-              </p>
+              {rx.cue && (
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  <span className="font-semibold text-cobalt-ink">How to do it: </span>{rx.cue}
+                </p>
+              )}
+              {rx.dose && (
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  <span className="font-semibold text-cobalt-ink">Dose: </span>{rx.dose}
+                </p>
+              )}
+              {rx.equipment && (
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  <span className="font-semibold text-cobalt-ink">Equipment: </span>{rx.equipment}
+                </p>
+              )}
+              {rx.video_url && (
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  <span className="font-semibold text-cobalt-ink">Video: </span>
+                  <a href={rx.video_url} target="_blank" rel="noreferrer" className="text-cobalt underline underline-offset-2">
+                    Watch demo
+                  </a>
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -593,11 +636,31 @@ function RxItem({
                     <span className="text-xs bg-cobalt-light text-cobalt font-semibold px-2.5 py-0.5 rounded-full">{rx.dose}</span>
                   </div>
                 )}
-                {openIdx === i && rx.cue && (
+                {openIdx === i && (
                   <div className="mt-2.5 pt-2.5 border-t border-cobalt/10 space-y-2">
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      <span className="font-semibold text-cobalt-ink">Coaching cue: </span>{rx.cue}
-                    </p>
+                    {rx.cue && (
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        <span className="font-semibold text-cobalt-ink">How to do it: </span>{rx.cue}
+                      </p>
+                    )}
+                    {rx.dose && (
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        <span className="font-semibold text-cobalt-ink">Dose: </span>{rx.dose}
+                      </p>
+                    )}
+                    {rx.equipment && (
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        <span className="font-semibold text-cobalt-ink">Equipment: </span>{rx.equipment}
+                      </p>
+                    )}
+                    {rx.video_url && (
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        <span className="font-semibold text-cobalt-ink">Video: </span>
+                        <a href={rx.video_url} target="_blank" rel="noreferrer" className="text-cobalt underline underline-offset-2">
+                          Watch demo
+                        </a>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -615,7 +678,7 @@ function IssueCard({ ranked, rxLibrary, rank }: {
   rxLibrary: Record<string, Prescription>
   rank: number
 }) {
-  const [open, setOpen] = useState(rank === 1)
+  const [open, setOpen] = useState<boolean>(false)
   const { def, left, right, single, atRisk, asymmetry, severity } = ranked
   const rx = rxLibrary[def.rxKey]
 
@@ -702,7 +765,7 @@ function IssueCard({ ranked, rxLibrary, rank }: {
       )}
       {open && !rx && (
         <div className="px-5 pb-5 border-t border-cobalt/10 pt-4">
-          <p className="text-xs text-slate-500">Prescription library loading. Refresh if this persists.</p>
+          <p className="text-xs text-slate-500">Recommended exercises loading. Refresh if this persists.</p>
         </div>
       )}
     </div>
@@ -711,7 +774,7 @@ function IssueCard({ ranked, rxLibrary, rank }: {
 
 // ---- Per-tab why copy ------------------------------------------------------
 const DAILY_WHY = "This is your minimum effective dose. Research is clear: short, consistent daily mobility work changes range of motion more than long sessions done occasionally. A few minutes a day, every day, is what actually moves your numbers. Do this and you're covered. Everything else is bonus."
-const FULL_WHY  = "Got more time, or want to attack a specific restriction? This is your complete prescription. Every movement from your assessment, organized by the limitations holding back your body. Use it as a deeper session when you can, or as a reference to understand the whole plan. The Daily keeps you progressing. The Full lets you go further."
+const FULL_WHY  = "Got more time, or want to attack a specific restriction? This is your complete list of recommended exercises (Rx). Every movement from your assessment, organized by the limitations holding back your body. Use it as a deeper session when you can, or as a reference to understand the whole plan. The Daily keeps you progressing. The Full lets you go further."
 
 // ---- Main page -------------------------------------------------------------
 export function MyProtocol() {
