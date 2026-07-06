@@ -116,7 +116,7 @@ export function ResultsPreview() {
   }, [user, navigate])
 
   const handleUnlock = async () => {
-    if (!session) return
+    if (!session || !user) return
     setPaying(true)
     setError('')
     try {
@@ -127,7 +127,7 @@ export function ResultsPreview() {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify({ email: user?.email, plan: 'base' }),
+        body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
       })
       const { url, error: err } = await res.json()
       if (url) { window.location.href = url; return }
@@ -207,7 +207,7 @@ export function ResultsPreview() {
           <div className="absolute inset-0 bg-cobalt-ink/60 backdrop-blur-sm flex items-center justify-center z-10 rounded-card">
             <div className="text-center space-y-2">
               <Unlock size={28} className="text-white mx-auto" />
-              <p className="text-sm font-bold text-white">Unlock Your Full Dashboard</p>
+              <p className="text-sm font-bold text-white">Unlock Your Dashboard</p>
               <p className="text-xs text-white/60">Full joint breakdown, personalized protocol, ROMBot</p>
             </div>
           </div>
@@ -235,7 +235,7 @@ export function ResultsPreview() {
           className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
         >
           {paying ? 'Setting up payment...' : <>
-            <Unlock size={18} /> Unlock My Full Dashboard - $60/yr
+            <Unlock size={18} /> Unlock My Dashboard - $60/yr
           </>}
         </button>
         <p className="text-center text-xs text-white/30">
