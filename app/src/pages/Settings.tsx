@@ -639,7 +639,7 @@ export function Settings() {
             <Trash2 size={15} className="shrink-0" />
             <span className="flex-1 text-left">
               Delete account
-              <span className="block text-xs font-normal mt-0.5 opacity-70">Requests removal of your data</span>
+              <span className="block text-xs font-normal mt-0.5 opacity-70">Closes your account and cancels access</span>
             </span>
             <ChevronRight size={14} />
           </button>
@@ -657,7 +657,7 @@ export function Settings() {
               <h3 className="font-display font-bold text-lg text-cobalt-ink">Delete account</h3>
             </div>
             <p className="text-sm text-slate-500 leading-relaxed">
-              This sends a deletion request to our team. Your account will be removed within 7 days.
+              This closes your account and cancels your access. Aggregated data may be retained for legal, security, and analytics purposes.
               Type <span className="font-bold text-cobalt-ink">DELETE</span> to confirm.
             </p>
             <input
