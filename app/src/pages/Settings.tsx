@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import type { Assessment } from '../hooks/useProfile'
@@ -454,9 +455,8 @@ export function Settings() {
 
         {/* ── ASSESSMENT HISTORY ─────────────────────────────────── */}
         <SectionCard title="Assessment History">
-          <div className="flex items-center justify-between mb-1">
+          <div className="mb-1">
             <p className="text-xs text-slate-500">Your past ROM snapshots</p>
-            <a href="/onboarding/assessment" className="text-xs font-semibold text-cobalt hover:underline">+ New assessment</a>
           </div>
 
           {historyLoading ? (
@@ -467,9 +467,9 @@ export function Settings() {
             <div className="text-center py-6">
               <ClipboardList size={28} className="mx-auto text-slate-400 mb-2" />
               <p className="text-sm text-slate-500 mb-2">No assessments on file yet.</p>
-              <a href="/onboarding/assessment" className="inline-block text-sm font-semibold text-cobalt hover:underline">
+              <Link to="/onboarding/assessment" className="inline-block text-sm font-semibold text-cobalt hover:underline">
                 Take your first assessment
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
@@ -495,10 +495,10 @@ export function Settings() {
                           Latest
                         </span>
                       )}
-                      <a href="/onboarding/assessment" className="flex items-center gap-1 text-xs font-semibold text-cobalt hover:underline">
+                      <Link to="/onboarding/assessment" className="flex items-center gap-1 text-xs font-semibold text-cobalt hover:underline">
                         <TrendingUp size={12} />
                         Retest
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 )

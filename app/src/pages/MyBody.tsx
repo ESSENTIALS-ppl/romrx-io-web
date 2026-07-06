@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import type { Assessment } from '../hooks/useProfile'
@@ -147,7 +148,7 @@ export function MyBody() {
       icon={Activity}
       title="No assessment on file"
       description="Complete your ROM self-assessment to see your body map and joint breakdown."
-      action={<a href="/onboarding/assessment" className="btn-primary text-sm">Get started</a>}
+      action={<Link to="/onboarding/assessment" className="btn-primary text-sm">Get started</Link>}
     />
   )
 

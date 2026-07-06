@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import type { Assessment } from '../hooks/useProfile'
@@ -825,7 +825,7 @@ export function MyProtocol() {
       icon={ClipboardList}
       title="No assessment yet"
       description="Complete your ROM assessment and your personalized mobility protocol will appear here."
-      action={<a href="/onboarding/assessment" className="btn-primary text-sm">Start assessment</a>}
+      action={<Link to="/onboarding/assessment" className="btn-primary text-sm">Start assessment</Link>}
     />
   )
 
