@@ -63,6 +63,17 @@ export function MySport() {
     }
   }
 
+  async function openSportApp(sport: string) {
+    const base = SPORT_APPS[sport]
+    if (!base) return
+    let url = base
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      url = `${base}#access_token=${session.access_token}&refresh_token=${session.refresh_token}&type=sso`
+    }
+    window.open(url, '_blank', 'noopener')
+  }
+
   async function startSportCheckout(slug: string) {
     if (!user) return
     setBusy(true)
@@ -113,6 +124,7 @@ export function MySport() {
                   href={SPORT_APPS[e.sport] ?? '#'}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={evt => { evt.preventDefault(); openSportApp(e.sport) }}
                   className="btn-primary text-sm flex items-center gap-1.5"
                 >
                   Open {SPORT_LABELS[e.sport]?.replace('ROMRx+', '') ?? e.sport} app <ExternalLink size={13} />
