@@ -227,9 +227,17 @@ export function MyBody() {
           <span className={cn('text-[10px] font-bold', tierColor(tier))}>/100</span>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
+          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
             <TrendingUp size={13} className={tierColor(tier)} />
             <span className={cn('text-xs font-bold uppercase tracking-wider', tierColor(tier))}>Position Readiness Score</span>
+            {prsDelta != null && previousDateStr && (
+              <span className={cn(
+                'text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
+                prsDelta > 0 ? 'bg-green-50 text-green-700' : prsDelta < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500'
+              )}>
+                {prsDelta > 0 ? '▲' : prsDelta < 0 ? '▼' : '–'} {prsDelta > 0 ? '+' : ''}{prsDelta} vs {previousDateStr}
+              </span>
+            )}
           </div>
           <p className={cn('text-lg font-bold leading-tight', tierColor(tier))}>{tierLabel(tier)}</p>
           <p className="text-xs text-slate-500 mt-0.5">Retest every 6 weeks to track progress</p>
@@ -293,22 +301,7 @@ export function MyBody() {
                 </div>
               </div>
             )}
-            {assessment.rom_total != null && (
-              <div className="flex justify-between items-center py-2.5 border-t border-cobalt/10">
-                <span className="text-sm text-slate-500">ROM Total Score</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-cobalt-ink">{assessment.rom_total}</span>
-                  {prsDelta != null && previousDateStr && (
-                    <span className={cn(
-                      'text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
-                      prsDelta > 0 ? 'bg-green-50 text-green-700' : prsDelta < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500'
-                    )}>
-                      {prsDelta > 0 ? '▲' : prsDelta < 0 ? '▼' : '–'} {prsDelta > 0 ? '+' : ''}{prsDelta} vs {previousDateStr}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+
             {assessment.rom_percentile != null && (
               <div className="flex justify-between items-center py-2.5 border-t border-cobalt/10">
                 <span className="text-sm text-slate-500">Percentile</span>
