@@ -10,8 +10,8 @@ import { CHECKOUT_URL, SPORT_PRICE_IDS } from '../lib/stripe'
 
 // Sport app URLs. Each sport add-on ships its own dashboard.
 const SPORT_APPS: Record<string, string> = {
-  bjj: 'https://bjj.romrx.io/dashboard',
-  bodybuilding: 'https://bb.romrx.io/dashboard',
+  bjj: 'https://romrxbjj.com/dashboard',
+  bodybuilding: 'https://romrxbodybuilding.com/dashboard',
 }
 
 const SPORT_LABELS: Record<string, string> = {
