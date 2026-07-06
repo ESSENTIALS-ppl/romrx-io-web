@@ -56,7 +56,7 @@ export function ROMBot() {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify({ message: msg, conversation_id: convId, sport: profile?.active_sport ?? 'general' }),
+        body: JSON.stringify({ message: msg, conversation_id: convId, sport: 'base' }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
