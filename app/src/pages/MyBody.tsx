@@ -9,7 +9,7 @@ import { Spinner } from '../components/Spinner'
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import { cn } from '../lib/cn'
 import { scoreToTier, tierColor, tierBg, tierLabel } from '../lib/tier'
-import { AlertTriangle, Activity, TrendingUp } from 'lucide-react'
+import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
 
 // Local helper: BJJ's lib/utils.ts had formatJoint(); HQ's lib/ is locked, so
 // we keep a small local copy here instead of touching app/src/lib/.
@@ -19,6 +19,28 @@ function formatJoint(key: string): string {
     .split('_')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ')
+}
+
+// Compute current streak: consecutive days ending today or yesterday with a logged session.
+// Grace of 1 day (yesterday counts) so a user missing today doesn't insta-break their streak.
+function computeStreak(sessionDates: string[]): number {
+  if (sessionDates.length === 0) return 0
+  const set = new Set(sessionDates)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const iso = (d: Date) => d.toISOString().slice(0, 10)
+  // Find anchor: today or yesterday. If neither logged, streak = 0.
+  let cursor = new Date(today)
+  if (!set.has(iso(cursor))) {
+    cursor.setDate(cursor.getDate() - 1)
+    if (!set.has(iso(cursor))) return 0
+  }
+  let count = 0
+  while (set.has(iso(cursor))) {
+    count += 1
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  return count
 }
 
 // -- Position Readiness Score --------------------------------------------------
@@ -139,7 +161,7 @@ function JointBar({ label, left, right, midline, optimal }: {
 
 export function MyBody() {
   const { user } = useAuth()
-  const { assessment, assessments, loading } = useProfile(user?.id)
+  const { assessment, assessments, sessionDates, loading } = useProfile(user?.id)
 
   if (loading) return <Spinner />
 
@@ -159,6 +181,29 @@ export function MyBody() {
   )
   const prs = computePRS(assessment)
   const tier = scoreToTier(prs)
+
+  // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
+  const previousAssessment = assessments.length > 1 ? assessments[1] : null
+  const previousPrs = previousAssessment ? computePRS(previousAssessment) : null
+  const prsDelta = previousPrs != null ? prs - previousPrs : null
+  const previousDateStr = previousAssessment
+    ? new Date(previousAssessment.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : null
+
+  // Streak + session totals
+  const streak = computeStreak(sessionDates)
+  const totalSessions = sessionDates.length
+
+  // Retest countdown: 42 days after most recent assessment
+  const assessedAtMs = new Date(assessment.assessed_at).getTime()
+  const retestDate = new Date(assessedAtMs + 42 * 24 * 60 * 60 * 1000)
+  const daysUntilRetest = Math.ceil((retestDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  const retestDateStr = retestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const retestDue = daysUntilRetest <= 0
+
+  // Estimated protocol duration: base 6 min + 1 min per priority joint (cap 15)
+  const priorityCount = assessment.worst_joints?.length ?? 0
+  const estMinutes = Math.min(15, 6 + priorityCount)
 
   return (
     <div className="space-y-5">
@@ -243,7 +288,17 @@ export function MyBody() {
             {assessment.rom_total != null && (
               <div className="flex justify-between items-center py-2.5 border-t border-cobalt/10">
                 <span className="text-sm text-slate-500">ROM Total Score</span>
-                <span className="text-sm font-bold text-cobalt-ink">{assessment.rom_total}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-cobalt-ink">{assessment.rom_total}</span>
+                  {prsDelta != null && previousDateStr && (
+                    <span className={cn(
+                      'text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
+                      prsDelta > 0 ? 'bg-green-50 text-green-700' : prsDelta < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500'
+                    )}>
+                      {prsDelta > 0 ? '▲' : prsDelta < 0 ? '▼' : '–'} {prsDelta > 0 ? '+' : ''}{prsDelta} vs {previousDateStr}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
             {assessment.rom_percentile != null && (
@@ -252,6 +307,68 @@ export function MyBody() {
                 <span className="text-sm font-bold text-cobalt-ink">{assessment.rom_percentile}th</span>
               </div>
             )}
+
+            {/* Consistency block */}
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-cobalt/10">
+              <div className="rounded-lg bg-orange-50 border border-orange-100 px-2.5 py-2 text-center">
+                <div className="flex items-center justify-center gap-1 text-orange-600">
+                  <Flame size={12} />
+                  <span className="text-[10px] font-bold uppercase tracking-wide">Streak</span>
+                </div>
+                <p className="text-lg font-bold text-orange-700 leading-tight mt-0.5">{streak}</p>
+                <p className="text-[10px] text-orange-600/70">day{streak === 1 ? '' : 's'}</p>
+              </div>
+              <div className="rounded-lg bg-cobalt/5 border border-cobalt/10 px-2.5 py-2 text-center">
+                <div className="flex items-center justify-center gap-1 text-cobalt">
+                  <CheckCircle2 size={12} />
+                  <span className="text-[10px] font-bold uppercase tracking-wide">Logged</span>
+                </div>
+                <p className="text-lg font-bold text-cobalt-ink leading-tight mt-0.5">{totalSessions}</p>
+                <p className="text-[10px] text-slate-500">total</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-2 text-center">
+                <div className="flex items-center justify-center gap-1 text-slate-600">
+                  <Clock size={12} />
+                  <span className="text-[10px] font-bold uppercase tracking-wide">Today</span>
+                </div>
+                <p className="text-lg font-bold text-slate-700 leading-tight mt-0.5">~{estMinutes}</p>
+                <p className="text-[10px] text-slate-500">min</p>
+              </div>
+            </div>
+
+            <Link
+              to="/app/dashboard/my-protocol"
+              className="btn-primary text-sm w-full text-center block"
+            >
+              Start Today's Session →
+            </Link>
+
+            {/* Retest countdown */}
+            <div className={cn(
+              'flex items-center justify-between gap-2 rounded-lg border px-3 py-2',
+              retestDue ? 'bg-cobalt/5 border-cobalt/30' : 'bg-slate-50 border-slate-200'
+            )}>
+              <div className="flex items-center gap-2 min-w-0">
+                <Calendar size={14} className={retestDue ? 'text-cobalt' : 'text-slate-500'} />
+                <div className="min-w-0">
+                  <p className={cn('text-xs font-semibold', retestDue ? 'text-cobalt-ink' : 'text-slate-600')}>
+                    {retestDue ? 'Retest available now' : `Next retest: ${retestDateStr}`}
+                  </p>
+                  {!retestDue && (
+                    <p className="text-[10px] text-slate-500">{daysUntilRetest} day{daysUntilRetest === 1 ? '' : 's'} to go</p>
+                  )}
+                </div>
+              </div>
+              <Link
+                to="/onboarding/assessment"
+                className={cn(
+                  'text-xs font-semibold px-2.5 py-1 rounded-md shrink-0',
+                  retestDue ? 'bg-cobalt text-white hover:bg-cobalt/90' : 'text-cobalt hover:bg-cobalt/10'
+                )}
+              >
+                {retestDue ? 'Retest now' : 'Retest early'}
+              </Link>
+            </div>
           </div>
         </SectionCard>
       </div>

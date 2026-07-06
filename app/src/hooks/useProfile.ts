@@ -67,6 +67,7 @@ export function useProfile(userId: string | undefined) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [assessment, setAssessment] = useState<Assessment | null>(null)
   const [assessments, setAssessments] = useState<Assessment[]>([])
+  const [sessionDates, setSessionDates] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -77,7 +78,15 @@ export function useProfile(userId: string | undefined) {
 
       // Use SECURITY DEFINER function - bypasses RLS entirely,
       // filters by auth.uid() server-side so it's still secure.
-      const { data, error } = await supabase.rpc('get_my_profile')
+      const [{ data, error }, sessionsRes] = await Promise.all([
+        supabase.rpc('get_my_profile'),
+        supabase
+          .from('protocol_sessions')
+          .select('session_date')
+          .eq('user_id', userId)
+          .order('session_date', { ascending: false })
+          .limit(365),
+      ])
 
       if (error) {
         console.error('get_my_profile error:', error.message)
@@ -99,11 +108,16 @@ export function useProfile(userId: string | undefined) {
       )
       setAssessment(result.assessment)
       setAssessments(result.assessments ?? [])
+      setSessionDates(
+        (sessionsRes.data ?? [])
+          .map((r: { session_date: string }) => r.session_date)
+          .filter(Boolean),
+      )
       setLoading(false)
     }
 
     load()
   }, [userId])
 
-  return { profile, assessment, assessments, loading }
+  return { profile, assessment, assessments, sessionDates, loading }
 }
