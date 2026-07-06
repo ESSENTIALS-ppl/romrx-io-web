@@ -13,12 +13,20 @@ import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calend
 
 // Local helper: BJJ's lib/utils.ts had formatJoint(); HQ's lib/ is locked, so
 // we keep a small local copy here instead of touching app/src/lib/.
+// Preserves L/R side as a suffix so bilateral joints don't render as duplicates.
+// Also uppercases common acronyms (ER/IR/DF/Flex/Ext/Abd/Lat).
+const JOINT_ACRONYMS: Record<string, string> = {
+  er: 'ER', ir: 'IR', df: 'DF', abd: 'Abd', ext: 'Ext', flex: 'Flex', lat: 'Lat', rot: 'Rot',
+}
 function formatJoint(key: string): string {
-  return key
-    .replace(/_l$|_r$/, '')
+  const sideMatch = key.match(/_(l|r)$/)
+  const side = sideMatch ? sideMatch[1].toUpperCase() : null
+  const base = key.replace(/_(l|r)$/, '')
+  const label = base
     .split('_')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .map(w => JOINT_ACRONYMS[w] ?? (w.charAt(0).toUpperCase() + w.slice(1)))
     .join(' ')
+  return side ? `${label} (${side})` : label
 }
 
 // Compute current streak: consecutive days ending today or yesterday with a logged session.
