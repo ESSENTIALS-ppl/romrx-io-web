@@ -73,10 +73,38 @@ const GENDERS = [
   { v: 'prefer_not_to_say', l: 'Prefer not to say' },
 ] as const
 
+const AGE_BUCKETS = [
+  { v: '13-17', l: '13 to 17' },
+  { v: '18-29', l: '18 to 29' },
+  { v: '30-44', l: '30 to 44' },
+  { v: '45-59', l: '45 to 59' },
+  { v: '60+', l: '60 and over' },
+] as const
+
+const HEIGHT_BUCKETS = [
+  { v: 'under_5_0', l: "Under 5'0\"" },
+  { v: '5_0_5_3', l: "5'0\" to 5'3\"" },
+  { v: '5_4_5_7', l: "5'4\" to 5'7\"" },
+  { v: '5_8_5_11', l: "5'8\" to 5'11\"" },
+  { v: '6_0_6_3', l: "6'0\" to 6'3\"" },
+  { v: '6_4_plus', l: "6'4\" and over" },
+] as const
+
+const WEIGHT_BUCKETS = [
+  { v: 'under_120', l: 'Under 120 lb' },
+  { v: '120_149', l: '120 to 149 lb' },
+  { v: '150_179', l: '150 to 179 lb' },
+  { v: '180_209', l: '180 to 209 lb' },
+  { v: '210_239', l: '210 to 239 lb' },
+  { v: '240_269', l: '240 to 269 lb' },
+  { v: '270_plus', l: '270 lb and over' },
+] as const
+
 type ExtProfile = {
   gender?: string | null
-  dob?: string | null
-  height_in?: number | null
+  age_bucket?: string | null
+  height_bucket?: string | null
+  weight_bucket?: string | null
   marketing_opt_out?: boolean | null
 }
 
@@ -92,9 +120,9 @@ export function Settings() {
   // Profile state
   const [fullName, setFullName] = useState('')
   const [gender, setGender] = useState<string>('')
-  const [dob, setDob] = useState('')
-  const [heightIn, setHeightIn] = useState<string>('')
-  const [weightLb, setWeightLb] = useState<string>('')
+  const [ageBucket, setAgeBucket] = useState<string>('')
+  const [heightBucket, setHeightBucket] = useState<string>('')
+  const [weightBucket, setWeightBucket] = useState<string>('')
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
   const [profileErr, setProfileErr] = useState('')
@@ -134,27 +162,11 @@ export function Settings() {
   useEffect(() => {
     if (profile?.full_name) setFullName(profile.full_name)
     if (ext?.gender) setGender(ext.gender)
-    if (ext?.dob) setDob(ext.dob)
-    if (ext?.height_in != null) setHeightIn(String(ext.height_in))
+    if (ext?.age_bucket) setAgeBucket(ext.age_bucket)
+    if (ext?.height_bucket) setHeightBucket(ext.height_bucket)
+    if (ext?.weight_bucket) setWeightBucket(ext.weight_bucket)
     if (ext?.marketing_opt_out != null) setMarketingOptOut(!!ext.marketing_opt_out)
   }, [profile, ext])
-
-  // ── Load latest body_metrics weight ────────────────────────────────────
-  useEffect(() => {
-    if (!user?.id) return
-    supabase.from('body_metrics')
-      .select('weight_kg, measured_at')
-      .eq('user_id', user.id)
-      .order('measured_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.weight_kg != null) {
-          const lb = Number(data.weight_kg) * 2.20462
-          setWeightLb(lb ? lb.toFixed(1) : '')
-        }
-      })
-  }, [user?.id])
 
   // ── Load full assessment history ───────────────────────────────────────
   useEffect(() => {
@@ -195,32 +207,18 @@ export function Settings() {
     if (!user) return
     setProfileSaving(true); setProfileSaved(false); setProfileErr('')
 
-    const heightNum = heightIn ? Number(heightIn) : null
-    const weightNum = weightLb ? Number(weightLb) : null
-
     const userUpdate: Record<string, unknown> = { full_name: fullName || null }
     if (gender) userUpdate.gender = gender
-    if (dob) userUpdate.dob = dob
-    if (heightNum && !Number.isNaN(heightNum)) userUpdate.height_in = heightNum
+    if (ageBucket) userUpdate.age_bucket = ageBucket
+    if (heightBucket) userUpdate.height_bucket = heightBucket
+    if (weightBucket) userUpdate.weight_bucket = weightBucket
 
     const { error: uErr } = await supabase.from('users').update(userUpdate).eq('id', user.id)
+    setProfileSaving(false)
     if (uErr) {
       setProfileErr(uErr.message)
-      setProfileSaving(false)
       return
     }
-
-    // Append weight to body_metrics (history-preserving)
-    if (weightNum && !Number.isNaN(weightNum)) {
-      const kg = Number((weightNum / 2.20462).toFixed(2))
-      const today = new Date().toISOString().slice(0, 10)
-      await supabase.from('body_metrics').upsert(
-        { user_id: user.id, measured_at: today, weight_kg: kg },
-        { onConflict: 'user_id,measured_at' },
-      )
-    }
-
-    setProfileSaving(false)
     setProfileSaved(true)
     setTimeout(() => setProfileSaved(false), 2000)
   }
@@ -359,16 +357,25 @@ export function Settings() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Date of birth</label>
-                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="input" />
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Age group</label>
+                <select value={ageBucket} onChange={e => setAgeBucket(e.target.value)} className="input">
+                  <option value="">Select...</option>
+                  {AGE_BUCKETS.map(b => (<option key={b.v} value={b.v}>{b.l}</option>))}
+                </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Height (in)</label>
-                <input type="number" step="0.1" min="0" value={heightIn} onChange={e => setHeightIn(e.target.value)} className="input" placeholder="e.g. 70" />
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Height</label>
+                <select value={heightBucket} onChange={e => setHeightBucket(e.target.value)} className="input">
+                  <option value="">Select...</option>
+                  {HEIGHT_BUCKETS.map(b => (<option key={b.v} value={b.v}>{b.l}</option>))}
+                </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Weight (lb)</label>
-                <input type="number" step="0.1" min="0" value={weightLb} onChange={e => setWeightLb(e.target.value)} className="input" placeholder="e.g. 185" />
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Weight</label>
+                <select value={weightBucket} onChange={e => setWeightBucket(e.target.value)} className="input">
+                  <option value="">Select...</option>
+                  {WEIGHT_BUCKETS.map(b => (<option key={b.v} value={b.v}>{b.l}</option>))}
+                </select>
               </div>
             </div>
 
