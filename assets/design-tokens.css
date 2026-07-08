@@ -115,6 +115,9 @@ img, svg { max-width: 100%; display: block; }
 }
 .rx-nav-links a:hover { color: var(--rx-text); }
 .rx-nav-links a.active { color: var(--rx-text); }
+/* Log in link: cobalt accent so returning users can spot it, consistent with .rx-cta.text */
+.rx-nav-links a.nav-login { color: var(--rx-cobalt-2); font-weight: 600; }
+.rx-nav-links a.nav-login:hover { color: var(--rx-text); }
 
 /* ===== CTA buttons ===== */
 .rx-cta {
