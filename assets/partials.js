@@ -12,6 +12,11 @@ const RX_NAV = `
       <a href="/science" data-nav="science">Science</a>
       <a href="/investors" data-nav="investors">Investors</a>
       <a href="/partners" data-nav="partners">Partners</a>
+      <!-- Log in: lets returning users skip the assessment funnel and go straight to their Base account login.
+           Mirrors the "Sign In" header link on the sibling sites romrxbjj.com and romrxbodybuilding.com,
+           which each point to their own /login route. The ROMRx Base app is served at /app/ (see netlify.toml
+           redirects and app/vite.config.ts base + App.tsx basename="/app"), so its login route is /app/login. -->
+      <a href="/app/login" class="nav-login mobile-hide-ok">Log in</a>
     </div>
     <a href="/assessment" class="rx-cta primary mobile-hide-ok">Start Free Assessment →</a>
   </div>
