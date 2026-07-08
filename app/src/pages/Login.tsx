@@ -61,7 +61,9 @@ export function Login() {
 
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+      // Must include the /app basename so the link lands on a real SPA route.
+      // Origin-based so localhost and Netlify previews keep working.
+      options: { emailRedirectTo: `${window.location.origin}/app/auth/confirm` },
     })
     setLoading(false)
     if (err) {

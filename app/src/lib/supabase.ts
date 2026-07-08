@@ -12,6 +12,9 @@ export const supabase = createClient(url, anon, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    // PKCE is the recommended flow for SPAs and matches the token_hash verify
+    // links used by the signup and magic-link email templates.
+    flowType: 'pkce',
     storageKey: 'romrx.hq.auth',
   },
 })

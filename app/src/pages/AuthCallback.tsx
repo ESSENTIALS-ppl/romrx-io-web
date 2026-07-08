@@ -1,33 +1,38 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { completeAuthFromUrl } from '../lib/authRedirect'
 
-// Handles the magic link redirect from Supabase.
-// Supabase appends access_token/refresh_token to the URL as a hash fragment.
-// This component waits for the session to be established, then redirects to the dashboard.
+// Handles the Supabase magic-link redirect at /app/auth/callback. Kept fully
+// functional alongside AuthConfirm so links pointing at either path succeed,
+// including any old links already sent to users.
 export function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Give Supabase time to parse the URL hash and establish the session
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        navigate('/dashboard/my-body', { replace: true })
+    let active = true
+
+    completeAuthFromUrl().then(async ({ ok, next, lead }) => {
+      if (!active) return
+      if (!ok) {
+        navigate('/login?error=link_expired', { replace: true })
+        return
       }
-      // If no session after token processing, go to login
-      if (event === 'INITIAL_SESSION' && !session) {
-        navigate('/login', { replace: true })
+
+      if (lead) {
+        const { data } = await supabase.auth.getUser()
+        if (data.user) {
+          await supabase
+            .from('leads')
+            .update({ converted_user_id: data.user.id, converted_at: new Date().toISOString() })
+            .eq('unlock_token', lead)
+        }
       }
+
+      navigate(next ?? '/dashboard/my-body', { replace: true })
     })
 
-    // Also try getting session immediately (handles cases where already processed)
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        navigate('/dashboard/my-body', { replace: true })
-      }
-    })
-
-    return () => listener.subscription.unsubscribe()
+    return () => { active = false }
   }, [navigate])
 
   return (

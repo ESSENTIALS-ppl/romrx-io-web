@@ -1,38 +1,38 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { completeAuthFromUrl } from '../lib/authRedirect'
 
-// Handles Supabase PKCE magic link: /auth/confirm?token_hash=...&type=email
+// Handles the Supabase magic-link / signup confirmation redirect at
+// /app/auth/confirm. Accepts token_hash (PKCE verify), code (PKCE), and hash
+// tokens (implicit) so any link format establishes a session.
 export function AuthConfirm() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const token_hash = params.get('token_hash')
-    const type = params.get('type') as 'email' | 'recovery' | 'invite' | null
+    let active = true
 
-    const next = params.get('next')
-    const leadToken = params.get('lead')
+    completeAuthFromUrl().then(async ({ ok, next, lead }) => {
+      if (!active) return
+      if (!ok) {
+        navigate('/login?error=link_expired', { replace: true })
+        return
+      }
 
-    if (token_hash && type) {
-      supabase.auth.verifyOtp({ token_hash, type })
-        .then(async ({ data, error }) => {
-          if (error || !data.session) {
-            console.error('Auth confirm error:', error?.message)
-            navigate('/login?error=link_expired', { replace: true })
-            return
-          }
+      if (lead) {
+        const { data } = await supabase.auth.getUser()
+        if (data.user) {
+          await supabase
+            .from('leads')
+            .update({ converted_user_id: data.user.id, converted_at: new Date().toISOString() })
+            .eq('unlock_token', lead)
+        }
+      }
 
-          const authedUser = data.session.user
-          if (leadToken && authedUser) {
-            await supabase.from('leads').update({ converted_user_id: authedUser.id, converted_at: new Date().toISOString() }).eq('unlock_token', leadToken)
-          }
+      navigate(next ?? '/dashboard/my-body', { replace: true })
+    })
 
-          navigate(next ?? '/dashboard/my-body', { replace: true })
-        })
-    } else {
-      navigate('/login', { replace: true })
-    }
+    return () => { active = false }
   }, [navigate])
 
   return (
