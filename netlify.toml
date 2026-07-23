@@ -102,3 +102,19 @@
   from = "/legal"
   to = "/legal.html"
   status = 200
+
+[[redirects]]
+  from = "/bjj"
+  to = "/bjj.html"
+  status = 200
+
+[[redirects]]
+  from = "/bodybuilding"
+  to = "/bodybuilding.html"
+  status = 200
+
+# /bb is a short alias that redirects to the +BodyBuilding landing page.
+[[redirects]]
+  from = "/bb"
+  to = "/bodybuilding"
+  status = 301
