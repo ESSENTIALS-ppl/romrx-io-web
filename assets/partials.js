@@ -25,7 +25,6 @@ const RX_NAV = `
 
 const RX_UNIVERSE = ({ here }) => {
   const rows = [
-    { key: 'romrx',      name: 'ROMRx',              proto: 'Free assessment + ROM Readiness Protocol™',   status: 'here',   href: '/' },
     { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   href: 'https://romrxbjj.com' },
     { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   href: 'https://romrxbodybuilding.com' },
     { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: 'Lift Readiness Protocol™',                    status: 'coming', href: null },
