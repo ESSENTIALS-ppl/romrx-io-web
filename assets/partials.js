@@ -18,14 +18,13 @@ const RX_NAV = `
            redirects and app/vite.config.ts base + App.tsx basename="/app"), so its login route is /app/login. -->
       <a href="/app/login" class="nav-login mobile-hide-ok">Log in</a>
     </div>
-    <a href="/assessment" class="rx-cta primary mobile-hide-ok">Start Free Assessment →</a>
+    <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start Free Assessment →</a>
   </div>
 </nav>
 `;
 
 const RX_UNIVERSE = ({ here }) => {
   const rows = [
-    { key: 'romrx',      name: 'ROMRx',              proto: 'Free assessment + ROM Readiness Protocol™',   status: 'here',   href: '/' },
     { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   href: 'https://romrxbjj.com' },
     { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   href: 'https://romrxbodybuilding.com' },
     { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: 'Lift Readiness Protocol™',                    status: 'coming', href: null },
