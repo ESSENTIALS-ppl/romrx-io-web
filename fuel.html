@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fuel &middot; ROMRx</title>
+  <meta name="description" content="Zone-based performance fuel for ROMRx Base: a nutrition calculator driven by your time in heart-rate zones, and a hydration calculator driven by your zone sweat losses.">
+  <meta property="og:title" content="ROMRx &middot; Fuel">
+  <link rel="canonical" href="https://romrx.io/fuel">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230A1020' width='100' height='100' rx='18'/><text x='50' y='68' font-size='52' font-weight='800' font-family='sans-serif' fill='%233B5BFF' text-anchor='middle'>R</text></svg>">
+  <link rel="stylesheet" href="/assets/design-tokens.css">
+  <script defer src="/assets/partials.js"></script>
+  <style>
+    /* ===== Fuel tab styles (extends Cobalt tokens) ===== */
+    .fuel-switch { display:flex; gap:8px; justify-content:center; margin:0 auto 40px; max-width:440px; }
+    .fuel-switch button {
+      flex:1; padding:12px 18px; border-radius:var(--rx-radius-sm);
+      background:var(--rx-bg-3); border:1px solid var(--rx-border);
+      color:var(--rx-text-muted); font-family:var(--rx-font-mono); font-weight:500;
+      font-size:0.85rem; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
+      transition:border-color var(--rx-t-fast), color var(--rx-t-fast), background var(--rx-t-fast);
+    }
+    .fuel-switch button.on { background:rgba(59,91,255,0.1); border-color:var(--rx-cobalt); color:var(--rx-text); }
+    .fuel-view { display:none; }
+    .fuel-view.on { display:block; animation:fuelFade .35s ease; }
+    @keyframes fuelFade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+    .fuel-step-meta { font-family:var(--rx-font-mono); color:var(--rx-cobalt); font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px; }
+    .fuel-card { margin-bottom:20px; }
+    .fuel-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .fuel-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+    @media (max-width:640px){ .fuel-row,.fuel-row-3{grid-template-columns:1fr;} }
+
+    .fuel-seg { display:flex; border:1px solid var(--rx-border); border-radius:var(--rx-radius-sm); overflow:hidden; }
+    .fuel-seg button { flex:1; border:none; background:var(--rx-bg-3); padding:12px; font-family:var(--rx-font-body); font-weight:600; font-size:0.9rem; color:var(--rx-text-muted); cursor:pointer; }
+    .fuel-seg button.on { background:var(--rx-grad-cta); color:#fff; }
+
+    .fuel-zline { display:grid; grid-template-columns:1.3fr .9fr .9fr; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--rx-border); }
+    .fuel-zline:last-child { border-bottom:none; }
+    .fuel-zname { font-weight:600; font-size:0.92rem; color:var(--rx-text); }
+    .fuel-zname small { display:block; font-weight:400; color:var(--rx-text-dim); font-size:0.72rem; margin-top:1px; }
+    .fuel-zdot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+    @media (max-width:640px){ .fuel-zline{grid-template-columns:1fr; gap:6px;} }
+
+    .fuel-total { display:flex; justify-content:space-between; align-items:center; margin-top:18px; padding:14px 18px; border-radius:var(--rx-radius-sm); font-family:var(--rx-font-mono); font-weight:500; letter-spacing:0.03em; }
+    .fuel-total.ok { background:rgba(34,197,94,0.12); color:var(--rx-green); border:1px solid rgba(34,197,94,0.3); }
+    .fuel-total.bad { background:rgba(239,68,68,0.1); color:var(--rx-red); border:1px solid rgba(239,68,68,0.3); }
+
+    .fuel-dayclass { margin-top:14px; padding:16px 18px; border-radius:var(--rx-radius-sm); border-left:3px solid var(--rx-cobalt); background:rgba(59,91,255,0.06); }
+    .fuel-dayclass b { font-family:var(--rx-font-display); font-weight:700; display:block; margin-bottom:4px; color:var(--rx-text); }
+    .fuel-dayclass p { font-size:0.86rem; color:var(--rx-text-muted); margin:0; }
+
+    .fuel-calc-btn { width:100%; font-family:var(--rx-font-body); font-weight:600; font-size:1rem; padding:15px; border:none; border-radius:var(--rx-radius-sm); background:var(--rx-grad-cta); color:#fff; cursor:pointer; box-shadow:0 4px 20px rgba(59,91,255,0.35); transition:transform var(--rx-t-fast), box-shadow var(--rx-t-fast); }
+    .fuel-calc-btn:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 6px 28px rgba(59,91,255,0.5); }
+    .fuel-calc-btn:disabled { background:var(--rx-bg-3); color:var(--rx-text-dim); box-shadow:none; cursor:not-allowed; }
+
+    .fuel-results { display:none; }
+    .fuel-results.on { display:block; animation:fuelFade .4s ease; }
+    .fuel-narr { font-size:1.05rem; line-height:1.7; margin-bottom:22px; color:var(--rx-text); }
+    .fuel-narr b { color:var(--rx-cobalt-2); }
+
+    .fuel-tgt { display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center; background:var(--rx-bg-3); border-radius:var(--rx-radius-sm); padding:16px; margin-bottom:20px; text-align:center; }
+    .fuel-tgt .v { font-family:var(--rx-font-display); font-weight:800; font-size:1.35rem; color:var(--rx-text); }
+    .fuel-tgt .l { font-family:var(--rx-font-mono); font-size:0.7rem; color:var(--rx-text-dim); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+    .fuel-tgt .arrow { color:var(--rx-cobalt); font-size:1.5rem; font-weight:800; }
+    @media (max-width:640px){ .fuel-tgt{grid-template-columns:1fr;} .fuel-tgt .arrow{transform:rotate(90deg);} }
+
+    .fuel-kcal { text-align:center; font-family:var(--rx-font-display); font-weight:800; font-size:1.3rem; padding:18px; background:var(--rx-grad-hero); color:#fff; border-radius:var(--rx-radius); margin:18px 0; box-shadow:0 0 40px rgba(59,91,255,0.25); }
+    .fuel-kcal small { display:block; font-family:var(--rx-font-body); font-weight:400; font-size:0.74rem; opacity:.85; margin-top:3px; }
+
+    .fuel-strip { display:flex; height:14px; border-radius:8px; overflow:hidden; margin:8px 0 18px; }
+    .fuel-strip i { display:block; height:100%; }
+
+    .fuel-macros { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:8px; }
+    @media (max-width:640px){ .fuel-macros{grid-template-columns:1fr;} }
+    .fuel-macro { border:1px solid var(--rx-border); border-radius:var(--rx-radius); padding:18px; text-align:center; background:var(--rx-bg-3); }
+    .fuel-macro .big { font-family:var(--rx-font-display); font-weight:900; font-size:2rem; line-height:1; }
+    .fuel-macro .lab { font-family:var(--rx-font-mono); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--rx-text-muted); margin-top:8px; }
+    .fuel-macro .kc { font-size:0.74rem; color:var(--rx-text-dim); margin-top:3px; }
+    .fuel-macro.carb .big { color:var(--rx-cobalt-2); }
+    .fuel-macro.pro .big { color:var(--rx-violet-2); }
+    .fuel-macro.fat .big { color:var(--rx-yellow); }
+
+    /* hydration accents (violet-leaning within cobalt system) */
+    .fuel-bigout { text-align:center; background:var(--rx-grad-hero); color:#fff; border-radius:var(--rx-radius); padding:22px; margin-bottom:18px; box-shadow:0 0 40px rgba(59,91,255,0.25); }
+    .fuel-bigout .n { font-family:var(--rx-font-display); font-weight:900; font-size:2.6rem; line-height:1; }
+    .fuel-bigout .l { font-size:0.82rem; opacity:.9; margin-top:5px; }
+    .fuel-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px; }
+    @media (max-width:640px){ .fuel-grid2{grid-template-columns:1fr;} }
+    .fuel-stat { border:1px solid var(--rx-border); border-radius:var(--rx-radius); padding:16px; text-align:center; background:var(--rx-bg-3); }
+    .fuel-stat .big { font-family:var(--rx-font-display); font-weight:800; font-size:1.5rem; color:var(--rx-text); }
+    .fuel-stat .lab { font-family:var(--rx-font-mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--rx-text-muted); margin-top:6px; }
+    .fuel-stat .sub { font-size:0.72rem; color:var(--rx-text-dim); margin-top:2px; }
+    .fuel-elec { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin:14px 0; }
+    @media (max-width:640px){ .fuel-elec{grid-template-columns:1fr;} }
+    .fuel-elec .e { background:var(--rx-bg-3); border:1px solid var(--rx-border); border-radius:var(--rx-radius-sm); padding:14px; text-align:center; }
+    .fuel-elec .e .v { font-family:var(--rx-font-display); font-weight:800; font-size:1.15rem; color:var(--rx-cobalt-2); }
+    .fuel-elec .e .k { font-family:var(--rx-font-mono); font-size:0.7rem; color:var(--rx-text-dim); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
+
+    .fuel-flag { border-radius:var(--rx-radius-sm); padding:13px 16px; margin-top:12px; font-size:0.88rem; line-height:1.5; border:1px solid; }
+    .fuel-flag.ok { background:rgba(34,197,94,0.08); color:#7fe0a6; border-color:rgba(34,197,94,0.3); }
+    .fuel-flag.warn { background:rgba(250,204,21,0.08); color:#f0d068; border-color:rgba(250,204,21,0.3); }
+    .fuel-flag.bad { background:rgba(239,68,68,0.08); color:#f09090; border-color:rgba(239,68,68,0.3); }
+
+    .fuel-sweatstrip { display:flex; height:12px; border-radius:8px; overflow:hidden; margin:18px 0 4px; }
+    .fuel-sweatstrip i { flex:1; }
+    .fuel-striplab { display:flex; justify-content:space-between; font-family:var(--rx-font-mono); font-size:0.68rem; color:var(--rx-text-dim); }
+
+    .fuel-measure { display:flex; align-items:flex-start; gap:12px; background:rgba(59,91,255,0.06); border:1px solid rgba(59,91,255,0.25); border-radius:var(--rx-radius-sm); padding:14px 16px; margin-bottom:16px; cursor:pointer; }
+    .fuel-measure input { width:auto; margin-top:3px; }
+    .fuel-measure b { display:block; color:var(--rx-text); font-size:0.92rem; }
+    .fuel-measure span { font-size:0.8rem; color:var(--rx-text-muted); }
+    .fuel-measure-fields { display:none; }
+    .fuel-measure-fields.on { display:block; animation:fuelFade .3s ease; }
+
+    .fuel-note { font-size:0.8rem; color:var(--rx-text-muted); background:var(--rx-bg-3); border-radius:var(--rx-radius-sm); padding:13px 15px; margin-top:12px; line-height:1.55; }
+    details.fuel-details { margin-top:18px; border-top:1px solid var(--rx-border); padding-top:16px; }
+    details.fuel-details summary { font-family:var(--rx-font-mono); font-size:0.82rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--rx-cobalt-2); cursor:pointer; }
+    details.fuel-details .db { font-size:0.85rem; color:var(--rx-text-muted); margin-top:12px; line-height:1.6; }
+    details.fuel-details code { background:rgba(59,91,255,0.12); color:var(--rx-cobalt-2); padding:1px 6px; border-radius:4px; font-family:var(--rx-font-mono); font-size:0.8rem; }
+    details.fuel-details table { width:100%; border-collapse:collapse; margin-top:10px; font-size:0.8rem; }
+    details.fuel-details th, details.fuel-details td { border:1px solid var(--rx-border); padding:6px 9px; text-align:left; }
+    details.fuel-details th { font-family:var(--rx-font-mono); font-weight:500; color:var(--rx-text-muted); font-size:0.72rem; text-transform:uppercase; }
+
+    .fuel-select { width:100%; }
+    .fuel-form-lbl { font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--rx-text-muted); font-weight:600; display:block; margin-bottom:6px; }
+    .fuel-hint { text-transform:none; letter-spacing:0; font-weight:400; color:var(--rx-text-dim); }
+    .fuel-field { margin-bottom:16px; }
+    .fuel-field:last-child { margin-bottom:0; }
+  </style>
+</head>
+<body data-rx-here="romrx">
+  <div class="rx-ambient"></div>
+  <div data-rx-slot="nav"></div>
+
+  <!-- HERO -->
+  <section class="rx-section" style="padding-top:72px; padding-bottom:32px;">
+    <div class="rx-container narrow rx-center">
+      <p class="rx-eyebrow rx-mt-md">Base &middot; Fuel</p>
+      <h1 class="rx-h1">Fuel the body<br><span class="rx-grad">you're building.</span></h1>
+      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
+        Most calculators fuel the body you're carrying. ROMRx fuels the body you're building and using.
+        Your time in heart-rate zones sets your energy, macros, and sweat losses, so your plan matches
+        the day you actually had, not a generic maintenance number.
+      </p>
+      <div class="rx-chips">
+        <span class="rx-chip">Zone-driven</span>
+        <span class="rx-chip">Peer-reviewed</span>
+        <span class="rx-chip">Lean-mass first</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="rx-section" style="padding-top:16px;">
+    <div class="rx-container narrow">
+
+      <!-- SUB-VIEW SWITCH -->
+      <div class="fuel-switch">
+        <button id="swNutrition" class="on" data-view="nutrition">Nutrition</button>
+        <button id="swHydration" data-view="hydration">Hydration</button>
+      </div>
+
+      <!-- ============ NUTRITION VIEW ============ -->
+      <div class="fuel-view on" id="viewNutrition">
+
+        <div class="rx-card fuel-card">
+          <div class="fuel-step-meta">Step 1 &middot; Your body</div>
+          <div class="fuel-field">
+            <label class="fuel-form-lbl">Biological sex <span class="fuel-hint">sets target composition default</span></label>
+            <div class="fuel-seg" id="nSexSeg">
+              <button data-sex="male" class="on">Male</button>
+              <button data-sex="female">Female</button>
+            </div>
+          </div>
+          <div class="fuel-row">
+            <div class="fuel-field">
+              <label class="fuel-form-lbl">Current weight <span class="fuel-hint">(lb)</span></label>
+              <input id="nWeight" type="number" inputmode="decimal" value="255" min="60" max="600" />
+            </div>
+            <div class="fuel-field">
+              <label class="fuel-form-lbl">Body fat <span class="fuel-hint">(%)</span></label>
+              <input id="nBf" type="number" inputmode="decimal" value="25" min="3" max="60" />
+            </div>
+          </div>
+          <div class="fuel-note">We preserve your current lean mass and project it to a healthy target operating composition (default 12% men / 22% women) to set your resting energy, never your total current weight.</div>
+        </div>
+
+        <div class="rx-card fuel-card">
+          <div class="fuel-step-meta">Step 2 &middot; Your day in zones</div>
+          <label class="fuel-form-lbl" style="margin-bottom:10px;">Log a full 24 hours across your heart-rate zones <span class="fuel-hint">in hours &amp; minutes</span></label>
+          <div id="nZones"></div>
+          <div class="fuel-total" id="nTotalBar"><span>Day total</span><span id="nTotalTxt">0h 0m</span></div>
+          <div class="fuel-dayclass" id="nDayClass" style="display:none;"><b id="nDcName"></b><p id="nDcDesc"></p></div>
+        </div>
+
+        <button class="fuel-calc-btn" id="nCalcBtn" disabled>Log must equal 24:00 to calculate</button>
+
+        <div class="rx-card fuel-results" id="nResults" style="margin-top:20px;">
+          <div class="fuel-step-meta">Your fuel plan</div>
+          <p class="fuel-narr" id="nNarr"></p>
+          <div class="fuel-tgt">
+            <div><div class="v" id="nTgtCur"></div><div class="l">Current weight</div></div>
+            <div class="arrow">&rarr;</div>
+            <div><div class="v" id="nTgtOp"></div><div class="l">Target operating body</div></div>
+          </div>
+          <div class="fuel-kcal">&asymp; <span id="nKcal"></span> kcal / day<small>Estimated daily energy need, built entirely from your time in zone</small></div>
+          <div class="fuel-strip" id="nStrip"></div>
+          <div class="fuel-macros">
+            <div class="fuel-macro carb"><div class="big" id="nCarbG"></div><div class="lab">Carbs</div><div class="kc" id="nCarbKc"></div></div>
+            <div class="fuel-macro pro"><div class="big" id="nProG"></div><div class="lab">Protein</div><div class="kc" id="nProKc"></div></div>
+            <div class="fuel-macro fat"><div class="big" id="nFatG"></div><div class="lab">Fat</div><div class="kc" id="nFatKc"></div></div>
+          </div>
+          <div class="fuel-note" id="nWarn" style="display:none;"></div>
+          <p class="fuel-note">Your time-in-zone set the energy and carb/fat mix; lean mass set protein. Macro targets are approximate starting values, not medical prescriptions. Small day-to-day variation is normal.</p>
+          <details class="fuel-details">
+            <summary>Formulas &amp; evidence</summary>
+            <div class="db">
+              <p><b>Lean mass</b> = weight &times; (1 &minus; body-fat%). <b>Target operating weight</b> = lean mass &divide; (1 &minus; target BF%), target BF <code>12%</code> men / <code>22%</code> women.</p>
+              <p style="margin-top:8px;"><b>Zone 0 baseline</b> = <code>75 &times; (target wt &divide; 198)</code> kcal/hr. <b>Daily energy</b> = &Sigma;(zone hours &times; zone kcal/hr). <b>Protein</b> = <code>lean mass(kg) &times; 1.7 g</code> (fixed). Carbs &amp; fat split the remainder by the zone fuel blend.</p>
+              <table>
+                <tr><th>Zone</th><th>kcal/hr</th><th>Carb / Fat</th></tr>
+                <tr><td>Z0</td><td>75&times;(TOW/198)</td><td>5% / 95%</td></tr>
+                <tr><td>Z1</td><td>&times;1.67</td><td>20% / 80%</td></tr>
+                <tr><td>Z2</td><td>&times;3.33</td><td>40% / 60%</td></tr>
+                <tr><td>Z3</td><td>&times;6.0</td><td>65% / 35%</td></tr>
+                <tr><td>Z4</td><td>&times;8.67</td><td>85% / 15%</td></tr>
+                <tr><td>Z5</td><td>&times;11.33</td><td>100% / 0%</td></tr>
+              </table>
+              <p style="margin-top:8px;">Substrate direction follows the crossover concept; protein floor per ISSN/ACSM muscle-preservation research; target composition per U-shaped body-fat mortality evidence.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- ============ HYDRATION VIEW ============ -->
+      <div class="fuel-view" id="viewHydration">
+
+        <div class="rx-card fuel-card">
+          <div class="fuel-step-meta">Step 1 &middot; Your body</div>
+          <div class="fuel-field">
+            <label class="fuel-form-lbl">Biological sex</label>
+            <div class="fuel-seg" id="hSexSeg"><button data-sex="male" class="on">Male</button><button data-sex="female">Female</button></div>
+          </div>
+          <div class="fuel-row-3">
+            <div class="fuel-field"><label class="fuel-form-lbl">Weight <span class="fuel-hint">(lb)</span></label><input id="hWeight" type="number" value="198" min="60" max="600"/></div>
+            <div class="fuel-field"><label class="fuel-form-lbl">Height ft</label><input id="hFt" type="number" value="5" min="3" max="8"/></div>
+            <div class="fuel-field"><label class="fuel-form-lbl">Height in</label><input id="hIn" type="number" value="10" min="0" max="11"/></div>
+          </div>
+          <div class="fuel-field"><label class="fuel-form-lbl">Body fat <span class="fuel-hint">(%) for heat-vulnerability flag</span></label><input id="hBf" type="number" value="18" min="3" max="60"/></div>
+          <div class="fuel-field">
+            <label class="fuel-form-lbl">Sweat saltiness <span class="fuel-hint">sets sodium concentration</span></label>
+            <select id="hSalt" class="fuel-select">
+              <option value="20">Light sweater (~20 mmol/L)</option>
+              <option value="35" selected>Average sweater (~35 mmol/L)</option>
+              <option value="50">Salty sweater (~50 mmol/L, white crust on kit)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rx-card fuel-card">
+          <div class="fuel-step-meta">Step 2 &middot; Your day in zones</div>
+          <label class="fuel-measure" id="hMeasToggle">
+            <input type="checkbox" id="hMeasChk"/>
+            <div><b>I measured my sweat rate</b><span>Use pre/post weigh-in for your real number instead of a zone estimate (gold standard)</span></div>
+          </label>
+          <div class="fuel-measure-fields" id="hMeasFields">
+            <div class="fuel-row-3">
+              <div class="fuel-field"><label class="fuel-form-lbl">Pre-weight <span class="fuel-hint">(lb)</span></label><input id="hPre" type="number" value="198"/></div>
+              <div class="fuel-field"><label class="fuel-form-lbl">Post-weight <span class="fuel-hint">(lb)</span></label><input id="hPost" type="number" value="196"/></div>
+              <div class="fuel-field"><label class="fuel-form-lbl">Session <span class="fuel-hint">(min)</span></label><input id="hSesMin" type="number" value="60"/></div>
+            </div>
+            <div class="fuel-row">
+              <div class="fuel-field"><label class="fuel-form-lbl">Fluid drunk <span class="fuel-hint">(L)</span></label><input id="hDrunk" type="number" step="0.1" value="0.5"/></div>
+              <div class="fuel-field"><label class="fuel-form-lbl">Urine <span class="fuel-hint">(L, optional)</span></label><input id="hUrine" type="number" step="0.1" value="0"/></div>
+            </div>
+            <div class="fuel-note">Measured sweat rate = <code>[(pre &minus; post) lb &times; 0.4536 + fluid drunk &minus; urine] &divide; hours</code>.</div>
+          </div>
+          <div id="hZoneWrap">
+            <label class="fuel-form-lbl" style="margin-bottom:10px;">Log a full 24 hours across your heart-rate zones <span class="fuel-hint">in hours &amp; minutes</span></label>
+            <div id="hZones"></div>
+            <div class="fuel-sweatstrip" id="hSweatStrip"></div>
+            <div class="fuel-striplab"><span>Z0 dry</span><span>rising sweat load</span><span>Z5 drenched</span></div>
+            <div class="fuel-total" id="hTotalBar"><span>Day total</span><span id="hTotalTxt">0h 0m</span></div>
+          </div>
+        </div>
+
+        <button class="fuel-calc-btn" id="hCalcBtn" disabled>Log must equal 24:00 to calculate</button>
+
+        <div class="rx-card fuel-results" id="hResults" style="margin-top:20px;">
+          <div class="fuel-step-meta">Your sweat-loss replacement</div>
+          <p class="fuel-narr" id="hNarr"></p>
+          <div class="fuel-bigout"><div class="n" id="hFluid"></div><div class="l" id="hFluidLab">estimated fluid lost to sweat today, replace across the day</div></div>
+          <div class="fuel-grid2">
+            <div class="fuel-stat"><div class="big" id="hRate"></div><div class="lab">Peak sweat rate</div><div class="sub">during your hardest zone</div></div>
+            <div class="fuel-stat"><div class="big" id="hCap"></div><div class="lab">Intra-session cap</div><div class="sub">max absorbable / hr</div></div>
+          </div>
+          <label class="fuel-form-lbl" style="margin:16px 0 6px;">Electrolytes lost in sweat</label>
+          <div class="fuel-elec">
+            <div class="e"><div class="v" id="hNa"></div><div class="k">Sodium (Na)</div></div>
+            <div class="e"><div class="v" id="hK"></div><div class="k">Potassium (K)</div></div>
+            <div class="e"><div class="v" id="hMg"></div><div class="k">Magnesium (Mg)</div></div>
+          </div>
+          <div id="hFlags"></div>
+          <p class="fuel-note">These are sweat-replacement estimates to spread across the day via food and drinks, not one forced dose and not your full dietary intake. Rehydration target after a hard session is ~150% of fluid lost.</p>
+          <details class="fuel-details">
+            <summary>Formulas &amp; evidence</summary>
+            <div class="db">
+              <p><b>Zone sweat rates</b> (L/hr): Z1 &lt;0.3 &middot; Z2 0.75 &middot; Z3 1.25 &middot; Z4 2.0 &middot; Z5 2.5. Fluid lost = &Sigma;(zone hours &times; zone sweat rate). Measured mode overrides with real pre/post weight.</p>
+              <p style="margin-top:8px;"><b>Sodium</b> = fluid lost (L) &times; Na conc (mmol/L) &times; 23. <b>Intra-session cap</b> = 400&ndash;800 mL/hr (IMMDA). <b>Rehydration</b> = 150% of loss.</p>
+              <table>
+                <tr><th>Zone</th><th>Sweat L/hr</th><th>Electrolytes</th></tr>
+                <tr><td>Z1</td><td>&lt;0.3</td><td>Only if &gt;60 min</td></tr>
+                <tr><td>Z2</td><td>0.5&ndash;1.0</td><td>If &gt;60 min</td></tr>
+                <tr><td>Z3</td><td>1.0&ndash;1.5</td><td>All sessions &gt;30 min</td></tr>
+                <tr><td>Z4</td><td>1.5&ndash;2.5+</td><td>Mandatory, Na priority</td></tr>
+                <tr><td>Z5</td><td>Cumulative high</td><td>Na, K, Mg post</td></tr>
+              </table>
+              <p style="margin-top:8px;">Height &rarr; Body Surface Area (Du Bois) &rarr; surface-area-to-mass ratio heat flag. Body fat &ge;25% &rarr; ~3.5&times; heat-illness flag. Sources: ACSM fluid-replacement position stand, IMMDA, GSSI sweat-sodium normative data.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div data-rx-slot="universe"></div>
+  <div data-rx-slot="legal"></div>
+
+  <script>
+  /* ============================================================
+     ROMRx Base - Fuel tab logic (Nutrition + Hydration)
+     ============================================================ */
+  const LB2KG = 0.45359237;
+
+  /* ----- sub-view switch ----- */
+  document.querySelectorAll('.fuel-switch button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.fuel-switch button').forEach(b=>b.classList.toggle('on',b===btn));
+      const v=btn.dataset.view;
+      document.getElementById('viewNutrition').classList.toggle('on',v==='nutrition');
+      document.getElementById('viewHydration').classList.toggle('on',v==='hydration');
+    });
+  });
+
+  /* =================== NUTRITION =================== */
+  const N_ZONES=[
+    {k:0,name:'Zone 0',sub:'Rest / basal',mult:1.00,carb:0.05,color:'#6B7A9A',defH:16,defM:0},
+    {k:1,name:'Zone 1',sub:'Easy activity',mult:1.6667,carb:0.20,color:'#4E6EFF',defH:7,defM:0},
+    {k:2,name:'Zone 2',sub:'Moderate',mult:3.3333,carb:0.40,color:'#3B5BFF',defH:0,defM:45},
+    {k:3,name:'Zone 3',sub:'Hard',mult:6.0000,carb:0.65,color:'#7C4DFF',defH:0,defM:10},
+    {k:4,name:'Zone 4',sub:'Very hard',mult:8.6667,carb:0.85,color:'#FACC15',defH:0,defM:5},
+    {k:5,name:'Zone 5',sub:'Maximal',mult:11.3333,carb:1.00,color:'#EF4444',defH:0,defM:0},
+  ];
+  const TARGET_BF={male:0.12,female:0.22};
+  let nSex='male';
+  const nZonesEl=document.getElementById('nZones');
+  N_ZONES.forEach(z=>{
+    const line=document.createElement('div');line.className='fuel-zline';
+    const hOpts=Array.from({length:25},(_,i)=>`<option value="${i}" ${i===z.defH?'selected':''}>${i} hours</option>`).join('');
+    const mOpts=[0,5,10,15,20,25,30,35,40,45,50,55].map(m=>`<option value="${m}" ${m===z.defM?'selected':''}>${m} minutes</option>`).join('');
+    line.innerHTML=`<div class="fuel-zname"><span class="fuel-zdot" style="background:${z.color}"></span>${z.name}<small>${z.sub}</small></div>
+      <div><select data-nz="${z.k}" data-u="h">${hOpts}</select></div>
+      <div><select data-nz="${z.k}" data-u="m">${mOpts}</select></div>`;
+    nZonesEl.appendChild(line);
+  });
+  document.getElementById('nSexSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;nSex=b.dataset.sex;document.querySelectorAll('#nSexSeg button').forEach(x=>x.classList.toggle('on',x===b));});
+  nZonesEl.addEventListener('change',nUpdateTotal);
+  function nGetMinutes(){let total=0;const per={};N_ZONES.forEach(z=>{const h=+document.querySelector(`select[data-nz="${z.k}"][data-u="h"]`).value;const m=+document.querySelector(`select[data-nz="${z.k}"][data-u="m"]`).value;per[z.k]=h*60+m;total+=per[z.k];});return{per,total};}
+  function nClassify(v){
+    if(v<=20) return {name:'Sedentary Day',desc:'Almost all time at rest. Fat is the dominant fuel and carbohydrate need is minimal, your body runs mostly on stored energy today.'};
+    if(v<=42) return {name:'Active Rest Day',desc:'Light movement across the day. Still fat-dominant, but a little more carbohydrate supports the extra low-level activity.'};
+    if(v<=89) return {name:'Moderate Activity Day',desc:'Meaningful moderate work. Carbohydrate demand climbs as glycogen becomes a bigger contributor to your fuel mix.'};
+    if(v<=149) return {name:'High Activity Day',desc:'Hard training volume. Carbohydrate is now a primary fuel and glycogen replenishment matters for recovery.'};
+    return {name:'Extreme Activity Day',desc:'Athlete-level load. Carbohydrate demand is very high to sustain repeated hard efforts and refill glycogen.'};
+  }
+  function nUpdateTotal(){
+    const {per,total}=nGetMinutes();const h=Math.floor(total/60),m=total%60;
+    const bar=document.getElementById('nTotalBar'),txt=document.getElementById('nTotalTxt'),btn=document.getElementById('nCalcBtn');
+    if(total===1440){txt.textContent='24h 0m ✓';bar.className='fuel-total ok';btn.disabled=false;btn.textContent='Calculate my fuel plan';}
+    else{txt.textContent=`${h}h ${m}m`;bar.className='fuel-total bad';btn.disabled=true;btn.textContent= total>1440?`Over by ${Math.floor((total-1440)/60)}h ${(total-1440)%60}m`:`Add ${Math.floor((1440-total)/60)}h ${(1440-total)%60}m more`;}
+    const vigEq=per[2]+(per[3]+per[4]+per[5])*2;const dc=nClassify(vigEq);const box=document.getElementById('nDayClass');
+    if(total>0){box.style.display='block';document.getElementById('nDcName').textContent=dc.name;document.getElementById('nDcDesc').textContent=dc.desc;}else box.style.display='none';
+  }
+  document.getElementById('nCalcBtn').addEventListener('click',()=>{
+    const weight=+document.getElementById('nWeight').value, bfPct=+document.getElementById('nBf').value/100;
+    if(!weight||weight<60||bfPct<=0){alert('Enter a valid weight and body fat %.');return;}
+    const {per}=nGetMinutes();
+    const leanLb=weight*(1-bfPct), leanKg=leanLb*LB2KG, tow=leanLb/(1-TARGET_BF[nSex]), z0=75*(tow/198);
+    let kcal=0,carbKcal=0;
+    N_ZONES.forEach(z=>{const hrs=per[z.k]/60;const e=hrs*z0*z.mult;kcal+=e;carbKcal+=e*z.carb;});
+    kcal=Math.round(kcal);
+    const proG=Math.round(leanKg*1.7), proKcal=proG*4;
+    let remain=kcal-proKcal, warn='';
+    if(remain<0){remain=0;warn='On a near-pure-rest day your protein target alone approaches your total energy estimate, so protein is preserved and carbs/fat fall low. Add any real Zone 2+ activity and the budget opens up.';}
+    const carbFrac=kcal>0?carbKcal/kcal:0.05;
+    const carbG=Math.round((remain*carbFrac)/4), fatG=Math.round((remain*(1-carbFrac))/9);
+    document.getElementById('nTgtCur').textContent=Math.round(weight)+' lb';
+    document.getElementById('nTgtOp').textContent=Math.round(tow)+' lb @ '+(TARGET_BF[nSex]*100)+'%';
+    document.getElementById('nKcal').textContent=kcal.toLocaleString();
+    document.getElementById('nCarbG').textContent='~'+carbG+'g';
+    document.getElementById('nProG').textContent='~'+proG+'g';
+    document.getElementById('nFatG').textContent='~'+fatG+'g';
+    document.getElementById('nCarbKc').textContent=(carbG*4)+' kcal';
+    document.getElementById('nProKc').textContent=proKcal+' kcal';
+    document.getElementById('nFatKc').textContent=(fatG*9)+' kcal';
+    const cPct=Math.round(carbFrac*100);
+    document.getElementById('nStrip').innerHTML=`<i style="width:${cPct}%;background:var(--rx-cobalt)"></i><i style="width:${100-cPct}%;background:var(--rx-yellow)"></i>`;
+    const excess=Math.max(0,Math.round(weight-tow)), vigEq=per[2]+(per[3]+per[4]+per[5])*2, dc=nClassify(vigEq);
+    document.getElementById('nNarr').innerHTML=`Today reads as a <b>${dc.name.replace(' Day','').toLowerCase()} day</b>. We protect your <b>${Math.round(leanLb)} lb</b> of lean mass and fuel a <b>${Math.round(tow)} lb</b> operating body`+(excess>3?`, treating about <b>${excess} lb</b> of excess fat as available stored energy rather than fuel to maintain`:'')+`. That sets an estimated <b>${kcal.toLocaleString()} kcal</b>, with carbohydrate making up <b>${cPct}%</b> of your non-protein energy based on how you spent your day.`;
+    const wb=document.getElementById('nWarn');if(warn){wb.style.display='block';wb.textContent=warn;}else wb.style.display='none';
+    document.getElementById('nResults').classList.add('on');
+    document.getElementById('nResults').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  nUpdateTotal();
+
+  /* =================== HYDRATION =================== */
+  const H_ZONES=[
+    {k:0,name:'Zone 0',sub:'Rest / basal',rate:0.00,color:'#1F2A48',defH:16,defM:0},
+    {k:1,name:'Zone 1',sub:'Easy activity',rate:0.20,color:'#2F3F68',defH:7,defM:0},
+    {k:2,name:'Zone 2',sub:'Moderate',rate:0.75,color:'#4E6EFF',defH:0,defM:45},
+    {k:3,name:'Zone 3',sub:'Hard',rate:1.25,color:'#3B5BFF',defH:0,defM:10},
+    {k:4,name:'Zone 4',sub:'Very hard',rate:2.00,color:'#7C4DFF',defH:0,defM:5},
+    {k:5,name:'Zone 5',sub:'Maximal',rate:2.50,color:'#9B6BFF',defH:0,defM:0},
+  ];
+  let hSex='male';
+  const hZonesEl=document.getElementById('hZones');
+  H_ZONES.forEach(z=>{
+    const line=document.createElement('div');line.className='fuel-zline';
+    const hOpts=Array.from({length:25},(_,i)=>`<option value="${i}" ${i===z.defH?'selected':''}>${i} hours</option>`).join('');
+    const mOpts=[0,5,10,15,20,25,30,35,40,45,50,55].map(m=>`<option value="${m}" ${m===z.defM?'selected':''}>${m} minutes</option>`).join('');
+    line.innerHTML=`<div class="fuel-zname"><span class="fuel-zdot" style="background:${z.color}"></span>${z.name}<small>${z.sub}</small></div>
+      <div><select data-hz="${z.k}" data-u="h">${hOpts}</select></div>
+      <div><select data-hz="${z.k}" data-u="m">${mOpts}</select></div>`;
+    hZonesEl.appendChild(line);
+  });
+  document.getElementById('hSweatStrip').innerHTML=H_ZONES.map(z=>`<i style="background:${z.color}"></i>`).join('');
+  document.getElementById('hSexSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;hSex=b.dataset.sex;document.querySelectorAll('#hSexSeg button').forEach(x=>x.classList.toggle('on',x===b));});
+  const hMeasChk=document.getElementById('hMeasChk');
+  document.getElementById('hMeasToggle').addEventListener('click',e=>{ if(e.target!==hMeasChk){/* label handles toggle */} setTimeout(hToggleMeasure,0); });
+  hMeasChk.addEventListener('change',hToggleMeasure);
+  function hToggleMeasure(){const on=hMeasChk.checked;document.getElementById('hMeasFields').classList.toggle('on',on);document.getElementById('hZoneWrap').style.display=on?'none':'block';hUpdateTotal();}
+  hZonesEl.addEventListener('change',hUpdateTotal);
+  function hGetMinutes(){let total=0;const per={};H_ZONES.forEach(z=>{const h=+document.querySelector(`select[data-hz="${z.k}"][data-u="h"]`).value;const m=+document.querySelector(`select[data-hz="${z.k}"][data-u="m"]`).value;per[z.k]=h*60+m;total+=per[z.k];});return{per,total};}
+  function hUpdateTotal(){
+    const btn=document.getElementById('hCalcBtn');
+    if(hMeasChk.checked){btn.disabled=false;btn.textContent='Calculate my hydration needs';return;}
+    const {total}=hGetMinutes();const h=Math.floor(total/60),m=total%60;
+    const bar=document.getElementById('hTotalBar'),txt=document.getElementById('hTotalTxt');
+    if(total===1440){txt.textContent='24h 0m ✓';bar.className='fuel-total ok';btn.disabled=false;btn.textContent='Calculate my hydration needs';}
+    else{txt.textContent=`${h}h ${m}m`;bar.className='fuel-total bad';btn.disabled=true;btn.textContent= total>1440?`Over by ${Math.floor((total-1440)/60)}h ${(total-1440)%60}m`:`Add ${Math.floor((1440-total)/60)}h ${(1440-total)%60}m more`;}
+  }
+  document.getElementById('hCalcBtn').addEventListener('click',()=>{
+    const weight=+document.getElementById('hWeight').value, bfPct=+document.getElementById('hBf').value, naConc=+document.getElementById('hSalt').value;
+    const ftv=+document.getElementById('hFt').value, inv=+document.getElementById('hIn').value;
+    const heightCm=((ftv*12)+inv)*2.54, weightKg=weight*LB2KG;
+    let fluidL, peakRate, narrIntro, sessionMode=false;
+    const {per}=hGetMinutes();
+    if(hMeasChk.checked){
+      sessionMode=true;
+      const pre=+document.getElementById('hPre').value, post=+document.getElementById('hPost').value, sesMin=+document.getElementById('hSesMin').value, drunk=+document.getElementById('hDrunk').value, urine=+document.getElementById('hUrine').value;
+      const hrs=sesMin/60||1, lostL=(pre-post)*LB2KG+drunk-urine;
+      peakRate=Math.max(0,lostL/hrs); fluidL=Math.max(0,lostL);
+      narrIntro=`From your weigh-in, you lost <b>${fluidL.toFixed(2)} L</b> of fluid over a ${sesMin}-minute session, a measured sweat rate of <b>${peakRate.toFixed(2)} L/hr</b>.`;
+    } else {
+      fluidL=0; peakRate=0;
+      H_ZONES.forEach(z=>{fluidL+=(per[z.k]/60)*z.rate; if(z.rate>peakRate&&per[z.k]>0)peakRate=z.rate;});
+      const hardMin=per[3]+per[4]+per[5];
+      narrIntro=`Based on how you spent your day, your body lost about <b>${fluidL.toFixed(1)} L</b> to sweat, driven mostly by ${hardMin>0?'your harder Zone 3&ndash;5 work':'light day-long activity'}.`;
+    }
+    const naMg=Math.round(fluidL*naConc*23);
+    const cap=peakRate>=1.5?800:(peakRate>=1.0?600:(peakRate>0?500:400));
+    const bsa=0.007184*Math.pow(heightCm,0.725)*Math.pow(weightKg,0.425), saMass=bsa/weightKg;
+    const buildFlag = saMass>=0.0128 ? {c:'ok',t:'Efficient cooling build. Your surface-area-to-mass ratio favors heat loss, so you shed heat relatively well.'} : (saMass<=0.0112 ? {c:'warn',t:'Heat-vulnerable build. A lower surface-area-to-mass ratio means you rely more on sweating to shed heat. Prioritize fluid and cooling in warm sessions.'} : {c:'ok',t:'Balanced surface-area-to-mass ratio for heat dissipation.'});
+    document.getElementById('hFluid').textContent=fluidL.toFixed(fluidL<1?2:1)+' L';
+    document.getElementById('hFluidLab').textContent=sessionMode?'measured fluid lost this session, rehydrate to ~150% of this':'estimated fluid lost to sweat today, replace across the day';
+    document.getElementById('hRate').textContent=peakRate.toFixed(2)+' L/hr';
+    document.getElementById('hCap').textContent=cap+' mL/hr';
+    document.getElementById('hNa').textContent=naMg.toLocaleString()+' mg';
+    document.getElementById('hK').textContent=Math.round(fluidL*5*39).toLocaleString()+' mg';
+    document.getElementById('hMg').textContent=Math.round(fluidL*0.8*24)+' mg';
+    const rehyd=(fluidL*1.5).toFixed(1);
+    document.getElementById('hNarr').innerHTML=narrIntro+` Aim to replace it steadily${sessionMode?`, about <b>${rehyd} L</b> in the hours after training`:''}, pairing fluid with sodium so you don't dilute your blood.`;
+    const flags=[buildFlag];
+    if(bfPct>=25) flags.push({c:'bad',t:`At ${bfPct}% body fat, fat acts as thermal insulation and lowers your total-body-water reserve. Research links this to ~3.5x higher heat-illness risk. Hydrate early and avoid peak heat for hard sessions.`});
+    if(peakRate>=1.5) flags.push({c:'warn',t:'Zone 4-5 work: sodium replacement is mandatory for sessions over 60 minutes. Plain water alone risks hyponatremia.'});
+    else if(fluidL>0) flags.push({c:'ok',t:'Moderate sweat load. Sip to thirst and add sodium on any session over 60 minutes.'});
+    flags.push({c:'warn',t:'Both dehydration and overdrinking are dangerous. Never exceed the intra-session absorption cap; use thirst as your ceiling.'});
+    document.getElementById('hFlags').innerHTML=flags.map(f=>`<div class="fuel-flag ${f.c}">${f.t}</div>`).join('');
+    document.getElementById('hResults').classList.add('on');
+    document.getElementById('hResults').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  hUpdateTotal();
+  </script>
+</body>
+</html>
