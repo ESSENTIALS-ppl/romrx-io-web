@@ -93,10 +93,14 @@
   to = "/ambassador.html"
   status = 200
 
+# The public cohort/waitlist assessment page is retired. Send every direct or
+# historical request straight to the Base signup funnel. force = true so this
+# fires even if a stale /assessment.html is ever restored to the publish dir.
 [[redirects]]
   from = "/assessment"
-  to = "/assessment.html"
-  status = 200
+  to = "/app/signup"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/legal"
