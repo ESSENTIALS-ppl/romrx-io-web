@@ -9,6 +9,7 @@ const RX_NAV = `
     <div class="rx-nav-links">
       <a href="/universe" data-nav="universe">Universe</a>
       <a href="/dashboard" data-nav="dashboard">Dashboard</a>
+      <a href="/fuel" data-nav="fuel">Fuel</a>
       <a href="/science" data-nav="science">Science</a>
       <a href="/investors" data-nav="investors">Investors</a>
       <a href="/partners" data-nav="partners">Partners</a>
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navSlot.outerHTML = RX_NAV;
     // Mark active nav link
     const path = window.location.pathname.replace(/\/$/, '') || '/';
-    const map = { '/universe': 'universe', '/dashboard': 'dashboard', '/platform': 'dashboard', '/science': 'science', '/investors': 'investors', '/partners': 'partners' };
+    const map = { '/universe': 'universe', '/dashboard': 'dashboard', '/fuel': 'fuel', '/platform': 'dashboard', '/science': 'science', '/investors': 'investors', '/partners': 'partners' };
     const activeKey = map[path];
     if (activeKey) {
       const el = document.querySelector(`[data-nav="${activeKey}"]`);
