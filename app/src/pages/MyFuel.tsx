@@ -23,6 +23,12 @@ import { Utensils, Droplets } from 'lucide-react'
 
 const LB2KG = 0.45359237
 
+// Coerce a raw input string to a number; blank/invalid -> 0 only at calc time.
+const num = (s: string): number => {
+  const n = parseFloat(s)
+  return Number.isFinite(n) ? n : 0
+}
+
 // ---- Zone definitions ------------------------------------------------------
 interface FuelZone { k: number; name: string; sub: string; mult: number; carb: number; color: string; defH: number; defM: number }
 const N_ZONES: FuelZone[] = [
@@ -109,12 +115,12 @@ function TotalBar({ total, calcLabel }: { total: number; calcLabel: string }) {
 // ============================ NUTRITION VIEW ================================
 function NutritionView() {
   const [sex, setSex] = useState<Sex>('male')
-  const [weight, setWeight] = useState(255)
-  const [bf, setBf] = useState(25)
+  const [weight, setWeight] = useState('255')
+  const [bf, setBf] = useState('25')
   const [times, setTimes] = useState<ZoneTime>(() => initTimes(N_ZONES))
   const [result, setResult] = useState<null | {
     kcal: number; carbG: number; proG: number; fatG: number; carbFrac: number
-    tow: number; leanLb: number; excess: number; dayName: string; warn: string
+    tow: number; leanLb: number; excess: number; weightN: number; dayName: string; warn: string
   }>(null)
 
   const total = totalMinutes(times)
@@ -136,9 +142,10 @@ function NutritionView() {
   }
 
   function calculate() {
-    const bfPct = bf / 100
-    if (!weight || weight < 60 || bfPct <= 0) return
-    const leanLb = weight * (1 - bfPct)
+    const weightN = num(weight)
+    const bfPct = num(bf) / 100
+    if (!weightN || weightN < 60 || bfPct <= 0) return
+    const leanLb = weightN * (1 - bfPct)
     const leanKg = leanLb * LB2KG
     const tow = leanLb / (1 - TARGET_BF[sex])
     const z0 = 75 * (tow / 198)
@@ -157,7 +164,7 @@ function NutritionView() {
     const carbFrac = kcal > 0 ? carbKcal / kcal : 0.05
     const carbG = Math.round((remain * carbFrac) / 4)
     const fatG = Math.round((remain * (1 - carbFrac)) / 9)
-    setResult({ kcal, carbG, proG, fatG, carbFrac, tow, leanLb, excess: Math.max(0, Math.round(weight - tow)), dayName, warn })
+    setResult({ kcal, carbG, proG, fatG, carbFrac, tow, leanLb, excess: Math.max(0, Math.round(weightN - tow)), weightN, dayName, warn })
   }
 
   const cPct = result ? Math.round(result.carbFrac * 100) : 0
@@ -173,11 +180,11 @@ function NutritionView() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Current weight (lb)</label>
-              <input type="number" className="input" value={weight} min={60} max={600} onChange={e => setWeight(+e.target.value)} />
+              <input type="number" inputMode="decimal" className="input" value={weight} min={60} max={600} onChange={e => setWeight(e.target.value)} />
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Body fat (%)</label>
-              <input type="number" className="input" value={bf} min={3} max={60} onChange={e => setBf(+e.target.value)} />
+              <input type="number" inputMode="decimal" className="input" value={bf} min={3} max={60} onChange={e => setBf(e.target.value)} />
             </div>
           </div>
           <p className="text-xs text-slate-500 bg-surface rounded-card p-3 leading-relaxed">
@@ -209,7 +216,7 @@ function NutritionView() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-2 items-center bg-surface rounded-card p-4 text-center mb-5">
-            <div><div className="font-display font-bold text-xl text-cobalt-ink">{Math.round(weight)} lb</div><div className="text-[0.7rem] uppercase tracking-wide text-slate-400">Current weight</div></div>
+            <div><div className="font-display font-bold text-xl text-cobalt-ink">{Math.round(result.weightN)} lb</div><div className="text-[0.7rem] uppercase tracking-wide text-slate-400">Current weight</div></div>
             <div className="text-cobalt text-2xl font-bold">→</div>
             <div><div className="font-display font-bold text-xl text-cobalt-ink">{Math.round(result.tow)} lb @ {TARGET_BF[sex] * 100}%</div><div className="text-[0.7rem] uppercase tracking-wide text-slate-400">Target operating body</div></div>
           </div>
@@ -249,17 +256,17 @@ function NutritionView() {
 // ============================ HYDRATION VIEW ===============================
 function HydrationView() {
   const [sex, setSex] = useState<Sex>('male')
-  const [weight, setWeight] = useState(198)
-  const [ft, setFt] = useState(5)
-  const [inch, setInch] = useState(10)
-  const [bf, setBf] = useState(18)
+  const [weight, setWeight] = useState('198')
+  const [ft, setFt] = useState('5')
+  const [inch, setInch] = useState('10')
+  const [bf, setBf] = useState('18')
   const [salt, setSalt] = useState(35)
   const [measured, setMeasured] = useState(false)
-  const [pre, setPre] = useState(198)
-  const [post, setPost] = useState(196)
-  const [sesMin, setSesMin] = useState(60)
-  const [drunk, setDrunk] = useState(0.5)
-  const [urine, setUrine] = useState(0)
+  const [pre, setPre] = useState('198')
+  const [post, setPost] = useState('196')
+  const [sesMin, setSesMin] = useState('60')
+  const [drunk, setDrunk] = useState('0.5')
+  const [urine, setUrine] = useState('0')
   const [times, setTimes] = useState<ZoneTime>(() => initTimes(H_ZONES))
   const [result, setResult] = useState<null | {
     fluidL: number; peakRate: number; cap: number; naMg: number; kMg: number; mgMg: number
@@ -275,17 +282,18 @@ function HydrationView() {
   }
 
   function calculate() {
-    const heightCm = (ft * 12 + inch) * 2.54
-    const weightKg = weight * LB2KG
+    const heightCm = (num(ft) * 12 + num(inch)) * 2.54
+    const weightKg = num(weight) * LB2KG
     let fluidL = 0, peakRate = 0, narr = '', sessionMode = false
 
     if (measured) {
       sessionMode = true
-      const hrs = sesMin / 60 || 1
-      const lostL = (pre - post) * LB2KG + drunk - urine
+      const sesMinN = num(sesMin)
+      const hrs = sesMinN / 60 || 1
+      const lostL = (num(pre) - num(post)) * LB2KG + num(drunk) - num(urine)
       peakRate = Math.max(0, lostL / hrs)
       fluidL = Math.max(0, lostL)
-      narr = `From your weigh-in, you lost ${fluidL.toFixed(2)} L of fluid over a ${sesMin}-minute session, a measured sweat rate of ${peakRate.toFixed(2)} L/hr.`
+      narr = `From your weigh-in, you lost ${fluidL.toFixed(2)} L of fluid over a ${sesMinN}-minute session, a measured sweat rate of ${peakRate.toFixed(2)} L/hr.`
     } else {
       H_ZONES.forEach(z => {
         const mins = times[z.k].h * 60 + times[z.k].m
@@ -296,6 +304,7 @@ function HydrationView() {
       narr = `Based on how you spent your day, your body lost about ${fluidL.toFixed(1)} L to sweat, driven mostly by ${hardMin > 0 ? 'your harder Zone 3-5 work' : 'light day-long activity'}.`
     }
 
+    const bfN = num(bf)
     const naMg = Math.round(fluidL * salt * 23)
     const cap = peakRate >= 1.5 ? 800 : peakRate >= 1.0 ? 600 : peakRate > 0 ? 500 : 400
     const bsa = 0.007184 * Math.pow(heightCm, 0.725) * Math.pow(weightKg, 0.425)
@@ -305,7 +314,7 @@ function HydrationView() {
     if (saMass >= 0.0128) flags.push({ c: 'ok', t: 'Efficient cooling build. Your surface-area-to-mass ratio favors heat loss, so you shed heat relatively well.' })
     else if (saMass <= 0.0112) flags.push({ c: 'warn', t: 'Heat-vulnerable build. A lower surface-area-to-mass ratio means you rely more on sweating to shed heat. Prioritize fluid and cooling in warm sessions.' })
     else flags.push({ c: 'ok', t: 'Balanced surface-area-to-mass ratio for heat dissipation.' })
-    if (bf >= 25) flags.push({ c: 'bad', t: `At ${bf}% body fat, fat acts as thermal insulation and lowers your total-body-water reserve. Research links this to roughly 3.5x higher heat-illness risk. Hydrate early and avoid peak heat for hard sessions.` })
+    if (bfN >= 25) flags.push({ c: 'bad', t: `At ${bfN}% body fat, fat acts as thermal insulation and lowers your total-body-water reserve. Research links this to roughly 3.5x higher heat-illness risk. Hydrate early and avoid peak heat for hard sessions.` })
     if (peakRate >= 1.5) flags.push({ c: 'warn', t: 'Zone 4-5 work: sodium replacement is mandatory for sessions over 60 minutes. Plain water alone risks hyponatremia.' })
     else if (fluidL > 0) flags.push({ c: 'ok', t: 'Moderate sweat load. Sip to thirst and add sodium on any session over 60 minutes.' })
     flags.push({ c: 'warn', t: 'Both dehydration and overdrinking are dangerous. Never exceed the intra-session absorption cap; use thirst as your ceiling.' })
@@ -331,12 +340,12 @@ function HydrationView() {
             <SexToggle value={sex} onChange={setSex} />
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Weight (lb)</label><input type="number" className="input" value={weight} onChange={e => setWeight(+e.target.value)} /></div>
-            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Height ft</label><input type="number" className="input" value={ft} onChange={e => setFt(+e.target.value)} /></div>
-            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Height in</label><input type="number" className="input" value={inch} onChange={e => setInch(+e.target.value)} /></div>
+            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Weight (lb)</label><input type="number" inputMode="decimal" className="input" value={weight} onChange={e => setWeight(e.target.value)} /></div>
+            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Height ft</label><input type="number" inputMode="numeric" className="input" value={ft} onChange={e => setFt(e.target.value)} /></div>
+            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Height in</label><input type="number" inputMode="decimal" className="input" value={inch} onChange={e => setInch(e.target.value)} /></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Body fat (%)</label><input type="number" className="input" value={bf} onChange={e => setBf(+e.target.value)} /></div>
+            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Body fat (%)</label><input type="number" inputMode="decimal" className="input" value={bf} onChange={e => setBf(e.target.value)} /></div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Sweat saltiness</label>
               <select className="input" value={salt} onChange={e => setSalt(+e.target.value)}>
@@ -358,13 +367,13 @@ function HydrationView() {
         {measured ? (
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-3">
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Pre (lb)</label><input type="number" className="input" value={pre} onChange={e => setPre(+e.target.value)} /></div>
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Post (lb)</label><input type="number" className="input" value={post} onChange={e => setPost(+e.target.value)} /></div>
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Session (min)</label><input type="number" className="input" value={sesMin} onChange={e => setSesMin(+e.target.value)} /></div>
+              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Pre (lb)</label><input type="number" inputMode="decimal" className="input" value={pre} onChange={e => setPre(e.target.value)} /></div>
+              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Post (lb)</label><input type="number" inputMode="decimal" className="input" value={post} onChange={e => setPost(e.target.value)} /></div>
+              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Session (min)</label><input type="number" inputMode="numeric" className="input" value={sesMin} onChange={e => setSesMin(e.target.value)} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Fluid drunk (L)</label><input type="number" step="0.1" className="input" value={drunk} onChange={e => setDrunk(+e.target.value)} /></div>
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Urine (L)</label><input type="number" step="0.1" className="input" value={urine} onChange={e => setUrine(+e.target.value)} /></div>
+              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Fluid drunk (L)</label><input type="number" inputMode="decimal" step="0.1" className="input" value={drunk} onChange={e => setDrunk(e.target.value)} /></div>
+              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Urine (L)</label><input type="number" inputMode="decimal" step="0.1" className="input" value={urine} onChange={e => setUrine(e.target.value)} /></div>
             </div>
           </div>
         ) : (
