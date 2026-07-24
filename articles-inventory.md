@@ -2,6 +2,8 @@
 
 Generated for the Base article library. Production URLs are live under https://romrx.io/articles/. Published and modified: 2026-07-24.
 
+Note on titles: the HTML title tag (below) is intentionally kept under 60 characters for search snippets and can be shorter than the on-page H1. The JSON-LD Article headline always equals the visible H1 (enforced by the build), so the shortening applies only to the title tag, not structured data.
+
 | # | Title | Slug | Production URL | Primary keyword | Cluster |
 | - | ----- | ---- | -------------- | --------------- | ------- |
 | 0 | ROMRx Base Article Library | (hub) | https://romrx.io/articles | range of motion articles | Hub |

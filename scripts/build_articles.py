@@ -13,7 +13,7 @@ import os
 import re
 import sys
 
-from content import ARTICLES_LIST, CLUSTERS, DATE, SITE
+from content import ARTICLES_LIST, CLUSTERS, DATE, SITE, XREF
 
 ARTICLES = {a["slug"]: a for a in ARTICLES_LIST}
 
@@ -243,6 +243,49 @@ def faq_html(faq):
     )
 
 
+_ANCHOR_RE = re.compile(r"<a\b[^>]*>.*?</a>", re.DOTALL)
+_TAG_RE = re.compile(r"<[^>]+>")
+_SEC_SEP = "\x00SEC\x00"
+
+
+def _protected_spans(html):
+    spans = [(m.start(), m.end()) for m in _ANCHOR_RE.finditer(html)]
+    spans += [(m.start(), m.end()) for m in _TAG_RE.finditer(html)]
+    return spans
+
+
+def _inject_one(html, phrase, slug):
+    """Link the first occurrence of phrase that is not inside an anchor or tag."""
+    spans = _protected_spans(html)
+    start = 0
+    while True:
+        i = html.find(phrase, start)
+        if i == -1:
+            return html, False
+        j = i + len(phrase)
+        if not any(i < e and j > s for s, e in spans):
+            link = '<a href="/articles/%s">%s</a>' % (slug, phrase)
+            return html[:i] + link + html[j:], True
+        start = i + 1
+
+
+def apply_xrefs(a):
+    """Return (sections_with_links, injected_slugs, missing_phrases)."""
+    sections = a["sections"]
+    joined = _SEC_SEP.join(html for _, html in sections)
+    injected = []
+    missing = []
+    for phrase, slug in XREF.get(a["slug"], []):
+        joined, ok = _inject_one(joined, phrase, slug)
+        if ok:
+            injected.append(slug)
+        else:
+            missing.append(phrase)
+    parts = joined.split(_SEC_SEP)
+    new_sections = [(h2, parts[idx]) for idx, (h2, _) in enumerate(sections)]
+    return new_sections, injected, missing
+
+
 def render_article(a):
     slug = a["slug"]
     canonical = "%s/articles/%s" % (SITE, slug)
@@ -271,7 +314,8 @@ def render_article(a):
     body.append("      </header>")
     body.append('      <div class="rx-answer"><p>%s</p></div>' % a["answer"])
     body.append('      <article class="rx-prose">')
-    for h2, html in a["sections"]:
+    sections, _, _ = apply_xrefs(a)
+    for h2, html in sections:
         body.append("        <h2>%s</h2>" % esc(h2))
         body.append("        " + html.strip().replace("\n", "\n        "))
     body.append("        <h2>Frequently asked questions</h2>")
@@ -344,6 +388,54 @@ def render_hub():
     body.append("      </div>")
     body.append("    </section>")
 
+    # Search + cluster filter toolbar (progressive enhancement; no-JS keeps all
+    # cards and clusters visible as plain links).
+    body.append('    <section class="rx-section rx-hub-tools" style="padding-top: 0; padding-bottom: 8px;">')
+    body.append('      <div class="rx-container">')
+    body.append(
+        '        <form class="rx-hub-searchbar" role="search" onsubmit="return false;">'
+    )
+    body.append(
+        '          <label for="rx-hub-q" class="rx-visually-hidden">Search articles</label>'
+    )
+    body.append(
+        '          <input id="rx-hub-q" type="search" class="rx-hub-search" '
+        'placeholder="Search guides by topic, joint, or keyword" '
+        'autocomplete="off" aria-describedby="rx-hub-count">'
+    )
+    body.append(
+        '          <button type="button" class="rx-hub-reset" data-rx-reset hidden>'
+        "Reset</button>"
+    )
+    body.append("        </form>")
+    body.append(
+        '        <div class="rx-hub-filters" role="group" aria-label="Filter by topic">'
+    )
+    body.append(
+        '          <button type="button" class="rx-filter is-active" '
+        'data-filter="all" aria-pressed="true">All</button>'
+    )
+    for cid, cname, slugs in CLUSTERS:
+        body.append(
+            '          <button type="button" class="rx-filter" data-filter="%s" '
+            'aria-pressed="false">%s</button>' % (cid, esc(cname))
+        )
+    body.append("        </div>")
+    body.append(
+        '        <p id="rx-hub-count" class="rx-hub-count" role="status" '
+        'aria-live="polite"></p>'
+    )
+    body.append(
+        '        <p class="rx-hub-empty" hidden>No guides match your search. '
+        '<button type="button" class="rx-linkbtn" data-rx-reset>Clear filters</button></p>'
+    )
+    body.append(
+        '        <p class="rx-hub-rss">Prefer a feed? '
+        '<a href="/articles/feed.xml">Subscribe via RSS</a>.</p>'
+    )
+    body.append("      </div>")
+    body.append("    </section>")
+
     body.append('    <section class="rx-section" style="padding-top: 24px;">')
     body.append('      <div class="rx-container">')
     for cid, cname, slugs in CLUSTERS:
@@ -358,13 +450,25 @@ def render_hub():
         body.append('          <div class="rx-hub-grid">')
         for s in slugs:
             a = ARTICLES[s]
+            search_blob = " ".join(
+                [a["card"], a["title"], a["excerpt"], a["kw"], cname]
+            ).lower()
             body.append(
-                '            <a class="rx-hub-card" href="/articles/%s">\n'
+                '            <a class="rx-hub-card" href="/articles/%s"'
+                ' data-cluster="%s" data-search="%s">\n'
                 '              <span class="rx-hub-kicker">%s</span>\n'
                 "              <h3>%s</h3>\n"
                 "              <p>%s</p>\n"
                 '              <span class="rx-hub-date">Updated Jul 24, 2026</span>\n'
-                "            </a>" % (s, esc(a["cluster"]), esc(a["card"]), esc(a["excerpt"]))
+                "            </a>"
+                % (
+                    s,
+                    cid,
+                    esc(search_blob),
+                    esc(a["cluster"]),
+                    esc(a["card"]),
+                    esc(a["excerpt"]),
+                )
             )
         body.append("          </div>")
         body.append("        </section>")
@@ -391,9 +495,74 @@ def render_hub():
     }
     body.append("  " + jsonld_block(item_list))
     body.append("  " + jsonld_block(breadcrumb_jsonld(crumbs)))
+    body.append(HUB_SCRIPT)
     body.append("</body>")
     body.append("</html>")
     return "\n".join(body) + "\n"
+
+
+HUB_SCRIPT = """  <script>
+  (function () {
+    var q = document.getElementById('rx-hub-q');
+    if (!q) return;
+    var cards = [].slice.call(document.querySelectorAll('.rx-hub-card'));
+    var clusters = [].slice.call(document.querySelectorAll('.rx-cluster'));
+    var filters = [].slice.call(document.querySelectorAll('.rx-filter'));
+    var countEl = document.getElementById('rx-hub-count');
+    var emptyEl = document.querySelector('.rx-hub-empty');
+    var resets = [].slice.call(document.querySelectorAll('[data-rx-reset]'));
+    var active = 'all';
+    function apply() {
+      var term = (q.value || '').trim().toLowerCase();
+      var visible = 0;
+      cards.forEach(function (card) {
+        var text = card.getAttribute('data-search') || '';
+        var matchText = term === '' || text.indexOf(term) !== -1;
+        var matchCluster = active === 'all' || card.getAttribute('data-cluster') === active;
+        var show = matchText && matchCluster;
+        card.hidden = !show;
+        if (show) visible++;
+      });
+      clusters.forEach(function (sec) {
+        sec.hidden = sec.querySelectorAll('.rx-hub-card:not([hidden])').length === 0;
+      });
+      if (countEl) {
+        countEl.textContent = visible === cards.length
+          ? 'Showing all ' + cards.length + ' guides'
+          : visible + ' of ' + cards.length + ' guides';
+      }
+      if (emptyEl) emptyEl.hidden = visible !== 0;
+      var dirty = term !== '' || active !== 'all';
+      resets.forEach(function (r) { r.hidden = !dirty; });
+    }
+    q.addEventListener('input', apply);
+    filters.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        active = btn.getAttribute('data-filter');
+        filters.forEach(function (b) {
+          var on = b === btn;
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        apply();
+      });
+    });
+    resets.forEach(function (r) {
+      r.addEventListener('click', function () {
+        q.value = '';
+        active = 'all';
+        filters.forEach(function (b) {
+          var on = b.getAttribute('data-filter') === 'all';
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        apply();
+        q.focus();
+      });
+    });
+    apply();
+  })();
+  </script>"""
 
 
 def render_feed():
@@ -459,6 +628,11 @@ def render_inventory():
         "Generated for the Base article library. Production URLs are live under "
         "https://romrx.io/articles/. Published and modified: 2026-07-24.",
         "",
+        "Note on titles: the HTML title tag (below) is intentionally kept under 60 "
+        "characters for search snippets and can be shorter than the on-page H1. The "
+        "JSON-LD Article headline always equals the visible H1 (enforced by the "
+        "build), so the shortening applies only to the title tag, not structured data.",
+        "",
         "| # | Title | Slug | Production URL | Primary keyword | Cluster |",
         "| - | ----- | ---- | -------------- | --------------- | ------- |",
     ]
@@ -509,6 +683,24 @@ def validate(pages):
         for r in a["related"]:
             if r not in ARTICLES:
                 errors.append("%s: related slug missing %s" % (slug, r))
+        # Contextual in-body internal links (task 4).
+        _, injected, missing = apply_xrefs(a)
+        for phrase in missing:
+            errors.append("%s: xref phrase not found in prose: %r" % (slug, phrase))
+        for tgt in XREF.get(slug, []):
+            if tgt[1] not in ARTICLES:
+                errors.append("%s: xref target missing %s" % (slug, tgt[1]))
+            if tgt[1] == slug:
+                errors.append("%s: xref links to itself" % slug)
+        distinct = set(injected)
+        if len(distinct) < 3:
+            errors.append(
+                "%s: only %d distinct in-body internal links (need >=3)"
+                % (slug, len(distinct))
+            )
+        # JSON-LD headline must equal the visible H1 (task 5).
+        if article_jsonld(a, "%s/articles/%s" % (SITE, slug))["headline"] != a["h1"]:
+            errors.append("%s: JSON-LD headline != H1" % slug)
     for t, slugs in titles.items():
         if len(slugs) > 1:
             errors.append("duplicate title: %s -> %s" % (t, slugs))

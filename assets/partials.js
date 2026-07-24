@@ -67,6 +67,7 @@ const RX_LEGAL = `
     <div>© 2026 ROMRx LLC · Greenwood, Indiana</div>
     <div>
       <a href="/articles">Articles</a> ·
+      <a href="/articles/feed.xml">RSS</a> ·
       <a href="/legal">Terms &amp; Privacy</a> ·
       <a href="mailto:investors@romrx.io">Investors</a> ·
       <a href="mailto:partners@romrx.io">Partners</a>

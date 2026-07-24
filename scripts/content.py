@@ -49,6 +49,9 @@ CLUSTERS = [
 ]
 
 # Frequently reused source links.
+# Third-party host (goniometer.io) of a published goniometry reference chart of
+# normal ROM values (Norkin & White lineage). NOT an AAOS-published URL, so
+# anchor text must not attribute it to AAOS. See citation sweep, PR #16.
 L_AAOS = "https://goniometer.io/rom-chart.pdf"
 L_ACSM = "https://pubmed.ncbi.nlm.nih.gov/21694556/"
 L_VISCO = "https://pubmed.ncbi.nlm.nih.gov/9241023/"
@@ -76,7 +79,7 @@ ARTICLES_LIST += [
         "answer": "<strong>Mobility vs flexibility comes down to control.</strong> Range of motion is the measurable arc a joint travels, flexibility is the passive part (how far a muscle or joint moves under an outside force), and mobility is the portion of that range you can actively control with your own strength. Knowing which one limits you decides whether you should stretch, strengthen, or both.",
         "sections": [
             ("What is range of motion, the measurable thing", """
-<p>Range of motion (ROM) is the arc a joint can move through, measured in degrees from an anatomical neutral position. It is the objective number underneath both flexibility and mobility. Clinicians measure it with a goniometer against published reference values, for example roughly 180 degrees of shoulder flexion or 135 degrees of knee flexion in the <a href="%(aaos)s">AAOS normal range of motion reference chart</a>.</p>
+<p>Range of motion (ROM) is the arc a joint can move through, measured in degrees from an anatomical neutral position. It is the objective number underneath both flexibility and mobility. Clinicians measure it with a goniometer against published reference values, for example roughly 180 degrees of shoulder flexion or 135 degrees of knee flexion in the <a href="%(aaos)s">published normal range of motion reference chart</a>.</p>
 <p>ROM is not a single fixed property. Research on the stretch response shows a measured joint range reflects both tissue stiffness and your <a href="%(visco)s">tolerance to the stretch sensation</a>, which is why two people with identical anatomy can test differently on the same day.</p>
 """ % {"aaos": L_AAOS, "visco": L_VISCO}),
             ("Passive vs active range of motion", """
@@ -142,7 +145,7 @@ ARTICLES_LIST += [
 <p>Range of motion is measured in degrees from a neutral zero position, usually with a goniometer. The same joint can produce a different number depending on whether the range is active or passive and which tool is used, so consistency matters more than the instrument.</p>
 """),
             ("Normal range of motion reference values", """
-<p>The values below come from the <a href="%(aaos)s">AAOS normal range of motion reference chart</a>. <a href="%(physio)s">Physiopedia's normative values</a> list comparable numbers and note that each person differs in the ability to reach them.</p>
+<p>The values below come from the <a href="%(aaos)s">published normal range of motion reference chart</a>. <a href="%(physio)s">Physiopedia's normative values</a> list comparable numbers and note that each person differs in the ability to reach them.</p>
 <div class="rx-table-wrap">
 <table>
 <thead><tr><th>Joint</th><th>Motion</th><th>Approx. normal (degrees)</th></tr></thead>
@@ -407,7 +410,7 @@ ARTICLES_LIST += [
 <h3>Photo and video from a fixed angle</h3>
 <p>Mark where the camera and your body sit, then compare frames over time. Community trackers note that video often reveals less progress than it feels like, which is exactly why it is useful.</p>
 <h3>Goniometer and phone apps</h3>
-<p>A goniometer or a phone goniometer app reads joint angles in degrees, which you can compare against the <a href="%(aaos)s">AAOS reference chart</a> while treating norms as a guide, not a cutoff.</p>
+<p>A goniometer or a phone goniometer app reads joint angles in degrees, which you can compare against the <a href="%(aaos)s">normal range of motion reference chart</a> while treating norms as a guide, not a cutoff.</p>
 """ % {"dorsi": L_DORSI, "wblt": L_WBLT, "aaos": L_AAOS}),
             ("Make measurements repeatable", """
 <p>Consistency is what makes a number trustworthy. Use the same warm-up, the same position, the same tool, and a similar time of day. A measurement taken cold on Monday and warm on Friday is not a fair comparison.</p>
@@ -719,7 +722,7 @@ ARTICLES_LIST += [
         },
         "sections": [
             ("What the overhead position requires", """
-<p>A clean overhead position combines shoulder flexion, normally about 180 degrees on the <a href="%(aaos)s">AAOS reference chart</a>, with thoracic extension. If either is limited, you compensate by arching the low back or flaring the ribs to get the arms up.</p>
+<p>A clean overhead position combines shoulder flexion, normally about 180 degrees on the <a href="%(aaos)s">normal range of motion reference chart</a>, with thoracic extension. If either is limited, you compensate by arching the low back or flaring the ribs to get the arms up.</p>
 """ % {"aaos": L_AAOS}),
             ("Common limiters of overhead shoulder mobility", """
 <p>The usual suspects are tight lats and pecs, a stiff thoracic spine, and a lack of end-range control. Because the upper back contributes so much, shoulder work alone often stalls until the t-spine moves better.</p>
@@ -768,7 +771,7 @@ ARTICLES_LIST += [
 <p>The thoracic spine is built for rotation more than extension, and it is the bridge between your shoulders and your low back. Good upper-back motion lets the shoulders reach overhead and the neck turn comfortably without the low back compensating.</p>
 """),
             ("How it affects shoulders, neck, and breathing", """
-<p>A stiff upper back forces the shoulders and neck to make up the difference, which is why thoracic work often unlocks overhead reach (toward the roughly 180 degrees of shoulder flexion on the <a href="%(aaos)s">AAOS chart</a>) and eases neck strain. Rib position and breathing also influence how much extension you can access.</p>
+<p>A stiff upper back forces the shoulders and neck to make up the difference, which is why thoracic work often unlocks overhead reach (toward the roughly 180 degrees of shoulder flexion on the <a href="%(aaos)s">normal range of motion reference chart</a>) and eases neck strain. Rib position and breathing also influence how much extension you can access.</p>
 """ % {"aaos": L_AAOS}),
             ("Assess t-spine extension and rotation", """
 <p>Check extension by reaching overhead against a wall with ribs down, and rotation by sitting tall and turning to each side. Compare left and right rotation, since asymmetry is common.</p>
@@ -875,7 +878,7 @@ ARTICLES_LIST += [
         "answer": "<strong>A stiff neck with limited turning is usually related to posture and muscle tone, not serious disease.</strong> Normal neck range is roughly 45 degrees of flexion and extension, 45 degrees of side bend, and about 60 degrees of rotation to each side. Gentle range work, movement breaks, thoracic mobility, and neck strengthening help many people, but trauma, neurological symptoms, or fever with neck stiffness need prompt clinician evaluation.",
         "sections": [
             ("What normal neck range looks like", """
-<p>The <a href="%(aaos)s">AAOS reference chart</a> lists roughly 45 degrees of cervical flexion and extension, 45 degrees of side bend, and about 60 degrees of rotation each side. As <a href="%(physio)s">Physiopedia notes</a>, cervical range declines with age, so compare against your own baseline and left-versus-right rather than a single cutoff.</p>
+<p>The <a href="%(aaos)s">normal range of motion reference chart</a> lists roughly 45 degrees of cervical flexion and extension, 45 degrees of side bend, and about 60 degrees of rotation each side. As <a href="%(physio)s">Physiopedia notes</a>, cervical range declines with age, so compare against your own baseline and left-versus-right rather than a single cutoff.</p>
 """ % {"aaos": L_AAOS, "physio": L_PHYSIO}),
             ("Common causes of a stiff neck", """
 <p>Most everyday stiffness relates to sustained positions (long desk or phone time), elevated muscle tone, and low movement variety. <a href="%(age)s">Range naturally varies with age</a> too. These causes respond well to movement rather than rest alone.</p>
@@ -916,7 +919,7 @@ ARTICLES_LIST += [
         "answer": "<strong>Normal knee range of motion is roughly 0 degrees of extension (fully straight) to about 135 degrees of flexion.</strong> Full extension matters for walking and sharing load. A knee that will not fully straighten or bend, especially with locking, catching, giving way, or swelling, suggests an injury and belongs with a clinician, whereas mild stiffness in an otherwise healthy knee often responds to gentle range work and strengthening.",
         "sections": [
             ("What normal knee range of motion is", """
-<p>The <a href="%(aaos)s">AAOS reference chart</a> lists knee flexion of about 135 degrees and extension of 0 degrees, and records a deficit as a negative number (for example -10 degrees short of straight). <a href="%(physio)s">Physiopedia</a> lists comparable values (flexion up to about 150 degrees, extension 0) and describes how goniometry notes a starting angle when neutral cannot be reached.</p>
+<p>The <a href="%(aaos)s">normal range of motion reference chart</a> lists knee flexion of about 135 degrees and extension of 0 degrees, and records a deficit as a negative number (for example -10 degrees short of straight). <a href="%(physio)s">Physiopedia</a> lists comparable values (flexion up to about 150 degrees, extension 0) and describes how goniometry notes a starting angle when neutral cannot be reached.</p>
 """ % {"aaos": L_AAOS, "physio": L_PHYSIO}),
             ("Why full extension matters", """
 <p>A knee that fully straightens shares load efficiently and lets you walk without a compensatory limp. Losing the last few degrees of extension changes gait and can overload other structures, which is why clinicians prioritize restoring it after injury.</p>
@@ -1150,3 +1153,114 @@ ARTICLES_LIST += [
         "cta_bjj": True,
     },
 ]
+
+# Contextual in-body internal links. For each article slug, a list of
+# (visible phrase, target slug) tuples. The build injects a link on the first
+# occurrence of the phrase that is NOT already inside an anchor, giving each
+# article at least three natural cross-references in the prose (separate from
+# the bottom "Keep exploring" related block). Phrases are chosen from text that
+# already appears in the article so no keyword stuffing is introduced. The
+# build fails if any phrase does not resolve or an article has fewer than three
+# distinct in-body internal links.
+XREF = {
+    "mobility-vs-flexibility": [
+        ("published reference values", "what-is-normal-range-of-motion"),
+        ("strength through the range", "full-vs-partial-range-of-motion"),
+        ("compare left to right", "how-to-measure-range-of-motion-progress"),
+    ],
+    "what-is-normal-range-of-motion": [
+        ("active range", "mobility-vs-flexibility"),
+        ("a knee that will not fully straighten", "knee-range-of-motion"),
+        ("check yourself at home", "how-to-measure-range-of-motion-progress"),
+    ],
+    "how-to-measure-range-of-motion-progress": [
+        ("toe-to-wall", "ankle-dorsiflexion-for-squats"),
+        ("side-to-side difference", "one-side-more-flexible-asymmetry"),
+        ("whether to strengthen or stretch", "mobility-vs-flexibility"),
+    ],
+    "how-long-to-hold-a-stretch": [
+        ("measure it", "how-to-measure-range-of-motion-progress"),
+        ("Warm tissue", "do-you-need-to-warm-up"),
+        ("flexibility gains", "why-cant-i-touch-my-toes"),
+    ],
+    "static-vs-dynamic-stretching": [
+        ("build flexibility over time", "how-long-to-hold-a-stretch"),
+        ("dynamic before activity", "do-you-need-to-warm-up"),
+        ("increases range without the strength cost", "full-vs-partial-range-of-motion"),
+    ],
+    "hip-mobility-for-squats": [
+        ("Limited ankle dorsiflexion", "ankle-dorsiflexion-for-squats"),
+        ("sharp anterior groin pinch", "hip-impingement-deep-squat"),
+        ("full-range training", "full-vs-partial-range-of-motion"),
+    ],
+    "do-you-need-to-warm-up": [
+        ("dynamic stretching", "static-vs-dynamic-stretching"),
+        ("long static stretching", "how-long-to-hold-a-stretch"),
+        ("Dynamic drills for the joints you will train", "hip-mobility-for-squats"),
+    ],
+    "does-foam-rolling-improve-range-of-motion": [
+        ("in a warm up", "do-you-need-to-warm-up"),
+        ("dynamic drills", "static-vs-dynamic-stretching"),
+        ("build lasting range", "how-long-to-hold-a-stretch"),
+    ],
+    "full-vs-partial-range-of-motion": [
+        ("usable mobility", "mobility-vs-flexibility"),
+        ("the stretched portion", "why-cant-i-touch-my-toes"),
+        ("largest pain-free range", "hip-mobility-for-squats"),
+    ],
+    "ankle-dorsiflexion-for-squats": [
+        ("hip stretching", "hip-mobility-for-squats"),
+        ("Tempo squats", "full-vs-partial-range-of-motion"),
+        ("difference greater than about 2 to 3 cm", "one-side-more-flexible-asymmetry"),
+    ],
+    "hip-impingement-deep-squat": [
+        ("widen the stance", "hip-mobility-for-squats"),
+        ("hip range", "hip-mobility-for-bjj"),
+        ("pain-free range", "full-vs-partial-range-of-motion"),
+    ],
+    "overhead-shoulder-mobility": [
+        ("a stiff thoracic spine", "thoracic-spine-mobility"),
+        ("shoulder flexion", "what-is-normal-range-of-motion"),
+        ("Compare left and right", "one-side-more-flexible-asymmetry"),
+    ],
+    "thoracic-spine-mobility": [
+        ("overhead reach", "overhead-shoulder-mobility"),
+        ("neck strain", "stiff-neck-limited-range-of-motion"),
+        ("foam roller", "does-foam-rolling-improve-range-of-motion"),
+    ],
+    "why-cant-i-touch-my-toes": [
+        ("hamstring stretch", "how-long-to-hold-a-stretch"),
+        ("strength at long muscle lengths", "full-vs-partial-range-of-motion"),
+        ("Re-test fingertip-to-floor", "how-to-measure-range-of-motion-progress"),
+    ],
+    "stiff-neck-limited-range-of-motion": [
+        ("thoracic mobility", "thoracic-spine-mobility"),
+        ("declines with age", "does-flexibility-decline-with-age"),
+        ("track neck rotation", "how-to-measure-range-of-motion-progress"),
+    ],
+    "knee-range-of-motion": [
+        ("Gentle range work and strengthening", "full-vs-partial-range-of-motion"),
+        ("age-related change", "does-flexibility-decline-with-age"),
+        ("compares sides", "how-to-measure-range-of-motion-progress"),
+    ],
+    "does-flexibility-decline-with-age": [
+        ("Stretch major muscle groups", "how-long-to-hold-a-stretch"),
+        ("full pain-free range", "full-vs-partial-range-of-motion"),
+        ("asymmetric loss of range", "one-side-more-flexible-asymmetry"),
+    ],
+    "am-i-hypermobile-beighton": [
+        ("how far muscles lengthen", "mobility-vs-flexibility"),
+        ("strength and control through range", "full-vs-partial-range-of-motion"),
+        ("laxity decreases with age", "does-flexibility-decline-with-age"),
+    ],
+    "one-side-more-flexible-asymmetry": [
+        ("Measure the same joint on both sides", "how-to-measure-range-of-motion-progress"),
+        ("unilateral strengthening", "full-vs-partial-range-of-motion"),
+        ("Individual range", "what-is-normal-range-of-motion"),
+    ],
+    "hip-mobility-for-bjj": [
+        ("hip rotation", "hip-mobility-for-squats"),
+        ("compare sides", "how-to-measure-range-of-motion-progress"),
+        ("Sharp groin pain", "hip-impingement-deep-squat"),
+    ],
+}
