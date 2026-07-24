@@ -10,6 +10,7 @@ const RX_NAV = `
       <a href="/universe" data-nav="universe">Universe</a>
       <a href="/dashboard" data-nav="dashboard">Dashboard</a>
       <a href="/science" data-nav="science">Science</a>
+      <a href="/articles" data-nav="articles">Articles</a>
       <a href="/investors" data-nav="investors">Investors</a>
       <a href="/partners" data-nav="partners">Partners</a>
       <!-- Log in: lets returning users skip the assessment funnel and go straight to their Base account login.
@@ -65,6 +66,7 @@ const RX_LEGAL = `
   <div class="rx-legal-inner">
     <div>© 2026 ROMRx LLC · Greenwood, Indiana</div>
     <div>
+      <a href="/articles">Articles</a> ·
       <a href="/legal">Terms &amp; Privacy</a> ·
       <a href="mailto:investors@romrx.io">Investors</a> ·
       <a href="mailto:partners@romrx.io">Partners</a>
@@ -89,8 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
     navSlot.outerHTML = RX_NAV;
     // Mark active nav link
     const path = window.location.pathname.replace(/\/$/, '') || '/';
-    const map = { '/universe': 'universe', '/dashboard': 'dashboard', '/platform': 'dashboard', '/science': 'science', '/investors': 'investors', '/partners': 'partners' };
-    const activeKey = map[path];
+    const map = { '/universe': 'universe', '/dashboard': 'dashboard', '/platform': 'dashboard', '/science': 'science', '/articles': 'articles', '/investors': 'investors', '/partners': 'partners' };
+    const activeKey = path.startsWith('/articles') ? 'articles' : map[path];
     if (activeKey) {
       const el = document.querySelector(`[data-nav="${activeKey}"]`);
       if (el) el.classList.add('active');

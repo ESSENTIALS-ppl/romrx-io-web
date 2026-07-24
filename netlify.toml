@@ -52,6 +52,19 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Article library. Hub at /articles, articles at /articles/<slug>.
+# Real files (index.html, feed.xml) are served directly by Netlify before
+# these rewrites apply; only slug paths with no static file are rewritten.
+[[redirects]]
+  from = "/articles"
+  to = "/articles/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/articles/*"
+  to = "/articles/:splat.html"
+  status = 200
+
 # Pretty URLs, allow /investors instead of /investors.html
 [[redirects]]
   from = "/investors"
