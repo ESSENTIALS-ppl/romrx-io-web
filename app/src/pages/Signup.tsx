@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Loader2, UserPlus } from 'lucide-react'
+import { Loader2, UserPlus, Mail } from 'lucide-react'
 
 export function Signup() {
   const navigate = useNavigate()
@@ -9,7 +9,24 @@ export function Signup() {
   const leadToken = searchParams.get('lead')
   const leadEmail = searchParams.get('email')
   const leadName = searchParams.get('name')
-  const redirectAfterSignup = leadToken ? `/unlock/${leadToken}` : '/dashboard/my-body'
+  // Sport intent from the +sport landing pages (/app/signup?add=bjj|bodybuilding).
+  // Carried through email confirmation so the sport apps (consumers of the shared
+  // Supabase identity) can pick it up later. The base assessment is always the
+  // first destination regardless of sport intent.
+  const addSport = searchParams.get('add')
+  // Base is sport-neutral. When (and only when) the visitor arrived with a recognized
+  // sport intent, we surface that sport's protocol label in the footer as text. We do
+  // NOT pull in any sport-site visual branding here; this stays the shared Base signup.
+  const sportKey = (addSport ?? '').toLowerCase()
+  const SPORT_PROTOCOL_LABELS: Record<string, string> = {
+    bjj: 'Position Readiness Protocol™ by ROMRx+BJJ',
+    bodybuilding: 'Exercise Readiness Protocol™ by ROMRx+BodyBuilding',
+  }
+  const protocolLabel = SPORT_PROTOCOL_LABELS[sportKey] ?? 'Readiness Protocol™ by ROMRx'
+  const assessmentDest = `/onboarding/assessment${addSport ? `?add=${encodeURIComponent(addSport)}` : ''}`
+  // Brand-new accounts always start at assessment step one. Lead-unlock links keep
+  // their /unlock/:token destination (that lead already assessed as an anon lead).
+  const nextDest = leadToken ? `/unlock/${leadToken}` : assessmentDest
   const [email, setEmail] = useState(leadEmail ?? '')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -17,6 +34,7 @@ export function Signup() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [checkEmail, setCheckEmail] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,8 +47,18 @@ export function Signup() {
       email,
       password,
       options: {
-        data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/app/auth/confirm?next=${encodeURIComponent(redirectAfterSignup)}${leadToken ? `&lead=${encodeURIComponent(leadToken)}` : ''}`,
+        // full_name, sport intent, and source land in raw_user_meta_data, where the
+        // send-s1-welcome-email edge function reads them for the customer welcome email
+        // and the best-effort internal jim@romrx.io signup alert.
+        data: {
+          full_name: fullName,
+          signup_source: 'romrx.io',
+          ...(addSport ? { add_sport: addSport } : {}),
+        },
+        // If email confirmation is enabled, this is where the confirmation link lands.
+        // next carries the assessment destination so a confirmed new user starts at
+        // assessment step one (not the paywalled dashboard).
+        emailRedirectTo: `${window.location.origin}/app/auth/confirm?next=${encodeURIComponent(nextDest)}${leadToken ? `&lead=${encodeURIComponent(leadToken)}` : ''}`,
       },
     })
 
@@ -41,23 +69,52 @@ export function Signup() {
       return
     }
 
+    // The public.users row is created by the on_auth_user_created trigger
+    // (handle_new_user). It defaults to base_status='inactive' - ProtectedRoute
+    // blocks /dashboard/* until the Stripe webhook flips it after checkout. Do NOT
+    // client-upsert here (no INSERT RLS policy on public.users; the trigger owns it).
+
+    // Confirmation disabled: signUp returns a live session, so go straight to the
+    // first assessment step now.
+    if (data.session) {
+      navigate(nextDest, { replace: true })
+      return
+    }
+
+    // Confirmation enabled: the user row exists but there is no session yet. Supabase
+    // has emailed a confirmation link (next -> assessment). Show a prompt rather than
+    // dropping an unauthenticated user into the assessment as an anon lead.
     if (data.user) {
-      // The public.users row is created by the on_auth_user_created trigger
-      // (handle_new_user function). It defaults to subscription_status='inactive',
-      // base_status='inactive', subscription_tier='free' - ProtectedRoute will
-      // block dashboard access until stripe-webhook flips these after checkout.
-      // Do NOT client-upsert here - there is no INSERT RLS policy on public.users
-      // and the trigger already handled it.
-
-      // TODO(phase1): no lib/terms.ts / recordConsent helper exists yet in the
-      // HQ app. Re-add consent logging here once that helper is ported.
-
-      navigate(leadToken ? redirectAfterSignup : '/onboarding/assessment', { replace: true })
+      setCheckEmail(true)
+      setLoading(false)
       return
     }
 
     setLoading(false)
     setError('Something went wrong. Please try again.')
+  }
+
+  if (checkEmail) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center space-y-4">
+          <div className="w-16 h-16 bg-cobalt-light rounded-full flex items-center justify-center mx-auto">
+            <Mail size={30} className="text-cobalt" />
+          </div>
+          <h1 className="font-display font-bold text-cobalt-ink text-xl">Confirm your email</h1>
+          <p className="text-sm text-slate-500">
+            We sent a confirmation link to <strong>{email}</strong>. Open it to activate your
+            account and start your free ROM assessment.
+          </p>
+          <p className="text-xs text-slate-500">
+            Wrong email?{' '}
+            <button type="button" onClick={() => setCheckEmail(false)} className="text-cobalt underline">
+              Go back
+            </button>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -135,7 +192,7 @@ export function Signup() {
           Already have an account?{' '}
           <Link to="/login" className="text-cobalt underline">Sign in</Link>
         </p>
-        <p className="text-center text-xs text-slate-500 mt-6">Position Readiness Protocol™ by ROMRx</p>
+        <p className="text-center text-xs text-slate-500 mt-6">{protocolLabel}</p>
       </div>
     </div>
   )

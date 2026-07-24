@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { Login } from './pages/Login'
@@ -16,6 +16,20 @@ import { MySport } from './pages/MySport'
 import { ROMBot } from './pages/ROMBot'
 import { Settings } from './pages/Settings'
 
+// Sport intent supported by the shared Base signup. Only these values are carried
+// as ?add= so a stale or guessed /app/signup/:sport can never inject arbitrary text.
+const KNOWN_SPORTS = new Set(['bjj', 'bodybuilding'])
+
+// Stale/guessable /app/signup/:sport links (e.g. /app/signup/bjj) used to fall
+// through to nothing and render a blank screen. Canonicalize them onto the shared
+// Base signup, preserving a recognized sport as ?add=<sport> and dropping anything else.
+function SignupSportRedirect() {
+  const { sport } = useParams<{ sport: string }>()
+  const key = (sport ?? '').toLowerCase()
+  const to = KNOWN_SPORTS.has(key) ? `/signup?add=${encodeURIComponent(key)}` : '/signup'
+  return <Navigate to={to} replace />
+}
+
 export default function App() {
   return (
     <BrowserRouter basename="/app">
@@ -23,6 +37,7 @@ export default function App() {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/signup/:sport" element={<SignupSportRedirect />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/confirm" element={<AuthConfirm />} />
         <Route path="/onboarding/assessment" element={<Assessment />} />
@@ -53,6 +68,11 @@ export default function App() {
         <Route path="/my-sport" element={<Navigate to="/dashboard/my-sport" replace />} />
         <Route path="/chat" element={<Navigate to="/dashboard/rombot" replace />} />
         <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
+
+        {/* Unknown /app/* paths: never a blank screen. Route to /login, which sends
+            authenticated users on to /dashboard/my-body and everyone else to sign in,
+            so a stale link can't strand or reset a logged-in user. */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   )
