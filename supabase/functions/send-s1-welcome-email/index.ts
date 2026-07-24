@@ -1,195 +1,292 @@
-// Supabase Edge Function: send-s1-welcome-email  (matches live v13; verify_jwt=false)
-//
-// This is a conservative patch of the deployed v13 function, NOT a redesign. v13
-// already: defines BRANDS for bjj / bodybuilding / general (brand-specific from
-// address + alertTo), sends a customer welcome email via RESEND_API_KEY, then sends a
-// best-effort non-blocking internal alert to the brand's alertTo (jim@romrx.io), and
-// is invoked exactly once per new account by an AFTER INSERT trigger on auth.users.
-// All of that behavior and the template copy are preserved.
-//
-// Required delta only:
-//   1. Every brand's CUSTOMER CTA now points at canonical Base onboarding
-//      (https://romrx.io/app/onboarding/assessment), appending only a recognized
-//      ?add=bjj or ?add=bodybuilding. It NEVER points at a sport-domain
-//      /onboarding/assessment.
-//   2. The internal alert (still jim@romrx.io) now includes the auth user id
-//      (record.id) and the captured source / sport intent when metadata has them.
-//   3. Alert send stays best-effort and non-blocking; no credentials are committed.
-//   4. Minimal payload validation + HTML escaping of user-controlled name/email.
-//
-// Secret (never hardcode): RESEND_API_KEY.
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const BASE_ONBOARDING = 'https://romrx.io/app/onboarding/assessment'
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 
-type BrandKey = 'bjj' | 'bodybuilding' | 'general'
+// Escape user-controlled values (name, email) before interpolating into email HTML.
+const esc = (v: unknown): string =>
+  String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
+// Canonical Base onboarding. The welcome CTA for every brand points here (never a
+// sport domain), preserving a recognized sport intent as ?add=bjj|bodybuilding.
+const BASE_ASSESSMENT = "https://romrx.io/app/onboarding/assessment";
+
+// ── Sport-aware branding config ────────────────────────────────────────────────
+// The new-user trigger (auth.users INSERT) passes raw_user_meta_data, which the
+// BB signup stamps with active_sport: 'bodybuilding' and BJJ signups with 'bjj'.
+// Any signup that does NOT stamp a sport (Base / romrx.io) falls through to
+// the 'general' brand, which is the sport-agnostic ROMRx Base experience.
 interface Brand {
-  label: string
-  from: string
-  alertTo: string
-  // Recognized sport intent carried to Base as ?add=<add>. null = generic Base.
-  add: 'bjj' | 'bodybuilding' | null
+  brandName: string;
+  fromName: string;
+  fromEmail: string;
+  domain: string;
+  city: string;
+  accent: string;
+  protocol: string;
+  markerCount: string;
+  contextLine: string;
+  ctaLabel: string;
+  subject: string;
+  alertTo: string;
 }
 
-const BRANDS: Record<BrandKey, Brand> = {
+const BRANDS: Record<string, Brand> = {
   bjj: {
-    label: 'ROMRx+BJJ',
-    from: 'ROMRx+BJJ <no-reply@romrx.io>',
-    alertTo: 'jim@romrx.io',
-    add: 'bjj',
+    brandName: "ROMRxBJJ",
+    fromName: "Jim Scott",
+    fromEmail: "jim@romrxbjj.com",
+    domain: "https://romrxbjj.com",
+    city: "Dublin, Ohio",
+    accent: "#c8102e",
+    protocol: "Position Readiness Protocol&trade;",
+    markerCount: "8 key ROM markers",
+    contextLine: "which positions your body is ready for (and which ones are costing you on the mat)",
+    ctaLabel: "&rarr; Start My Assessment Now",
+    subject: "Your ROMRx account is ready. Here's your first move.",
+    alertTo: "jim@romrx.io",
   },
   bodybuilding: {
-    label: 'ROMRx+BodyBuilding',
-    from: 'ROMRx+BodyBuilding <no-reply@romrx.io>',
-    alertTo: 'jim@romrx.io',
-    add: 'bodybuilding',
+    brandName: "ROMRxBodybuilding",
+    fromName: "Jim Scott",
+    fromEmail: "jim@romrxbodybuilding.com",
+    domain: "https://romrxbodybuilding.com",
+    city: "Dublin, Ohio",
+    accent: "#1e6fd9",
+    protocol: "Range of Motion Readiness Protocol&trade;",
+    markerCount: "key ROM markers",
+    contextLine: "which lifts your body is ready to load (and which ranges are leaking strength and risking injury)",
+    ctaLabel: "&rarr; Start My ROM Assessment",
+    subject: "Your ROMRx account is ready. Here's your first move.",
+    alertTo: "jim@romrx.io",
   },
   general: {
-    label: 'ROMRx',
-    from: 'ROMRx <no-reply@romrx.io>',
-    alertTo: 'jim@romrx.io',
-    add: null,
+    brandName: "ROMRx",
+    fromName: "Jim Scott",
+    fromEmail: "jim@romrx.io",
+    domain: "https://romrx.io",
+    city: "Dublin, Ohio",
+    accent: "#1e6fd9",
+    protocol: "Position Readiness Protocol&trade;",
+    markerCount: "key ROM markers",
+    contextLine: "which positions your body is ready for (and which restrictions are quietly holding you back)",
+    ctaLabel: "&rarr; Start My ROM Assessment",
+    subject: "Your ROMRx account is ready. Here's your first move.",
+    alertTo: "jim@romrx.io",
   },
-}
+};
 
-interface AuthUserRecord {
-  id?: string
-  email?: string | null
-  created_at?: string | null
-  raw_user_meta_data?: Record<string, unknown> | null
-}
-
-function str(v: unknown): string | null {
-  if (typeof v !== 'string') return null
-  const t = v.trim()
-  return t === '' ? null : t
-}
-
-// Escape user-controlled values before interpolating into the HTML template.
-function esc(v: string): string {
-  return v
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-function brandFor(sport: string | null): Brand {
-  if (sport === 'bjj') return BRANDS.bjj
-  if (sport === 'bodybuilding') return BRANDS.bodybuilding
-  return BRANDS.general
-}
-
-// Canonical Base CTA. Only a recognized brand.add is appended; never a sport domain.
-function ctaFor(brand: Brand): string {
-  return brand.add ? `${BASE_ONBOARDING}?add=${encodeURIComponent(brand.add)}` : BASE_ONBOARDING
-}
-
-async function sendEmail(resendKey: string, body: Record<string, unknown>): Promise<string | null> {
+serve(async (req) => {
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
+    const payload = await req.json();
+
+    // Handle both DB webhook and direct call
+    const record = payload?.record ?? payload;
+    const email = record?.email ?? record?.new?.email;
+    const meta = record?.raw_user_meta_data ?? record?.new?.raw_user_meta_data ?? {};
+    const rawName = meta?.full_name ?? "";
+    const firstName = rawName.split(" ")[0] || "there";
+
+    // Route by explicit sport meta. Anything not bjj / bodybuilding is Base (general).
+    const rawSport = String(meta?.active_sport ?? "").toLowerCase();
+    const sport = rawSport === "bjj"
+      ? "bjj"
+      : rawSport === "bodybuilding"
+      ? "bodybuilding"
+      : "general";
+    const b = BRANDS[sport];
+
+    // Recognized sport intent for the CTA: active_sport (stamped by the sport apps)
+    // or add_sport (stamped by Base +sport signups); anything else = generic Base.
+    const addRaw = sport !== "general"
+      ? sport
+      : String(meta?.add_sport ?? "").toLowerCase();
+    const ctaAdd = addRaw === "bjj" || addRaw === "bodybuilding" ? addRaw : "";
+    const assessmentUrl = `${BASE_ASSESSMENT}${ctaAdd ? `?add=${ctaAdd}` : ""}`;
+
+    // Signup metadata for the internal alert (routing data only; no secrets/PII beyond
+    // what the operator needs to triage a new account).
+    const userId = record?.id ?? record?.new?.id ?? "";
+    const source = String(meta?.signup_source ?? "").trim();
+
+    if (!email) {
+      return new Response(JSON.stringify({ error: "No email found" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your ROMRx account is ready.</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#1a1a1a;padding:32px 40px;text-align:center;">
+              <h1 style="color:#ffffff;font-size:24px;margin:0;letter-spacing:2px;font-weight:700;">${b.brandName}</h1>
+              <p style="color:#888888;font-size:12px;margin:6px 0 0 0;letter-spacing:1px;text-transform:uppercase;">${b.protocol}</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px 40px 32px 40px;">
+              <p style="font-size:16px;color:#333333;line-height:1.6;margin:0 0 16px 0;">Hey ${esc(firstName)},</p>
+              <p style="font-size:16px;color:#333333;line-height:1.6;margin:0 0 16px 0;">You're in.</p>
+              <p style="font-size:16px;color:#333333;line-height:1.6;margin:0 0 16px 0;">Most people who get real results with ${b.brandName} do one thing first: complete the <strong>${b.protocol} assessment</strong>.</p>
+              <p style="font-size:16px;color:#333333;line-height:1.6;margin:0 0 16px 0;">It takes about 15 minutes. You'll measure ${b.markerCount}, and immediately see ${b.contextLine}.</p>
+              <p style="font-size:16px;color:#333333;line-height:1.6;margin:0 0 32px 0;">This is the diagnostic that changes how you train.</p>
+
+              <!-- CTA Button -->
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:32px;">
+                    <a href="${assessmentUrl}"
+                       style="display:inline-block;background-color:${b.accent};color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 36px;border-radius:6px;letter-spacing:0.5px;">
+                      ${b.ctaLabel}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size:16px;color:#333333;line-height:1.6;margin:0 0 16px 0;">Talk soon,</p>
+              <p style="font-size:16px;color:#333333;line-height:1.6;margin:0 0 4px 0;"><strong>${b.fromName}</strong></p>
+              <p style="font-size:14px;color:#666666;margin:0 0 24px 0;">Founder, ${b.brandName}</p>
+
+              <hr style="border:none;border-top:1px solid #eeeeee;margin:0 0 24px 0;" />
+
+              <p style="font-size:14px;color:#555555;line-height:1.6;margin:0 0 16px 0;"><em>P.S. The assessment is free. No expensive equipment needed. Just your body and a little floor space.</em></p>
+
+              <p style="font-size:14px;color:#555555;line-height:1.6;margin:0;">This is my personal email. If you ever have any questions about ${b.brandName} or run into any difficulty, please save it. I'd be happy to help however I can.</p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#f9f9f9;padding:24px 40px;border-top:1px solid #eeeeee;">
+              <p style="font-size:12px;color:#999999;text-align:center;margin:0;line-height:1.6;">
+                ${b.brandName} &bull; ${b.city}<br />
+                You're receiving this because you created a ${b.brandName} account.<br />
+                <a href="mailto:${b.fromEmail}" style="color:#999999;">${b.fromEmail}</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) return `resend ${res.status}: ${await res.text()}`
-    return null
-  } catch (e) {
-    return e instanceof Error ? e.message : String(e)
-  }
-}
+      body: JSON.stringify({
+        from: `${b.fromName} <${b.fromEmail}>`,
+        to: [email],
+        subject: b.subject,
+        html: htmlBody,
+        headers: {
+          "X-Entity-Ref-ID": `s1-welcome-${Date.now()}`,
+        },
+        tags: [
+          { name: "stage", value: "s1_registered" },
+          { name: "email_id", value: "s1_1_welcome" },
+          { name: "sport", value: sport },
+        ],
+      }),
+    });
 
-Deno.serve(async (req) => {
-  // Minimal payload validation. Malformed input must not throw.
-  let payload: { record?: AuthUserRecord } & Partial<AuthUserRecord>
-  try {
-    payload = await req.json()
-  } catch {
-    return new Response('bad request', { status: 400 })
-  }
+    const data = await res.json();
 
-  const rec: AuthUserRecord = payload?.record ?? (payload as AuthUserRecord)
-  const userId = str(rec?.id)
-  const email = str(rec?.email)
-  if (!userId) return new Response('no user id', { status: 200 })
+    if (!res.ok) {
+      console.error("Resend error:", data);
+      return new Response(JSON.stringify({ error: data }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
-  const meta = (rec.raw_user_meta_data ?? {}) as Record<string, unknown>
-  const fullName = str(meta.full_name)
-  const source = str(meta.signup_source) ?? 'romrx.io'
-  const sportRaw = str(meta.add_sport)
-  const sport = sportRaw ? sportRaw.toLowerCase() : null
-  const signedUpAt = str(rec.created_at) ?? new Date().toISOString()
+    console.log(`S1-1 welcome (${sport}) sent to:`, email, "| Resend ID:", data.id);
 
-  const brand = brandFor(sport)
-  const cta = ctaFor(brand)
+    // ── Internal signup alert (sport-routed) ───────────────────────────────────
+    // Base signups fire the ROMRx (general) brand alert. BJJ and BB signups fire
+    // their own on-brand alerts. Reply-to matches the sport-specific alias so
+    // replies stay on-brand.
+    // Best-effort: never block or fail the customer welcome on alert errors.
+    try {
+      const signupTime = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+      const alertHtml = `
+        <div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#222;line-height:1.6;">
+          <h2 style="margin:0 0 12px;color:${b.accent};">\uD83C\uDF89 New ${b.brandName} signup</h2>
+          <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+            <tr><td style="font-weight:bold;">Name</td><td>${esc(firstName)} ${esc(rawName.split(" ").slice(1).join(" "))}</td></tr>
+            <tr><td style="font-weight:bold;">Email</td><td>${esc(email)}</td></tr>
+            <tr><td style="font-weight:bold;">Sport</td><td>${esc(sport)}</td></tr>
+            <tr><td style="font-weight:bold;">Sport intent</td><td>${esc(ctaAdd || "(none)")}</td></tr>
+            <tr><td style="font-weight:bold;">Source</td><td>${esc(source || "(unknown)")}</td></tr>
+            <tr><td style="font-weight:bold;">User ID</td><td>${esc(userId)}</td></tr>
+            <tr><td style="font-weight:bold;">Signed up</td><td>${esc(signupTime)} ET</td></tr>
+          </table>
+          <p style="margin-top:16px;font-size:13px;color:#777;">Welcome email delivered (Resend ID: ${data.id}).</p>
+        </div>`;
 
-  const resendKey = Deno.env.get('RESEND_API_KEY')
-  if (!resendKey) {
-    console.error('send-s1-welcome-email: RESEND_API_KEY not set; skipping sends')
-    return new Response(JSON.stringify({ ok: false, reason: 'no RESEND_API_KEY' }), {
+      const alertRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: `${b.brandName} Signups <${b.fromEmail}>`,
+          to: [b.alertTo],
+          reply_to: b.fromEmail,
+          subject: `New ${b.brandName} signup: ${email}`,
+          html: alertHtml,
+          tags: [
+            { name: "type", value: "internal_signup_alert" },
+            { name: "sport", value: sport },
+          ],
+        }),
+      });
+      if (alertRes.ok) {
+        console.log(`Signup alert (${sport}) sent to ${b.alertTo}`);
+      } else {
+        console.error("Signup alert failed:", await alertRes.text());
+      }
+    } catch (alertErr) {
+      console.error("Signup alert error (non-blocking):", alertErr);
+    }
+
+    return new Response(JSON.stringify({ success: true, id: data.id, sport }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
+      headers: { "Content-Type": "application/json" },
+    });
+
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
+});
 
-  // 1) Customer welcome email. CTA always -> canonical Base assessment onboarding.
-  let customerError: string | null = null
-  if (email) {
-    const htmlGreeting = fullName ? `Hi ${esc(fullName)},` : 'Hi,'
-    const textGreeting = fullName ? `Hi ${fullName},` : 'Hi,'
-    customerError = await sendEmail(resendKey, {
-      from: brand.from,
-      to: [email],
-      subject: `Welcome to ${brand.label} - start your free ROM assessment`,
-      html: [
-        `<p>${htmlGreeting}</p>`,
-        `<p>Your ${esc(brand.label)} account is ready. Your next step is your free Range of Motion assessment - it takes just a few minutes and sets up everything that follows.</p>`,
-        `<p><a href="${cta}">Start your assessment</a></p>`,
-        `<p>See you inside,<br/>The ROMRx Team</p>`,
-      ].join('\n'),
-      text: [
-        textGreeting,
-        '',
-        `Your ${brand.label} account is ready. Your next step is your free Range of Motion`,
-        'assessment - it takes just a few minutes and sets up everything that follows.',
-        '',
-        `Start your assessment: ${cta}`,
-        '',
-        'See you inside,',
-        'The ROMRx Team',
-      ].join('\n'),
-    })
-  }
-
-  // 2) Best-effort internal signup alert to the brand's alertTo (jim@romrx.io). Sent
-  //    AFTER the customer welcome and never blocks; routing metadata only, no
-  //    passwords/tokens/medical/assessment data.
-  const alertError = await sendEmail(resendKey, {
-    from: brand.from,
-    to: [brand.alertTo],
-    subject: `New ${brand.label} signup: ${fullName || email || userId}`,
-    text: [
-      `A new ${brand.label} account was created.`,
-      '',
-      `Name:         ${fullName || '(not provided)'}`,
-      `Email:        ${email || '(not provided)'}`,
-      `Sport intent: ${sport || '(none)'}`,
-      `Source:       ${source}`,
-      `Signed up at: ${signedUpAt}`,
-      `User ID:      ${userId}`,
-    ].join('\n'),
-  })
-
-  if (customerError) console.error('send-s1-welcome-email customer send failed:', customerError)
-  if (alertError) console.error('send-s1-welcome-email alert send failed:', alertError)
-
-  // Always 200: notification failures must not block signup or the trigger.
-  return new Response(
-    JSON.stringify({ ok: !customerError && !alertError, customerError, alertError }),
-    { status: 200, headers: { 'Content-Type': 'application/json' } },
-  )
-})
