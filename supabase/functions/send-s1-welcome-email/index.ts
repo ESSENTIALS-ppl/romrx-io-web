@@ -1,40 +1,56 @@
-// Supabase Edge Function: send-s1-welcome-email
+// Supabase Edge Function: send-s1-welcome-email  (matches live v13; verify_jwt=false)
 //
-// RECONCILE BEFORE DEPLOY. This file is the repo copy of the function that is already
-// live in the shared Supabase project. The live version was not previously committed,
-// so before running `supabase functions deploy send-s1-welcome-email`, pull the
-// deployed source (Dashboard > Edge Functions, or `supabase functions download
-// send-s1-welcome-email`) and diff it against this file so no unseen production logic
-// is lost. This copy corrects two things and otherwise preserves the described behavior:
-//   1. Every CUSTOMER welcome CTA now points at the canonical Base assessment onboarding
-//      (https://romrx.io/app/onboarding/assessment). The old code built
-//      `${b.domain}/onboarding/assessment`, so Base dropped the required /app basename
-//      and the sport branches pointed customers at sport-site assessments.
-//   2. The best-effort internal alert to jim@romrx.io now includes the user ID and the
-//      captured signup source / sport intent when the signup metadata provides them.
+// This is a conservative patch of the deployed v13 function, NOT a redesign. v13
+// already: defines BRANDS for bjj / bodybuilding / general (brand-specific from
+// address + alertTo), sends a customer welcome email via RESEND_API_KEY, then sends a
+// best-effort non-blocking internal alert to the brand's alertTo (jim@romrx.io), and
+// is invoked exactly once per new account by an AFTER INSERT trigger on auth.users.
+// All of that behavior and the template copy are preserved.
 //
-// Invocation: a Database Webhook on INSERT into auth.users calls this once per new
-// account, so there is exactly one welcome email and one alert per genuinely new user.
+// Required delta only:
+//   1. Every brand's CUSTOMER CTA now points at canonical Base onboarding
+//      (https://romrx.io/app/onboarding/assessment), appending only a recognized
+//      ?add=bjj or ?add=bodybuilding. It NEVER points at a sport-domain
+//      /onboarding/assessment.
+//   2. The internal alert (still jim@romrx.io) now includes the auth user id
+//      (record.id) and the captured source / sport intent when metadata has them.
+//   3. Alert send stays best-effort and non-blocking; no credentials are committed.
+//   4. Minimal payload validation + HTML escaping of user-controlled name/email.
 //
-// Guarantees:
-//   - Non-blocking: always returns 200. A Resend outage or a malformed row must never
-//     block account creation or the webhook. Failures are logged, not thrown.
-//   - Privacy: reads and sends ONLY signup routing metadata (name, email, source, sport
-//     intent, user id, timestamp). No passwords, tokens, medical, or assessment data.
-//
-// Required function secrets (never hardcode these):
-//   RESEND_API_KEY
-//   NOTIFY_WEBHOOK_SECRET   shared secret the Database Webhook sends as x-notify-secret
+// Secret (never hardcode): RESEND_API_KEY.
 
-const CUSTOMER_FROM = 'ROMRx <no-reply@romrx.io>'
-const ALERT_TO = 'jim@romrx.io'
-const ALERT_FROM = 'ROMRx <no-reply@romrx.io>'
-
-// Canonical Base onboarding. Sport intent, when recognized, is carried as ?add=<sport>
-// so the shared Base assessment can hand off to a sport app later. This is the ONLY
-// place the customer CTA is built; no per-brand domain is used for it.
 const BASE_ONBOARDING = 'https://romrx.io/app/onboarding/assessment'
-const KNOWN_SPORTS = new Set(['bjj', 'bodybuilding'])
+
+type BrandKey = 'bjj' | 'bodybuilding' | 'general'
+
+interface Brand {
+  label: string
+  from: string
+  alertTo: string
+  // Recognized sport intent carried to Base as ?add=<add>. null = generic Base.
+  add: 'bjj' | 'bodybuilding' | null
+}
+
+const BRANDS: Record<BrandKey, Brand> = {
+  bjj: {
+    label: 'ROMRx+BJJ',
+    from: 'ROMRx+BJJ <no-reply@romrx.io>',
+    alertTo: 'jim@romrx.io',
+    add: 'bjj',
+  },
+  bodybuilding: {
+    label: 'ROMRx+BodyBuilding',
+    from: 'ROMRx+BodyBuilding <no-reply@romrx.io>',
+    alertTo: 'jim@romrx.io',
+    add: 'bodybuilding',
+  },
+  general: {
+    label: 'ROMRx',
+    from: 'ROMRx <no-reply@romrx.io>',
+    alertTo: 'jim@romrx.io',
+    add: null,
+  },
+}
 
 interface AuthUserRecord {
   id?: string
@@ -49,11 +65,25 @@ function str(v: unknown): string | null {
   return t === '' ? null : t
 }
 
-function onboardingUrl(sport: string | null): string {
-  if (sport && KNOWN_SPORTS.has(sport)) {
-    return `${BASE_ONBOARDING}?add=${encodeURIComponent(sport)}`
-  }
-  return BASE_ONBOARDING
+// Escape user-controlled values before interpolating into the HTML template.
+function esc(v: string): string {
+  return v
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function brandFor(sport: string | null): Brand {
+  if (sport === 'bjj') return BRANDS.bjj
+  if (sport === 'bodybuilding') return BRANDS.bodybuilding
+  return BRANDS.general
+}
+
+// Canonical Base CTA. Only a recognized brand.add is appended; never a sport domain.
+function ctaFor(brand: Brand): string {
+  return brand.add ? `${BASE_ONBOARDING}?add=${encodeURIComponent(brand.add)}` : BASE_ONBOARDING
 }
 
 async function sendEmail(resendKey: string, body: Record<string, unknown>): Promise<string | null> {
@@ -74,13 +104,8 @@ async function sendEmail(resendKey: string, body: Record<string, unknown>): Prom
 }
 
 Deno.serve(async (req) => {
-  // Shared-secret guard so only the configured Database Webhook can invoke this.
-  const expected = Deno.env.get('NOTIFY_WEBHOOK_SECRET')
-  if (expected && req.headers.get('x-notify-secret') !== expected) {
-    return new Response('forbidden', { status: 403 })
-  }
-
-  let payload: { record?: AuthUserRecord; type?: string } & Partial<AuthUserRecord>
+  // Minimal payload validation. Malformed input must not throw.
+  let payload: { record?: AuthUserRecord } & Partial<AuthUserRecord>
   try {
     payload = await req.json()
   } catch {
@@ -99,6 +124,9 @@ Deno.serve(async (req) => {
   const sport = sportRaw ? sportRaw.toLowerCase() : null
   const signedUpAt = str(rec.created_at) ?? new Date().toISOString()
 
+  const brand = brandFor(sport)
+  const cta = ctaFor(brand)
+
   const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) {
     console.error('send-s1-welcome-email: RESEND_API_KEY not set; skipping sends')
@@ -108,23 +136,28 @@ Deno.serve(async (req) => {
     })
   }
 
-  const ctaUrl = onboardingUrl(sport)
-
   // 1) Customer welcome email. CTA always -> canonical Base assessment onboarding.
   let customerError: string | null = null
   if (email) {
-    const greeting = fullName ? `Hi ${fullName},` : 'Hi,'
+    const htmlGreeting = fullName ? `Hi ${esc(fullName)},` : 'Hi,'
+    const textGreeting = fullName ? `Hi ${fullName},` : 'Hi,'
     customerError = await sendEmail(resendKey, {
-      from: CUSTOMER_FROM,
+      from: brand.from,
       to: [email],
-      subject: 'Welcome to ROMRx - start your free ROM assessment',
+      subject: `Welcome to ${brand.label} - start your free ROM assessment`,
+      html: [
+        `<p>${htmlGreeting}</p>`,
+        `<p>Your ${esc(brand.label)} account is ready. Your next step is your free Range of Motion assessment - it takes just a few minutes and sets up everything that follows.</p>`,
+        `<p><a href="${cta}">Start your assessment</a></p>`,
+        `<p>See you inside,<br/>The ROMRx Team</p>`,
+      ].join('\n'),
       text: [
-        greeting,
+        textGreeting,
         '',
-        'Your ROMRx account is ready. Your next step is your free Range of Motion',
+        `Your ${brand.label} account is ready. Your next step is your free Range of Motion`,
         'assessment - it takes just a few minutes and sets up everything that follows.',
         '',
-        `Start your assessment: ${ctaUrl}`,
+        `Start your assessment: ${cta}`,
         '',
         'See you inside,',
         'The ROMRx Team',
@@ -132,14 +165,15 @@ Deno.serve(async (req) => {
     })
   }
 
-  // 2) Best-effort internal signup alert to jim@romrx.io. Never blocks; routing
-  //    metadata only, no passwords/tokens/medical/assessment data.
+  // 2) Best-effort internal signup alert to the brand's alertTo (jim@romrx.io). Sent
+  //    AFTER the customer welcome and never blocks; routing metadata only, no
+  //    passwords/tokens/medical/assessment data.
   const alertError = await sendEmail(resendKey, {
-    from: ALERT_FROM,
-    to: [ALERT_TO],
-    subject: `New ROMRx Base signup: ${fullName || email || userId}`,
+    from: brand.from,
+    to: [brand.alertTo],
+    subject: `New ${brand.label} signup: ${fullName || email || userId}`,
     text: [
-      'A new ROMRx Base account was created.',
+      `A new ${brand.label} account was created.`,
       '',
       `Name:         ${fullName || '(not provided)'}`,
       `Email:        ${email || '(not provided)'}`,
@@ -153,7 +187,7 @@ Deno.serve(async (req) => {
   if (customerError) console.error('send-s1-welcome-email customer send failed:', customerError)
   if (alertError) console.error('send-s1-welcome-email alert send failed:', alertError)
 
-  // Always 200: notification failures must not block signup or the webhook.
+  // Always 200: notification failures must not block signup or the trigger.
   return new Response(
     JSON.stringify({ ok: !customerError && !alertError, customerError, alertError }),
     { status: 200, headers: { 'Content-Type': 'application/json' } },
