@@ -11,6 +11,7 @@ import { Unlock } from './pages/Unlock'
 import { Unsubscribe } from './pages/Unsubscribe'
 import { MyBody } from './pages/MyBody'
 import { MyProtocol } from './pages/MyProtocol'
+import { MyFuel } from './pages/MyFuel'
 import { MySport } from './pages/MySport'
 import { ROMBot } from './pages/ROMBot'
 import { Settings } from './pages/Settings'
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/dashboard" element={<Navigate to="/dashboard/my-body" replace />} />
             <Route path="/dashboard/my-body" element={<MyBody />} />
             <Route path="/dashboard/my-protocol" element={<MyProtocol />} />
+            <Route path="/dashboard/my-fuel" element={<MyFuel />} />
             <Route path="/dashboard/my-sport" element={<MySport />} />
             <Route path="/dashboard/rombot" element={<ROMBot />} />
             <Route path="/dashboard/settings" element={<Settings />} />
@@ -47,6 +49,7 @@ export default function App() {
         {/* Legacy redirects - old /my-body etc. -> /dashboard/my-body */}
         <Route path="/my-body" element={<Navigate to="/dashboard/my-body" replace />} />
         <Route path="/my-protocol" element={<Navigate to="/dashboard/my-protocol" replace />} />
+        <Route path="/my-fuel" element={<Navigate to="/dashboard/my-fuel" replace />} />
         <Route path="/my-sport" element={<Navigate to="/dashboard/my-sport" replace />} />
         <Route path="/chat" element={<Navigate to="/dashboard/rombot" replace />} />
         <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />

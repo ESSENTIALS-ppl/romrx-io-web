@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { cn } from '../lib/cn'
-import { Dumbbell, ClipboardList, Trophy, MessageSquare, Settings, LogOut } from 'lucide-react'
+import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 interface NavItem {
@@ -13,6 +13,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/dashboard/my-body', icon: Dumbbell, label: 'My Body' },
   { to: '/dashboard/my-protocol', icon: ClipboardList, label: 'My Protocol' },
+  { to: '/dashboard/my-fuel', icon: Apple, label: 'My Fuel' },
   { to: '/dashboard/my-sport', icon: Trophy, label: 'My Sport' },
   { to: '/dashboard/rombot', icon: MessageSquare, label: 'ROMBot' },
   { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
