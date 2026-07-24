@@ -1,0 +1,30 @@
+# ROMRx
+
+> ROMRx builds assessment-first range of motion (ROM) software. ROMRx Base is a free ROM assessment that identifies your priority joints and turns them into a trackable mobility plan; sport packs (ROMRx+BJJ, ROMRx+BodyBuilding) stack on top. The article library below is educational, grounded in peer-reviewed research and reputable medical sources, and is not medical advice.
+
+## Product
+- [ROMRx Base](https://romrx.io/): Free range of motion assessment and ROM Readiness Protocol.
+- [Start a free assessment](https://romrx.io/assessment): Begin the ROMRx Base assessment funnel.
+
+## Article library
+- [ROMRx Base Article Library](https://romrx.io/articles): Hub of evidence-based range of motion, mobility, and flexibility guides.
+- [Mobility vs Flexibility](https://romrx.io/articles/mobility-vs-flexibility): Defines range of motion, flexibility (passive), and mobility (active, controlled range) and how the distinction guides training.
+- [Normal Range of Motion by Joint](https://romrx.io/articles/what-is-normal-range-of-motion): Joint-by-joint normal range of motion reference values in degrees with the caveat that norms vary by age, sex, and anatomy.
+- [Measure and Track Range of Motion](https://romrx.io/articles/how-to-measure-range-of-motion-progress): How-to for measuring range of motion at home with tape tests, photos, and goniometer apps, standardizing conditions and tracking active and passive range.
+- [How Long to Hold a Stretch](https://romrx.io/articles/how-long-to-hold-a-stretch): Evidence-based stretching dosage: about 30 to 60 second holds, roughly 4 minutes per muscle per session, about 10 minutes per muscle per week.
+- [Static vs Dynamic Stretching](https://romrx.io/articles/static-vs-dynamic-stretching): Compares static and dynamic stretching: short static holds barely affect performance, long holds reduce strength, dynamic work fits pre-training.
+- [Do You Need to Warm Up](https://romrx.io/articles/do-you-need-to-warm-up): Explains what a warm up does, cites FIFA 11+ injury reduction, and gives a general to dynamic to ramp-up structure; long static holds fit later.
+- [Does Foam Rolling Improve Range of Motion](https://romrx.io/articles/does-foam-rolling-improve-range-of-motion): Foam rolling gives reliable short-term range-of-motion gains and reduces soreness; long-term gains are muscle-dependent and it complements rather than replaces stretching.
+- [Full vs Partial Range of Motion](https://romrx.io/articles/full-vs-partial-range-of-motion): Compares full and partial range of motion in training: full or long ROM tends to favor strength and lower-body hypertrophy, with a specificity effect and a role for partials.
+- [Hip Mobility for Squats](https://romrx.io/articles/hip-mobility-for-squats): How-to for hip mobility for squats: add range, individualize stance and foot angle, and strengthen end range; escalate a sharp groin pinch.
+- [Ankle Dorsiflexion for Squats](https://romrx.io/articles/ankle-dorsiflexion-for-squats): How-to for ankle dorsiflexion for squats: measure with the weight-bearing lunge test (about 10 cm good), build range, load it, and use heel lifts as a workaround.
+- [Hip Pinch in a Deep Squat](https://romrx.io/articles/hip-impingement-deep-squat): Explains hip impingement (FAI) versus tight hips in a deep squat, signs of a structural cause, simple adjustments that help, and escalation criteria.
+- [Overhead Shoulder Mobility](https://romrx.io/articles/overhead-shoulder-mobility): How-to for overhead shoulder mobility: needs shoulder flexion (about 180 degrees) plus thoracic extension; hangs, band work, and control help; frozen shoulder is a red flag.
+- [Thoracic Spine Mobility](https://romrx.io/articles/thoracic-spine-mobility): How-to for thoracic spine mobility: pair extension and rotation drills with rib and scapular control, then strengthen; supports overhead reach and neck comfort.
+- [Why You Can't Touch Your Toes](https://romrx.io/articles/why-cant-i-touch-my-toes): Explains that the toe-touch mainly measures hamstring extensibility and hip flexion; combining stretching with active and loaded work improves it for most people.
+- [Stiff Neck With Limited Range](https://romrx.io/articles/stiff-neck-limited-range-of-motion): Explains normal neck range (about 60 degrees rotation each side), posture-related causes, gentle mobility and strengthening, and red flags needing urgent care.
+- [Knee Range of Motion](https://romrx.io/articles/knee-range-of-motion): Explains normal knee range of motion (about 0 to 135 degrees), why full extension matters, and injury red flags like locking, giving way, and swelling.
+- [Does Flexibility Decline With Age](https://romrx.io/articles/does-flexibility-decline-with-age): Explains that measured range declines with age but much stiffness is inactivity; consistent flexibility work and strength through range preserve and improve usable motion.
+- [Am I Hypermobile (Beighton)](https://romrx.io/articles/am-i-hypermobile-beighton): Explains joint hypermobility versus flexibility, the 9-point Beighton score and thresholds, the difference from HSD and hEDS, and when to seek assessment.
+- [One Side More Flexible](https://romrx.io/articles/one-side-more-flexible-asymmetry): Explains that some left-right flexibility asymmetry is normal from dominance and habit; measure the gap and give the tighter side extra targeted work, escalating large painful gaps.
+- [Hip Mobility for BJJ](https://romrx.io/articles/hip-mobility-for-bjj): How-to for hip mobility for BJJ: guard depends on usable, strength-supported hip rotation, flexion, and hip-flexor endurance more than passive splits; measure and load the range.
