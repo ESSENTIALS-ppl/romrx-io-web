@@ -319,6 +319,9 @@
   border-radius: var(--rx-radius);
   transition: border-color var(--rx-t-med), transform var(--rx-t-med);
 }
+/* The hidden attribute must win over the display rules above so JS-filtered
+   cards and empty clusters are actually removed from view. */
+.rx-hub-card[hidden], .rx-cluster[hidden] { display: none; }
 .rx-hub-card:hover { border-color: var(--rx-cobalt); transform: translateY(-3px); }
 .rx-hub-card .rx-hub-kicker {
   font-family: var(--rx-font-mono);
