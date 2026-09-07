@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { Spinner } from '../components/Spinner'
@@ -7,6 +7,23 @@ import { AlertTriangle, CheckCircle, Unlock, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
+
+const BASE_PRICE_YR = 60
+const SPORT_PRICE_YR = 149
+const COMBO_PRICE_YR = BASE_PRICE_YR + SPORT_PRICE_YR
+
+type PendingSport = 'bjj' | 'bodybuilding'
+
+const SPORT_LABELS: Record<PendingSport, { short: string; wordmark: string }> = {
+  bjj: { short: 'BJJ', wordmark: 'ROMRx+BJJ' },
+  bodybuilding: { short: 'BodyBuilding', wordmark: 'ROMRx+BodyBuilding' },
+}
+
+function normalizePendingSport(raw: unknown): PendingSport | null {
+  const v = String(raw ?? '').toLowerCase().trim()
+  if (v === 'bjj' || v === 'bodybuilding') return v
+  return null
+}
 
 // -- PRS scoring algorithm ------------------------------------------------------
 const BILATERAL_JOINTS = [
@@ -79,10 +96,22 @@ function getTopAsymmetries(assessment: Record<string, number | null>): Array<{ j
 export function ResultsPreview() {
   const { user, session } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [assessment, setAssessment] = useState<Record<string, number | null> | null>(null)
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
+
+  // Pending sport from signup metadata (raw_user_meta_data.add_sport) or URL ?add=
+  // URL wins if both are present so a shared results link can override.
+  const pendingSport = useMemo(() => {
+    const fromUrl = normalizePendingSport(searchParams.get('add'))
+    if (fromUrl) return fromUrl
+    const meta = (user?.user_metadata ?? {}) as Record<string, unknown>
+    return normalizePendingSport(meta.add_sport ?? meta.active_sport)
+  }, [searchParams, user])
+
+  const sportCopy = pendingSport ? SPORT_LABELS[pendingSport] : null
 
   useEffect(() => {
     if (!user) { setLoading(false); return }
@@ -115,11 +144,23 @@ export function ResultsPreview() {
     })()
   }, [user, navigate])
 
-  const handleUnlock = async () => {
+  const handleUnlock = async (includePendingSport: boolean) => {
     if (!session || !user) return
     setPaying(true)
     setError('')
     try {
+      const body: Record<string, string> = {
+        mode: 'base',
+        user_id: user.id,
+        email: user.email ?? '',
+      }
+      // create-checkout-session v22+ accepts pending_sport / add on Base mode.
+      // Carries sport intent into Stripe metadata + success URL ?add=.
+      if (includePendingSport && pendingSport) {
+        body.pending_sport = pendingSport
+        body.add = pendingSport
+      }
+
       const res = await fetch(CHECKOUT_URL, {
         method: 'POST',
         headers: {
@@ -127,7 +168,7 @@ export function ResultsPreview() {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
+        body: JSON.stringify(body),
       })
       const { url, error: err } = await res.json()
       if (url) { window.location.href = url; return }
@@ -218,7 +259,13 @@ export function ResultsPreview() {
             <span className="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full font-bold">RED</span>
           </div>
           <div className="space-y-2">
-            {['My Protocol - Top 3 Priority Joints', 'My Sport - Offense + Defense Flow', 'ROMBot - Ask anything about your data'].map(item => (
+            {[
+              'My Protocol - Top 3 Priority Joints',
+              sportCopy
+                ? `My Sport - ${sportCopy.wordmark} (after Base)`
+                : 'My Sport - Offense + Defense Flow',
+              'ROMBot - Ask anything about your data',
+            ].map(item => (
               <div key={item} className="flex items-center gap-2">
                 <CheckCircle size={14} className="text-cobalt/40" />
                 <span className="text-sm text-white/40 blur-sm select-none">{item}</span>
@@ -229,15 +276,42 @@ export function ResultsPreview() {
 
         {/* CTA */}
         {error && <p className="text-xs text-center text-red-400 bg-red-500/10 rounded-xl px-3 py-2">{error}</p>}
-        <button
-          onClick={handleUnlock}
-          disabled={paying}
-          className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
-        >
-          {paying ? 'Setting up payment...' : <>
-            <Unlock size={18} /> Unlock My Dashboard - $60/yr
-          </>}
-        </button>
+
+        {pendingSport && sportCopy ? (
+          <div className="space-y-3">
+            <button
+              onClick={() => handleUnlock(true)}
+              disabled={paying}
+              className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {paying ? 'Setting up payment...' : <>
+                <Unlock size={18} /> Unlock Base + {sportCopy.short} - ${COMBO_PRICE_YR}/yr
+              </>}
+            </button>
+            <button
+              onClick={() => handleUnlock(false)}
+              disabled={paying}
+              className="w-full py-3 bg-transparent border border-white/25 text-white font-display font-semibold text-sm rounded-card hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              Unlock Base only - ${BASE_PRICE_YR}/yr
+            </button>
+            <p className="text-center text-xs text-white/40">
+              Base is ${BASE_PRICE_YR}/yr. {sportCopy.wordmark} is a ${SPORT_PRICE_YR}/yr add-on after Base.
+              Combo checkout starts Base and carries your sport intent for the next step.
+            </p>
+          </div>
+        ) : (
+          <button
+            onClick={() => handleUnlock(false)}
+            disabled={paying}
+            className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {paying ? 'Setting up payment...' : <>
+              <Unlock size={18} /> Unlock My Dashboard - ${BASE_PRICE_YR}/yr
+            </>}
+          </button>
+        )}
+
         <p className="text-center text-xs text-white/30">
           Free during beta with the <a href="/ambassador" className="underline">ambassador program</a>. Cancel anytime. Results saved permanently.
         </p>
