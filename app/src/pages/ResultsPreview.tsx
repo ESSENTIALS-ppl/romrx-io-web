@@ -8,10 +8,6 @@ import { cn } from '../lib/cn'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
 
-const BASE_PRICE_YR = 60
-const SPORT_PRICE_YR = 149
-const COMBO_PRICE_YR = BASE_PRICE_YR + SPORT_PRICE_YR
-
 type PendingSport = 'bjj' | 'bodybuilding'
 
 const SPORT_LABELS: Record<PendingSport, { short: string; wordmark: string }> = {
@@ -74,7 +70,7 @@ function computePRS(assessment: Record<string, number | null>): number {
 }
 
 function getPRSTier(score: number): { label: string; color: string; bg: string; desc: string } {
-  if (score >= 85) return { label: 'ELITE', color: 'text-cobalt', bg: 'bg-cobalt-light', desc: 'Exceptional ROM profile. Train hard and retest regularly.' }
+  if (score >= 85) return { label: 'ELITE', color: 'text-cobalt', bg: 'bg-cobalt-light', desc: 'Exceptional ROM profile. Keep training and retest regularly.' }
   if (score >= 70) return { label: 'STRONG', color: 'text-cobalt', bg: 'bg-cobalt-light', desc: 'Good mobility foundation. A few gaps to address.' }
   if (score >= 55) return { label: 'DEVELOPING', color: 'text-yellow-700', bg: 'bg-yellow-50', desc: 'ROM limitations are affecting your movement readiness.' }
   if (score >= 40) return { label: 'RESTRICTED', color: 'text-yellow-700', bg: 'bg-yellow-50', desc: 'Significant mobility restrictions. Prioritize your protocol.' }
@@ -202,12 +198,12 @@ export function ResultsPreview() {
         {/* Header */}
         <div className="text-center">
           <h1 className="font-display font-bold text-white text-2xl">Your Results Are In</h1>
-          <p className="text-sm text-white/60 mt-1">Position Readiness Protocol™ by ROMRx</p>
+          <p className="text-sm text-white/60 mt-1">Personalized Readiness Profile™ by ROMRx</p>
         </div>
 
         {/* PRS Score Card */}
         <div className="bg-white/5 rounded-card border border-cobalt/30 p-6 text-center">
-          <p className="text-xs font-bold text-cobalt-light uppercase tracking-widest mb-4">Position Readiness Score</p>
+          <p className="text-xs font-bold text-cobalt-light uppercase tracking-widest mb-4">Personalized Readiness Profile</p>
           <div className={cn('inline-flex items-center justify-center w-32 h-32 rounded-full border-4 mb-4', tier.bg, tier.color === 'text-cobalt' ? 'border-cobalt/40' : tier.color === 'text-yellow-700' ? 'border-yellow-400/40' : 'border-red-400/40')}>
             <div>
               <span className={cn('font-display font-bold text-5xl leading-none block', tier.color)}>{prs}</span>
@@ -285,7 +281,7 @@ export function ResultsPreview() {
               className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {paying ? 'Setting up payment...' : <>
-                <Unlock size={18} /> Unlock Base + {sportCopy.short} - ${COMBO_PRICE_YR}/yr
+                <Unlock size={18} /> Unlock Base + {sportCopy.short} (free through Dec 31, 2026)
               </>}
             </button>
             <button
@@ -293,10 +289,10 @@ export function ResultsPreview() {
               disabled={paying}
               className="w-full py-3 bg-transparent border border-white/25 text-white font-display font-semibold text-sm rounded-card hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              Unlock Base only - ${BASE_PRICE_YR}/yr
+              Unlock Base only (free through Dec 31, 2026)
             </button>
             <p className="text-center text-xs text-white/40">
-              Base is ${BASE_PRICE_YR}/yr. {sportCopy.wordmark} is a ${SPORT_PRICE_YR}/yr add-on after Base.
+              Base is free through December 31, 2026 (billing starts January 1, 2027). {sportCopy.wordmark} is an add-on after Base.
               Combo checkout starts Base and carries your sport intent for the next step.
             </p>
           </div>
@@ -307,13 +303,13 @@ export function ResultsPreview() {
             className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {paying ? 'Setting up payment...' : <>
-              <Unlock size={18} /> Unlock My Dashboard - ${BASE_PRICE_YR}/yr
+              <Unlock size={18} /> Unlock My Dashboard (free through Dec 31, 2026)
             </>}
           </button>
         )}
 
         <p className="text-center text-xs text-white/30">
-          Free during beta with the <a href="/ambassador" className="underline">ambassador program</a>. Cancel anytime. Results saved permanently.
+          ROMRx Base is free through December 31, 2026. Billing starts January 1, 2027. Cancel anytime. Results saved permanently.
         </p>
       </div>
     </div>
