@@ -58,4 +58,4 @@ Cobalt `#3B5BFF` + Violet `#7C4DFF` on `#0A1020`. Inter Tight (display), Inter (
 
 Trademark footer line (do not alter):
 
-> © 2026 ROMRx LLC. Greenwood, Indiana. ROMRx™, ROMRx+BJJ™, ROMRx+BodyBuilding™, ROM Readiness Protocol™, Position Readiness Protocol™, Exercise Readiness Protocol™, ROMBot™, The 6-Week Reassessment Cycle™, Top 3 Priority Joints™ are trademarks of ROMRx LLC.
+> © 2026 ROMRx LLC. Dublin, Ohio. ROMRx™, ROMRx+BJJ™, ROMRx+BodyBuilding™, ROM Readiness Protocol™, Position Readiness Protocol™, Exercise Readiness Protocol™, ROMBot™, The 6-Week Reassessment Cycle™, Top 3 Priority Joints™ are trademarks of ROMRx LLC.
