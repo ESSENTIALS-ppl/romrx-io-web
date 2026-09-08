@@ -110,7 +110,9 @@ export function Assessment() {
     submit(email, fullName)
   }
 
-  return (
+  // -- Setup screen -----------------------------------------------------------
+  
+    return (
     <AssessmentPhases
       phase={phase}
       stepIdx={stepIdx}
