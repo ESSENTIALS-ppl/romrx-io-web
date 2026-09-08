@@ -28,6 +28,7 @@ export function MySport() {
   const { user } = useAuth()
   const { profile, loading } = useProfile(user?.id)
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
 
   if (loading) return <Spinner />
 
@@ -49,6 +50,7 @@ export function MySport() {
   async function startBaseCheckout() {
     if (!user) return
     setBusy(true)
+    setError('')
     try {
       const headers = await authHeaders()
       const res = await fetch(CHECKOUT_URL, {
@@ -57,7 +59,13 @@ export function MySport() {
         body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
       })
       const data = await res.json()
-      if (data.url) window.location.href = data.url
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+      setError(data.message || data.error || `Could not start Base checkout (HTTP ${res.status}).`)
+    } catch {
+      setError('Could not start Base checkout. Please try again.')
     } finally {
       setBusy(false)
     }
@@ -77,6 +85,7 @@ export function MySport() {
   async function startSportCheckout(slug: string) {
     if (!user) return
     setBusy(true)
+    setError('')
     try {
       const headers = await authHeaders()
       const res = await fetch(CHECKOUT_URL, {
@@ -89,7 +98,13 @@ export function MySport() {
         await startBaseCheckout()
         return
       }
-      if (data.url) window.location.href = data.url
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+      setError(data.message || data.error || `Could not start ${slug} checkout (HTTP ${res.status}).`)
+    } catch {
+      setError('Could not start sport checkout. Please try again.')
     } finally {
       setBusy(false)
     }
@@ -98,6 +113,12 @@ export function MySport() {
   return (
     <div className="space-y-5">
       <PageHeader title="My Sport" subtitle="Your sport add-ons and available upgrades" />
+
+      {error && (
+        <div className="rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {entitlements.length === 0 ? (
         <SectionCard>
