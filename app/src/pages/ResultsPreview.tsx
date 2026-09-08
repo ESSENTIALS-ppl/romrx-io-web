@@ -8,10 +8,6 @@ import { cn } from '../lib/cn'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
 
-const BASE_PRICE_YR = 60
-const SPORT_PRICE_YR = 149
-const COMBO_PRICE_YR = BASE_PRICE_YR + SPORT_PRICE_YR
-
 type PendingSport = 'bjj' | 'bodybuilding'
 
 const SPORT_LABELS: Record<PendingSport, { short: string; wordmark: string }> = {
