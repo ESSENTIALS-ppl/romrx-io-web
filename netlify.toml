@@ -4,10 +4,12 @@
   functions = "netlify/functions"
   # Build the HQ React app into app/dist/ (Vite base='/app/').
   # Marketing HTML at repo root is served as-is.
-  command = "cd app && npm install && npm run build"
+  # rm app/index.html after build so publish="." cannot serve Vite /src/main.tsx
+  # for /app/ (Field RISK 2026-09-08). Local Vite still has its own index.
+  command = "cd app && npm install && npm run build && rm -f index.html"
 
-# HQ React app static asset passthrough. Serves /app/assets/*, /app/index.html etc.
-# directly from app/dist/. This must come BEFORE the SPA fallback below.
+# HQ React app static asset passthrough. Serves /app/assets/* from app/dist/.
+# This must come BEFORE the SPA fallback below.
 [[redirects]]
   from = "/app/assets/*"
   to = "/app/dist/assets/:splat"
@@ -18,25 +20,32 @@
   to = "/app/dist/favicon.ico"
   status = 200
 
-# SPA fallback: any /app/* URL that isn't a static asset falls back to the
-# built index.html so react-router-dom handles the route.
-# Two rules: bare /app (no slash) and /app/*. The bare /app rule must come
-# first because Netlify would otherwise serve the raw app/index.html from
-# the repo root due to publish=".".
+# SPA entry: force=true overrides any static app/index.html left in publish.
+# Without force, Netlify serves repo app/index.html (Vite /src/main.tsx) for
+# /app and /app/ ahead of redirects — Field RISK 2026-09-08.
 [[redirects]]
   from = "/app"
   to = "/app/dist/index.html"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/app/"
   to = "/app/dist/index.html"
   status = 200
+  force = true
+
+[[redirects]]
+  from = "/app/index.html"
+  to = "/app/dist/index.html"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/app/*"
   to = "/app/dist/index.html"
   status = 200
+  force = true
 
 [[headers]]
   for = "/*"
