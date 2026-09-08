@@ -202,7 +202,7 @@ export function ResultsPreview() {
         {/* Header */}
         <div className="text-center">
           <h1 className="font-display font-bold text-white text-2xl">Your Results Are In</h1>
-          <p className="text-sm text-white/60 mt-1">Personalized Readiness Profile\u2122 by ROMRx</p>
+          <p className="text-sm text-white/60 mt-1">Personalized Readiness Profile™ by ROMRx</p>
         </div>
 
         {/* PRS Score Card */}
@@ -232,9 +232,9 @@ export function ResultsPreview() {
               <div key={i} className="flex items-center justify-between">
                 <span className="text-sm text-white/80">{a.joint}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/50">L {a.left}\u00b0 / R {a.right}\u00b0</span>
+                  <span className="text-xs text-white/50">L {a.left}° / R {a.right}°</span>
                   <span className={cn('text-xs font-bold px-2 py-0.5 rounded-full', a.gap >= 15 ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400')}>
-                    {a.gap}\u00b0 gap
+                    {a.gap}° gap
                   </span>
                 </div>
               </div>
