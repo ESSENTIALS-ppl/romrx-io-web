@@ -21,6 +21,7 @@ export function AssessmentMeasureScreen(p: {
   return (
     <div className="min-h-screen bg-surface py-6 px-4">
       <div className="max-w-lg mx-auto space-y-4">
+        {/* Progress */}
         <div className="flex items-center gap-3">
           <div className="flex-1 h-1.5 bg-cobalt-light rounded-full overflow-hidden">
             <div className="h-full bg-cobalt rounded-full transition-all duration-500"
@@ -29,18 +30,22 @@ export function AssessmentMeasureScreen(p: {
           <span className="text-xs text-slate-500 whitespace-nowrap">{stepIdx + 1} / {totalMeasureSteps}</span>
         </div>
 
+        {/* Joint card */}
         <div className="bg-white rounded-card border border-cobalt/10 shadow-sm overflow-hidden">
+          {/* Header */}
           <div className="bg-cobalt px-5 py-4">
             <h2 className="font-display font-bold text-xl text-white">{step.title}</h2>
             <p className="text-cobalt-light text-xs mt-0.5">{step.why}</p>
           </div>
 
           <div className="p-5 space-y-5">
+            {/* Tool badge */}
             <div className="flex items-center gap-2 text-xs text-slate-500 bg-surface rounded-card px-3 py-2">
               <span className="text-base">📐</span>
               <span className="font-medium">{step.tool}</span>
             </div>
 
+            {/* Setup */}
             <div>
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide mb-2">Setup</p>
               <ol className="space-y-1.5">
@@ -55,6 +60,7 @@ export function AssessmentMeasureScreen(p: {
               </ol>
             </div>
 
+            {/* How to */}
             <div>
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide mb-2">How to Measure</p>
               <ol className="space-y-1.5">
@@ -69,6 +75,7 @@ export function AssessmentMeasureScreen(p: {
               </ol>
             </div>
 
+            {/* Common mistake */}
             <div className="flex gap-2.5 bg-yellow-50 border border-yellow-200 rounded-card p-3">
               <AlertTriangle size={15} className="text-yellow-600 shrink-0 mt-0.5" />
               <div>
@@ -78,6 +85,7 @@ export function AssessmentMeasureScreen(p: {
               </div>
             </div>
 
+            {/* Input fields */}
             <div className="space-y-4 pt-2 border-t border-cobalt/10">
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide">Enter your measurements</p>
               {step.fields.map(f => (
@@ -85,12 +93,14 @@ export function AssessmentMeasureScreen(p: {
               ))}
             </div>
 
+            {/* Hands-free screenshot tip */}
             <p className="text-center text-xs text-slate-500">
               📸 Can't tap the screen? Say <span className="font-semibold">&ldquo;Hey Siri, take a screenshot&rdquo;</span> (iPhone) or <span className="font-semibold">&ldquo;Hey Google, take a screenshot&rdquo;</span> (Android).
             </p>
 
             {error && <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
+            {/* Navigation */}
             <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
@@ -127,6 +137,7 @@ export function AssessmentMeasureScreen(p: {
           </div>
         </div>
 
+        {/* Step dots */}
         <div className="flex justify-center gap-1.5">
           {STEPS.map((_, i) => (
             <div key={i} className={cn(
