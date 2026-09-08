@@ -1,8 +1,6 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
-import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, Info, SkipForward } from 'lucide-react'
-import { cn } from '../lib/cn'
-import { SETUP_STEPS, type Field } from './assessmentMeta'
-import { STEPS } from './assessmentSteps'
+import { Loader2, ChevronRight, CheckCircle2, Info } from 'lucide-react'
+import { SETUP_STEPS } from './assessmentMeta'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
 
 type Phase = 'setup' | 'measure' | 'lead' | 'done' | 'lead-done'
