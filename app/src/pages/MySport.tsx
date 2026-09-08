@@ -143,7 +143,7 @@ export function MySport() {
               <p className="text-sm font-semibold text-cobalt-ink">Start with ROMRx Base</p>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              The $60/yr Base membership unlocks your Assessment history, ROMBot, and the ability to add any Sport pack. Free during beta with the ambassador program.
+              ROMRx Base unlocks your Assessment history, ROMBot, and the ability to add any Sport pack. Base is free through December 31, 2026. Billing starts January 1, 2027.
             </p>
             <button
               onClick={startBaseCheckout}
@@ -160,7 +160,7 @@ export function MySport() {
             {addable.map(s => (
               <div key={s.slug} className="border border-cobalt/10 rounded-card p-4 flex flex-col gap-2">
                 <p className="text-sm font-semibold text-cobalt-ink">{s.label}</p>
-                <p className="text-xs text-slate-500">Free during beta with the ambassador program - or {s.price} at checkout.</p>
+                <p className="text-xs text-slate-500">Sport packs are add-ons. Base is free through December 31, 2026. Billing starts January 1, 2027. Or {s.price} at checkout after beta.</p>
                 <button
                   onClick={() => startSportCheckout(s.slug)}
                   disabled={busy}
