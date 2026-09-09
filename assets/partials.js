@@ -63,7 +63,7 @@ const RX_UNIVERSE = ({ here }) => {
 const RX_LEGAL = `
 <footer class="rx-legal">
   <div class="rx-legal-inner">
-    <div>© 2026 ROMRx LLC · Greenwood, Indiana</div>
+    <div>© 2026 ROMRx LLC · Dublin, Ohio</div>
     <div>
       <a href="/articles">Articles</a> ·
       <a href="/articles/feed.xml">RSS</a> ·
