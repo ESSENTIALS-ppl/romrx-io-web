@@ -112,8 +112,9 @@
 
 [[redirects]]
   from = "/ambassador"
-  to = "/ambassador.html"
-  status = 200
+  to = "/"
+  status = 301
+  force = true
 
 # The public cohort/waitlist assessment page is retired. Send every direct or
 # historical request straight to the Base signup funnel. force = true so this
