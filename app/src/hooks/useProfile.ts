@@ -14,6 +14,12 @@ export interface Profile {
   portal_role: string
   subscription_status: string
   subscription_tier?: string
+  /** Research demographics (existing users columns; required by Settings / Layout gate). */
+  gender?: string | null
+  age_bucket?: string | null
+  height_bucket?: string | null
+  weight_bucket?: string | null
+  marketing_opt_out?: boolean | null
   /** Base (HQ) subscription status. Gates access to /dashboard/*. Set to 'active' only by the Stripe webhook. */
   base_status?: 'inactive' | 'active' | 'past_due' | 'canceled'
   base_stripe_subscription_id?: string

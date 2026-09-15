@@ -1,6 +1,8 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useProfile } from '../hooks/useProfile'
 import { cn } from '../lib/cn'
+import { FuelCalculateTracker } from './FuelCalculateTracker'
 import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -20,17 +22,27 @@ const NAV: NavItem[] = [
 ]
 
 export function Layout() {
-  const { signOut } = useAuth()
+  const { user, signOut } = useAuth()
+  const { profile, loading: profileLoading } = useProfile(user?.id)
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
   }
 
+  const demo = profile as { age_bucket?: string | null; gender?: string | null } | null
+  const needsDemographics = !!profile && (!demo?.age_bucket || !demo?.gender)
+  const onGate = location.pathname.startsWith('/dashboard/complete-profile')
+    || location.pathname.startsWith('/dashboard/settings')
+  if (!profileLoading && needsDemographics && !onGate) {
+    return <Navigate to="/dashboard/complete-profile" replace />
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-surface">
-      {/* Top nav */}
+      <FuelCalculateTracker />
       <header className="sticky top-0 z-10 bg-white border-b border-cobalt/10">
         <div className="max-w-5xl mx-auto px-4 flex items-center h-14 gap-1">
           <span className="font-display font-bold mr-4 text-base text-cobalt">
@@ -63,7 +75,6 @@ export function Layout() {
         </div>
       </header>
 
-      {/* Page content */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
         <Outlet />
       </main>

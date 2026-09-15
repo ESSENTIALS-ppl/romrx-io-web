@@ -244,6 +244,26 @@ export function MyBody() {
         </div>
       </div>
 
+
+      {/* Data-first: second assessment enables improvements-over-time research */}
+      {assessments.length === 1 && (
+        <div className="flex items-start gap-3 rounded-card border border-cobalt/20 bg-cobalt-light p-4">
+          <TrendingUp size={18} className="text-cobalt mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-cobalt-ink">Want to see how your ROM is changing?</p>
+            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+              You have one assessment on file. A second snapshot unlocks progress tracking on this page.
+            </p>
+            <Link
+              to="/onboarding/assessment"
+              className="inline-block mt-2 text-xs font-semibold text-cobalt hover:underline"
+            >
+              Reassess when ready
+            </Link>
+          </div>
+        </div>
+      )}
+
       {assessment.red_flag_triggered && (
         <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-card p-4">
           <AlertTriangle size={18} className="text-red-700 mt-0.5 shrink-0" />

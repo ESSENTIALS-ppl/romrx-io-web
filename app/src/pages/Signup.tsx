@@ -3,6 +3,22 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Loader2, UserPlus, Mail } from 'lucide-react'
 import { track } from '../lib/track'
+import { cn } from '../lib/cn'
+
+const GENDERS = [
+  { v: 'male', l: 'Male' },
+  { v: 'female', l: 'Female' },
+  { v: 'other', l: 'Other' },
+  { v: 'prefer_not_to_say', l: 'Prefer not to say' },
+] as const
+
+const AGE_BUCKETS = [
+  { v: '13-17', l: '13 to 17' },
+  { v: '18-29', l: '18 to 29' },
+  { v: '30-44', l: '30 to 44' },
+  { v: '45-59', l: '45 to 59' },
+  { v: '60+', l: '60 and over' },
+] as const
 
 export function Signup() {
   const navigate = useNavigate()
@@ -10,23 +26,14 @@ export function Signup() {
   const leadToken = searchParams.get('lead')
   const leadEmail = searchParams.get('email')
   const leadName = searchParams.get('name')
-  // Sport intent from the +sport landing pages (/app/signup?add=bjj|bodybuilding).
-  // Carried through email confirmation so the sport apps (consumers of the shared
-  // Supabase identity) can pick it up later. The base assessment is always the
-  // first destination regardless of sport intent.
   const addSport = searchParams.get('add')
-  // Base is sport-neutral. When (and only when) the visitor arrived with a recognized
-  // sport intent, we surface that sport's protocol label in the footer as text. We do
-  // NOT pull in any sport-site visual branding here; this stays the shared Base signup.
   const sportKey = (addSport ?? '').toLowerCase()
   const SPORT_PROTOCOL_LABELS: Record<string, string> = {
-    bjj: 'Position Readiness Protocol™ by ROMRx+BJJ',
-    bodybuilding: 'Exercise Readiness Protocol™ by ROMRx+BodyBuilding',
+    bjj: 'Position Readiness Protocol\u2122 by ROMRx+BJJ',
+    bodybuilding: 'Exercise Readiness Protocol\u2122 by ROMRx+BodyBuilding',
   }
-  const protocolLabel = SPORT_PROTOCOL_LABELS[sportKey] ?? 'Readiness Protocol™ by ROMRx'
+  const protocolLabel = SPORT_PROTOCOL_LABELS[sportKey] ?? 'Readiness Protocol\u2122 by ROMRx'
   const assessmentDest = `/onboarding/assessment${addSport ? `?add=${encodeURIComponent(addSport)}` : ''}`
-  // Brand-new accounts always start at assessment step one. Lead-unlock links keep
-  // their /unlock/:token destination (that lead already assessed as an anon lead).
   const nextDest = leadToken ? `/unlock/${leadToken}` : assessmentDest
   const [email, setEmail] = useState(leadEmail ?? '')
   const [password, setPassword] = useState('')
@@ -36,12 +43,15 @@ export function Signup() {
   const [error, setError] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [checkEmail, setCheckEmail] = useState(false)
+  const [gender, setGender] = useState('')
+  const [ageBucket, setAgeBucket] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (password !== confirm) { setError('Passwords do not match.'); return }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     if (!agreedToTerms) { setError('You must agree to the Terms of Service to continue.'); return }
+    if (!gender || !ageBucket) { setError('Age group and gender are required.'); return }
     setLoading(true); setError('')
     track('signup_submitted', { sport_intent: addSport ?? 'general', has_lead_token: !!leadToken })
 
@@ -49,17 +59,13 @@ export function Signup() {
       email,
       password,
       options: {
-        // full_name, sport intent, and source land in raw_user_meta_data, where the
-        // send-s1-welcome-email edge function reads them for the customer welcome email
-        // and the best-effort internal jim@romrx.io signup alert.
         data: {
           full_name: fullName,
           signup_source: 'romrx.io',
+          age_bucket: ageBucket,
+          gender,
           ...(addSport ? { add_sport: addSport } : {}),
         },
-        // If email confirmation is enabled, this is where the confirmation link lands.
-        // next carries the assessment destination so a confirmed new user starts at
-        // assessment step one (not the paywalled dashboard).
         emailRedirectTo: `${window.location.origin}/app/auth/confirm?next=${encodeURIComponent(nextDest)}${leadToken ? `&lead=${encodeURIComponent(leadToken)}` : ''}`,
       },
     })
@@ -71,21 +77,16 @@ export function Signup() {
       return
     }
 
-    // The public.users row is created by the on_auth_user_created trigger
-    // (handle_new_user). It defaults to base_status='inactive' - ProtectedRoute
-    // blocks /dashboard/* until the Stripe webhook flips it after checkout. Do NOT
-    // client-upsert here (no INSERT RLS policy on public.users; the trigger owns it).
-
-    // Confirmation disabled: signUp returns a live session, so go straight to the
-    // first assessment step now.
-    if (data.session) {
+    if (data.session && data.user) {
+      const { error: demoErr } = await supabase.from('users').update({
+        age_bucket: ageBucket,
+        gender,
+      }).eq('id', data.user.id)
+      if (demoErr && import.meta.env.DEV) console.warn('[signup] demographics update', demoErr.message)
       navigate(nextDest, { replace: true })
       return
     }
 
-    // Confirmation enabled: the user row exists but there is no session yet. Supabase
-    // has emailed a confirmation link (next -> assessment). Show a prompt rather than
-    // dropping an unauthenticated user into the assessment as an anon lead.
     if (data.user) {
       setCheckEmail(true)
       setLoading(false)
@@ -165,7 +166,35 @@ export function Signup() {
             />
           </div>
 
-          {/* Terms of Service checkbox */}
+          <div>
+            <p className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Gender <span className="normal-case font-normal text-slate-400">(required)</span></p>
+            <div className="flex gap-2 flex-wrap">
+              {GENDERS.map(g => (
+                <button
+                  key={g.v}
+                  type="button"
+                  onClick={() => setGender(g.v)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
+                    gender === g.v
+                      ? 'bg-cobalt text-white'
+                      : 'bg-white text-cobalt-ink border border-slate-200 hover:bg-slate-50',
+                  )}
+                >
+                  {g.l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Age group <span className="normal-case font-normal text-slate-400">(required)</span></label>
+            <select value={ageBucket} onChange={e => setAgeBucket(e.target.value)} className="input" required>
+              <option value="">Select...</option>
+              {AGE_BUCKETS.map(b => (<option key={b.v} value={b.v}>{b.l}</option>))}
+            </select>
+          </div>
+
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -176,7 +205,7 @@ export function Signup() {
             <span className="text-xs text-slate-500 leading-relaxed">
               I have read and agree to the{' '}
               <a href="/legal" target="_blank" rel="noopener noreferrer" className="text-cobalt underline font-medium">
-                ROMRx LLC Terms of Service, Privacy Policy &amp; Refund Policy
+                ROMRx LLC Terms of Service, Privacy Policy & Refund Policy
               </a>
               {' '}- a company-wide agreement with ROMRx LLC (parent of ROMRx+BJJ, ROMRx+BodyBuilding, and other ROMRx products) - including the collection and anonymized use of my ROM data for research and product development. All sales are final.
             </span>
@@ -184,7 +213,7 @@ export function Signup() {
 
           {error && <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
-          <button type="submit" disabled={loading || !agreedToTerms} className="btn-primary w-full flex items-center justify-center gap-2 mt-2 disabled:opacity-50">
+          <button type="submit" disabled={loading || !agreedToTerms || !gender || !ageBucket} className="btn-primary w-full flex items-center justify-center gap-2 mt-2 disabled:opacity-50">
             {loading ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
             Create account & start assessment
           </button>
