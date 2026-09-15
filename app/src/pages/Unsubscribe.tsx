@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+
+// One-click marketing opt-out. Calls the `unsubscribe` edge function, which flips
+// users.marketing_opt_out with the service role. The previous client-side update targeted a
+// `profiles` table that does not exist and was blocked by RLS anyway, so every unsubscribe
+// click errored and nobody was actually opted out (Base audit 2026-09-15).
+const UNSUBSCRIBE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/unsubscribe`
 
 export function Unsubscribe() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'missing'>('loading')
@@ -14,20 +19,24 @@ export function Unsubscribe() {
       return
     }
 
-    const decoded = decodeURIComponent(raw)
+    const decoded = decodeURIComponent(raw).trim().toLowerCase()
     setEmail(decoded)
 
-    supabase
-      .from('profiles')
-      .update({ marketing_opt_out: true })
-      .eq('email', decoded)
-      .then(({ error }) => {
-        if (error) {
-          console.error('Unsubscribe error:', error)
-          setStatus('error')
-        } else {
-          setStatus('success')
-        }
+    fetch(UNSUBSCRIBE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ email: decoded }),
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        setStatus('success')
+      })
+      .catch((err) => {
+        console.error('Unsubscribe error:', err)
+        setStatus('error')
       })
   }, [])
 
@@ -57,7 +66,7 @@ export function Unsubscribe() {
             </p>
             <p style={styles.note}>
               Changed your mind? Re-enable emails anytime in your{' '}
-              <a href="/dashboard/settings" style={styles.link}>account settings</a>.
+              <a href="/app/dashboard/settings" style={styles.link}>account settings</a>.
             </p>
           </>
         )}

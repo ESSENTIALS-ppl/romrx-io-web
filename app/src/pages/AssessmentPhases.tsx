@@ -2,6 +2,7 @@ import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import { Loader2, ChevronRight, CheckCircle2, Info } from 'lucide-react'
 import { SETUP_STEPS } from './assessmentMeta'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
+import { track } from '../lib/track'
 
 type Phase = 'setup' | 'measure' | 'lead' | 'done' | 'lead-done'
 
@@ -57,7 +58,7 @@ if (phase === 'setup') {
             </div>
           </div>
 
-          <button onClick={() => p.setPhase('measure')} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
+          <button onClick={() => { track('assessment_started'); p.setPhase('measure') }} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
             I'm ready - Start assessment <ChevronRight size={18} />
           </button>
           <p className="text-center text-xs text-slate-500">You can skip any measurement you can't do and retest later.</p>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Loader2, UserPlus, Mail } from 'lucide-react'
+import { track } from '../lib/track'
 
 export function Signup() {
   const navigate = useNavigate()
@@ -42,6 +43,7 @@ export function Signup() {
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     if (!agreedToTerms) { setError('You must agree to the Terms of Service to continue.'); return }
     setLoading(true); setError('')
+    track('signup_submitted', { sport_intent: addSport ?? 'general', has_lead_token: !!leadToken })
 
     const { data, error: signUpErr } = await supabase.auth.signUp({
       email,

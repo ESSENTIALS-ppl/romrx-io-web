@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
+import { PageViewTracker } from './components/PageViewTracker'
 import { Login } from './pages/Login'
 import { AuthCallback } from './pages/AuthCallback'
 import { AuthConfirm } from './pages/AuthConfirm'
@@ -33,6 +34,7 @@ function SignupSportRedirect() {
 export default function App() {
   return (
     <BrowserRouter basename="/app">
+      <PageViewTracker />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />

@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { Spinner } from '../components/Spinner'
 import { AlertTriangle, CheckCircle, Unlock, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
+import { track } from '../lib/track'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
 
@@ -110,6 +111,7 @@ export function ResultsPreview() {
   const sportCopy = pendingSport ? SPORT_LABELS[pendingSport] : null
 
   useEffect(() => {
+    track('results_viewed', { authenticated: !!user, pending_sport: pendingSport ?? null })
     if (!user) { setLoading(false); return }
     ;(async () => {
       // Check if base subscription is already active
@@ -141,6 +143,7 @@ export function ResultsPreview() {
   }, [user, navigate])
 
   const handleUnlock = async (includePendingSport: boolean) => {
+    track('results_unlock_clicked', { include_pending_sport: includePendingSport, pending_sport: pendingSport ?? null })
     if (!session || !user) return
     setPaying(true)
     setError('')

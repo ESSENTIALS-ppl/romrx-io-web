@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { scoreToTier, tierLabel } from '../lib/tier'
 import { STEPS } from './assessmentSteps'
 import { AssessmentPhases } from './AssessmentPhases'
+import { track } from '../lib/track'
 
 // Authenticated Base HQ → submit-assessment (great-job). Lead path unchanged.
 const SUBMIT_ASSESSMENT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-assessment`
@@ -23,12 +24,14 @@ export function Assessment() {
   const handleChange = (key: string, val: string) => setValues(p => ({ ...p, [key]: val }))
 
   const handleNext = () => {
+    track('assessment_step_completed', { step_index: stepIdx, step_key: STEPS[stepIdx]?.id ?? String(stepIdx), total_steps: STEPS.length, authenticated: !!session })
     if (stepIdx < STEPS.length - 1) {
       setStepIdx(s => s + 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else if (session) {
       submit()
     } else {
+      track('assessment_lead_gate_shown', { total_steps: STEPS.length })
       setPhase('lead')
     }
   }
@@ -69,6 +72,7 @@ export function Assessment() {
           setError(data.error ?? `Submission failed (HTTP ${res.status}). Please try again.`)
           return
         }
+        track('assessment_completed_ui', { authenticated: true, measured_fields: Object.values(assessment_data).filter(v => v !== null).length })
         setPhase('done')
         setTimeout(() => navigate('/onboarding/results', { replace: true }), 2000)
       } catch {
