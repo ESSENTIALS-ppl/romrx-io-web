@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation, Navigate } from 'react-route
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { cn } from '../lib/cn'
+import { FuelCalculateTracker } from './FuelCalculateTracker'
 import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -41,6 +42,7 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
+      <FuelCalculateTracker />
       <header className="sticky top-0 z-10 bg-white border-b border-cobalt/10">
         <div className="max-w-5xl mx-auto px-4 flex items-center h-14 gap-1">
           <span className="font-display font-bold mr-4 text-base text-cobalt">
