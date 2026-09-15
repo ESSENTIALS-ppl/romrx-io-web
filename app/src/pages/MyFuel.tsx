@@ -15,10 +15,27 @@ import { Utensils, Droplets } from 'lucide-react'
 //   - Hydration (Zone Sweat Model): purely zone-driven sweat loss (no dietary
 //     baselines), optional measured pre/post-weight mode, sodium =
 //     fluid * Na mmol/L * 23, 400-800 mL/hr cap, 150% rehydration, BSA heat
-//     vulnerability + >=25% BF heat-illness flags.
+//     vulnerability + sex-aware body-fat heat-illness flags.
 //
-// Self-contained: no Supabase writes. Inputs live in local component state so
-// the page works before profile fields for weight/body-fat exist.
+// 2026-09-15 update (audit fixes, core model unchanged):
+//   - Body inputs and the 24-hour zone grid are shared state owned by the page,
+//     so switching Nutrition <-> Hydration no longer wipes inputs or results.
+//   - Energy-availability floor: never prescribe under 30 kcal/kg lean mass
+//     (IOC REDs low-EA threshold). Explained in the plan text when applied.
+//   - Below-target body fat: operating body = current weight, not a heavier
+//     projection. Explained in the plan text.
+//   - Zone 5 guardrail: wearable Zone 5 beyond 20 min is treated as Zone 4 in
+//     the math and flagged. Zone 4+5 beyond 90 min is flagged.
+//   - Peak sweat rate requires at least 15 min in a zone; the intra-session
+//     cap follows that peak instead of any stray minute.
+//   - BSA heat-vulnerability thresholds corrected to a human range
+//     (m2/kg: >= 0.026 efficient, <= 0.021 heat-vulnerable).
+//   - Body-fat heat flag is sex-aware (>= 25% men, >= 35% women).
+//   - Measured mode flags overdrinking when post-weight exceeds pre-weight.
+//   - Input clamping with inline errors instead of silent zeros.
+//
+// Self-contained: no Supabase writes. Inputs live in page state so the tool
+// works before profile fields for weight/body-fat exist.
 // =============================================================================
 
 const LB2KG = 0.45359237
@@ -27,6 +44,25 @@ const LB2KG = 0.45359237
 const num = (s: string): number => {
   const n = parseFloat(s)
   return Number.isFinite(n) ? n : 0
+}
+
+// ---- Model constants ---------------------------------------------------------
+const PROTEIN_G_PER_KG_LEAN = 1.7
+const EA_FLOOR_KCAL_PER_KG_LEAN = 30 // IOC REDs low energy availability threshold
+const Z5_TRUE_MAX_MIN = 20 // wearable Zone 5 beyond this is treated as Zone 4
+const HARD_DAY_WARN_MIN = 90 // Zone 4 + Zone 5 minutes that earn a caution
+const PEAK_MIN_IN_ZONE = 15 // minutes in a zone before it counts as the peak
+const BSA_EFFICIENT = 0.026 // m2/kg
+const BSA_VULNERABLE = 0.021 // m2/kg
+const BF_HEAT_FLAG: Record<string, number> = { male: 25, female: 35 }
+
+// ---- Input limits -------------------------------------------------------------
+const LIM = {
+  weight: { min: 60, max: 600 },
+  bf: { min: 3, max: 60 },
+  ft: { min: 3, max: 8 },
+  inch: { min: 0, max: 11.9 },
+  session: { min: 10, max: 600 },
 }
 
 // ---- Zone definitions ------------------------------------------------------
@@ -61,6 +97,30 @@ function initTimes(zones: { k: number; defH: number; defM: number }[]): ZoneTime
 function totalMinutes(t: ZoneTime): number {
   return Object.values(t).reduce((s, v) => s + v.h * 60 + v.m, 0)
 }
+function zoneMins(t: ZoneTime, k: number): number {
+  return t[k].h * 60 + t[k].m
+}
+
+// Zone 5 guardrail shared by both models. Wearables report cumulative Zone 5
+// minutes that are rarely true VO2max physiology; anything past the cap is
+// fueled and sweated as Zone 4.
+function effectiveMinutes(t: ZoneTime): { mins: Record<number, number>; z5Moved: number; hardMin: number } {
+  const mins: Record<number, number> = {}
+  for (let k = 0; k <= 5; k++) mins[k] = zoneMins(t, k)
+  const z5Moved = Math.max(0, mins[5] - Z5_TRUE_MAX_MIN)
+  mins[5] -= z5Moved
+  mins[4] += z5Moved
+  return { mins, z5Moved, hardMin: mins[4] + mins[5] }
+}
+
+function rangeError(label: string, v: number, lim: { min: number; max: number }, unit: string): string {
+  if (v < lim.min || v > lim.max) return `${label} must be between ${lim.min} and ${lim.max} ${unit}.`
+  return ''
+}
+
+// ---- Shared body state ------------------------------------------------------
+interface Body { sex: Sex; weight: string; bf: string; ft: string; inch: string; salt: number }
+const DEFAULT_BODY: Body = { sex: 'male', weight: '198', bf: '18', ft: '5', inch: '10', salt: 35 }
 
 const HOUR_OPTS = Array.from({ length: 25 }, (_, i) => i)
 const MIN_OPTS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
@@ -75,10 +135,10 @@ function ZoneRows({ zones, times, onChange }: { zones: { k: number; name: string
             <span className="w-2.5 h-2.5 rounded-full flex-none" style={{ background: z.color }} />
             <span>{z.name}<span className="block text-xs font-normal text-slate-400">{z.sub}</span></span>
           </div>
-          <select className="input" value={times[z.k].h} onChange={e => onChange(z.k, 'h', +e.target.value)}>
+          <select className="input" aria-label={`${z.name} hours`} value={times[z.k].h} onChange={e => onChange(z.k, 'h', +e.target.value)}>
             {HOUR_OPTS.map(h => <option key={h} value={h}>{h} hours</option>)}
           </select>
-          <select className="input" value={times[z.k].m} onChange={e => onChange(z.k, 'm', +e.target.value)}>
+          <select className="input" aria-label={`${z.name} minutes`} value={times[z.k].m} onChange={e => onChange(z.k, 'm', +e.target.value)}>
             {MIN_OPTS.map(m => <option key={m} value={m}>{m} minutes</option>)}
           </select>
         </div>
@@ -107,28 +167,146 @@ function TotalBar({ total, calcLabel }: { total: number; calcLabel: string }) {
     <div className={cn('flex justify-between items-center mt-4 px-4 py-3 rounded-card text-sm font-semibold border',
       ok ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200')}>
       <span>Day total</span>
-      <span>{ok ? '24h 0m ✓' : `${h}h ${m}m — ${calcLabel}`}</span>
+      <span>{ok ? '24h 0m ✓' : `${h}h ${m}m, ${calcLabel}`}</span>
     </div>
   )
 }
 
-// ============================ NUTRITION VIEW ================================
-function NutritionView() {
-  const [sex, setSex] = useState<Sex>('male')
-  const [weight, setWeight] = useState('255')
-  const [bf, setBf] = useState('25')
-  const [times, setTimes] = useState<ZoneTime>(() => initTimes(N_ZONES))
-  const [result, setResult] = useState<null | {
-    kcal: number; carbG: number; proG: number; fatG: number; carbFrac: number
-    tow: number; leanLb: number; excess: number; weightN: number; dayName: string; warn: string
-  }>(null)
+function calcLabelFor(total: number): string {
+  return total > 1440
+    ? `over by ${Math.floor((total - 1440) / 60)}h ${(total - 1440) % 60}m`
+    : `add ${Math.floor((1440 - total) / 60)}h ${(1440 - total) % 60}m`
+}
 
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">{children}</label>
+)
+
+// Shared Step 1 body card. Height and sweat saltiness only matter for hydration
+// and are shown there; sex, weight, and body fat are one set of inputs for both.
+function BodyCard({ body, onChange, showHydrationFields }: { body: Body; onChange: (b: Body) => void; showHydrationFields: boolean }) {
+  const set = (patch: Partial<Body>) => onChange({ ...body, ...patch })
+  return (
+    <SectionCard title="Step 1 · Your body" subtitle="Shared by Nutrition and Hydration">
+      <div className="space-y-4">
+        <div>
+          <Label>Biological sex <span className="normal-case font-normal text-slate-400">(sets your target composition default)</span></Label>
+          <SexToggle value={body.sex} onChange={sex => set({ sex })} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label>Current weight (lb)</Label>
+            <input type="number" inputMode="decimal" className="input" value={body.weight} min={LIM.weight.min} max={LIM.weight.max} onChange={e => set({ weight: e.target.value })} />
+          </div>
+          <div>
+            <Label>Body fat (%)</Label>
+            <input type="number" inputMode="decimal" className="input" value={body.bf} min={LIM.bf.min} max={LIM.bf.max} onChange={e => set({ bf: e.target.value })} />
+          </div>
+        </div>
+        {showHydrationFields && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div><Label>Height ft</Label><input type="number" inputMode="numeric" className="input" value={body.ft} min={LIM.ft.min} max={LIM.ft.max} onChange={e => set({ ft: e.target.value })} /></div>
+            <div><Label>Height in</Label><input type="number" inputMode="decimal" className="input" value={body.inch} min={0} max={11} onChange={e => set({ inch: e.target.value })} /></div>
+            <div className="col-span-2">
+              <Label>Sweat saltiness</Label>
+              <select className="input" value={body.salt} onChange={e => set({ salt: +e.target.value })}>
+                <option value={20}>Light sweater (~20 mmol/L)</option>
+                <option value={35}>Average sweater (~35 mmol/L)</option>
+                <option value={50}>Salty sweater (~50 mmol/L)</option>
+              </select>
+            </div>
+          </div>
+        )}
+        <p className="text-xs text-slate-500 bg-surface rounded-card p-3 leading-relaxed">
+          We preserve your current lean mass and project it to a healthy target operating composition (default 12% men / 22% women) to set your resting energy, never your total current weight. If you are already leaner than that target, we fuel your current weight.
+        </p>
+      </div>
+    </SectionCard>
+  )
+}
+
+// ============================ NUTRITION VIEW ================================
+interface NutritionResult {
+  kcal: number; carbG: number; proG: number; fatG: number; carbFrac: number
+  tow: number; leanLb: number; excess: number; weightN: number; dayName: string
+  notes: string[]; belowTarget: boolean; eaFloored: boolean
+}
+
+export function computeNutrition(body: Body, times: ZoneTime): { result?: NutritionResult; error?: string } {
+  const weightN = num(body.weight)
+  const bfIn = num(body.bf)
+  const err = rangeError('Weight', weightN, LIM.weight, 'lb') || rangeError('Body fat', bfIn, LIM.bf, '%')
+  if (err) return { error: err }
+
+  const bfPct = bfIn / 100
+  const leanLb = weightN * (1 - bfPct)
+  const leanKg = leanLb * LB2KG
+  const target = TARGET_BF[body.sex]
+  const belowTarget = bfPct < target
+  // Operating body: lean mass projected to the target composition, or current
+  // weight when the user is already leaner than the target.
+  const tow = belowTarget ? weightN : leanLb / (1 - target)
+  const z0 = 75 * (tow / 198)
+
+  const { mins, z5Moved, hardMin } = effectiveMinutes(times)
+  let kcal = 0, carbKcal = 0
+  N_ZONES.forEach(z => {
+    const e = (mins[z.k] / 60) * z0 * z.mult
+    kcal += e; carbKcal += e * z.carb
+  })
+  const carbFrac = kcal > 0 ? carbKcal / kcal : 0.05
+  kcal = Math.round(kcal)
+
+  const notes: string[] = []
+  // Energy-availability floor (IOC REDs: < 30 kcal/kg FFM is low EA).
+  const eaFloor = Math.round(EA_FLOOR_KCAL_PER_KG_LEAN * leanKg)
+  const eaFloored = kcal < eaFloor
+  if (eaFloored) {
+    kcal = eaFloor
+    notes.push(`Your logged day came in under ${EA_FLOOR_KCAL_PER_KG_LEAN} kcal per kg of lean mass, the level below which hormones, bone, and recovery start to suffer. We raised the plan to that floor. Very restful days still need this much to run the body you are protecting.`)
+  }
+  if (belowTarget) {
+    notes.push(`You are already leaner than the ${Math.round(target * 100)}% reference, so we fueled your current ${Math.round(weightN)} lb rather than projecting a heavier operating body.`)
+  }
+  if (z5Moved > 0) {
+    notes.push(`Zone 5 is short interval work. We kept ${Z5_TRUE_MAX_MIN} minutes as true Zone 5 and fueled the remaining ${z5Moved} minutes as Zone 4, which is closer to what your body actually did.`)
+  }
+  if (hardMin > HARD_DAY_WARN_MIN) {
+    notes.push(`Over ${HARD_DAY_WARN_MIN} minutes in Zone 4 and 5 is a very hard day. Double-check your wearable data before eating to this number two days in a row.`)
+  }
+
+  const proG = Math.round(leanKg * PROTEIN_G_PER_KG_LEAN)
+  const proKcal = proG * 4
+  let remain = kcal - proKcal
+  if (remain < 0) {
+    remain = 0
+    notes.push('Your protein target alone approaches your total energy estimate, so protein is preserved and carbs and fat fall low. Add any real Zone 2+ activity and the budget opens up.')
+  }
+  const carbG = Math.round((remain * carbFrac) / 4)
+  const fatG = Math.round((remain * (1 - carbFrac)) / 9)
+
+  const vigEq = mins[2] + (mins[3] + mins[4] + mins[5]) * 2
+  const dayName = vigEq <= 20 ? 'Sedentary Day' : vigEq <= 42 ? 'Active Rest Day' : vigEq <= 89 ? 'Moderate Activity Day' : vigEq <= 149 ? 'High Activity Day' : 'Extreme Activity Day'
+
+  return {
+    result: {
+      kcal, carbG, proG, fatG, carbFrac, tow, leanLb, weightN, dayName, notes, belowTarget, eaFloored,
+      excess: belowTarget ? 0 : Math.max(0, Math.round(weightN - tow)),
+    },
+  }
+}
+
+function NutritionView({ body, times, setZone, result, setResult }: {
+  body: Body; times: ZoneTime; setZone: (k: number, field: 'h' | 'm', val: number) => void
+  result: NutritionResult | null; setResult: (r: NutritionResult | null) => void
+}) {
+  const [error, setError] = useState('')
   const total = totalMinutes(times)
   const complete = total === 1440
-  const calcLabel = total > 1440 ? `over by ${Math.floor((total - 1440) / 60)}h ${(total - 1440) % 60}m` : `add ${Math.floor((1440 - total) / 60)}h ${(1440 - total) % 60}m`
+  const calcLabel = calcLabelFor(total)
 
   const dayName = useMemo(() => {
-    const per = (k: number) => times[k].h * 60 + times[k].m
+    const per = (k: number) => zoneMins(times, k)
     const vigEq = per(2) + (per(3) + per(4) + per(5)) * 2
     if (vigEq <= 20) return 'Sedentary Day'
     if (vigEq <= 42) return 'Active Rest Day'
@@ -137,62 +315,17 @@ function NutritionView() {
     return 'Extreme Activity Day'
   }, [times])
 
-  function setZone(k: number, field: 'h' | 'm', val: number) {
-    setTimes(t => ({ ...t, [k]: { ...t[k], [field]: val } }))
-  }
-
   function calculate() {
-    const weightN = num(weight)
-    const bfPct = num(bf) / 100
-    if (!weightN || weightN < 60 || bfPct <= 0) return
-    const leanLb = weightN * (1 - bfPct)
-    const leanKg = leanLb * LB2KG
-    const tow = leanLb / (1 - TARGET_BF[sex])
-    const z0 = 75 * (tow / 198)
-    let kcal = 0, carbKcal = 0
-    N_ZONES.forEach(z => {
-      const hrs = (times[z.k].h * 60 + times[z.k].m) / 60
-      const e = hrs * z0 * z.mult
-      kcal += e; carbKcal += e * z.carb
-    })
-    kcal = Math.round(kcal)
-    const proG = Math.round(leanKg * 1.7)
-    const proKcal = proG * 4
-    let remain = kcal - proKcal
-    let warn = ''
-    if (remain < 0) { remain = 0; warn = 'On a near-pure-rest day your protein target alone approaches your total energy estimate, so protein is preserved and carbs and fat fall low. Add any real Zone 2+ activity and the budget opens up.' }
-    const carbFrac = kcal > 0 ? carbKcal / kcal : 0.05
-    const carbG = Math.round((remain * carbFrac) / 4)
-    const fatG = Math.round((remain * (1 - carbFrac)) / 9)
-    setResult({ kcal, carbG, proG, fatG, carbFrac, tow, leanLb, excess: Math.max(0, Math.round(weightN - tow)), weightN, dayName, warn })
+    const out = computeNutrition(body, times)
+    if (out.error) { setError(out.error); setResult(null); return }
+    setError('')
+    setResult(out.result ?? null)
   }
 
   const cPct = result ? Math.round(result.carbFrac * 100) : 0
 
   return (
     <div className="space-y-5">
-      <SectionCard title="Step 1 · Your body">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Biological sex <span className="normal-case font-normal text-slate-400">— sets target composition default</span></label>
-            <SexToggle value={sex} onChange={setSex} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Current weight (lb)</label>
-              <input type="number" inputMode="decimal" className="input" value={weight} min={60} max={600} onChange={e => setWeight(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Body fat (%)</label>
-              <input type="number" inputMode="decimal" className="input" value={bf} min={3} max={60} onChange={e => setBf(e.target.value)} />
-            </div>
-          </div>
-          <p className="text-xs text-slate-500 bg-surface rounded-card p-3 leading-relaxed">
-            We preserve your current lean mass and project it to a healthy target operating composition (default 12% men / 22% women) to set your resting energy, never your total current weight.
-          </p>
-        </div>
-      </SectionCard>
-
       <SectionCard title="Step 2 · Your day in zones" subtitle="Log a full 24 hours across your heart-rate zones">
         <ZoneRows zones={N_ZONES} times={times} onChange={setZone} />
         <TotalBar total={total} calcLabel={calcLabel} />
@@ -208,6 +341,7 @@ function NutritionView() {
         className="btn-primary w-full py-3.5 disabled:opacity-50 disabled:cursor-not-allowed">
         {complete ? 'Calculate my fuel plan' : 'Log must equal 24:00 to calculate'}
       </button>
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-card px-4 py-3">{error}</p>}
 
       {result && (
         <SectionCard title="Your fuel plan">
@@ -218,12 +352,15 @@ function NutritionView() {
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-2 items-center bg-surface rounded-card p-4 text-center mb-5">
             <div><div className="font-display font-bold text-xl text-cobalt-ink">{Math.round(result.weightN)} lb</div><div className="text-[0.7rem] uppercase tracking-wide text-slate-400">Current weight</div></div>
             <div className="text-cobalt text-2xl font-bold">→</div>
-            <div><div className="font-display font-bold text-xl text-cobalt-ink">{Math.round(result.tow)} lb @ {TARGET_BF[sex] * 100}%</div><div className="text-[0.7rem] uppercase tracking-wide text-slate-400">Target operating body</div></div>
+            <div>
+              <div className="font-display font-bold text-xl text-cobalt-ink">{Math.round(result.tow)} lb{result.belowTarget ? '' : ` @ ${TARGET_BF[body.sex] * 100}%`}</div>
+              <div className="text-[0.7rem] uppercase tracking-wide text-slate-400">{result.belowTarget ? 'Operating body (already lean)' : 'Target operating body'}</div>
+            </div>
           </div>
 
           <div className="text-center font-display font-bold text-xl text-white rounded-card p-4 mb-4" style={{ background: 'linear-gradient(135deg,#1D4ED8,#7C3AED)' }}>
             ≈ {result.kcal.toLocaleString()} kcal / day
-            <span className="block font-sans font-normal text-xs opacity-85 mt-0.5">Estimated daily energy, built entirely from your time in zone</span>
+            <span className="block font-sans font-normal text-xs opacity-85 mt-0.5">{result.eaFloored ? 'Raised to your energy-availability floor' : 'Estimated daily energy, built entirely from your time in zone'}</span>
           </div>
 
           <div className="flex h-3.5 rounded-full overflow-hidden mb-4">
@@ -245,7 +382,11 @@ function NutritionView() {
             ))}
           </div>
 
-          {result.warn && <p className="text-xs text-slate-500 bg-surface rounded-card p-3 mt-4">{result.warn}</p>}
+          {result.notes.length > 0 && (
+            <div className="space-y-2 mt-4">
+              {result.notes.map((n, i) => <p key={i} className="text-xs text-slate-600 bg-surface rounded-card p-3 leading-relaxed">{n}</p>)}
+            </div>
+          )}
           <p className="text-xs text-slate-400 mt-4 leading-relaxed">Your time-in-zone set the energy and carb/fat mix; lean mass set protein. Macro targets are approximate starting values, not medical prescriptions.</p>
         </SectionCard>
       )}
@@ -254,75 +395,97 @@ function NutritionView() {
 }
 
 // ============================ HYDRATION VIEW ===============================
-function HydrationView() {
-  const [sex, setSex] = useState<Sex>('male')
-  const [weight, setWeight] = useState('198')
-  const [ft, setFt] = useState('5')
-  const [inch, setInch] = useState('10')
-  const [bf, setBf] = useState('18')
-  const [salt, setSalt] = useState(35)
+interface HydrationResult {
+  fluidL: number; peakRate: number; cap: number; naMg: number; kMg: number; mgMg: number
+  sessionMode: boolean; narr: string; flags: { c: 'ok' | 'warn' | 'bad'; t: string }[]
+}
+interface Measured { pre: string; post: string; sesMin: string; drunk: string; urine: string }
+
+export function computeHydration(body: Body, times: ZoneTime, measured: boolean, m: Measured): { result?: HydrationResult; error?: string } {
+  const weightN = num(body.weight)
+  const bfN = num(body.bf)
+  const ftN = num(body.ft), inchN = num(body.inch)
+  const err = rangeError('Weight', weightN, LIM.weight, 'lb') || rangeError('Body fat', bfN, LIM.bf, '%')
+    || rangeError('Height (feet)', ftN, LIM.ft, 'ft') || rangeError('Height (inches)', inchN, LIM.inch, 'in')
+  if (err) return { error: err }
+
+  const heightCm = (ftN * 12 + inchN) * 2.54
+  const weightKg = weightN * LB2KG
+  const flags: HydrationResult['flags'] = []
+  let fluidL = 0, peakRate = 0, narr = '', sessionMode = false
+
+  if (measured) {
+    sessionMode = true
+    const sesMinN = num(m.sesMin)
+    const sErr = rangeError('Session length', sesMinN, LIM.session, 'minutes')
+    if (sErr) return { error: sErr }
+    const pre = num(m.pre), post = num(m.post)
+    if (pre < LIM.weight.min || post < LIM.weight.min) return { error: 'Enter your pre and post weights in pounds.' }
+    const hrs = sesMinN / 60
+    const drunk = Math.max(0, num(m.drunk)), urine = Math.max(0, num(m.urine))
+    const lostL = (pre - post) * LB2KG + drunk - urine
+    peakRate = Math.max(0, lostL / hrs)
+    fluidL = Math.max(0, lostL)
+    if (post > pre) {
+      flags.push({ c: 'bad', t: `You finished ${((post - pre)).toFixed(1)} lb heavier than you started, which means you drank more than you sweated. That is the overhydration side of the danger zone. Cut intake next session and keep sodium in what you do drink.` })
+    }
+    narr = `From your weigh-in, you lost ${fluidL.toFixed(2)} L of fluid over a ${sesMinN}-minute session, a measured sweat rate of ${peakRate.toFixed(2)} L/hr.`
+  } else {
+    const { mins, z5Moved, hardMin } = effectiveMinutes(times)
+    let anyActive = 0, activeFluid = 0
+    H_ZONES.forEach(z => {
+      const zm = mins[z.k]
+      fluidL += (zm / 60) * z.rate
+      if (z.k >= 2 && zm > 0) { anyActive += zm; activeFluid += (zm / 60) * z.rate }
+      // Peak only counts once a zone has real time in it, not a stray few minutes.
+      if (z.rate > peakRate && zm >= PEAK_MIN_IN_ZONE) peakRate = z.rate
+    })
+    // Fallback when no zone reaches the peak threshold: use the average active rate.
+    if (peakRate === 0 && anyActive > 0) peakRate = activeFluid / (anyActive / 60)
+    narr = `Based on how you spent your day, your body lost about ${fluidL.toFixed(1)} L to sweat, driven mostly by ${hardMin > 0 || mins[3] > 0 ? 'your harder Zone 3-5 work' : 'light day-long activity'}.`
+    if (z5Moved > 0) flags.push({ c: 'warn', t: `Zone 5 is short interval work. We counted ${Z5_TRUE_MAX_MIN} minutes as true Zone 5 and the other ${z5Moved} minutes at the Zone 4 sweat rate.` })
+    if (hardMin > HARD_DAY_WARN_MIN) flags.push({ c: 'warn', t: `Over ${HARD_DAY_WARN_MIN} minutes in Zone 4 and 5 is a very hard day. Weigh in before and after your next session to replace this estimate with your real sweat rate.` })
+  }
+
+  const naMg = Math.round(fluidL * body.salt * 23)
+  const cap = peakRate >= 1.5 ? 800 : peakRate >= 1.0 ? 600 : peakRate > 0 ? 500 : 400
+  const bsa = 0.007184 * Math.pow(heightCm, 0.725) * Math.pow(weightKg, 0.425)
+  const saMass = bsa / weightKg
+
+  if (saMass >= BSA_EFFICIENT) flags.push({ c: 'ok', t: 'Efficient cooling build. Your surface-area-to-mass ratio favors heat loss, so you shed heat relatively well.' })
+  else if (saMass <= BSA_VULNERABLE) flags.push({ c: 'warn', t: 'Heat-vulnerable build. A lower surface-area-to-mass ratio means you rely more on sweating to shed heat. Prioritize fluid and cooling in warm sessions.' })
+  else flags.push({ c: 'ok', t: 'Balanced surface-area-to-mass ratio for heat dissipation.' })
+
+  const bfFlag = BF_HEAT_FLAG[body.sex]
+  if (bfN >= bfFlag) flags.push({ c: 'bad', t: `At ${bfN}% body fat, fat acts as thermal insulation and lowers your total-body-water reserve. Military cohort studies link excess body fat to several times higher heat-illness risk. Hydrate early and avoid peak heat for hard sessions.` })
+  if (peakRate >= 1.5) flags.push({ c: 'warn', t: 'Zone 4-5 work: sodium replacement is mandatory for sessions over 60 minutes. Plain water alone risks hyponatremia.' })
+  else if (fluidL > 0) flags.push({ c: 'ok', t: 'Moderate sweat load. Sip to thirst and add sodium on any session over 60 minutes.' })
+  flags.push({ c: 'warn', t: 'Both dehydration and overdrinking are dangerous. Never exceed the intra-session absorption cap; use thirst as your ceiling.' })
+
+  const rehyd = (fluidL * 1.5).toFixed(1)
+  narr += ` Aim to replace it steadily${sessionMode ? `, about ${rehyd} L in the hours after training` : ''}, pairing fluid with sodium so you do not dilute your blood.`
+
+  return { result: { fluidL, peakRate, cap, naMg, kMg: Math.round(fluidL * 5 * 39), mgMg: Math.round(fluidL * 0.8 * 24), sessionMode, narr, flags } }
+}
+
+function HydrationView({ body, times, setZone, result, setResult }: {
+  body: Body; times: ZoneTime; setZone: (k: number, field: 'h' | 'm', val: number) => void
+  result: HydrationResult | null; setResult: (r: HydrationResult | null) => void
+}) {
   const [measured, setMeasured] = useState(false)
-  const [pre, setPre] = useState('198')
-  const [post, setPost] = useState('196')
-  const [sesMin, setSesMin] = useState('60')
-  const [drunk, setDrunk] = useState('0.5')
-  const [urine, setUrine] = useState('0')
-  const [times, setTimes] = useState<ZoneTime>(() => initTimes(H_ZONES))
-  const [result, setResult] = useState<null | {
-    fluidL: number; peakRate: number; cap: number; naMg: number; kMg: number; mgMg: number
-    sessionMode: boolean; narr: string; flags: { c: 'ok' | 'warn' | 'bad'; t: string }[]
-  }>(null)
+  const [m, setM] = useState<Measured>({ pre: body.weight, post: String(Math.max(0, num(body.weight) - 2)), sesMin: '60', drunk: '0.5', urine: '0' })
+  const [error, setError] = useState('')
+  const setField = (patch: Partial<Measured>) => setM(prev => ({ ...prev, ...patch }))
 
   const total = totalMinutes(times)
   const complete = measured || total === 1440
-  const calcLabel = total > 1440 ? `over by ${Math.floor((total - 1440) / 60)}h ${(total - 1440) % 60}m` : `add ${Math.floor((1440 - total) / 60)}h ${(1440 - total) % 60}m`
-
-  function setZone(k: number, field: 'h' | 'm', val: number) {
-    setTimes(t => ({ ...t, [k]: { ...t[k], [field]: val } }))
-  }
+  const calcLabel = calcLabelFor(total)
 
   function calculate() {
-    const heightCm = (num(ft) * 12 + num(inch)) * 2.54
-    const weightKg = num(weight) * LB2KG
-    let fluidL = 0, peakRate = 0, narr = '', sessionMode = false
-
-    if (measured) {
-      sessionMode = true
-      const sesMinN = num(sesMin)
-      const hrs = sesMinN / 60 || 1
-      const lostL = (num(pre) - num(post)) * LB2KG + num(drunk) - num(urine)
-      peakRate = Math.max(0, lostL / hrs)
-      fluidL = Math.max(0, lostL)
-      narr = `From your weigh-in, you lost ${fluidL.toFixed(2)} L of fluid over a ${sesMinN}-minute session, a measured sweat rate of ${peakRate.toFixed(2)} L/hr.`
-    } else {
-      H_ZONES.forEach(z => {
-        const mins = times[z.k].h * 60 + times[z.k].m
-        fluidL += (mins / 60) * z.rate
-        if (z.rate > peakRate && mins > 0) peakRate = z.rate
-      })
-      const hardMin = (times[3].h * 60 + times[3].m) + (times[4].h * 60 + times[4].m) + (times[5].h * 60 + times[5].m)
-      narr = `Based on how you spent your day, your body lost about ${fluidL.toFixed(1)} L to sweat, driven mostly by ${hardMin > 0 ? 'your harder Zone 3-5 work' : 'light day-long activity'}.`
-    }
-
-    const bfN = num(bf)
-    const naMg = Math.round(fluidL * salt * 23)
-    const cap = peakRate >= 1.5 ? 800 : peakRate >= 1.0 ? 600 : peakRate > 0 ? 500 : 400
-    const bsa = 0.007184 * Math.pow(heightCm, 0.725) * Math.pow(weightKg, 0.425)
-    const saMass = bsa / weightKg
-
-    const flags: { c: 'ok' | 'warn' | 'bad'; t: string }[] = []
-    if (saMass >= 0.0128) flags.push({ c: 'ok', t: 'Efficient cooling build. Your surface-area-to-mass ratio favors heat loss, so you shed heat relatively well.' })
-    else if (saMass <= 0.0112) flags.push({ c: 'warn', t: 'Heat-vulnerable build. A lower surface-area-to-mass ratio means you rely more on sweating to shed heat. Prioritize fluid and cooling in warm sessions.' })
-    else flags.push({ c: 'ok', t: 'Balanced surface-area-to-mass ratio for heat dissipation.' })
-    if (bfN >= 25) flags.push({ c: 'bad', t: `At ${bfN}% body fat, fat acts as thermal insulation and lowers your total-body-water reserve. Research links this to roughly 3.5x higher heat-illness risk. Hydrate early and avoid peak heat for hard sessions.` })
-    if (peakRate >= 1.5) flags.push({ c: 'warn', t: 'Zone 4-5 work: sodium replacement is mandatory for sessions over 60 minutes. Plain water alone risks hyponatremia.' })
-    else if (fluidL > 0) flags.push({ c: 'ok', t: 'Moderate sweat load. Sip to thirst and add sodium on any session over 60 minutes.' })
-    flags.push({ c: 'warn', t: 'Both dehydration and overdrinking are dangerous. Never exceed the intra-session absorption cap; use thirst as your ceiling.' })
-
-    const rehyd = (fluidL * 1.5).toFixed(1)
-    narr += ` Aim to replace it steadily${sessionMode ? `, about ${rehyd} L in the hours after training` : ''}, pairing fluid with sodium so you do not dilute your blood.`
-
-    setResult({ fluidL, peakRate, cap, naMg, kMg: Math.round(fluidL * 5 * 39), mgMg: Math.round(fluidL * 0.8 * 24), sessionMode, narr, flags })
+    const out = computeHydration(body, times, measured, m)
+    if (out.error) { setError(out.error); setResult(null); return }
+    setError('')
+    setResult(out.result ?? null)
   }
 
   const flagStyle: Record<string, string> = {
@@ -333,31 +496,6 @@ function HydrationView() {
 
   return (
     <div className="space-y-5">
-      <SectionCard title="Step 1 · Your body">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Biological sex</label>
-            <SexToggle value={sex} onChange={setSex} />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Weight (lb)</label><input type="number" inputMode="decimal" className="input" value={weight} onChange={e => setWeight(e.target.value)} /></div>
-            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Height ft</label><input type="number" inputMode="numeric" className="input" value={ft} onChange={e => setFt(e.target.value)} /></div>
-            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Height in</label><input type="number" inputMode="decimal" className="input" value={inch} onChange={e => setInch(e.target.value)} /></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Body fat (%)</label><input type="number" inputMode="decimal" className="input" value={bf} onChange={e => setBf(e.target.value)} /></div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Sweat saltiness</label>
-              <select className="input" value={salt} onChange={e => setSalt(+e.target.value)}>
-                <option value={20}>Light sweater (~20 mmol/L)</option>
-                <option value={35}>Average sweater (~35 mmol/L)</option>
-                <option value={50}>Salty sweater (~50 mmol/L)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </SectionCard>
-
       <SectionCard title="Step 2 · Your day in zones">
         <label className="flex items-start gap-3 bg-cobalt-light border border-cobalt/20 rounded-card p-3.5 mb-4 cursor-pointer">
           <input type="checkbox" className="mt-1" checked={measured} onChange={e => setMeasured(e.target.checked)} />
@@ -367,13 +505,13 @@ function HydrationView() {
         {measured ? (
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-3">
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Pre (lb)</label><input type="number" inputMode="decimal" className="input" value={pre} onChange={e => setPre(e.target.value)} /></div>
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Post (lb)</label><input type="number" inputMode="decimal" className="input" value={post} onChange={e => setPost(e.target.value)} /></div>
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Session (min)</label><input type="number" inputMode="numeric" className="input" value={sesMin} onChange={e => setSesMin(e.target.value)} /></div>
+              <div><Label>Pre (lb)</Label><input type="number" inputMode="decimal" className="input" value={m.pre} onChange={e => setField({ pre: e.target.value })} /></div>
+              <div><Label>Post (lb)</Label><input type="number" inputMode="decimal" className="input" value={m.post} onChange={e => setField({ post: e.target.value })} /></div>
+              <div><Label>Session (min)</Label><input type="number" inputMode="numeric" className="input" value={m.sesMin} min={LIM.session.min} max={LIM.session.max} onChange={e => setField({ sesMin: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Fluid drunk (L)</label><input type="number" inputMode="decimal" step="0.1" className="input" value={drunk} onChange={e => setDrunk(e.target.value)} /></div>
-              <div><label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Urine (L)</label><input type="number" inputMode="decimal" step="0.1" className="input" value={urine} onChange={e => setUrine(e.target.value)} /></div>
+              <div><Label>Fluid drunk (L)</Label><input type="number" inputMode="decimal" step="0.1" min={0} className="input" value={m.drunk} onChange={e => setField({ drunk: e.target.value })} /></div>
+              <div><Label>Urine (L)</Label><input type="number" inputMode="decimal" step="0.1" min={0} className="input" value={m.urine} onChange={e => setField({ urine: e.target.value })} /></div>
             </div>
           </div>
         ) : (
@@ -388,6 +526,7 @@ function HydrationView() {
         className="btn-primary w-full py-3.5 disabled:opacity-50 disabled:cursor-not-allowed">
         {complete ? 'Calculate my hydration needs' : 'Log must equal 24:00 to calculate'}
       </button>
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-card px-4 py-3">{error}</p>}
 
       {result && (
         <SectionCard title="Your sweat-loss replacement">
@@ -399,7 +538,7 @@ function HydrationView() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
-            <div className="border border-cobalt/10 rounded-card p-4 text-center"><div className="font-display font-bold text-2xl text-cobalt-ink">{result.peakRate.toFixed(2)} L/hr</div><div className="text-xs uppercase tracking-wide text-slate-500 mt-1.5">Peak sweat rate</div></div>
+            <div className="border border-cobalt/10 rounded-card p-4 text-center"><div className="font-display font-bold text-2xl text-cobalt-ink">{result.peakRate.toFixed(2)} L/hr</div><div className="text-xs uppercase tracking-wide text-slate-500 mt-1.5">{result.sessionMode ? 'Measured sweat rate' : 'Peak sweat rate'}</div></div>
             <div className="border border-cobalt/10 rounded-card p-4 text-center"><div className="font-display font-bold text-2xl text-cobalt-ink">{result.cap} mL/hr</div><div className="text-xs uppercase tracking-wide text-slate-500 mt-1.5">Intra-session cap</div></div>
           </div>
 
@@ -415,7 +554,7 @@ function HydrationView() {
               <div key={i} className={cn('rounded-card border px-4 py-3 text-sm leading-snug', flagStyle[f.c])}>{f.t}</div>
             ))}
           </div>
-          <p className="text-xs text-slate-400 mt-4 leading-relaxed">These are sweat-replacement estimates to spread across the day via food and drinks, not one forced dose and not your full dietary intake.</p>
+          <p className="text-xs text-slate-400 mt-4 leading-relaxed">These are sweat-replacement estimates to spread across the day via food and drinks, not one forced dose and not your full dietary intake. Fluid cap follows IMMDA guidance (400 to 800 mL/hr); heat-risk flags draw on military exertional heat illness cohorts.</p>
         </SectionCard>
       )}
     </div>
@@ -425,6 +564,15 @@ function HydrationView() {
 // =============================== PAGE ======================================
 export function MyFuel() {
   const [view, setView] = useState<'nutrition' | 'hydration'>('nutrition')
+  // Shared inputs owned by the page so toggling views never wipes them.
+  const [body, setBody] = useState<Body>(DEFAULT_BODY)
+  const [times, setTimes] = useState<ZoneTime>(() => initTimes(N_ZONES))
+  const [nResult, setNResult] = useState<NutritionResult | null>(null)
+  const [hResult, setHResult] = useState<HydrationResult | null>(null)
+
+  function setZone(k: number, field: 'h' | 'm', val: number) {
+    setTimes(t => ({ ...t, [k]: { ...t[k], [field]: val } }))
+  }
 
   return (
     <div className="space-y-5">
@@ -443,7 +591,11 @@ export function MyFuel() {
         </button>
       </div>
 
-      {view === 'nutrition' ? <NutritionView /> : <HydrationView />}
+      <BodyCard body={body} onChange={setBody} showHydrationFields={view === 'hydration'} />
+
+      {view === 'nutrition'
+        ? <NutritionView body={body} times={times} setZone={setZone} result={nResult} setResult={setNResult} />
+        : <HydrationView body={body} times={times} setZone={setZone} result={hResult} setResult={setHResult} />}
     </div>
   )
 }
