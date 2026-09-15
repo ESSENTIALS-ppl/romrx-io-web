@@ -19,13 +19,20 @@ export function AuthConfirm() {
         return
       }
 
-      if (lead) {
-        const { data } = await supabase.auth.getUser()
-        if (data.user) {
+      const { data } = await supabase.auth.getUser()
+      if (data.user) {
+        if (lead) {
           await supabase
             .from('leads')
             .update({ converted_user_id: data.user.id, converted_at: new Date().toISOString() })
             .eq('unlock_token', lead)
+        }
+        // Persist signup demographics collected into user_metadata (confirm-email path).
+        const meta = data.user.user_metadata ?? {}
+        const age_bucket = typeof meta.age_bucket === 'string' ? meta.age_bucket : null
+        const gender = typeof meta.gender === 'string' ? meta.gender : null
+        if (age_bucket && gender) {
+          await supabase.from('users').update({ age_bucket, gender }).eq('id', data.user.id)
         }
       }
 

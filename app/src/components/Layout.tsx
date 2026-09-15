@@ -1,5 +1,6 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useProfile } from '../hooks/useProfile'
 import { cn } from '../lib/cn'
 import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -20,12 +21,23 @@ const NAV: NavItem[] = [
 ]
 
 export function Layout() {
-  const { signOut } = useAuth()
+  const { user, signOut } = useAuth()
+  const { profile, loading: profileLoading } = useProfile(user?.id)
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
+  }
+
+  // Tiny data-first gate: age_bucket + gender must be set before other dashboard pages.
+  // Settings remains reachable so the user can complete the profile. No new schema.
+  const demo = profile as { age_bucket?: string | null; gender?: string | null } | null
+  const needsDemographics = !!profile && (!demo?.age_bucket || !demo?.gender)
+  const onSettings = location.pathname.startsWith('/dashboard/settings')
+  if (!profileLoading && needsDemographics && !onSettings) {
+    return <Navigate to="/dashboard/settings?complete=profile" replace />
   }
 
   return (
