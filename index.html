@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ROMRx · Finally, a mobility program customized for you.</title>
-  <meta name="description" content="ROMRx accepts you as you are. It doesn't leave you that way. Free through December 31, 2026. About 10 minutes on your phone.">
+  <meta name="description" content="ROMRx accepts you as you are. It doesn't leave you that way. Free to use through December 31, 2026. About 10 minutes on your phone.">
   <meta property="og:title" content="ROMRx · Finally, a mobility program customized for you.">
-  <meta property="og:description" content="The only customized feature most mobility apps have is your card number. Free through December 31, 2026. Billing starts January 1, 2027.">
+  <meta property="og:description" content="The only customized feature most mobility apps have is your card number. Free to use through December 31, 2026. Billing starts January 1, 2027.">
   <meta property="og:url" content="https://romrx.io">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
@@ -22,8 +22,35 @@
   <link rel="stylesheet" href="/assets/design-tokens.css">
   <script defer src="/assets/partials.js"></script>
   <style>
-    /* Homepage-only: thin header + sticky CTA after hero */
     .rx-home-nav .rx-nav-links a:not(.nav-login) { display: none; }
+    .rx-feature-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      margin-top: 48px;
+    }
+    .rx-feature-row.reverse { direction: rtl; }
+    .rx-feature-row.reverse > * { direction: ltr; }
+    .rx-feature-shot {
+      border-radius: 16px;
+      border: 1px solid rgba(59, 91, 255, 0.35);
+      overflow: hidden;
+      background: #0a1020;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+    }
+    .rx-feature-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      vertical-align: middle;
+    }
+    .rx-age-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 28px;
+    }
     .rx-sticky-cta {
       display: none;
       position: fixed;
@@ -36,17 +63,22 @@
       justify-content: center;
     }
     .rx-sticky-cta.is-on { display: flex; }
-    @media (max-width: 900px) {
-      .rx-home-stack { grid-template-columns: 1fr !important; }
-      .rx-grid.four { grid-template-columns: 1fr !important; }
-    }
     body.has-sticky-cta { padding-bottom: 76px; }
+    @media (max-width: 900px) {
+      .rx-feature-row,
+      .rx-feature-row.reverse {
+        grid-template-columns: 1fr;
+        direction: ltr;
+        gap: 20px;
+        margin-top: 36px;
+      }
+      .rx-age-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body data-rx-here="romrx">
   <div class="rx-ambient"></div>
 
-  <!-- Thin header: logo · Log in · Start Free Assessment -->
   <nav class="rx-nav rx-home-nav">
     <div class="rx-nav-inner">
       <a href="/" class="rx-wordmark">ROMRx</a>
@@ -57,10 +89,10 @@
     </div>
   </nav>
 
-  <!-- HERO (Jim lock WORD-FOR-WORD) -->
+  <!-- 1) Hero + assessment CTA -->
   <section class="rx-section" id="hero" style="padding-top: 80px;">
     <div class="rx-container narrow rx-center">
-      <p class="rx-eyebrow">Free through December 31, 2026</p>
+      <p class="rx-eyebrow">Free to use through December 31, 2026</p>
       <h1 class="rx-h1">Finally, a mobility program customized for you.</h1>
       <p class="rx-lead" style="margin-left:auto;margin-right:auto;font-weight:600;">
         The only customized feature most mobility apps have is your card number. The rest is generic full-body stretching that does not give you the progress you need.
@@ -77,78 +109,87 @@
       <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:36px;">
         <a href="/app/signup" class="rx-cta primary">Start Free Assessment →</a>
       </div>
-      <p class="rx-fine rx-center rx-mt-sm">About 10 minutes on your phone. Free through December 31, 2026. Billing starts January 1, 2027.</p>
+      <p class="rx-fine rx-center rx-mt-sm">About 10 minutes on your phone. Free to use through December 31, 2026. Billing starts January 1, 2027.</p>
     </div>
   </section>
 
-  <!-- What's in Base -->
+  <!-- 2) What's in Base  -  alternating screenshot rows -->
   <section class="rx-section tight">
     <div class="rx-container">
       <p class="rx-eyebrow rx-center">What's in Base</p>
-      <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">Built for regular people. Matched to your body.</h2>
-      <div class="rx-card-grid rx-home-stack rx-mt-lg">
-        <div class="rx-card" style="border-color:var(--rx-cobalt);">
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Daily plan</div>
-          <h3 class="rx-h3 rx-mt-sm">Exercises matched to you</h3>
-          <p class="rx-muted rx-mt-sm">Exercises, foam rolling, and stretches matched to your asymmetry and mobility needs. Not a generic program.</p>
+      <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">Real features. Matched to your body.</h2>
+
+      <div class="rx-feature-row">
+        <div class="rx-feature-shot">
+          <img src="/assets/imagine/home-screen-protocol.svg" alt="Daily plan and protocol in the ROMRx app" width="636" height="1200" loading="lazy" />
         </div>
-        <div class="rx-card" style="border-color:var(--rx-cobalt);">
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Fuel + hydration</div>
+        <div>
+          <p class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Daily plan</p>
+          <h3 class="rx-h3 rx-mt-sm">Exercises matched to your assessment</h3>
+          <p class="rx-muted rx-mt-sm">Your daily plan uses foam rolling, stretching, and exercises aimed at your greatest needs. Not a generic full-body program.</p>
+        </div>
+      </div>
+
+      <div class="rx-feature-row reverse">
+        <div class="rx-feature-shot">
+          <img src="/assets/imagine/home-screen-fuel.svg" alt="Fuel and hydration calculators in the ROMRx app" width="636" height="1200" loading="lazy" />
+        </div>
+        <div>
+          <p class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Fuel + hydration</p>
           <h3 class="rx-h3 rx-mt-sm">Calculators, not a food diary</h3>
           <p class="rx-muted rx-mt-sm">Macros from real daily living, not gym-only guesswork. Hydration sized to actual need, not drink-a-gallon.</p>
         </div>
-        <div class="rx-card" style="border-color:var(--rx-cobalt);">
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Guide</div>
-          <h3 class="rx-h3 rx-mt-sm">Knows your results</h3>
-          <p class="rx-muted rx-mt-sm">A guide that knows your assessment results so answers fit your body, not a one-size-fits-all script.</p>
+      </div>
+
+      <div class="rx-feature-row">
+        <div class="rx-feature-shot">
+          <img src="/assets/imagine/home-screen-guide.svg" alt="ROMBot in the ROMRx app" width="636" height="1200" loading="lazy" />
         </div>
+        <div>
+          <p class="rx-eyebrow" style="color:var(--rx-cobalt-2)">ROMBot</p>
+          <h3 class="rx-h3 rx-mt-sm">Ask about your results and plan</h3>
+          <p class="rx-muted rx-mt-sm">ROMBot knows your assessment results. Ask about your plan, your joints, or a move that feels off. Answers fit your body, not a one-size-fits-all script.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:40px;">
+        <a href="/app/signup" class="rx-cta primary">Start Free Assessment →</a>
       </div>
     </div>
   </section>
 
-  <!-- How it works (ONE 4-step with assimilation icons) -->
+  <!-- 3) For you if  -  three ages -->
   <section class="rx-section tight">
     <div class="rx-container">
-      <p class="rx-eyebrow rx-center">How it works</p>
-      <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">
-        Sign up. Assessment. Readiness profile. Log in daily.
-      </h2>
-      <div class="rx-card-grid rx-home-stack rx-mt-lg">
-        <div class="rx-card" style="text-align:center;border-color:var(--rx-cobalt);">
-          <img src="/assets/imagine/04-base-icons-signup.svg" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 12px;background:transparent;" />
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">01</div>
-          <h3 class="rx-h3 rx-mt-sm">Sign up</h3>
-          <p class="rx-muted rx-mt-sm">Create your Base account. Free to start.</p>
+      <p class="rx-eyebrow rx-center">For you if</p>
+      <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">Wherever you are, start where your body is.</h2>
+      <div class="rx-age-grid">
+        <div class="rx-card" style="border-color:var(--rx-cobalt);">
+          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Older adults</div>
+          <h3 class="rx-h3 rx-mt-sm">Stiffness that slows the day</h3>
+          <p class="rx-muted rx-mt-sm">Getting up, reaching, or walking feels harder than it used to. A gentle plan matched to your joints can help you move with more ease.</p>
         </div>
-        <div class="rx-card" style="text-align:center;border-color:var(--rx-cobalt);">
-          <img src="/assets/imagine/04-base-icons-assess.svg" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 12px;background:transparent;" />
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">02</div>
-          <h3 class="rx-h3 rx-mt-sm">Assessment</h3>
-          <p class="rx-muted rx-mt-sm">About ten minutes on your phone. Your ROM, as it is today.</p>
+        <div class="rx-card" style="border-color:var(--rx-cobalt);">
+          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Middle-aged adults</div>
+          <h3 class="rx-h3 rx-mt-sm">Tight from sitting and desk work</h3>
+          <p class="rx-muted rx-mt-sm">Hips and shoulders tighten from long days sitting. Your plan targets the spots that hold you back, not a random stretch list.</p>
         </div>
-        <div class="rx-card" style="text-align:center;border-color:var(--rx-cobalt);">
-          <img src="/assets/imagine/04-base-icons-readiness-profile.svg" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 12px;background:transparent;" />
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">03</div>
-          <h3 class="rx-h3 rx-mt-sm">Readiness profile</h3>
-          <p class="rx-muted rx-mt-sm">Your customized plan aimed at your greatest needs.</p>
-        </div>
-        <div class="rx-card" style="text-align:center;border-color:var(--rx-cobalt);">
-          <img src="/assets/imagine/04-base-icons-daily-login.svg" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 12px;background:transparent;" />
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">04</div>
-          <h3 class="rx-h3 rx-mt-sm">Log in daily</h3>
-          <p class="rx-muted rx-mt-sm">Show up for your plan. Consistency compounds.</p>
+        <div class="rx-card" style="border-color:var(--rx-cobalt);">
+          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Younger adults</div>
+          <h3 class="rx-h3 rx-mt-sm">Training hard without enough recovery</h3>
+          <p class="rx-muted rx-mt-sm">You push hard, but mobility work gets skipped. Get a short daily plan aimed at the ranges you actually need.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Free window + compact trust -->
+  <!-- 4) Bottom close + tiny FAQ -->
   <section class="rx-section tight">
     <div class="rx-container narrow rx-center">
-      <p class="rx-eyebrow">Free window</p>
-      <h2 class="rx-h2">Free through December 31, 2026.<br><span class="rx-grad">Billing starts January 1, 2027.</span></h2>
+      <p class="rx-eyebrow">Early access</p>
+      <h2 class="rx-h2">Free to use through December 31, 2026.<br><span class="rx-grad">Billing starts January 1, 2027.</span></h2>
       <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
-        Start now. It will only cost you your time during beta.
+        Start now. During this window it will only cost you your time. About 10 minutes on your phone. No wearables.
       </p>
       <div class="rx-chips rx-mt-md">
         <span class="rx-chip">14 joints both sides</span>
@@ -162,32 +203,26 @@
     </div>
   </section>
 
-  <!-- FAQ -->
-  <section class="rx-section tight">
+  <section class="rx-section tight" style="padding-top:0;">
     <div class="rx-container narrow">
       <p class="rx-eyebrow rx-center">FAQ</p>
-      <h2 class="rx-h2 rx-center">Straight answers</h2>
-      <div class="rx-card rx-mt-lg">
+      <div class="rx-card rx-mt-md">
         <h3 class="rx-h3">I'm not an athlete. Is this for me?</h3>
-        <p class="rx-muted rx-mt-sm">Yes. Base is for regular people who want better mobility and a plan matched to their body. You do not need a sport.</p>
+        <p class="rx-muted rx-mt-sm">Yes. Base is for regular people who want better mobility and a plan matched to their body.</p>
       </div>
       <div class="rx-card rx-mt-md">
-        <h3 class="rx-h3">Is this free?</h3>
-        <p class="rx-muted rx-mt-sm">Yes through December 31, 2026. Billing starts January 1, 2027. The assessment is about 10 minutes on your phone.</p>
+        <h3 class="rx-h3">Is it free right now?</h3>
+        <p class="rx-muted rx-mt-sm">Yes. Free to use through December 31, 2026. Billing starts January 1, 2027.</p>
       </div>
       <div class="rx-card rx-mt-md">
         <h3 class="rx-h3">What if a move hurts?</h3>
-        <p class="rx-muted rx-mt-sm">Skip it. Come back later if you want. No judgment. Never push through pain.</p>
+        <p class="rx-muted rx-mt-sm">Skip it. Come back later if you want. Never push through pain.</p>
       </div>
       <div class="rx-card rx-mt-md">
-        <h3 class="rx-h3">If I cancel a sport later, do I keep Base?</h3>
-        <p class="rx-muted rx-mt-sm">Yes. Base stays. Optional sport add-ons sit on top. Cancel a sport without losing Base.</p>
+        <h3 class="rx-h3">If I add a sport later and cancel it, do I keep Base?</h3>
+        <p class="rx-muted rx-mt-sm">Yes. Base stays. Optional sport add-ons sit on top.</p>
       </div>
-      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:36px;">
-        <a href="/app/signup" class="rx-cta primary">Start Free Assessment →</a>
-      </div>
-      <p class="rx-fine rx-center rx-mt-sm">About 10 minutes on your phone. Free through December 31, 2026. Billing starts January 1, 2027.</p>
-      <p class="rx-fine rx-center rx-mt-md">Train a sport? Optional add-ons later.</p>
+      <p class="rx-fine rx-center rx-mt-lg">Train a sport? Optional add-ons later.</p>
     </div>
   </section>
 
