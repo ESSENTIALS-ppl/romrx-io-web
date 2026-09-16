@@ -124,17 +124,20 @@ export function ROMBot() {
       </div>
 
       {/* Input */}
-      <div className="flex gap-2 pt-3 border-t border-cobalt/10 mt-2">
-        <textarea
-          value={input} onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-          placeholder="Ask about your mobility or protocol..."
-          rows={1} className="flex-1 px-4 py-2.5 rounded-card border border-cobalt/10 bg-surface text-sm resize-none focus:outline-none focus:border-cobalt focus:bg-white transition-colors"
-          style={{ minHeight: 44, maxHeight: 120 }}
-        />
-        <button onClick={send} disabled={busy || !input.trim()} className="btn-primary px-4 flex items-center gap-1.5 shrink-0">
-          {busy ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-        </button>
+      <div className="pt-3 border-t border-cobalt/10 mt-2">
+        <p className="text-[11px] text-slate-500 mb-1.5">AI · ROMRx plan only</p>
+        <div className="flex gap-2">
+          <textarea
+            value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+            placeholder="Ask about your ROMRx assessment, plan, or a move"
+            rows={1} className="flex-1 px-4 py-2.5 rounded-card border border-cobalt/10 bg-surface text-sm resize-none focus:outline-none focus:border-cobalt focus:bg-white transition-colors"
+            style={{ minHeight: 44, maxHeight: 120 }}
+          />
+          <button onClick={send} disabled={busy || !input.trim()} className="btn-primary px-4 flex items-center gap-1.5 shrink-0">
+            {busy ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+          </button>
+        </div>
       </div>
     </div>
   )
