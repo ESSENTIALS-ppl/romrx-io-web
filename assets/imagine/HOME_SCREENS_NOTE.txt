@@ -1,1 +1,1 @@
-Jim homepage screens: home-screen-protocol.svg, home-screen-fuel.svg, home-screen-guide.svg
+Jim homepage screens: home-screen-mybody.webp/.jpg, home-screen-protocol.webp/.jpg, home-screen-fuel.webp/.jpg, home-screen-guide.webp/.jpg
