@@ -14,15 +14,16 @@
   <meta name="twitter:description" content="ROMRx accepts you as you are. It doesn't leave you that way.">
   <link rel="canonical" href="https://romrx.io">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="/assets/fonts/inter-tight-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/fonts/romrx-fonts.css">
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230A1020' width='100' height='100' rx='18'/><text x='50' y='68' font-size='52' font-weight='800' font-family='sans-serif' fill='%233B5BFF' text-anchor='middle'>R</text></svg>">
   <link rel="stylesheet" href="/assets/design-tokens.css">
   <script defer src="/assets/partials.js"></script>
   <style>
     .rx-home-nav .rx-nav-links a:not(.nav-login) { display: none; }
+    /* homepage perf: no JetBrains Mono fetch */
+    body { --rx-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .rx-feature-row {
       display: grid;
       grid-template-columns: 1.1fr 1fr;
@@ -30,8 +31,10 @@
       align-items: center;
       margin-top: 48px;
     }
-    .rx-feature-row.reverse { direction: rtl; }
-    .rx-feature-row.reverse > * { direction: ltr; }
+    .rx-feature-row .rx-feature-shot { grid-column: 1; grid-row: 1; }
+    .rx-feature-row .rx-feature-copy { grid-column: 2; grid-row: 1; }
+    .rx-feature-row.reverse .rx-feature-shot { grid-column: 2; }
+    .rx-feature-row.reverse .rx-feature-copy { grid-column: 1; }
     .rx-feature-shot {
       border-radius: 16px;
       border: 1px solid rgba(59, 91, 255, 0.35);
@@ -68,10 +71,13 @@
       .rx-feature-row,
       .rx-feature-row.reverse {
         grid-template-columns: 1fr;
-        direction: ltr;
         gap: 20px;
         margin-top: 36px;
       }
+      .rx-feature-row .rx-feature-shot,
+      .rx-feature-row.reverse .rx-feature-shot { grid-column: 1; grid-row: 1; }
+      .rx-feature-row .rx-feature-copy,
+      .rx-feature-row.reverse .rx-feature-copy { grid-column: 1; grid-row: 2; }
       .rx-age-grid { grid-template-columns: 1fr; }
     }
   </style>
@@ -120,10 +126,13 @@
       <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">Real features. Matched to your body.</h2>
 
       <div class="rx-feature-row">
-        <div class="rx-feature-shot">
-          <img src="/assets/imagine/home-screen-protocol.svg" alt="Daily plan and protocol in the ROMRx app" width="636" height="1200" loading="lazy" />
+                <div class="rx-feature-shot">
+          <picture>
+            <source type="image/webp" srcset="/assets/imagine/home-screen-protocol.webp" />
+            <img src="/assets/imagine/home-screen-protocol.jpg" alt="Daily plan and protocol in the ROMRx app" width="720" height="1358" loading="lazy" decoding="async" />
+          </picture>
         </div>
-        <div>
+        <div class="rx-feature-copy">
           <p class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Daily plan</p>
           <h3 class="rx-h3 rx-mt-sm">Exercises matched to your assessment</h3>
           <p class="rx-muted rx-mt-sm">Your daily plan uses foam rolling, stretching, and exercises aimed at your greatest needs. Not a generic full-body program.</p>
@@ -131,10 +140,13 @@
       </div>
 
       <div class="rx-feature-row reverse">
-        <div class="rx-feature-shot">
-          <img src="/assets/imagine/home-screen-fuel.svg" alt="Fuel and hydration calculators in the ROMRx app" width="636" height="1200" loading="lazy" />
+                <div class="rx-feature-shot">
+          <picture>
+            <source type="image/webp" srcset="/assets/imagine/home-screen-fuel.webp" />
+            <img src="/assets/imagine/home-screen-fuel.jpg" alt="Fuel and hydration calculators in the ROMRx app" width="720" height="1358" loading="lazy" decoding="async" />
+          </picture>
         </div>
-        <div>
+        <div class="rx-feature-copy">
           <p class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Fuel + hydration</p>
           <h3 class="rx-h3 rx-mt-sm">Calculators, not a food diary</h3>
           <p class="rx-muted rx-mt-sm">Macros from real daily living, not gym-only guesswork. Hydration sized to actual need, not drink-a-gallon.</p>
@@ -142,10 +154,13 @@
       </div>
 
       <div class="rx-feature-row">
-        <div class="rx-feature-shot">
-          <img src="/assets/imagine/home-screen-guide.svg" alt="ROMBot in the ROMRx app" width="636" height="1200" loading="lazy" />
+                <div class="rx-feature-shot">
+          <picture>
+            <source type="image/webp" srcset="/assets/imagine/home-screen-guide.webp" />
+            <img src="/assets/imagine/home-screen-guide.jpg" alt="ROMBot in the ROMRx app" width="720" height="1358" loading="lazy" decoding="async" />
+          </picture>
         </div>
-        <div>
+        <div class="rx-feature-copy">
           <p class="rx-eyebrow" style="color:var(--rx-cobalt-2)">ROMBot</p>
           <h3 class="rx-h3 rx-mt-sm">Ask about your results and plan</h3>
           <p class="rx-muted rx-mt-sm">ROMBot knows your assessment results. Ask about your plan, your joints, or a move that feels off. Answers fit your body, not a one-size-fits-all script.</p>
