@@ -26,7 +26,7 @@
     body { --rx-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .rx-feature-row {
       display: grid;
-      grid-template-columns: 1.1fr 1fr;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
       gap: 40px;
       align-items: center;
       margin-top: 48px;
@@ -36,15 +36,19 @@
     .rx-feature-row.reverse .rx-feature-shot { grid-column: 2; }
     .rx-feature-row.reverse .rx-feature-copy { grid-column: 1; }
     .rx-feature-shot {
-      border-radius: 16px;
+      justify-self: center;
+      width: 100%;
+      max-width: 300px;
+      border-radius: 22px;
       border: 1px solid rgba(59, 91, 255, 0.35);
       overflow: hidden;
       background: #0a1020;
-      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.32);
     }
     .rx-feature-shot img {
       display: block;
       width: 100%;
+      max-width: 100%;
       height: auto;
       vertical-align: middle;
     }
@@ -78,6 +82,7 @@
       .rx-feature-row.reverse .rx-feature-shot { grid-column: 1; grid-row: 1; }
       .rx-feature-row .rx-feature-copy,
       .rx-feature-row.reverse .rx-feature-copy { grid-column: 1; grid-row: 2; }
+      .rx-feature-shot { max-width: 220px; border-radius: 18px; }
       .rx-age-grid { grid-template-columns: 1fr; }
     }
   </style>
@@ -126,7 +131,21 @@
       <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">Real features. Matched to your body.</h2>
 
       <div class="rx-feature-row">
-                <div class="rx-feature-shot">
+        <div class="rx-feature-shot">
+          <picture>
+            <source type="image/webp" srcset="/assets/imagine/home-screen-mybody.webp" />
+            <img src="/assets/imagine/home-screen-mybody.jpg" alt="My Body ROM profile spider chart in the ROMRx app" width="720" height="1259" loading="lazy" decoding="async" />
+          </picture>
+        </div>
+        <div class="rx-feature-copy">
+          <p class="rx-eyebrow" style="color:var(--rx-cobalt-2)">YOUR RESULTS</p>
+          <h3 class="rx-h3 rx-mt-sm">See how your body moves</h3>
+          <p class="rx-muted rx-mt-sm">Your assessment becomes a clear picture of where you’re limited and where to start. Confidence before you commit.</p>
+        </div>
+      </div>
+
+      <div class="rx-feature-row reverse">
+        <div class="rx-feature-shot">
           <picture>
             <source type="image/webp" srcset="/assets/imagine/home-screen-protocol.webp" />
             <img src="/assets/imagine/home-screen-protocol.jpg" alt="Daily plan and protocol in the ROMRx app" width="720" height="1358" loading="lazy" decoding="async" />
@@ -139,8 +158,8 @@
         </div>
       </div>
 
-      <div class="rx-feature-row reverse">
-                <div class="rx-feature-shot">
+      <div class="rx-feature-row">
+        <div class="rx-feature-shot">
           <picture>
             <source type="image/webp" srcset="/assets/imagine/home-screen-fuel.webp" />
             <img src="/assets/imagine/home-screen-fuel.jpg" alt="Fuel and hydration calculators in the ROMRx app" width="720" height="1358" loading="lazy" decoding="async" />
@@ -153,8 +172,8 @@
         </div>
       </div>
 
-      <div class="rx-feature-row">
-                <div class="rx-feature-shot">
+      <div class="rx-feature-row reverse">
+        <div class="rx-feature-shot">
           <picture>
             <source type="image/webp" srcset="/assets/imagine/home-screen-guide.webp" />
             <img src="/assets/imagine/home-screen-guide.jpg" alt="ROMBot in the ROMRx app" width="720" height="1358" loading="lazy" decoding="async" />
