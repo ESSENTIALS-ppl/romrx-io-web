@@ -32,7 +32,7 @@ export function Signup() {
     bjj: 'Position Readiness Protocol\u2122 by ROMRx+BJJ',
     bodybuilding: 'Exercise Readiness Protocol\u2122 by ROMRx+BodyBuilding',
   }
-  const protocolLabel = SPORT_PROTOCOL_LABELS[sportKey] ?? 'Readiness Protocol\u2122 by ROMRx'
+  const protocolLabel = SPORT_PROTOCOL_LABELS[sportKey] ?? 'Finally, a mobility program customized for you.'
   const assessmentDest = `/onboarding/assessment${addSport ? `?add=${encodeURIComponent(addSport)}` : ''}`
   const nextDest = leadToken ? `/unlock/${leadToken}` : assessmentDest
   const [email, setEmail] = useState(leadEmail ?? '')
@@ -125,7 +125,7 @@ export function Signup() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="font-display font-bold text-cobalt text-3xl">ROMRx</h1>
-          <p className="text-slate-500 text-sm mt-1">Create your account</p>
+          <p className="text-slate-500 text-sm mt-1">Finally, a mobility program customized for you.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
