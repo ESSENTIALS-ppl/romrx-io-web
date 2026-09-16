@@ -606,14 +606,14 @@ export function Settings() {
               <ChevronRight size={14} className="text-slate-500" />
             </a>
             <a
-              href="/legal"
+              href="https://romrx.io/legal"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center gap-3 px-4 py-3 rounded-card bg-white border border-slate-200 text-sm font-medium text-cobalt-ink hover:bg-slate-50 transition-colors"
             >
               <ExternalLink size={15} className="text-cobalt shrink-0" />
               <span className="flex-1">
-                Terms of Service and Privacy Policy
+                Terms of Service, Privacy Policy & Refund Policy
                 <span className="block text-xs text-slate-500 font-normal mt-0.5">romrx.io/legal</span>
               </span>
               <ChevronRight size={14} className="text-slate-500" />
