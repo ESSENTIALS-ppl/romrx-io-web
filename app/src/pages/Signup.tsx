@@ -203,11 +203,11 @@ export function Signup() {
               className="mt-0.5 h-4 w-4 rounded border-cobalt/20 accent-cobalt shrink-0 cursor-pointer"
             />
             <span className="text-xs text-slate-500 leading-relaxed">
-              I have read and agree to the{' '}
-              <a href="/legal" target="_blank" rel="noopener noreferrer" className="text-cobalt underline font-medium">
-                ROMRx LLC Terms of Service, Privacy Policy & Refund Policy
+              I have read and agree to the ROMRx LLC{' '}
+              <a href="https://romrx.io/legal" target="_blank" rel="noopener noreferrer" className="text-cobalt underline font-medium">
+                Terms of Service, Privacy Policy & Refund Policy
               </a>
-              {' '}- a company-wide agreement with ROMRx LLC (parent of ROMRx+BJJ, ROMRx+BodyBuilding, and other ROMRx products) - including the collection and anonymized use of my ROM data for research and product development. All sales are final.
+              , a company-wide agreement with ROMRx LLC covering ROMRx Base, ROMRx+BJJ, ROMRx+BodyBuilding, and other ROMRx products, including the collection and anonymized use of my ROM data for research and product development. All sales are final.
             </span>
           </label>
 
