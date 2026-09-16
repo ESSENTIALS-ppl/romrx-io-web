@@ -30,8 +30,8 @@ const RX_UNIVERSE = ({ here }) => {
     { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   href: 'https://romrxbodybuilding.com' },
     { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: 'Lift Readiness Protocol™',                    status: 'coming', href: null },
     { key: 'mma',        name: 'ROMRx<span class="rx-plus">+MMA</span>',              proto: 'Training Readiness Profile™',                 status: 'coming', href: null },
-    { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                    status: 'coming', href: null },
-    { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: 'Task Readiness Protocol™',                    status: 'coming', href: null },
+    { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                     status: 'coming', href: null },
+    { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: 'Task Readiness Protocol™',                     status: 'coming', href: null },
   ];
   const html = rows.map(r => {
     const isHere = here === r.key;
@@ -66,7 +66,6 @@ const RX_LEGAL = `
     <div>© 2026 ROMRx LLC · Dublin, Ohio</div>
     <div>
       <a href="/articles">Articles</a> ·
-      <a href="/articles/feed.xml">RSS</a> ·
       <a href="/legal">Terms &amp; Privacy</a> ·
       <a href="mailto:investors@romrx.io">Investors</a> ·
       <a href="mailto:partners@romrx.io">Partners</a>
