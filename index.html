@@ -3,87 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ROMRx · Base first. Sport packs on top.</title>
-  <meta name="description" content="ROMRx Base is longevity, self-care, and mobility in one foundation. Assess your ROM, get your Protocol, know your Top 3 Priority Joints. Add a sport pack only if you train that sport. They sell programs. We sell readiness on YOUR joints.">
-  <meta property="og:title" content="ROMRx · Base first. Sport packs on top.">
-  <meta property="og:description" content="Reactive healthcare starts after you're hurt. Proactive self care starts today. Base is longevity, self-care, and mobility. Sports are optional add-ons if you train.">
+  <title>ROMRx · Finally, a mobility program customized for you.</title>
+  <meta name="description" content="ROMRx accepts you as you are. It doesn't leave you that way. Free through December 31, 2026. About 10 minutes on your phone.">
+  <meta property="og:title" content="ROMRx · Finally, a mobility program customized for you.">
+  <meta property="og:description" content="The only customized feature most mobility apps have is your card number. Free through December 31, 2026. Billing starts January 1, 2027.">
   <meta property="og:url" content="https://romrx.io">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ROMRx · Base first. Sport packs on top.">
-  <meta name="twitter:description" content="They sell programs. We sell readiness on YOUR joints.">
+  <meta name="twitter:title" content="ROMRx · Finally, a mobility program customized for you.">
+  <meta name="twitter:description" content="ROMRx accepts you as you are. It doesn't leave you that way.">
   <link rel="canonical" href="https://romrx.io">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Montserrat:wght@600;700;800&family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230A1020' width='100' height='100' rx='18'/><text x='50' y='68' font-size='52' font-weight='800' font-family='sans-serif' fill='%233B5BFF' text-anchor='middle'>R</text></svg>">
   <link rel="stylesheet" href="/assets/design-tokens.css">
   <script defer src="/assets/partials.js"></script>
+  <style>
+    /* Homepage-only: thin header + sticky CTA after hero */
+    .rx-home-nav .rx-nav-links a:not(.nav-login) { display: none; }
+    .rx-sticky-cta {
+      display: none;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 40;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(10, 16, 32, 0.92);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(59, 91, 255, 0.35);
+      justify-content: center;
+    }
+    .rx-sticky-cta.is-on { display: flex; }
+    @media (max-width: 900px) {
+      .rx-home-stack { grid-template-columns: 1fr !important; }
+      .rx-grid.four { grid-template-columns: 1fr !important; }
+    }
+    body.has-sticky-cta { padding-bottom: 76px; }
+  </style>
 </head>
 <body data-rx-here="romrx">
   <div class="rx-ambient"></div>
 
-  <!-- NAV -->
-  <div data-rx-slot="nav"></div>
-
-  <!-- HERO -->
-  <section class="rx-section" style="padding-top: 80px;">
-    <div class="rx-container narrow rx-center">
-      <span class="rx-beta">Beta · Base + 2 sport packs</span>
-      <p class="rx-eyebrow rx-mt-md">ROMRx Base is longevity, self-care, and mobility</p>
-      <h1 class="rx-h1">
-        Assess your ROM.<br>
-        Get your Protocol.<br>
-        <span class="rx-grad">Know your Top 3 Priority Joints.</span>
-      </h1>
-      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
-        Reactive healthcare starts after you're hurt. Proactive self care starts today.
-        Base is how you take care of your body for the long run: mobility, longevity, self-care.
-        That is where every journey begins.
-      </p>
-      <p class="rx-lead rx-mt-md" style="margin-left:auto;margin-right:auto;font-weight:600;">
-        They sell programs. We sell readiness on <em>your</em> joints.
-      </p>
-
-      <!-- BASE PILLARS -->
-      <div class="rx-card-grid rx-mt-lg" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="rx-card" style="border-color:var(--rx-cobalt);">
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">01 · Assess</div>
-          <h3 class="rx-h3 rx-mt-sm">Range of Motion</h3>
-          <p class="rx-muted rx-mt-sm">A phone-based ROM assessment across your joints. About ten minutes. Your body, as it is today.</p>
-        </div>
-        <div class="rx-card" style="border-color:var(--rx-cobalt);">
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">02 · Protocol</div>
-          <h3 class="rx-h3 rx-mt-sm">Personalized Readiness Profile</h3>
-          <p class="rx-muted rx-mt-sm">Recommended exercises matched to your imbalances. The self-care and mobility path your body needs next.</p>
-        </div>
-        <div class="rx-card" style="border-color:var(--rx-cobalt);">
-          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">03 · Focus</div>
-          <h3 class="rx-h3 rx-mt-sm">Top 3 Priority Joints</h3>
-          <p class="rx-muted rx-mt-sm">Clear priorities so you know where to start. No overwhelm. No all-or-nothing.</p>
-        </div>
+  <!-- Thin header: logo · Log in · Start Free Assessment -->
+  <nav class="rx-nav rx-home-nav">
+    <div class="rx-nav-inner">
+      <a href="/" class="rx-wordmark">ROMRx</a>
+      <div class="rx-nav-links">
+        <a href="/app/login" class="nav-login mobile-hide-ok">Log in</a>
       </div>
+      <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start Free Assessment →</a>
+    </div>
+  </nav>
 
+  <!-- HERO (Jim lock WORD-FOR-WORD) -->
+  <section class="rx-section" id="hero" style="padding-top: 80px;">
+    <div class="rx-container narrow rx-center">
+      <p class="rx-eyebrow">Free through December 31, 2026</p>
+      <h1 class="rx-h1">Finally, a mobility program customized for you.</h1>
+      <p class="rx-lead" style="margin-left:auto;margin-right:auto;font-weight:600;">
+        The only customized feature most mobility apps have is your card number. The rest is generic full-body stretching that does not give you the progress you need.
+      </p>
+      <p class="rx-lead rx-mt-md" style="margin-left:auto;margin-right:auto;">
+        ROMRx accepts you as you are. It doesn't leave you that way.
+      </p>
+      <p class="rx-muted rx-mt-md" style="margin-left:auto;margin-right:auto;max-width:640px;">
+        We take your mobility assessment and customize it to your needs. Based on 140+ peer-reviewed studies, we assess your Range of Motion (ROM) and give you an Rx (Recommended Exercise) of foam rolling, stretching, and exercises aimed at your greatest needs.
+      </p>
+      <p class="rx-lead rx-mt-md" style="margin-left:auto;margin-right:auto;">
+        Ready to take your next step? It will only cost you your time.
+      </p>
       <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:36px;">
         <a href="/app/signup" class="rx-cta primary">Start Free Assessment →</a>
       </div>
-      <p class="rx-fine rx-center rx-mt-sm">Free assessment. About ten minutes. Just use your phone.</p>
+      <p class="rx-fine rx-center rx-mt-sm">About 10 minutes on your phone. Free through December 31, 2026. Billing starts January 1, 2027.</p>
     </div>
   </section>
 
-  <!-- BASE ASSIMILATION STEPS (Jim GO 2026-09-15 transparent icons) -->
+  <!-- What's in Base -->
+  <section class="rx-section tight">
+    <div class="rx-container">
+      <p class="rx-eyebrow rx-center">What's in Base</p>
+      <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">Built for regular people. Matched to your body.</h2>
+      <div class="rx-card-grid rx-home-stack rx-mt-lg">
+        <div class="rx-card" style="border-color:var(--rx-cobalt);">
+          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Daily plan</div>
+          <h3 class="rx-h3 rx-mt-sm">Exercises matched to you</h3>
+          <p class="rx-muted rx-mt-sm">Exercises, foam rolling, and stretches matched to your asymmetry and mobility needs. Not a generic program.</p>
+        </div>
+        <div class="rx-card" style="border-color:var(--rx-cobalt);">
+          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Fuel + hydration</div>
+          <h3 class="rx-h3 rx-mt-sm">Calculators, not a food diary</h3>
+          <p class="rx-muted rx-mt-sm">Macros from real daily living, not gym-only guesswork. Hydration sized to actual need, not drink-a-gallon.</p>
+        </div>
+        <div class="rx-card" style="border-color:var(--rx-cobalt);">
+          <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Guide</div>
+          <h3 class="rx-h3 rx-mt-sm">Knows your results</h3>
+          <p class="rx-muted rx-mt-sm">A guide that knows your assessment results so answers fit your body, not a one-size-fits-all script.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works (ONE 4-step with assimilation icons) -->
   <section class="rx-section tight">
     <div class="rx-container">
       <p class="rx-eyebrow rx-center">How it works</p>
       <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">
-        Sign up. Assess. Get your Personalized Readiness Profile. Show up daily.
+        Sign up. Assessment. Readiness profile. Log in daily.
       </h2>
-      <p class="rx-lead rx-center" style="max-width:640px;margin-left:auto;margin-right:auto;">
-        Base is longevity, self-care, and mobility. These four steps are how you start and stay with it.
-      </p>
-      <div class="rx-grid four rx-mt-lg">
+      <div class="rx-card-grid rx-home-stack rx-mt-lg">
         <div class="rx-card" style="text-align:center;border-color:var(--rx-cobalt);">
           <img src="/assets/imagine/04-base-icons-signup.svg" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 12px;background:transparent;" />
           <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">01</div>
@@ -99,173 +129,35 @@
         <div class="rx-card" style="text-align:center;border-color:var(--rx-cobalt);">
           <img src="/assets/imagine/04-base-icons-readiness-profile.svg" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 12px;background:transparent;" />
           <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">03</div>
-          <h3 class="rx-h3 rx-mt-sm">Personalized Readiness Profile</h3>
-          <p class="rx-muted rx-mt-sm">Your Protocol and Top 3 Priority Joints for longevity and mobility.</p>
+          <h3 class="rx-h3 rx-mt-sm">Readiness profile</h3>
+          <p class="rx-muted rx-mt-sm">Your customized plan aimed at your greatest needs.</p>
         </div>
         <div class="rx-card" style="text-align:center;border-color:var(--rx-cobalt);">
           <img src="/assets/imagine/04-base-icons-daily-login.svg" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 12px;background:transparent;" />
           <div class="rx-eyebrow" style="color:var(--rx-cobalt-2)">04</div>
           <h3 class="rx-h3 rx-mt-sm">Log in daily</h3>
-          <p class="rx-muted rx-mt-sm">Show up for your self-care. Consistency compounds.</p>
+          <p class="rx-muted rx-mt-sm">Show up for your plan. Consistency compounds.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- HOW ROMRX WORKS -->
+  <!-- Free window + compact trust -->
   <section class="rx-section tight">
     <div class="rx-container narrow rx-center">
-      <p class="rx-eyebrow">How ROMRx works</p>
-      <h2 class="rx-h2">
-        Base first. Take care of your body for the long run. Mobility, longevity, self-care.<br>
-        <span class="rx-grad">Add a sport pack only if you train that sport. Cancel a sport and Base stays.</span>
-      </h2>
+      <p class="rx-eyebrow">Free window</p>
+      <h2 class="rx-h2">Free through December 31, 2026.<br><span class="rx-grad">Billing starts January 1, 2027.</span></h2>
       <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
-        Base is proactive self-care: assess your ROM, get your Protocol, know your Top 3 Priority Joints.
-        Sport packs sit on Base for people who train. Not required. Not a different product.
+        Start now. It will only cost you your time during beta.
       </p>
       <div class="rx-chips rx-mt-md">
-        <span class="rx-chip">Start with Base</span>
-        <span class="rx-chip">Build for the long game</span>
-        <span class="rx-chip">Add a sport only if you train one</span>
-        <span class="rx-chip">Drop a sport, keep Base</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- PRICING -->
-  <section class="rx-section tight">
-    <div class="rx-container narrow">
-      <div class="rx-card" style="border-color:var(--rx-cobalt);max-width:660px;margin-left:auto;margin-right:auto;">
-        <div class="rx-eyebrow" style="color:var(--rx-yellow)">What it costs (example)</div>
-        <h3 class="rx-h3 rx-mt-sm">Simple yearly numbers</h3>
-        <p class="rx-muted rx-mt-sm">
-          Base is free through December 31, 2026 (billing begins January 1, 2027). That's the foundation for your Personalized Readiness Profile, your Protocol, and your Top 3 Priority Joints.
-        </p>
-        <p class="rx-muted rx-mt-sm">
-          If you also train a sport, Base plus BJJ is about $209 a year.
-        </p>
-        <p class="rx-fine rx-mt-md">These are example numbers so the idea is clear. Live prices show when you're ready to subscribe.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3 STEPS -->
-  <section class="rx-section">
-    <div class="rx-container">
-      <p class="rx-eyebrow rx-center">Your next step is easy</p>
-      <h2 class="rx-h2 rx-center" style="max-width:720px;margin-left:auto;margin-right:auto;">
-        Three steps. About ten minutes.
-      </h2>
-      <div class="rx-card-grid rx-mt-lg" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="rx-card">
-          <div style="font-family:var(--rx-font-mono);color:var(--rx-cobalt-2);font-size:0.82rem;letter-spacing:2px;">STEP 01</div>
-          <h3 class="rx-h3 rx-mt-sm">Pick up your phone.</h3>
-          <p class="rx-muted">Follow the easy step-by-step directions. Nothing else to buy, just
-            use your phone in your living room.</p>
-        </div>
-        <div class="rx-card">
-          <div style="font-family:var(--rx-font-mono);color:var(--rx-cobalt-2);font-size:0.82rem;letter-spacing:2px;">STEP 02</div>
-          <h3 class="rx-h3 rx-mt-sm">Record what you can.</h3>
-          <p class="rx-muted">If any movement feels uncomfortable or confusing, skip it. You can
-            always come back to it later. No judgment, no gatekeeping, no all-or-nothing.</p>
-        </div>
-        <div class="rx-card">
-          <div style="font-family:var(--rx-font-mono);color:var(--rx-cobalt-2);font-size:0.82rem;letter-spacing:2px;">STEP 03</div>
-          <h3 class="rx-h3 rx-mt-sm">See your results.</h3>
-          <p class="rx-muted">Your top 3 priority joints, your imbalances, and the exact next step
-            in your proactive self care and mobility journey. That's the beginning of your longevity plan.</p>
-        </div>
-      </div>
-      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:36px;">
-        <a href="/app/signup" class="rx-cta primary">Start Free Assessment →</a>
-      </div>
-      <p class="rx-fine rx-center rx-mt-sm">Free assessment · about 10 minutes · phone only</p>
-    </div>
-  </section>
-
-  <!-- ACCEPTS YOU AS YOU ARE -->
-  <section class="rx-section tight">
-    <div class="rx-container narrow rx-center">
-      <p class="rx-eyebrow">The ROMRx promise</p>
-      <h2 class="rx-h2">
-        ROMRx accepts you as you are.<br>
-        <span class="rx-grad">It doesn't leave you that way.</span>
-      </h2>
-      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
-        We meet your body where it is today. Then we help you build mobility, longevity, and self-care,
-        one joint at a time, toward the body you want for the rest of your life.
-      </p>
-      <div class="rx-chips rx-mt-md">
-        <span class="rx-chip">Based on 140+ peer-reviewed resources</span>
-        <span class="rx-chip">14 joints · bilateral</span>
-        <span class="rx-chip">10-minute assessment</span>
-        <span class="rx-chip">6-Week Reassessment Cycle™</span>
-        <span class="rx-chip">Zero wearables · zero clinic</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ROMBOT -->
-  <section class="rx-section">
-    <div class="rx-container narrow rx-center">
-      <p class="rx-eyebrow" style="color:var(--rx-cobalt-2)">Meet ROMBot™</p>
-      <h2 class="rx-h2">Your journey. Your questions. Answered.</h2>
-      <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
-        ROMBot™ is your always-on ROMRx guide. Ask it anything about your results, your protocol,
-        your progress, or a movement that feels off today. It knows your ROM data, your priority
-        joints, and your reassessment history, so the answers are yours, not generic.
-      </p>
-      <div class="rx-chips rx-mt-md">
-        <span class="rx-chip">"Why is my left hip a priority?"</span>
-        <span class="rx-chip">"Can I sub this stretch?"</span>
-        <span class="rx-chip">"What changed since last cycle?"</span>
+        <span class="rx-chip">14 joints both sides</span>
+        <span class="rx-chip">About 10 minutes</span>
+        <span class="rx-chip">No wearables</span>
+        <span class="rx-chip">140+ sources</span>
       </div>
       <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:32px;">
         <a href="/app/signup" class="rx-cta primary">Start Free Assessment →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- SPORT PACKS -->
-  <section class="rx-section">
-    <div class="rx-container">
-      <div class="rx-center">
-        <p class="rx-eyebrow">+Sport packs · optional on Base</p>
-        <h2 class="rx-h2">Same Base ROM. Sport-specific readiness on top.</h2>
-        <p class="rx-lead" style="margin-left:auto;margin-right:auto;">
-          Base stays your longevity, self-care, and mobility foundation. Each +sport keeps its own look and feel.
-          Packs are for people who train. Not required. Not a replacement for Base.
-          BJJ is live. BodyBuilding is live. More packs later.
-        </p>
-      </div>
-      <div class="rx-card-grid rx-mt-lg" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-        <a href="/bjj" class="rx-card" style="text-decoration:none;display:block;background:#1e2a32;border:2px solid #008080;box-shadow:0 0 32px rgba(0,128,128,0.25);font-family:'Montserrat',system-ui,sans-serif;padding:28px;">
-          <div style="display:inline-block;background:#FFB347;color:#1e2a32;font-weight:700;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:4px 10px;border-radius:4px;">Live · add-on on Base</div>
-          <h3 style="font-family:'Montserrat',system-ui,sans-serif;font-weight:800;font-size:1.75rem;color:#FAF9F6;margin:14px 0 6px;letter-spacing:-0.01em;">ROMRx<span style="color:#008080;">+BJJ</span></h3>
-          <p style="font-family:'JetBrains Mono',ui-monospace,monospace;color:#008080;font-size:0.85rem;margin:0 0 14px;letter-spacing:0.04em;">Position Readiness Protocol™</p>
-          <p style="color:#FAF9F6;opacity:0.85;line-height:1.55;font-size:0.95rem;margin:0 0 20px;">Your Base ROM becomes a Position Readiness Protocol for guard, sweeps, and submissions. Stack +BJJ on Base if you train jiu-jitsu. Not a separate product.</p>
-          <span style="display:block;width:100%;text-align:center;background:transparent;color:#FFB347;border:1.5px solid #FFB347;padding:12px 20px;border-radius:6px;font-weight:600;font-size:0.9rem;letter-spacing:0.03em;">See Base +BJJ →</span>
-        </a>
-        <a href="/bodybuilding" class="rx-card" style="text-decoration:none;display:block;background:linear-gradient(135deg,#070711 0%,#0A0A18 55%,#1a0a1f 100%);border:2px solid #FF2D78;box-shadow:0 0 32px rgba(255,45,120,0.3);font-family:'Barlow Condensed','Barlow',system-ui,sans-serif;padding:28px;">
-          <div style="display:inline-block;background:#FFD700;color:#070711;font-weight:700;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;border-radius:4px;font-family:'Barlow Condensed',system-ui,sans-serif;">Live · add-on on Base</div>
-          <h3 style="font-family:'Bebas Neue','Barlow Condensed',system-ui,sans-serif;font-weight:400;font-size:2rem;color:#F0EDE8;margin:14px 0 6px;letter-spacing:0.02em;text-transform:uppercase;">ROMRx<span style="color:#FF2D78;">+BodyBuilding</span></h3>
-          <p style="font-family:'JetBrains Mono',ui-monospace,monospace;color:#00F5E4;font-size:0.85rem;margin:0 0 14px;letter-spacing:0.05em;text-transform:uppercase;">Exercise Readiness Protocol™</p>
-          <p style="font-family:'Barlow','Barlow Condensed',system-ui,sans-serif;color:#F0EDE8;opacity:0.9;line-height:1.55;font-size:0.95rem;margin:0 0 20px;">Your Base ROM becomes an Exercise Readiness Protocol for your lifts. Stack +BodyBuilding on Base if you train. Same foundation. Sport-specific readiness.</p>
-          <span style="display:block;width:100%;text-align:center;background:transparent;color:#FFD700;border:1.5px solid #FFD700;padding:12px 20px;border-radius:6px;font-weight:600;font-size:0.9rem;letter-spacing:0.04em;text-transform:uppercase;font-family:'Barlow Condensed',system-ui,sans-serif;">See Base +BodyBuilding →</span>
-        </a>
-        <div class="rx-card">
-          <div class="rx-eyebrow" style="color:var(--rx-yellow)">In development</div>
-          <h3 class="rx-h3 rx-mt-sm">
-            <span class="rx-plus">+Yoga</span> · <span class="rx-plus">+Powerlifting</span><br>
-            <span class="rx-plus">+MMA</span> · <span class="rx-plus">+FirstResponder</span>
-          </h3>
-          <p class="rx-muted rx-mt-sm">More packs on the roadmap. Each one stacks on the same Base ROM.
-            Never a parallel product that replaces Base.</p>
-        </div>
-      </div>
-      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:40px;">
-        <a href="/app/signup" class="rx-cta primary">Start in Base →</a>
       </div>
     </div>
   </section>
@@ -276,25 +168,47 @@
       <p class="rx-eyebrow rx-center">FAQ</p>
       <h2 class="rx-h2 rx-center">Straight answers</h2>
       <div class="rx-card rx-mt-lg">
-        <h3 class="rx-h3">Do I need Base first?</h3>
-        <p class="rx-muted rx-mt-sm">Yes. Base is the longevity, self-care, and mobility foundation. Sport packs are optional add-ons if you train.</p>
-      </div>
-      <div class="rx-card rx-mt-md">
-        <h3 class="rx-h3">If I cancel a sport, do I keep Base?</h3>
-        <p class="rx-muted rx-mt-sm">Yes. Base stays. Sports are optional on top.</p>
-      </div>
-      <div class="rx-card rx-mt-md">
-        <h3 class="rx-h3">Can I stack more than one sport?</h3>
-        <p class="rx-muted rx-mt-sm">Yes, if you train more than one. Start with Base. Add only the packs that match how you train.</p>
+        <h3 class="rx-h3">I'm not an athlete. Is this for me?</h3>
+        <p class="rx-muted rx-mt-sm">Yes. Base is for regular people who want better mobility and a plan matched to their body. You do not need a sport.</p>
       </div>
       <div class="rx-card rx-mt-md">
         <h3 class="rx-h3">Is this free?</h3>
-        <p class="rx-muted rx-mt-sm">The assessment is free to start. Base is free through December 31, 2026 (billing begins January 1, 2027). Sport packs are optional extras. Example numbers above just show how Base and packs stack.</p>
+        <p class="rx-muted rx-mt-sm">Yes through December 31, 2026. Billing starts January 1, 2027. The assessment is about 10 minutes on your phone.</p>
       </div>
+      <div class="rx-card rx-mt-md">
+        <h3 class="rx-h3">What if a move hurts?</h3>
+        <p class="rx-muted rx-mt-sm">Skip it. Come back later if you want. No judgment. Never push through pain.</p>
+      </div>
+      <div class="rx-card rx-mt-md">
+        <h3 class="rx-h3">If I cancel a sport later, do I keep Base?</h3>
+        <p class="rx-muted rx-mt-sm">Yes. Base stays. Optional sport add-ons sit on top. Cancel a sport without losing Base.</p>
+      </div>
+      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:36px;">
+        <a href="/app/signup" class="rx-cta primary">Start Free Assessment →</a>
+      </div>
+      <p class="rx-fine rx-center rx-mt-sm">About 10 minutes on your phone. Free through December 31, 2026. Billing starts January 1, 2027.</p>
+      <p class="rx-fine rx-center rx-mt-md">Train a sport? Optional add-ons later.</p>
     </div>
   </section>
 
-  <!-- LEGAL FOOTER -->
   <div data-rx-slot="legal"></div>
+
+  <div class="rx-sticky-cta" id="stickyCta" aria-hidden="true">
+    <a href="/app/signup" class="rx-cta primary" style="width:100%;max-width:420px;text-align:center;">Start Free Assessment →</a>
+  </div>
+  <script>
+    (function () {
+      var hero = document.getElementById('hero');
+      var bar = document.getElementById('stickyCta');
+      if (!hero || !bar || !('IntersectionObserver' in window)) return;
+      var io = new IntersectionObserver(function (entries) {
+        var visible = entries[0] && entries[0].isIntersecting;
+        bar.classList.toggle('is-on', !visible);
+        bar.setAttribute('aria-hidden', visible ? 'true' : 'false');
+        document.body.classList.toggle('has-sticky-cta', !visible);
+      }, { threshold: 0.08 });
+      io.observe(hero);
+    })();
+  </script>
 </body>
 </html>
