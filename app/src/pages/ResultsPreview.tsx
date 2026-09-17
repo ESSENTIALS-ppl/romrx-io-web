@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { Spinner } from '../components/Spinner'
 import { AlertTriangle, CheckCircle, Unlock, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
+import { bandScoreFromAggregate, bandFull, BAND_DESC } from '../lib/mobilityBands'
 import { track } from '../lib/track'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
@@ -71,11 +72,11 @@ function computePRS(assessment: Record<string, number | null>): number {
 }
 
 function getPRSTier(score: number): { label: string; color: string; bg: string; desc: string } {
-  if (score >= 85) return { label: 'ELITE', color: 'text-cobalt', bg: 'bg-cobalt-light', desc: 'Exceptional ROM profile. Keep training and retest regularly.' }
-  if (score >= 70) return { label: 'STRONG', color: 'text-cobalt', bg: 'bg-cobalt-light', desc: 'Good mobility foundation. A few gaps to address.' }
-  if (score >= 55) return { label: 'DEVELOPING', color: 'text-yellow-700', bg: 'bg-yellow-50', desc: 'ROM limitations are affecting your movement readiness.' }
-  if (score >= 40) return { label: 'RESTRICTED', color: 'text-yellow-700', bg: 'bg-yellow-50', desc: 'Significant mobility restrictions. Prioritize your protocol.' }
-  return { label: 'AT RISK', color: 'text-red-700', bg: 'bg-red-50', desc: 'Multiple AT RISK joints. Prioritize injury prevention immediately.' }
+  // Locked Base bands: 1 Needs focus / 2 Building / 3 Steady (progress-needed tone)
+  const band = bandScoreFromAggregate(score)
+  if (band === 3) return { label: bandFull(3), color: 'text-cobalt', bg: 'bg-cobalt-light', desc: BAND_DESC[3] }
+  if (band === 2) return { label: bandFull(2), color: 'text-yellow-700', bg: 'bg-yellow-50', desc: BAND_DESC[2] }
+  return { label: bandFull(1), color: 'text-red-700', bg: 'bg-red-50', desc: BAND_DESC[1] }
 }
 
 function getTopAsymmetries(assessment: Record<string, number | null>): Array<{ joint: string; gap: number; left: number; right: number }> {
@@ -201,12 +202,12 @@ export function ResultsPreview() {
         {/* Header */}
         <div className="text-center">
           <h1 className="font-display font-bold text-white text-2xl">Your Results Are In</h1>
-          <p className="text-sm text-white/60 mt-1">Personalized Readiness Profile™ by ROMRx</p>
+          <p className="text-sm text-white/60 mt-1">ROMRx mobility</p>
         </div>
 
         {/* PRS Score Card */}
         <div className="bg-white/5 rounded-card border border-cobalt/30 p-6 text-center">
-          <p className="text-xs font-bold text-cobalt-light uppercase tracking-widest mb-4">Personalized Readiness Profile</p>
+          <p className="text-xs font-bold text-cobalt-light uppercase tracking-widest mb-4">Mobility band</p>
           <div className={cn('inline-flex items-center justify-center w-32 h-32 rounded-full border-4 mb-4', tier.bg, tier.color === 'text-cobalt' ? 'border-cobalt/40' : tier.color === 'text-yellow-700' ? 'border-yellow-400/40' : 'border-red-400/40')}>
             <div>
               <span className={cn('font-display font-bold text-5xl leading-none block', tier.color)}>{prs}</span>
