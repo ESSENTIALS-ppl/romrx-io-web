@@ -8,7 +8,17 @@ import { EmptyState } from '../components/EmptyState'
 import { Spinner } from '../components/Spinner'
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import { cn } from '../lib/cn'
-import { bandScoreFromAggregate, bandFull, BAND_DESC } from '../lib/mobilityBands'
+import {
+  bandScoreFromAggregate,
+  bandScoreFromThresholds,
+  bandFull,
+  bandChip,
+  worstBandScore,
+  BAND_DESC,
+  BAND_TONE,
+  BAND_LEGEND,
+  type BandScore,
+} from '../lib/mobilityBands'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
 
 // Local helper: BJJ's lib/utils.ts had formatJoint(); HQ's lib/ is locked, so
@@ -53,14 +63,14 @@ function computeStreak(sessionDates: string[]): number {
 
 // -- Mobility band (aggregate from joint thresholds) ------------------------------
 const PRS_BILATERAL = [
-  { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40 },
-  { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30 },
-  { l: 'hip_abd_l', r: 'hip_abd_r', riskBelow: 30, normalMin: 40 },
-  { l: 'hip_flex_l', r: 'hip_flex_r', riskBelow: 100, normalMin: 100 },
-  { l: 'shoulder_er_l', r: 'shoulder_er_r', riskBelow: 60, normalMin: 60 },
-  { l: 'shoulder_flex_l', r: 'shoulder_flex_r', riskBelow: 120, normalMin: 140 },
-  { l: 'ankle_df_l', r: 'ankle_df_r', riskBelow: 10, normalMin: 10 },
-  { l: 'cervical_lat_l', r: 'cervical_lat_r', riskBelow: 30, normalMin: 40 },
+  { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40, base: 'hip_er' },
+  { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30, base: 'hip_ir' },
+  { l: 'hip_abd_l', r: 'hip_abd_r', riskBelow: 30, normalMin: 40, base: 'hip_abd' },
+  { l: 'hip_flex_l', r: 'hip_flex_r', riskBelow: 100, normalMin: 100, base: 'hip_flex' },
+  { l: 'shoulder_er_l', r: 'shoulder_er_r', riskBelow: 60, normalMin: 60, base: 'shoulder_er' },
+  { l: 'shoulder_flex_l', r: 'shoulder_flex_r', riskBelow: 120, normalMin: 140, base: 'shoulder_flex' },
+  { l: 'ankle_df_l', r: 'ankle_df_r', riskBelow: 10, normalMin: 10, base: 'ankle_df' },
+  { l: 'cervical_lat_l', r: 'cervical_lat_r', riskBelow: 30, normalMin: 40, base: 'cervical_lat' },
 ]
 const PRS_UNILATERAL = [
   { key: 'lumbar_flex', riskBelow: 40, normalMin: 40 },
@@ -93,11 +103,73 @@ function computePRS(a: Assessment): number {
   return Math.max(0, Math.min(100, Math.round(score)))
 }
 
-function getPRSTier(s: number) {
-  const band = bandScoreFromAggregate(s)
-  if (band === 3) return { label: bandFull(3), color: 'text-cobalt', bg: 'bg-cobalt-light', ring: 'border-cobalt/40', desc: BAND_DESC[3] }
-  if (band === 2) return { label: bandFull(2), color: 'text-yellow-700', bg: 'bg-yellow-50', ring: 'border-yellow-400/40', desc: BAND_DESC[2] }
-  return { label: bandFull(1), color: 'text-red-700', bg: 'bg-red-50', ring: 'border-red-400/40', desc: BAND_DESC[1] }
+/**
+ * Overall band: prefer worst measured joint from thresholds.
+ * PRS alone inflates Steady when many joints are null; only fall back to
+ * bandScoreFromAggregate(computePRS) when nothing is measured.
+ */
+function overallBandFromJoints(a: Assessment): BandScore {
+  const rec = a as unknown as Record<string, number | null>
+  const bands: BandScore[] = []
+  for (const j of PRS_BILATERAL) {
+    const l = rec[j.l]
+    const r = rec[j.r]
+    if (l != null && r != null) {
+      bands.push(bandScoreFromThresholds(Math.min(l, r), j.riskBelow, j.normalMin))
+    } else if (l != null) {
+      bands.push(bandScoreFromThresholds(l, j.riskBelow, j.normalMin))
+    } else if (r != null) {
+      bands.push(bandScoreFromThresholds(r, j.riskBelow, j.normalMin))
+    }
+  }
+  for (const j of PRS_UNILATERAL) {
+    const v = rec[j.key]
+    if (v != null) {
+      bands.push(bandScoreFromThresholds(v, j.riskBelow, j.normalMin))
+    }
+  }
+  return worstBandScore(bands) ?? bandScoreFromAggregate(computePRS(a))
+}
+
+function getBandTier(band: BandScore) {
+  const tone = BAND_TONE[band]
+  return {
+    label: bandFull(band),
+    color: tone.color,
+    bg: tone.bg,
+    ring: tone.ring,
+    desc: BAND_DESC[band],
+  }
+}
+
+/** Resolve a priority-joint key (with optional _l/_r) to its threshold band. */
+function bandForPriorityJoint(a: Assessment, jointKey: string): BandScore | null {
+  const rec = a as unknown as Record<string, number | null>
+  const base = jointKey.replace(/_(l|r)$/, '')
+  const bilateral = PRS_BILATERAL.find(j => j.base === base || j.l === jointKey || j.r === jointKey)
+  if (bilateral) {
+    const sideMatch = jointKey.match(/_(l|r)$/)
+    if (sideMatch) {
+      const v = rec[jointKey]
+      if (v == null) return null
+      return bandScoreFromThresholds(v, bilateral.riskBelow, bilateral.normalMin)
+    }
+    const l = rec[bilateral.l]
+    const r = rec[bilateral.r]
+    if (l != null && r != null) {
+      return bandScoreFromThresholds(Math.min(l, r), bilateral.riskBelow, bilateral.normalMin)
+    }
+    if (l != null) return bandScoreFromThresholds(l, bilateral.riskBelow, bilateral.normalMin)
+    if (r != null) return bandScoreFromThresholds(r, bilateral.riskBelow, bilateral.normalMin)
+    return null
+  }
+  const unilateral = PRS_UNILATERAL.find(j => j.key === base || j.key === jointKey)
+  if (unilateral) {
+    const v = rec[unilateral.key]
+    if (v == null) return null
+    return bandScoreFromThresholds(v, unilateral.riskBelow, unilateral.normalMin)
+  }
+  return null
 }
 
 // Elite athlete targets - scoring against these gives meaningful differentiation.
@@ -135,14 +207,26 @@ function buildRadar(assessments: Assessment[]) {
   })
 }
 
-function JointBar({ label, left, right, midline, optimal }: {
+function JointBar({ label, left, right, midline, optimal, riskBelow, normalMin }: {
   label: string; left?: number | null; right?: number | null
   midline?: number | null; optimal: number
+  riskBelow: number; normalMin: number
 }) {
   const best = midline ?? Math.max(left ?? 0, right ?? 0)
   const pct = Math.min(100, Math.round((best / optimal) * 100))
   const asym = left != null && right != null ? Math.abs(left - right) : 0
   const isBad = pct < 75
+
+  let measured: number | null = null
+  if (midline != null) measured = midline
+  else if (left != null && right != null) measured = Math.min(left, right)
+  else if (left != null) measured = left
+  else if (right != null) measured = right
+
+  const jointBand = measured != null
+    ? bandScoreFromThresholds(measured, riskBelow, normalMin)
+    : null
+  const chipTone = jointBand != null ? BAND_TONE[jointBand] : null
 
   return (
     <div className="flex items-center gap-3 py-2">
@@ -170,6 +254,16 @@ function JointBar({ label, left, right, midline, optimal }: {
           {pct}%
         </span>
       </div>
+      <div className="w-16 shrink-0 flex justify-end">
+        {jointBand != null && chipTone && (
+          <span className={cn(
+            'text-[10px] font-bold px-1.5 py-0.5 rounded-full border',
+            chipTone.chip,
+          )}>
+            {bandChip(jointBand)}
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -195,7 +289,8 @@ export function MyBody() {
     new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
   )
   const prs = computePRS(assessment)
-  const tier = getPRSTier(prs)
+  const overallBand = overallBandFromJoints(assessment)
+  const tier = getBandTier(overallBand)
 
   // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
   const previousAssessment = assessments.length > 1 ? assessments[1] : null
@@ -228,26 +323,43 @@ export function MyBody() {
       />
 
       {/* Mobility band */}
-      <div className={cn('flex items-center gap-4 rounded-card border p-4', tier.bg, 'border-cobalt/10')}>
-        <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
-          <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
-          <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <TrendingUp size={13} className={tier.color} />
-            <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
-            {prsDelta != null && previousDateStr && (
-              <span className={cn(
-                'text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
-                prsDelta > 0 ? 'bg-green-50 text-green-700' : prsDelta < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500'
-              )}>
-                {prsDelta > 0 ? '▲' : prsDelta < 0 ? '▼' : '–'} {prsDelta > 0 ? '+' : ''}{prsDelta} vs {previousDateStr}
-              </span>
-            )}
+      <div className={cn('rounded-card border p-4', tier.bg, 'border-cobalt/10')}>
+        <div className="flex items-center gap-4">
+          <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
+            <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
+            <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
           </div>
-          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{tier.label}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Retest every 6 weeks to track progress</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+              <TrendingUp size={13} className={tier.color} />
+              <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
+              {prsDelta != null && previousDateStr && (
+                <span className={cn(
+                  'text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
+                  prsDelta > 0 ? 'bg-green-50 text-green-700' : prsDelta < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500'
+                )}>
+                  {prsDelta > 0 ? '▲' : prsDelta < 0 ? '▼' : '-'} {prsDelta > 0 ? '+' : ''}{prsDelta} vs {previousDateStr}
+                </span>
+              )}
+            </div>
+            <p className={cn('text-lg font-bold leading-tight', tier.color)}>{tier.label}</p>
+            <p className="text-xs text-slate-500 mt-0.5">Retest every 6 weeks to track progress</p>
+          </div>
+        </div>
+        {/* Band legend: always show Needs focus · Building · Steady */}
+        <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-cobalt/10">
+          {BAND_LEGEND.map(entry => (
+            <span
+              key={entry.score}
+              className={cn(
+                'text-[11px] font-semibold px-2.5 py-1 rounded-full border',
+                BAND_TONE[entry.score].chip,
+                overallBand === entry.score ? 'ring-1 ring-offset-1 ring-current' : 'opacity-90',
+              )}
+            >
+              {entry.full}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -320,11 +432,22 @@ export function MyBody() {
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Priority joints</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {assessment.worst_joints.map(j => (
-                    <span key={j} className="text-xs bg-red-50 text-red-700 px-2.5 py-1 rounded-full font-medium">
-                      {formatJoint(j)}
-                    </span>
-                  ))}
+                  {assessment.worst_joints.map(j => {
+                    const jb = bandForPriorityJoint(assessment, j) ?? 1
+                    const tone = BAND_TONE[jb]
+                    return (
+                      <span
+                        key={j}
+                        className={cn(
+                          'text-xs px-2.5 py-1 rounded-full font-medium border inline-flex items-center gap-1.5',
+                          tone.chip,
+                        )}
+                      >
+                        {formatJoint(j)}
+                        <span className="font-bold">{bandChip(jb)}</span>
+                      </span>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -403,18 +526,18 @@ export function MyBody() {
 
       <SectionCard title="Joint Breakdown" subtitle="Best side shown - % of optimal range">
         <div className="divide-y divide-cobalt/10">
-          <JointBar label="Hip ER" left={assessment.hip_er_l} right={assessment.hip_er_r} optimal={OPTIMAL['Hip ER']} />
-          <JointBar label="Hip IR" left={assessment.hip_ir_l} right={assessment.hip_ir_r} optimal={OPTIMAL['Hip IR']} />
-          <JointBar label="Hip Abduction" left={assessment.hip_abd_l} right={assessment.hip_abd_r} optimal={OPTIMAL['Hip Abd']} />
-          <JointBar label="Hip Flexion" left={assessment.hip_flex_l} right={assessment.hip_flex_r} optimal={OPTIMAL['Hip Flex']} />
-          <JointBar label="Shoulder ER" left={assessment.shoulder_er_l} right={assessment.shoulder_er_r} optimal={OPTIMAL['Shoulder ER']} />
-          <JointBar label="Shoulder Flex" left={assessment.shoulder_flex_l} right={assessment.shoulder_flex_r} optimal={OPTIMAL['Shoulder Flex']} />
-          <JointBar label="Ankle DF" left={assessment.ankle_df_l} right={assessment.ankle_df_r} optimal={OPTIMAL['Ankle DF']} />
-          <JointBar label="Lumbar Flex" midline={assessment.lumbar_flex} optimal={OPTIMAL['Lumbar Flex']} />
-          <JointBar label="Lumbar Ext" midline={assessment.lumbar_ext} optimal={OPTIMAL['Lumbar Ext']} />
-          <JointBar label="Cervical Lat Flex" left={assessment.cervical_lat_l} right={assessment.cervical_lat_r} optimal={OPTIMAL['Cervical Lat']} />
-          <JointBar label="Cervical Flex" midline={assessment.cervical_flex} optimal={OPTIMAL['Cervical Flex']} />
-          <JointBar label="Cervical Ext" midline={assessment.cervical_ext} optimal={OPTIMAL['Cervical Ext']} />
+          <JointBar label="Hip ER" left={assessment.hip_er_l} right={assessment.hip_er_r} optimal={OPTIMAL['Hip ER']} riskBelow={40} normalMin={40} />
+          <JointBar label="Hip IR" left={assessment.hip_ir_l} right={assessment.hip_ir_r} optimal={OPTIMAL['Hip IR']} riskBelow={30} normalMin={30} />
+          <JointBar label="Hip Abduction" left={assessment.hip_abd_l} right={assessment.hip_abd_r} optimal={OPTIMAL['Hip Abd']} riskBelow={30} normalMin={40} />
+          <JointBar label="Hip Flexion" left={assessment.hip_flex_l} right={assessment.hip_flex_r} optimal={OPTIMAL['Hip Flex']} riskBelow={100} normalMin={100} />
+          <JointBar label="Shoulder ER" left={assessment.shoulder_er_l} right={assessment.shoulder_er_r} optimal={OPTIMAL['Shoulder ER']} riskBelow={60} normalMin={60} />
+          <JointBar label="Shoulder Flex" left={assessment.shoulder_flex_l} right={assessment.shoulder_flex_r} optimal={OPTIMAL['Shoulder Flex']} riskBelow={120} normalMin={140} />
+          <JointBar label="Ankle DF" left={assessment.ankle_df_l} right={assessment.ankle_df_r} optimal={OPTIMAL['Ankle DF']} riskBelow={10} normalMin={10} />
+          <JointBar label="Lumbar Flex" midline={assessment.lumbar_flex} optimal={OPTIMAL['Lumbar Flex']} riskBelow={40} normalMin={40} />
+          <JointBar label="Lumbar Ext" midline={assessment.lumbar_ext} optimal={OPTIMAL['Lumbar Ext']} riskBelow={15} normalMin={20} />
+          <JointBar label="Cervical Lat Flex" left={assessment.cervical_lat_l} right={assessment.cervical_lat_r} optimal={OPTIMAL['Cervical Lat']} riskBelow={30} normalMin={40} />
+          <JointBar label="Cervical Flex" midline={assessment.cervical_flex} optimal={OPTIMAL['Cervical Flex']} riskBelow={35} normalMin={45} />
+          <JointBar label="Cervical Ext" midline={assessment.cervical_ext} optimal={OPTIMAL['Cervical Ext']} riskBelow={40} normalMin={55} />
         </div>
       </SectionCard>
     </div>
