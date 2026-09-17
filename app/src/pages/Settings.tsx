@@ -9,6 +9,7 @@ import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
 import { FeedbackWidget } from '../components/FeedbackWidget'
 import { cn } from '../lib/cn'
+import { bandScoreFromAggregate, bandFull } from '../lib/mobilityBands'
 import {
   Save, Loader2, ExternalLink, LogOut, Mail, HelpCircle, ChevronRight,
   ClipboardList, TrendingUp, Bell, KeyRound, Trash2, MessageSquarePlus,
@@ -60,11 +61,11 @@ function computePRS(a: Assessment): number {
 }
 
 function getPRSTier(s: number) {
-  if (s >= 85) return { label: 'ELITE', color: 'text-cobalt', bg: 'bg-cobalt-light' }
-  if (s >= 70) return { label: 'STRONG', color: 'text-cobalt', bg: 'bg-cobalt-light' }
-  if (s >= 55) return { label: 'DEVELOPING', color: 'text-amber-700', bg: 'bg-amber-50' }
-  if (s >= 40) return { label: 'RESTRICTED', color: 'text-amber-700', bg: 'bg-amber-50' }
-  return { label: 'AT RISK', color: 'text-red-700', bg: 'bg-red-50' }
+  // Locked Base bands: 1 Needs focus / 2 Building / 3 Steady (cobalt tokens)
+  const band = bandScoreFromAggregate(s)
+  if (band === 3) return { label: bandFull(3), color: 'text-cobalt', bg: 'bg-cobalt-light' }
+  if (band === 2) return { label: bandFull(2), color: 'text-amber-700', bg: 'bg-amber-50' }
+  return { label: bandFull(1), color: 'text-red-700', bg: 'bg-red-50' }
 }
 
 const GENDERS = [
