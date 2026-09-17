@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { scoreToTier, tierLabel } from '../lib/tier'
+import { bandScoreFromAggregate, bandFull } from '../lib/mobilityBands'
 import { STEPS } from './assessmentSteps'
 import { AssessmentPhases } from './AssessmentPhases'
 import { track } from '../lib/track'
@@ -87,7 +87,7 @@ export function Assessment() {
     const body: Record<string, unknown> = {
       assessment_data,
       prs_score,
-      tier: tierLabel(scoreToTier(prs_score)),
+      tier: bandFull(bandScoreFromAggregate(prs_score)),
       email: leadEmail,
       full_name: leadName,
     }
