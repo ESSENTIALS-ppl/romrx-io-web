@@ -11,13 +11,19 @@ import { cn } from '../lib/cn'
 import {
   bandScoreFromAggregate,
   bandScoreFromThresholds,
+  bandScoreFromTargetRatio,
   bandFull,
   bandChip,
   worstBandScore,
+  overallBandFromJointScores,
+  bandMapFromJointScores,
+  bandForJointKey,
+  JOINT_SCORE_TARGETS,
   BAND_DESC,
   BAND_TONE,
   BAND_LEGEND,
   type BandScore,
+  type JointScoreRow,
 } from '../lib/mobilityBands'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
 
@@ -104,29 +110,35 @@ function computePRS(a: Assessment): number {
 }
 
 /**
- * Overall band: prefer worst measured joint from thresholds.
- * PRS alone inflates Steady when many joints are null; only fall back to
- * bandScoreFromAggregate(computePRS) when nothing is measured.
+ * Overall band — shared path with ROMBot:
+ * 1) worst persisted joint_scores.score
+ * 2) else compute_joint_scores target-ratio on measured ROM
+ * 3) else legacy thresholds / PRS only if nothing else available
  */
-function overallBandFromJoints(a: Assessment): BandScore {
+function overallBandFromJoints(a: Assessment, scores: JointScoreRow[]): BandScore {
+  const fromDb = overallBandFromJointScores(scores)
+  if (fromDb != null) return fromDb
+
   const rec = a as unknown as Record<string, number | null>
   const bands: BandScore[] = []
   for (const j of PRS_BILATERAL) {
+    const target = JOINT_SCORE_TARGETS[j.base]
     const l = rec[j.l]
     const r = rec[j.r]
-    if (l != null && r != null) {
-      bands.push(bandScoreFromThresholds(Math.min(l, r), j.riskBelow, j.normalMin))
-    } else if (l != null) {
-      bands.push(bandScoreFromThresholds(l, j.riskBelow, j.normalMin))
-    } else if (r != null) {
-      bands.push(bandScoreFromThresholds(r, j.riskBelow, j.normalMin))
-    }
+    let worse: number | null = null
+    if (l != null && r != null) worse = Math.min(l, r)
+    else if (l != null) worse = l
+    else if (r != null) worse = r
+    if (worse == null) continue
+    if (target != null) bands.push(bandScoreFromTargetRatio(worse, target))
+    else bands.push(bandScoreFromThresholds(worse, j.riskBelow, j.normalMin))
   }
   for (const j of PRS_UNILATERAL) {
     const v = rec[j.key]
-    if (v != null) {
-      bands.push(bandScoreFromThresholds(v, j.riskBelow, j.normalMin))
-    }
+    if (v == null) continue
+    const target = JOINT_SCORE_TARGETS[j.key]
+    if (target != null) bands.push(bandScoreFromTargetRatio(v, target))
+    else bands.push(bandScoreFromThresholds(v, j.riskBelow, j.normalMin))
   }
   return worstBandScore(bands) ?? bandScoreFromAggregate(computePRS(a))
 }
@@ -142,34 +154,27 @@ function getBandTier(band: BandScore) {
   }
 }
 
-/** Resolve a priority-joint key (with optional _l/_r) to its threshold band. */
-function bandForPriorityJoint(a: Assessment, jointKey: string): BandScore | null {
+/** Resolve priority-joint key via joint_scores first (same truth as ROMBot). */
+function bandForPriorityJoint(
+  a: Assessment,
+  jointKey: string,
+  scoreMap: Map<string, BandScore>,
+): BandScore | null {
   const rec = a as unknown as Record<string, number | null>
   const base = jointKey.replace(/_(l|r)$/, '')
   const bilateral = PRS_BILATERAL.find(j => j.base === base || j.l === jointKey || j.r === jointKey)
   if (bilateral) {
     const sideMatch = jointKey.match(/_(l|r)$/)
-    if (sideMatch) {
-      const v = rec[jointKey]
-      if (v == null) return null
-      return bandScoreFromThresholds(v, bilateral.riskBelow, bilateral.normalMin)
-    }
-    const l = rec[bilateral.l]
-    const r = rec[bilateral.r]
-    if (l != null && r != null) {
-      return bandScoreFromThresholds(Math.min(l, r), bilateral.riskBelow, bilateral.normalMin)
-    }
-    if (l != null) return bandScoreFromThresholds(l, bilateral.riskBelow, bilateral.normalMin)
-    if (r != null) return bandScoreFromThresholds(r, bilateral.riskBelow, bilateral.normalMin)
-    return null
+    const measured = sideMatch
+      ? { left: rec[jointKey], right: null }
+      : { left: rec[bilateral.l], right: rec[bilateral.r] }
+    return bandForJointKey(jointKey, scoreMap, measured)
   }
   const unilateral = PRS_UNILATERAL.find(j => j.key === base || j.key === jointKey)
   if (unilateral) {
-    const v = rec[unilateral.key]
-    if (v == null) return null
-    return bandScoreFromThresholds(v, unilateral.riskBelow, unilateral.normalMin)
+    return bandForJointKey(jointKey, scoreMap, { midline: rec[unilateral.key] })
   }
-  return null
+  return bandForJointKey(jointKey, scoreMap)
 }
 
 // Elite athlete targets - scoring against these gives meaningful differentiation.
@@ -207,10 +212,12 @@ function buildRadar(assessments: Assessment[]) {
   })
 }
 
-function JointBar({ label, left, right, midline, optimal, riskBelow, normalMin }: {
+function JointBar({ label, left, right, midline, optimal, riskBelow, normalMin, jointKey, scoreMap }: {
   label: string; left?: number | null; right?: number | null
   midline?: number | null; optimal: number
   riskBelow: number; normalMin: number
+  jointKey?: string
+  scoreMap?: Map<string, BandScore>
 }) {
   const best = midline ?? Math.max(left ?? 0, right ?? 0)
   const pct = Math.min(100, Math.round((best / optimal) * 100))
@@ -223,9 +230,17 @@ function JointBar({ label, left, right, midline, optimal, riskBelow, normalMin }
   else if (left != null) measured = left
   else if (right != null) measured = right
 
-  const jointBand = measured != null
-    ? bandScoreFromThresholds(measured, riskBelow, normalMin)
-    : null
+  // Prefer persisted joint_scores (ROMBot truth); else target-ratio; else legacy thresholds.
+  let jointBand: BandScore | null = null
+  if (jointKey && scoreMap) {
+    jointBand = bandForJointKey(jointKey, scoreMap, { left, right, midline })
+  }
+  if (jointBand == null && measured != null && jointKey && JOINT_SCORE_TARGETS[jointKey] != null) {
+    jointBand = bandScoreFromTargetRatio(measured, JOINT_SCORE_TARGETS[jointKey])
+  }
+  if (jointBand == null && measured != null) {
+    jointBand = bandScoreFromThresholds(measured, riskBelow, normalMin)
+  }
   const chipTone = jointBand != null ? BAND_TONE[jointBand] : null
 
   return (
@@ -270,7 +285,7 @@ function JointBar({ label, left, right, midline, optimal, riskBelow, normalMin }
 
 export function MyBody() {
   const { user } = useAuth()
-  const { assessment, assessments, sessionDates, loading } = useProfile(user?.id)
+  const { assessment, assessments, jointScores, sessionDates, loading } = useProfile(user?.id)
 
   if (loading) return <Spinner />
 
@@ -289,7 +304,8 @@ export function MyBody() {
     new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
   )
   const prs = computePRS(assessment)
-  const overallBand = overallBandFromJoints(assessment)
+  const scoreMap = bandMapFromJointScores(jointScores)
+  const overallBand = overallBandFromJoints(assessment, jointScores)
   const tier = getBandTier(overallBand)
 
   // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
@@ -433,7 +449,7 @@ export function MyBody() {
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Priority joints</p>
                 <div className="flex flex-wrap gap-1.5">
                   {assessment.worst_joints.map(j => {
-                    const jb = bandForPriorityJoint(assessment, j) ?? 1
+                    const jb = bandForPriorityJoint(assessment, j, scoreMap) ?? 1
                     const tone = BAND_TONE[jb]
                     return (
                       <span
@@ -526,18 +542,18 @@ export function MyBody() {
 
       <SectionCard title="Joint Breakdown" subtitle="Best side shown - % of optimal range">
         <div className="divide-y divide-cobalt/10">
-          <JointBar label="Hip ER" left={assessment.hip_er_l} right={assessment.hip_er_r} optimal={OPTIMAL['Hip ER']} riskBelow={40} normalMin={40} />
-          <JointBar label="Hip IR" left={assessment.hip_ir_l} right={assessment.hip_ir_r} optimal={OPTIMAL['Hip IR']} riskBelow={30} normalMin={30} />
-          <JointBar label="Hip Abduction" left={assessment.hip_abd_l} right={assessment.hip_abd_r} optimal={OPTIMAL['Hip Abd']} riskBelow={30} normalMin={40} />
-          <JointBar label="Hip Flexion" left={assessment.hip_flex_l} right={assessment.hip_flex_r} optimal={OPTIMAL['Hip Flex']} riskBelow={100} normalMin={100} />
-          <JointBar label="Shoulder ER" left={assessment.shoulder_er_l} right={assessment.shoulder_er_r} optimal={OPTIMAL['Shoulder ER']} riskBelow={60} normalMin={60} />
-          <JointBar label="Shoulder Flex" left={assessment.shoulder_flex_l} right={assessment.shoulder_flex_r} optimal={OPTIMAL['Shoulder Flex']} riskBelow={120} normalMin={140} />
-          <JointBar label="Ankle DF" left={assessment.ankle_df_l} right={assessment.ankle_df_r} optimal={OPTIMAL['Ankle DF']} riskBelow={10} normalMin={10} />
-          <JointBar label="Lumbar Flex" midline={assessment.lumbar_flex} optimal={OPTIMAL['Lumbar Flex']} riskBelow={40} normalMin={40} />
-          <JointBar label="Lumbar Ext" midline={assessment.lumbar_ext} optimal={OPTIMAL['Lumbar Ext']} riskBelow={15} normalMin={20} />
-          <JointBar label="Cervical Lat Flex" left={assessment.cervical_lat_l} right={assessment.cervical_lat_r} optimal={OPTIMAL['Cervical Lat']} riskBelow={30} normalMin={40} />
-          <JointBar label="Cervical Flex" midline={assessment.cervical_flex} optimal={OPTIMAL['Cervical Flex']} riskBelow={35} normalMin={45} />
-          <JointBar label="Cervical Ext" midline={assessment.cervical_ext} optimal={OPTIMAL['Cervical Ext']} riskBelow={40} normalMin={55} />
+          <JointBar label="Hip ER" left={assessment.hip_er_l} right={assessment.hip_er_r} optimal={OPTIMAL['Hip ER']} riskBelow={40} normalMin={40} jointKey="hip_er" scoreMap={scoreMap} />
+          <JointBar label="Hip IR" left={assessment.hip_ir_l} right={assessment.hip_ir_r} optimal={OPTIMAL['Hip IR']} riskBelow={30} normalMin={30} jointKey="hip_ir" scoreMap={scoreMap} />
+          <JointBar label="Hip Abduction" left={assessment.hip_abd_l} right={assessment.hip_abd_r} optimal={OPTIMAL['Hip Abd']} riskBelow={30} normalMin={40} jointKey="hip_abd" scoreMap={scoreMap} />
+          <JointBar label="Hip Flexion" left={assessment.hip_flex_l} right={assessment.hip_flex_r} optimal={OPTIMAL['Hip Flex']} riskBelow={100} normalMin={100} jointKey="hip_flex" scoreMap={scoreMap} />
+          <JointBar label="Shoulder ER" left={assessment.shoulder_er_l} right={assessment.shoulder_er_r} optimal={OPTIMAL['Shoulder ER']} riskBelow={60} normalMin={60} jointKey="shoulder_er" scoreMap={scoreMap} />
+          <JointBar label="Shoulder Flex" left={assessment.shoulder_flex_l} right={assessment.shoulder_flex_r} optimal={OPTIMAL['Shoulder Flex']} riskBelow={120} normalMin={140} jointKey="shoulder_flex" scoreMap={scoreMap} />
+          <JointBar label="Ankle DF" left={assessment.ankle_df_l} right={assessment.ankle_df_r} optimal={OPTIMAL['Ankle DF']} riskBelow={10} normalMin={10} jointKey="ankle_df" scoreMap={scoreMap} />
+          <JointBar label="Lumbar Flex" midline={assessment.lumbar_flex} optimal={OPTIMAL['Lumbar Flex']} riskBelow={40} normalMin={40} jointKey="lumbar_flex" scoreMap={scoreMap} />
+          <JointBar label="Lumbar Ext" midline={assessment.lumbar_ext} optimal={OPTIMAL['Lumbar Ext']} riskBelow={15} normalMin={20} jointKey="lumbar_ext" scoreMap={scoreMap} />
+          <JointBar label="Cervical Lat Flex" left={assessment.cervical_lat_l} right={assessment.cervical_lat_r} optimal={OPTIMAL['Cervical Lat']} riskBelow={30} normalMin={40} jointKey="cervical_lat" scoreMap={scoreMap} />
+          <JointBar label="Cervical Flex" midline={assessment.cervical_flex} optimal={OPTIMAL['Cervical Flex']} riskBelow={35} normalMin={45} jointKey="cervical_flex" scoreMap={scoreMap} />
+          <JointBar label="Cervical Ext" midline={assessment.cervical_ext} optimal={OPTIMAL['Cervical Ext']} riskBelow={40} normalMin={55} jointKey="cervical_ext" scoreMap={scoreMap} />
         </div>
       </SectionCard>
     </div>

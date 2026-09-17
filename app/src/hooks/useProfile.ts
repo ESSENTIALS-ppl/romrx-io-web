@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import type { JointScoreRow } from '../lib/mobilityBands'
 
 export interface SportEntitlement {
   sport: string
@@ -73,6 +74,7 @@ export function useProfile(userId: string | undefined) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [assessment, setAssessment] = useState<Assessment | null>(null)
   const [assessments, setAssessments] = useState<Assessment[]>([])
+  const [jointScores, setJointScores] = useState<JointScoreRow[]>([])
   const [sessionDates, setSessionDates] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -82,8 +84,7 @@ export function useProfile(userId: string | undefined) {
     async function load() {
       setLoading(true)
 
-      // Use SECURITY DEFINER function - bypasses RLS entirely,
-      // filters by auth.uid() server-side so it's still secure.
+      // Use SECURITY DEFINER / INVOKER RPC — bypasses or respects RLS via auth.uid().
       const [{ data, error }, sessionsRes] = await Promise.all([
         supabase.rpc('get_my_profile'),
         supabase
@@ -119,11 +120,29 @@ export function useProfile(userId: string | undefined) {
           .map((r: { session_date: string }) => r.session_date)
           .filter(Boolean),
       )
+
+      // Shared scoring path with ROMBot: persisted joint_scores for latest assessment.
+      // RLS: "joint_scores: athlete reads own" via assessments.user_id = auth.uid().
+      if (result.assessment?.id) {
+        const { data: scores, error: scoresErr } = await supabase
+          .from('joint_scores')
+          .select('joint_key, score, left_value, right_value, asymmetry_pct, asymmetry_flag')
+          .eq('assessment_id', result.assessment.id)
+        if (scoresErr) {
+          console.error('joint_scores fetch error:', scoresErr.message)
+          setJointScores([])
+        } else {
+          setJointScores((scores as JointScoreRow[]) ?? [])
+        }
+      } else {
+        setJointScores([])
+      }
+
       setLoading(false)
     }
 
     load()
   }, [userId])
 
-  return { profile, assessment, assessments, sessionDates, loading }
+  return { profile, assessment, assessments, jointScores, sessionDates, loading }
 }
