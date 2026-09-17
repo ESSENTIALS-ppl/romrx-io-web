@@ -30,17 +30,17 @@ export function MeasureInput({ field, value, onChange }: {
         <span className="text-sm text-slate-500">{field.unit}</span>
         {score === 'risk' && (
           <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded-full">
-            <AlertTriangle size={10} /> AT RISK
+            <AlertTriangle size={10} /> Focus
           </span>
         )}
         {score === 'functional' && (
           <span className="flex items-center gap-1 text-xs font-semibold text-cobalt bg-cobalt-light px-2 py-0.5 rounded-full">
-            <CheckCircle2 size={10} /> FUNCTIONAL
+            <CheckCircle2 size={10} /> Steady
           </span>
         )}
         {score === 'yellow' && (
           <span className="flex items-center gap-1 text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full">
-            LOW
+            Building
           </span>
         )}
       </div>

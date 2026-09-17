@@ -8,7 +8,7 @@ import { EmptyState } from '../components/EmptyState'
 import { Spinner } from '../components/Spinner'
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import { cn } from '../lib/cn'
-import { scoreToTier, tierColor, tierBg, tierLabel } from '../lib/tier'
+import { bandScoreFromAggregate, bandFull, BAND_DESC } from '../lib/mobilityBands'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
 
 // Local helper: BJJ's lib/utils.ts had formatJoint(); HQ's lib/ is locked, so
@@ -51,7 +51,7 @@ function computeStreak(sessionDates: string[]): number {
   return count
 }
 
-// -- Position Readiness Score --------------------------------------------------
+// -- Mobility band (aggregate from joint thresholds) ------------------------------
 const PRS_BILATERAL = [
   { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40 },
   { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30 },
@@ -91,6 +91,13 @@ function computePRS(a: Assessment): number {
     }
   }
   return Math.max(0, Math.min(100, Math.round(score)))
+}
+
+function getPRSTier(s: number) {
+  const band = bandScoreFromAggregate(s)
+  if (band === 3) return { label: bandFull(3), color: 'text-cobalt', bg: 'bg-cobalt-light', ring: 'border-cobalt/40', desc: BAND_DESC[3] }
+  if (band === 2) return { label: bandFull(2), color: 'text-yellow-700', bg: 'bg-yellow-50', ring: 'border-yellow-400/40', desc: BAND_DESC[2] }
+  return { label: bandFull(1), color: 'text-red-700', bg: 'bg-red-50', ring: 'border-red-400/40', desc: BAND_DESC[1] }
 }
 
 // Elite athlete targets - scoring against these gives meaningful differentiation.
@@ -177,7 +184,7 @@ export function MyBody() {
     <EmptyState
       icon={Activity}
       title="No assessment on file"
-      description="Complete your ROM self-assessment to see your body map and joint breakdown."
+      description="Complete your ROM self-assessment to see your body map, joint breakdown, and mobility bands."
       action={<Link to="/onboarding/assessment" className="btn-primary text-sm">Get started</Link>}
     />
   )
@@ -188,7 +195,7 @@ export function MyBody() {
     new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
   )
   const prs = computePRS(assessment)
-  const tier = scoreToTier(prs)
+  const tier = getPRSTier(prs)
 
   // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
   const previousAssessment = assessments.length > 1 ? assessments[1] : null
@@ -220,16 +227,16 @@ export function MyBody() {
         subtitle={`Assessed ${new Date(assessment.assessed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
       />
 
-      {/* Position Readiness Score */}
-      <div className={cn('flex items-center gap-4 rounded-card border p-4', tierBg(tier), 'border-cobalt/10')}>
-        <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0 border-cobalt/40')}>
-          <span className={cn('font-display font-bold text-2xl leading-none', tierColor(tier))}>{prs}</span>
-          <span className={cn('text-[10px] font-bold', tierColor(tier))}>/100</span>
+      {/* Mobility band */}
+      <div className={cn('flex items-center gap-4 rounded-card border p-4', tier.bg, 'border-cobalt/10')}>
+        <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
+          <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
+          <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <TrendingUp size={13} className={tierColor(tier)} />
-            <span className={cn('text-xs font-bold uppercase tracking-wider', tierColor(tier))}>Position Readiness Score</span>
+            <TrendingUp size={13} className={tier.color} />
+            <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
             {prsDelta != null && previousDateStr && (
               <span className={cn(
                 'text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
@@ -239,7 +246,7 @@ export function MyBody() {
               </span>
             )}
           </div>
-          <p className={cn('text-lg font-bold leading-tight', tierColor(tier))}>{tierLabel(tier)}</p>
+          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{tier.label}</p>
           <p className="text-xs text-slate-500 mt-0.5">Retest every 6 weeks to track progress</p>
         </div>
       </div>
