@@ -8,7 +8,7 @@ import { Spinner } from '../components/Spinner'
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { cn } from '../lib/cn'
-import { scoreToTier, tierColor, tierBg, tierLabel } from '../lib/tier'
+import { bandScoreFromAggregate, bandFull, BAND_DESC } from '../lib/mobilityBands'
 import {
   AlertTriangle, ChevronDown, ChevronUp, CheckCircle2, Circle,
   ClipboardList, Dumbbell, Flame, PersonStanding,
@@ -19,7 +19,7 @@ import {
 // My Protocol (Base / HQ)
 // -----------------------------------------------------------------------------
 // This is the sport-agnostic mobility protocol shown to every Base subscriber.
-// It surfaces the user's Position Readiness Score, tier, top-3 priority joints,
+// It surfaces the user's mobility band, top-3 priority joints,
 // asymmetry flags, and a personalized daily / full mobility plan pulled from
 // the `exercises` table (filtered to sports @> ['general']).
 //
@@ -103,6 +103,13 @@ function computePRS(a: Assessment): number {
     }
   }
   return Math.max(0, Math.min(100, Math.round(score)))
+}
+
+function getPRSTier(s: number) {
+  const band = bandScoreFromAggregate(s)
+  if (band === 3) return { label: bandFull(3), color: 'text-cobalt', bg: 'bg-cobalt-light', desc: BAND_DESC[3] }
+  if (band === 2) return { label: bandFull(2), color: 'text-yellow-700', bg: 'bg-yellow-50', desc: BAND_DESC[2] }
+  return { label: bandFull(1), color: 'text-red-700', bg: 'bg-red-50', desc: BAND_DESC[1] }
 }
 
 // ---- Joint config ----------------------------------------------------------
@@ -701,8 +708,8 @@ function IssueCard({ ranked, rxLibrary, rank }: {
                 {rankLabel}
               </span>
               {atRisk && (
-                <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  <AlertTriangle size={9} /> AT RISK
+                <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-full tracking-wider">
+                  <AlertTriangle size={9} /> Focus
                 </span>
               )}
             </div>
@@ -841,24 +848,24 @@ export function MyProtocol() {
   const assessedAt = assessment.assessed_at
   const dateStr = new Date(assessedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   const prs  = computePRS(assessment)
-  const tier = scoreToTier(prs)
+  const tier = getPRSTier(prs)
 
   return (
     <div className="space-y-5">
       <PageHeader title="My Protocol" subtitle={`Based on assessment · ${dateStr}`} />
 
-      {/* PRS + tier badge (matches MyBody so the two pages read as siblings) */}
-      <div className={cn('flex items-center gap-4 rounded-card border p-4 border-cobalt/10', tierBg(tier))}>
+      {/* Mobility band (matches MyBody so the two pages read as siblings) */}
+      <div className={cn('flex items-center gap-4 rounded-card border p-4 border-cobalt/10', tier.bg)}>
         <div className="w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0 border-cobalt/40">
-          <span className={cn('font-display font-bold text-2xl leading-none', tierColor(tier))}>{prs}</span>
-          <span className={cn('text-[10px] font-bold', tierColor(tier))}>/100</span>
+          <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
+          <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <TrendingUp size={13} className={tierColor(tier)} />
-            <span className={cn('text-xs font-bold uppercase tracking-wider', tierColor(tier))}>Position Readiness Score</span>
+            <TrendingUp size={13} className={tier.color} />
+            <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
           </div>
-          <p className={cn('text-lg font-bold leading-tight', tierColor(tier))}>{tierLabel(tier)}</p>
+          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{tier.label}</p>
           <p className="text-xs text-slate-500 mt-0.5">Your top-3 priority joints inform today's plan</p>
         </div>
       </div>
