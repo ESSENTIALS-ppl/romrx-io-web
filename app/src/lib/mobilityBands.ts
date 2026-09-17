@@ -58,6 +58,16 @@ export function bandScoreFromAggregate(score: number): BandScore {
   return 1
 }
 
+/** Prefer worst (lowest) band among measured joints; null if none measured. */
+export function worstBandScore(scores: Array<BandScore | null | undefined>): BandScore | null {
+  let worst: BandScore | null = null
+  for (const s of scores) {
+    if (s == null) continue
+    if (worst == null || s < worst) worst = s
+  }
+  return worst
+}
+
 export function bandFull(score: BandScore): string {
   return BAND_FULL[score]
 }
@@ -72,3 +82,32 @@ export const BAND_DESC: Record<BandScore, string> = {
   2: 'Progress needed on key joints. Stay consistent with your plan.',
   3: 'Solid mobility foundation. Keep training and retest regularly.',
 }
+
+/** Tailwind tone tokens for band chips / chrome (cobalt locked). */
+export const BAND_TONE: Record<BandScore, { color: string; bg: string; ring: string; chip: string }> = {
+  1: {
+    color: 'text-red-700',
+    bg: 'bg-red-50',
+    ring: 'border-red-400/40',
+    chip: 'bg-red-50 text-red-700 border-red-200',
+  },
+  2: {
+    color: 'text-yellow-700',
+    bg: 'bg-yellow-50',
+    ring: 'border-yellow-400/40',
+    chip: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  },
+  3: {
+    color: 'text-cobalt',
+    bg: 'bg-cobalt-light',
+    ring: 'border-cobalt/40',
+    chip: 'bg-cobalt-light text-cobalt border-cobalt/20',
+  },
+}
+
+/** Ordered legend entries for My Body chrome (always show all three). */
+export const BAND_LEGEND: ReadonlyArray<{ score: BandScore; full: string; chip: string }> = [
+  { score: 1, full: BAND_FULL[1], chip: BAND_CHIP[1] },
+  { score: 2, full: BAND_FULL[2], chip: BAND_CHIP[2] },
+  { score: 3, full: BAND_FULL[3], chip: BAND_CHIP[3] },
+]
