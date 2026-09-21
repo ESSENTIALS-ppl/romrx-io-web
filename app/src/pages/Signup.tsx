@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Loader2, UserPlus, Mail } from 'lucide-react'
 import { track } from '../lib/track'
+import { captureUtmFromUrl, getSignupAttribution } from '../lib/utm'
 import { cn } from '../lib/cn'
 
 const GENDERS = [
@@ -53,7 +54,15 @@ export function Signup() {
     if (!agreedToTerms) { setError('You must agree to the Terms of Service to continue.'); return }
     if (!gender || !ageBucket) { setError('Age group and gender are required.'); return }
     setLoading(true); setError('')
-    track('signup_submitted', { sport_intent: addSport ?? 'general', has_lead_token: !!leadToken })
+    captureUtmFromUrl()
+    const { signup_source, meta: utmMeta } = getSignupAttribution()
+    track('signup_submitted', {
+      sport_intent: addSport ?? 'general',
+      has_lead_token: !!leadToken,
+      signup_source,
+      ...(utmMeta.utm_campaign ? { utm_campaign: utmMeta.utm_campaign } : {}),
+      ...(utmMeta.utm_medium ? { utm_medium: utmMeta.utm_medium } : {}),
+    })
 
     const { data, error: signUpErr } = await supabase.auth.signUp({
       email,
@@ -61,9 +70,10 @@ export function Signup() {
       options: {
         data: {
           full_name: fullName,
-          signup_source: 'romrx.io',
+          signup_source,
           age_bucket: ageBucket,
           gender,
+          ...utmMeta,
           ...(addSport ? { add_sport: addSport } : {}),
         },
         emailRedirectTo: `${window.location.origin}/app/auth/confirm?next=${encodeURIComponent(nextDest)}${leadToken ? `&lead=${encodeURIComponent(leadToken)}` : ''}`,
