@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { cn } from '../lib/cn'
 import { Utensils, Droplets } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
+import { loadLatestFuelBody, saveFuelLog } from '../lib/fuelLogs'
 
 // =============================================================================
 // My Fuel (Base / HQ)
@@ -34,8 +36,9 @@ import { Utensils, Droplets } from 'lucide-react'
 //   - Measured mode flags overdrinking when post-weight exceeds pre-weight.
 //   - Input clamping with inline errors instead of silent zeros.
 //
-// Self-contained: no Supabase writes. Inputs live in page state so the tool
-// works before profile fields for weight/body-fat exist.
+// Persistence: successful Calculate writes one row to public.fuel_logs per
+// kind (nutrition|hydration). Inputs live in page state; last body prefills
+// from the user's latest fuel_log when present.
 // =============================================================================
 
 const LB2KG = 0.45359237
@@ -296,9 +299,11 @@ export function computeNutrition(body: Body, times: ZoneTime): { result?: Nutrit
   }
 }
 
-function NutritionView({ body, times, setZone, result, setResult }: {
+function NutritionView({ body, times, setZone, result, setResult, onSaved, saveState }: {
   body: Body; times: ZoneTime; setZone: (k: number, field: 'h' | 'm', val: number) => void
   result: NutritionResult | null; setResult: (r: NutritionResult | null) => void
+  onSaved: (inputs: Record<string, unknown>, outputs: Record<string, unknown>) => void
+  saveState: string
 }) {
   const [error, setError] = useState('')
   const total = totalMinutes(times)
@@ -320,6 +325,23 @@ function NutritionView({ body, times, setZone, result, setResult }: {
     if (out.error) { setError(out.error); setResult(null); return }
     setError('')
     setResult(out.result ?? null)
+    if (out.result) {
+      onSaved(
+        { body, times },
+        {
+          kcal: out.result.kcal,
+          carbG: out.result.carbG,
+          proG: out.result.proG,
+          fatG: out.result.fatG,
+          carbFrac: out.result.carbFrac,
+          dayName: out.result.dayName,
+          tow: out.result.tow,
+          leanLb: out.result.leanLb,
+          belowTarget: out.result.belowTarget,
+          eaFloored: out.result.eaFloored,
+        },
+      )
+    }
   }
 
   const cPct = result ? Math.round(result.carbFrac * 100) : 0
@@ -342,6 +364,7 @@ function NutritionView({ body, times, setZone, result, setResult }: {
         {complete ? 'Calculate my fuel plan' : 'Log must equal 24:00 to calculate'}
       </button>
       {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-card px-4 py-3">{error}</p>}
+      {saveState && <p className="text-xs text-slate-500">{saveState}</p>}
 
       {result && (
         <SectionCard title="Your fuel plan">
@@ -468,9 +491,11 @@ export function computeHydration(body: Body, times: ZoneTime, measured: boolean,
   return { result: { fluidL, peakRate, cap, naMg, kMg: Math.round(fluidL * 5 * 39), mgMg: Math.round(fluidL * 0.8 * 24), sessionMode, narr, flags } }
 }
 
-function HydrationView({ body, times, setZone, result, setResult }: {
+function HydrationView({ body, times, setZone, result, setResult, onSaved, saveState }: {
   body: Body; times: ZoneTime; setZone: (k: number, field: 'h' | 'm', val: number) => void
   result: HydrationResult | null; setResult: (r: HydrationResult | null) => void
+  onSaved: (inputs: Record<string, unknown>, outputs: Record<string, unknown>) => void
+  saveState: string
 }) {
   const [measured, setMeasured] = useState(false)
   const [m, setM] = useState<Measured>({ pre: body.weight, post: String(Math.max(0, num(body.weight) - 2)), sesMin: '60', drunk: '0.5', urine: '0' })
@@ -486,6 +511,20 @@ function HydrationView({ body, times, setZone, result, setResult }: {
     if (out.error) { setError(out.error); setResult(null); return }
     setError('')
     setResult(out.result ?? null)
+    if (out.result) {
+      onSaved(
+        { body, times, measured, measuredInputs: m },
+        {
+          fluidL: out.result.fluidL,
+          peakRate: out.result.peakRate,
+          cap: out.result.cap,
+          naMg: out.result.naMg,
+          kMg: out.result.kMg,
+          mgMg: out.result.mgMg,
+          sessionMode: out.result.sessionMode,
+        },
+      )
+    }
   }
 
   const flagStyle: Record<string, string> = {
@@ -527,6 +566,7 @@ function HydrationView({ body, times, setZone, result, setResult }: {
         {complete ? 'Calculate my hydration needs' : 'Log must equal 24:00 to calculate'}
       </button>
       {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-card px-4 py-3">{error}</p>}
+      {saveState && <p className="text-xs text-slate-500">{saveState}</p>}
 
       {result && (
         <SectionCard title="Your sweat-loss replacement">
@@ -563,20 +603,59 @@ function HydrationView({ body, times, setZone, result, setResult }: {
 
 // =============================== PAGE ======================================
 export function MyFuel() {
+  const { user } = useAuth()
   const [view, setView] = useState<'nutrition' | 'hydration'>('nutrition')
   // Shared inputs owned by the page so toggling views never wipes them.
   const [body, setBody] = useState<Body>(DEFAULT_BODY)
   const [times, setTimes] = useState<ZoneTime>(() => initTimes(N_ZONES))
   const [nResult, setNResult] = useState<NutritionResult | null>(null)
   const [hResult, setHResult] = useState<HydrationResult | null>(null)
+  const [nSave, setNSave] = useState('')
+  const [hSave, setHSave] = useState('')
+  const [prefillNote, setPrefillNote] = useState('')
+
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    void (async () => {
+      const bodyIn = await loadLatestFuelBody(user.id)
+      if (cancelled || !bodyIn) return
+      setBody(prev => ({
+        sex: bodyIn.sex === 'female' || bodyIn.sex === 'male' ? bodyIn.sex : prev.sex,
+        weight: typeof bodyIn.weight === 'string' ? bodyIn.weight : prev.weight,
+        bf: typeof bodyIn.bf === 'string' ? bodyIn.bf : prev.bf,
+        ft: typeof bodyIn.ft === 'string' ? bodyIn.ft : prev.ft,
+        inch: typeof bodyIn.inch === 'string' ? bodyIn.inch : prev.inch,
+        salt: typeof bodyIn.salt === 'number' ? bodyIn.salt : prev.salt,
+      }))
+      setPrefillNote('Loaded your last saved body inputs.')
+    })()
+    return () => { cancelled = true }
+  }, [user?.id])
 
   function setZone(k: number, field: 'h' | 'm', val: number) {
     setTimes(t => ({ ...t, [k]: { ...t[k], [field]: val } }))
   }
 
+  function persist(kind: 'nutrition' | 'hydration', inputs: Record<string, unknown>, outputs: Record<string, unknown>) {
+    if (!user?.id) {
+      const msg = 'Sign in required to save this capture.'
+      if (kind === 'nutrition') setNSave(msg)
+      else setHSave(msg)
+      return
+    }
+    const setMsg = kind === 'nutrition' ? setNSave : setHSave
+    setMsg('Saving…')
+    void saveFuelLog(user.id, kind, inputs, outputs).then(res => {
+      if (res.error) setMsg(`Saved locally only — cloud save failed: ${res.error}`)
+      else setMsg(`Saved to your Fuel log${res.id ? ` (${res.id.slice(0, 8)})` : ''}.`)
+    })
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader title="My Fuel" subtitle="Zone-based nutrition and hydration for the body you're building" />
+      {prefillNote && <p className="text-xs text-slate-500">{prefillNote}</p>}
 
       <div className="flex gap-2 max-w-md">
         <button onClick={() => setView('nutrition')}
@@ -594,8 +673,8 @@ export function MyFuel() {
       <BodyCard body={body} onChange={setBody} showHydrationFields={view === 'hydration'} />
 
       {view === 'nutrition'
-        ? <NutritionView body={body} times={times} setZone={setZone} result={nResult} setResult={setNResult} />
-        : <HydrationView body={body} times={times} setZone={setZone} result={hResult} setResult={setHResult} />}
+        ? <NutritionView body={body} times={times} setZone={setZone} result={nResult} setResult={setNResult} onSaved={(i, o) => persist('nutrition', i, o)} saveState={nSave} />
+        : <HydrationView body={body} times={times} setZone={setZone} result={hResult} setResult={setHResult} onSaved={(i, o) => persist('hydration', i, o)} saveState={hSave} />}
     </div>
   )
 }
