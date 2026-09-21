@@ -1,3 +1,24 @@
+/* romrx.utm first-touch capture — shared key with app/src/lib/utm.ts
+   Runs on marketing pages (/beta, homepage, etc.) so UTMs survive CTA → /app/signup. */
+(function captureRomrxUtm() {
+  try {
+    var KEY = 'romrx.utm';
+    var keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'];
+    var sp = new URLSearchParams(window.location.search);
+    var found = {};
+    var any = false;
+    for (var i = 0; i < keys.length; i++) {
+      var v = (sp.get(keys[i]) || '').trim();
+      if (v) { found[keys[i]] = v; any = true; }
+    }
+    if (!any) return;
+    if (localStorage.getItem(KEY)) return; // first-touch only
+    found.captured_at = new Date().toISOString();
+    found.landing_path = window.location.pathname + window.location.search;
+    localStorage.setItem(KEY, JSON.stringify(found));
+  } catch (e) { /* ignore private mode */ }
+})();
+
 /* ROMRx corporate, shared partials injected client-side.
    Each page marks slots with data-rx-slot="nav|universe|legal".
    This keeps partials DRY without a build step. */
