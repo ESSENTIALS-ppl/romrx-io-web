@@ -87,6 +87,7 @@ const RX_LEGAL = `
     <div>© 2026 ROMRx LLC · Dublin, Ohio</div>
     <div>
       <a href="/articles">Articles</a> ·
+      <a href="/faq">FAQ</a> ·
       <a href="/legal">Terms, Privacy &amp; Refund</a> ·
       <a href="mailto:investors@romrx.io">Investors</a> ·
       <a href="mailto:partners@romrx.io">Partners</a>
