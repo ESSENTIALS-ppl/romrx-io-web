@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { completeAuthFromUrl } from '../lib/authRedirect'
+import { resolvePostAuthDest } from '../lib/postAuthDest'
 
 // Handles the Supabase magic-link / signup confirmation redirect at
 // /app/auth/confirm. Accepts token_hash (PKCE verify), code (PKCE), and hash
@@ -36,7 +37,8 @@ export function AuthConfirm() {
         }
       }
 
-      navigate(next ?? '/dashboard/my-body', { replace: true })
+      const dest = await resolvePostAuthDest(data.user?.id, next)
+      navigate(dest, { replace: true })
     })
 
     return () => { active = false }

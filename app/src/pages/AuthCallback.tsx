@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { completeAuthFromUrl } from '../lib/authRedirect'
+import { resolvePostAuthDest } from '../lib/postAuthDest'
 
 // Handles the Supabase magic-link redirect at /app/auth/callback. Kept fully
 // functional alongside AuthConfirm so links pointing at either path succeed,
@@ -19,17 +20,16 @@ export function AuthCallback() {
         return
       }
 
-      if (lead) {
-        const { data } = await supabase.auth.getUser()
-        if (data.user) {
-          await supabase
-            .from('leads')
-            .update({ converted_user_id: data.user.id, converted_at: new Date().toISOString() })
-            .eq('unlock_token', lead)
-        }
+      const { data } = await supabase.auth.getUser()
+      if (lead && data.user) {
+        await supabase
+          .from('leads')
+          .update({ converted_user_id: data.user.id, converted_at: new Date().toISOString() })
+          .eq('unlock_token', lead)
       }
 
-      navigate(next ?? '/dashboard/my-body', { replace: true })
+      const dest = await resolvePostAuthDest(data.user?.id, next)
+      navigate(dest, { replace: true })
     })
 
     return () => { active = false }

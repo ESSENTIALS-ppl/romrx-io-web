@@ -57,8 +57,10 @@ export function readConsent(): ConsentRecord | null {
 }
 
 export function writeConsent(state: ConsentState): ConsentRecord {
+  // Stacy GPC Field-test C.3: banner OK must not override Global Privacy Control.
+  const effective: ConsentState = gpcEnabled() && state === 'granted' ? 'denied' : state
   const rec: ConsentRecord = {
-    state,
+    state: effective,
     policy_version: CONSENT_POLICY_VERSION,
     updated_at: new Date().toISOString(),
     region: detectRegion(),
