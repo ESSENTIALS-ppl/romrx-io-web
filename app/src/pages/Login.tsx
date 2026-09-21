@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
 import { Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react'
 import { DoNotSellLink } from '../components/ConsentBanner'
+import { resolvePostAuthDest } from '../lib/postAuthDest'
 
 export function Login() {
   const { session } = useAuth()
@@ -19,7 +20,12 @@ export function Login() {
   const [cooldown, setCooldown] = useState(0) // seconds remaining
 
   useEffect(() => {
-    if (session) navigate('/dashboard/my-body', { replace: true })
+    if (!session) return
+    let active = true
+    resolvePostAuthDest(session.user?.id).then((dest) => {
+      if (active) navigate(dest, { replace: true })
+    })
+    return () => { active = false }
   }, [session, navigate])
 
   // Restore cooldown from localStorage on mount

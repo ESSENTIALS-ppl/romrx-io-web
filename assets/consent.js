@@ -26,6 +26,8 @@
   }
 
   function writeRecord(state) {
+    // Stacy GPC Field-test C.3: banner OK must not override Global Privacy Control.
+    if (gpcEnabled() && state === 'granted') state = 'denied';
     var rec = {
       state: state,
       policy_version: POLICY_VERSION,
