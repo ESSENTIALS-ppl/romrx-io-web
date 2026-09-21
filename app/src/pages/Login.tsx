@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
 import { Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react'
+import { DoNotSellLink } from '../components/ConsentBanner'
 
 export function Login() {
   const { session } = useAuth()
@@ -198,6 +199,7 @@ export function Login() {
           <Link to="/signup" className="text-cobalt underline">Create an account</Link>
         </p>
         <p className="text-center text-xs text-slate-500 mt-3">Position Readiness Protocol™ by ROMRx</p>
+        <div className="text-center mt-4"><DoNotSellLink /></div>
       </div>
     </div>
   )

@@ -3,8 +3,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Loader2, UserPlus, Mail } from 'lucide-react'
 import { track } from '../lib/track'
+import { trackMetaLead } from '../lib/metaAttribution'
 import { captureUtmFromUrl, getSignupAttribution } from '../lib/utm'
 import { cn } from '../lib/cn'
+import { DoNotSellLink } from '../components/ConsentBanner'
 
 const GENDERS = [
   { v: 'male', l: 'Male' },
@@ -93,11 +95,13 @@ export function Signup() {
         gender,
       }).eq('id', data.user.id)
       if (demoErr && import.meta.env.DEV) console.warn('[signup] demographics update', demoErr.message)
+      trackMetaLead()
       navigate(nextDest, { replace: true })
       return
     }
 
     if (data.user) {
+      trackMetaLead()
       setCheckEmail(true)
       setLoading(false)
       return
@@ -109,7 +113,7 @@ export function Signup() {
 
   if (checkEmail) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-sm text-center space-y-4">
           <div className="w-16 h-16 bg-cobalt-light rounded-full flex items-center justify-center mx-auto">
             <Mail size={30} className="text-cobalt" />
@@ -119,6 +123,7 @@ export function Signup() {
             We sent a confirmation link to <strong>{email}</strong>. Open it to activate your
             account and start your free ROM assessment.
           </p>
+          <div className="pt-4"><DoNotSellLink /></div>
           <p className="text-xs text-slate-500">
             Wrong email?{' '}
             <button type="button" onClick={() => setCheckEmail(false)} className="text-cobalt underline">
@@ -234,6 +239,7 @@ export function Signup() {
           <Link to="/login" className="text-cobalt underline">Sign in</Link>
         </p>
         <p className="text-center text-xs text-slate-500 mt-6">{protocolLabel}</p>
+        <div className="text-center mt-4"><DoNotSellLink /></div>
       </div>
     </div>
   )

@@ -21,7 +21,7 @@
     <div class="rx-container narrow">
       <p class="rx-eyebrow rx-center">Legal</p>
       <h1 class="rx-h1 rx-center">Terms, Privacy &amp; Refund Policy</h1>
-      <p class="rx-fine rx-center">Effective 2026-09-16 · Beta software, terms may update</p>
+      <p class="rx-fine rx-center">Effective 2026-09-21 · Beta software, terms may update</p>
 
       <div class="rx-legal-doc rx-mt-lg">
 
@@ -70,7 +70,7 @@
 
         <hr class="rx-hr">
 
-        <h2 class="rx-h2">Privacy Policy</h2>
+        <h2 class="rx-h2" id="privacy">Privacy Policy</h2>
 
         <h3 class="rx-h3">1. What we collect</h3>
         <p><strong>Account data:</strong> name, email, password hash, and demographics you choose to provide (for example age and sex or gender, and related height/weight ranges when collected).</p>
@@ -78,17 +78,24 @@
         <p><strong>Engagement data:</strong> login and usage events, survey and in-app feedback responses, which sport packs you enable, and subscription or entitlement state.</p>
         <p><strong>Billing data:</strong> handled by Stripe. We never see your full card details.</p>
 
-        <h3 class="rx-h3">2. How we use it</h3>
-        <p>To deliver the service, personalize your protocol, send the emails you signed up for, improve the product, and for product research that uses anonymized or aggregated data (including future studies when we publish only non-identifying results). We do not sell your personal data.</p>
+        <h3 class="rx-h3" id="how-we-use">2. How we use it</h3>
+        <p>To deliver the service, personalize your protocol, send the emails you signed up for, improve the product, measure our Meta (Facebook and Instagram) ads as described in Who we share it with, and for product research that uses anonymized or aggregated data (including future studies when we publish only non-identifying results). We do not sell your personal data for money.</p>
 
-        <h3 class="rx-h3">3. Who we share it with</h3>
-        <p>Only sub-processors necessary to run the service: Supabase (database), Netlify (hosting), Stripe (billing), Resend (transactional email), and Google Workspace (support inbox). We do not sell your data. We do not share personally identifiable data with advertisers.</p>
+        <h3 class="rx-h3" id="who-we-share">3. Who we share it with</h3>
+        <p>We use service providers necessary to run the service: Supabase (database), Netlify (hosting), Stripe (billing), Resend (transactional email), and Google Workspace (support inbox).</p>
+        <p>For measurement of our Meta (Facebook and Instagram) ads, we may share limited event and identifier data with Meta Platforms, Inc. That can include browser or device signals (such as page URL, IP address, and browser type), cookie or click identifiers (such as <code>_fbp</code> and <code>_fbc</code> when present), hashed contact information you already gave us (for example email), and conversion events (such as page view or signup). We send some of those events from your browser (Meta Pixel) and some from our servers (Conversions API).</p>
+        <p>We do not sell your personal data for money. The Meta measurement sharing described above may be treated as "sharing" for cross-context behavioral advertising under California and similar state privacy laws. You can opt out as described in Your rights.</p>
+        <p>We do not share your assessment ROM scores, protocol details, or other health-adjacent workout data with Meta for ads.</p>
 
-        <h3 class="rx-h3">4. Your rights</h3>
-        <p>You can request a full export of your data, or full deletion, by emailing <a href="mailto:privacy@romrx.io" class="rx-inline-link">privacy@romrx.io</a>. We respond within 30 days. If you're in the EU or UK, you have GDPR rights of access, rectification, erasure, portability, and objection. If you're in California, you have CCPA rights of access and deletion.</p>
+        <h3 class="rx-h3" id="your-rights">4. Your rights</h3>
+        <p>You can request a full export of your data, or full deletion, by emailing <a href="mailto:privacy@romrx.io" class="rx-inline-link">privacy@romrx.io</a>. We respond within 30 days.</p>
+        <p id="do-not-sell">If you are in California or another U.S. state with similar rights, you may have rights to know, access, delete, correct, and to opt out of the sale or sharing of personal information for cross-context behavioral advertising. To opt out of that sharing for Meta ads measurement, use the "Do Not Sell or Share My Personal Information" control on our site (also linked in the site footer), or email <a href="mailto:privacy@romrx.io" class="rx-inline-link">privacy@romrx.io</a> with the subject line "Do Not Sell or Share." We also honor Global Privacy Control (GPC) signals where required.</p>
+        <p>If you are in the EU or UK, you have GDPR rights of access, rectification, erasure, portability, and objection. Where EU or UK law requires consent before ads cookies or similar technologies, we will ask for that consent before loading the Meta Pixel or sending matching Conversions API events.</p>
 
-        <h3 class="rx-h3">5. Cookies</h3>
-        <p>We use a minimal set of first-party cookies for authentication and preferences. No third-party ad-tracking cookies.</p>
+        <h3 class="rx-h3" id="cookies">5. Cookies</h3>
+        <p>We use first-party cookies and similar technologies for authentication and preferences so you can stay signed in and keep basic site settings.</p>
+        <p>When ads measurement is allowed under Your rights (and, for EU or UK visitors, after required consent), we also use Meta Pixel cookies and related identifiers for advertising measurement. Those commonly include <code>_fbp</code> and <code>_fbc</code> on our domain, and may involve Meta receiving browser event data. We may also send matching conversion events from our servers through Meta's Conversions API.</p>
+        <p>If you opt out of sale or sharing (or withhold EU/UK ads consent), we will not load the Meta Pixel and we will not send new Pixel or Conversions API measurement events for you to Meta. Essential auth and preference cookies still work.</p>
 
         <h3 class="rx-h3">6. Security</h3>
         <p>Passwords are hashed with industry-standard algorithms. Data in transit uses TLS. Data at rest lives in Supabase (Postgres) with row-level security. No system is 100% secure, but we take reasonable steps.</p>

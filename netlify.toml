@@ -61,6 +61,11 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+[[redirects]]
+  from = "/api/attribution/meta"
+  to = "/.netlify/functions/meta-capi"
+  status = 200
+
 # Article library. Hub at /articles, articles at /articles/<slug>.
 # Real files (index.html, feed.xml) are served directly by Netlify before
 # these rewrites apply; only slug paths with no static file are rewritten.

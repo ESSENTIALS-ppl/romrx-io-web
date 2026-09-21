@@ -1,0 +1,95 @@
+/* ROMRx consent / DNS-S banner (Privacy B 2026-09-21) */
+.rx-consent-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10000;
+  max-width: 560px;
+  margin: 0 auto;
+  background: var(--rx-bg-2, #0F1730);
+  border: 1px solid var(--rx-border-hi, #2F3F68);
+  border-radius: var(--rx-radius, 14px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  padding: 18px 18px 16px;
+  color: var(--rx-text, #F5F7FB);
+  font-family: var(--rx-font-body, Inter, system-ui, sans-serif);
+}
+.rx-consent-banner[hidden] { display: none !important; }
+.rx-consent-title {
+  font-family: var(--rx-font-display, Inter Tight, Inter, sans-serif);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.rx-consent-body {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--rx-text-muted, #9AA7C2);
+}
+.rx-consent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.rx-consent-btn {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.rx-consent-btn:hover { opacity: 0.92; }
+.rx-consent-btn-primary {
+  background: linear-gradient(135deg, #3B5BFF 0%, #4E6EFF 100%);
+  color: #fff;
+}
+.rx-consent-btn-secondary {
+  background: transparent;
+  color: var(--rx-text, #F5F7FB);
+  border: 1px solid var(--rx-border-hi, #2F3F68);
+}
+.rx-consent-link {
+  color: var(--rx-cobalt-2, #4E6EFF);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+.rx-consent-toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10001;
+  max-width: 520px;
+  margin: 0 auto;
+  background: #131C3A;
+  border: 1px solid #2F3F68;
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #F5F7FB;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+}
+.rx-consent-toast[hidden] { display: none !important; }
+.rx-dns-link {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--rx-text-muted, #9AA7C2) !important;
+  font-size: 0.8rem;
+  text-decoration: underline;
+}
+.rx-dns-link:hover { color: var(--rx-text, #F5F7FB) !important; }
+@media (max-width: 640px) {
+  .rx-consent-banner { left: 10px; right: 10px; bottom: 10px; }
+  .rx-consent-actions { flex-direction: column; align-items: stretch; }
+  .rx-consent-link { margin-left: 0; text-align: center; }
+}
