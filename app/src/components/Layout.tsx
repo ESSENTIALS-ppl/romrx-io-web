@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { cn } from '../lib/cn'
 import { FuelCalculateTracker } from './FuelCalculateTracker'
+import { DoNotSellLink } from './ConsentBanner'
 import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -78,6 +79,13 @@ export function Layout() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
         <Outlet />
       </main>
+
+      <footer className="border-t border-cobalt/10 py-4 px-4 text-center">
+        <DoNotSellLink />
+        <div className="mt-2 text-xs text-slate-400">
+          <a href="https://romrx.io/legal#privacy" className="underline hover:text-slate-600">Privacy Policy</a>
+        </div>
+      </footer>
     </div>
   )
 }

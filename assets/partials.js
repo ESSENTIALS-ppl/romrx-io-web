@@ -88,10 +88,13 @@ const RX_LEGAL = `
     <div>
       <a href="/articles">Articles</a> ·
       <a href="/faq">FAQ</a> ·
-      <a href="/legal">Terms, Privacy &amp; Refund</a> ·
+      <a href="/legal#privacy">Terms, Privacy &amp; Refund</a> ·
       <a href="mailto:investors@romrx.io">Investors</a> ·
       <a href="mailto:partners@romrx.io">Partners</a>
     </div>
+  </div>
+  <div class="rx-legal-inner" style="padding-top:0;padding-bottom:8px;">
+    <a href="/legal#do-not-sell" class="rx-dns-link" data-rx-dns="1">Do Not Sell or Share My Personal Information</a>
   </div>
   <div class="rx-trademarks">
     ROMRx™, ROMRx+BJJ™, ROMRx+BodyBuilding™, ROM Readiness Protocol™, Position Readiness Protocol™,
@@ -100,6 +103,15 @@ const RX_LEGAL = `
   </div>
 </footer>
 `;
+
+function ensureConsentScript() {
+  if (document.querySelector('script[data-rx-consent-js]')) return;
+  const s = document.createElement('script');
+  s.src = '/assets/consent.js';
+  s.defer = true;
+  s.setAttribute('data-rx-consent-js', '1');
+  document.head.appendChild(s);
+}
 
 // Inject on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -121,4 +133,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (uniSlot) uniSlot.outerHTML = RX_UNIVERSE({ here });
   if (legalSlot) legalSlot.outerHTML = RX_LEGAL;
+  ensureConsentScript();
 });
