@@ -97,9 +97,7 @@ const RX_LEGAL = `
     <a href="/legal#do-not-sell" class="rx-dns-link" data-rx-dns="1">Do Not Sell or Share My Personal Information</a>
   </div>
   <div class="rx-trademarks">
-    ROMRx™, ROMRx+BJJ™, ROMRx+BodyBuilding™, ROM Readiness Protocol™, Position Readiness Protocol™,
-    Exercise Readiness Protocol™, ROMBot™, The 6-Week Reassessment Cycle™, Top 3 Priority Joints™
-    are trademarks of ROMRx LLC. All rights reserved. Beta software, content, features, and pricing subject to change.
+    ROMRx™ and related marks are trademarks of ROMRx LLC. All rights reserved.
   </div>
 </footer>
 `;
