@@ -90,11 +90,16 @@ export function Signup() {
     }
 
     if (data.session && data.user) {
+      const utmPatch: Record<string, string> = { signup_source }
+      for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const) {
+        if (utmMeta[k]) utmPatch[k] = utmMeta[k]
+      }
       const { error: demoErr } = await supabase.from('users').update({
         age_bucket: ageBucket,
         gender,
+        ...utmPatch,
       }).eq('id', data.user.id)
-      if (demoErr && import.meta.env.DEV) console.warn('[signup] demographics update', demoErr.message)
+      if (demoErr && import.meta.env.DEV) console.warn('[signup] demographics/utm update', demoErr.message)
       trackMetaLead()
       navigate(nextDest, { replace: true })
       return

@@ -9,6 +9,7 @@
  * event_id is shared across Pixel and CAPI for dedupe.
  * No ROM scores, protocols, or health-adjacent data in Meta payloads.
  * Automatic Advanced Matching stays OFF.
+ * Enable-later steps: docs/META_ATTRIBUTION_ENABLE.md
  */
 import {
   effectiveConsentState,

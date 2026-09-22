@@ -28,12 +28,20 @@ export function AuthConfirm() {
             .update({ converted_user_id: data.user.id, converted_at: new Date().toISOString() })
             .eq('unlock_token', lead)
         }
-        // Persist signup demographics collected into user_metadata (confirm-email path).
+        // Persist signup demographics + first-touch UTM into public.users (ops).
         const meta = data.user.user_metadata ?? {}
         const age_bucket = typeof meta.age_bucket === 'string' ? meta.age_bucket : null
         const gender = typeof meta.gender === 'string' ? meta.gender : null
-        if (age_bucket && gender) {
-          await supabase.from('users').update({ age_bucket, gender }).eq('id', data.user.id)
+        const str = (k: string) => (typeof meta[k] === 'string' && (meta[k] as string).trim() ? (meta[k] as string).trim() : null)
+        const patch: Record<string, string> = {}
+        if (age_bucket) patch.age_bucket = age_bucket
+        if (gender) patch.gender = gender
+        for (const k of ['signup_source', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const) {
+          const v = str(k)
+          if (v) patch[k] = v
+        }
+        if (Object.keys(patch).length > 0) {
+          await supabase.from('users').update(patch).eq('id', data.user.id)
         }
       }
 
