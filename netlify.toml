@@ -57,6 +57,17 @@
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
 
 [[headers]]
+  for = "/assets/*.js"
+  [headers.values]
+    # Consent + Meta stubs must not be immutable — enable / copy flips need refresh.
+    Cache-Control = "public, max-age=300, must-revalidate"
+
+[[headers]]
+  for = "/assets/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=300, must-revalidate"
+
+[[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"

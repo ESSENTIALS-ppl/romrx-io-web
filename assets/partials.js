@@ -109,6 +109,16 @@ function ensureConsentScript() {
   document.head.appendChild(s);
 }
 
+/** Meta Pixel/CAPI marketing stub — hard-gated OFF in assets/meta-attribution.js. */
+function ensureMetaAttributionScript() {
+  if (document.querySelector('script[data-rx-meta-js]')) return;
+  const s = document.createElement('script');
+  s.src = '/assets/meta-attribution.js';
+  s.defer = true;
+  s.setAttribute('data-rx-meta-js', '1');
+  document.head.appendChild(s);
+}
+
 // Inject on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   const here = document.body.dataset.rxHere || 'romrx';
@@ -130,4 +140,5 @@ document.addEventListener('DOMContentLoaded', () => {
   if (uniSlot) uniSlot.outerHTML = RX_UNIVERSE({ here });
   if (legalSlot) legalSlot.outerHTML = RX_LEGAL;
   ensureConsentScript();
+  ensureMetaAttributionScript();
 });
