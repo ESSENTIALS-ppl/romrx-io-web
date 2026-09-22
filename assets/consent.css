@@ -55,6 +55,24 @@
   color: var(--rx-text, #F5F7FB);
   border: 1px solid var(--rx-border-hi, #2F3F68);
 }
+.rx-consent-btn-equal {
+  background: transparent;
+  color: var(--rx-text, #F5F7FB);
+  border: 1px solid var(--rx-border-hi, #2F3F68);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+a.rx-consent-btn-equal:hover { opacity: 0.92; }
+.rx-dns-micro {
+  margin: 6px 0 0;
+  max-width: 36rem;
+  color: var(--rx-text-muted, #9AA7C2);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
 .rx-consent-link {
   color: var(--rx-cobalt-2, #4E6EFF);
   font-size: 0.85rem;

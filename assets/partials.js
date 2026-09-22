@@ -91,7 +91,8 @@ const RX_LEGAL = `
     </div>
   </div>
   <div class="rx-legal-inner" style="padding-top:0;padding-bottom:8px;">
-    <a href="/legal#do-not-sell" class="rx-dns-link" data-rx-dns="1">Do Not Sell or Share My Personal Information</a>
+    <a href="/legal#do-not-sell" class="rx-dns-link" data-rx-dns="1">Don't Sell or Share My Personal Information</a>
+    <p class="rx-dns-micro">We do not sell your personal information. This turns off limited uses that help us reach people who need ROMRx. California may call those a "sale" or "share."</p>
   </div>
   <div class="rx-trademarks">
     ROMRx™ and related marks are trademarks of ROMRx LLC. All rights reserved.
