@@ -32,8 +32,7 @@ const RX_NAV = `
       <a href="/dashboard" data-nav="dashboard">Dashboard</a>
       <a href="/science" data-nav="science">Science</a>
       <a href="/articles" data-nav="articles">Articles</a>
-      <a href="/investors" data-nav="investors">Investors</a>
-      <a href="/partners" data-nav="partners">Partners</a>
+      <!-- Investors / Partners: pages stay live; header links hidden (same pattern as RSS). -->
       <!-- Log in: lets returning users skip the assessment funnel and go straight to their Base account login.
            Mirrors the "Sign In" header link on the sibling sites romrxbjj.com and romrxbodybuilding.com,
            which each point to their own /login route. The ROMRx Base app is served at /app/ (see netlify.toml
@@ -87,10 +86,8 @@ const RX_LEGAL = `
     <div>© 2026 ROMRx LLC · Dublin, Ohio</div>
     <div>
       <a href="/articles">Articles</a> ·
-      <a href="/faq">FAQ</a> ·
-      <a href="/legal#privacy">Terms, Privacy &amp; Refund</a> ·
-      <a href="mailto:investors@romrx.io">Investors</a> ·
-      <a href="mailto:partners@romrx.io">Partners</a>
+      <a href="/legal#privacy">Terms, Privacy &amp; Refund</a>
+      <!-- FAQ / Investors / Partners / RSS: pages+mailto stay; footer links hidden. -->
     </div>
   </div>
   <div class="rx-legal-inner" style="padding-top:0;padding-bottom:8px;">
@@ -122,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navSlot.outerHTML = RX_NAV;
     // Mark active nav link
     const path = window.location.pathname.replace(/\/$/, '') || '/';
-    const map = { '/universe': 'universe', '/dashboard': 'dashboard', '/platform': 'dashboard', '/science': 'science', '/articles': 'articles', '/investors': 'investors', '/partners': 'partners' };
+    const map = { '/universe': 'universe', '/dashboard': 'dashboard', '/platform': 'dashboard', '/science': 'science', '/articles': 'articles' };
     const activeKey = path.startsWith('/articles') ? 'articles' : map[path];
     if (activeKey) {
       const el = document.querySelector(`[data-nav="${activeKey}"]`);
