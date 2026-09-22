@@ -3,9 +3,9 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 
 // Only 'active' grants access to /dashboard/*. base_status is set to 'active'
-// exclusively by the Stripe webhook once the base subscription checkout
-// completes. Never seed 'active' (or 'trialing') client-side at signup - see
-// Signup.tsx, which always seeds base_status='inactive'.
+// by the Stripe webhook (paid) OR activate-beta-base (free through Dec 31 2026).
+// Never seed 'active' (or 'trialing') client-side at signup - see Signup.tsx,
+// which always seeds base_status='inactive' (incident 2026-06-10).
 export function ProtectedRoute() {
   const { session, user, loading } = useAuth()
   const { profile, loading: profileLoading } = useProfile(user?.id)

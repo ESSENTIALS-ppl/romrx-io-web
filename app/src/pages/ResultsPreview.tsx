@@ -9,7 +9,7 @@ import { bandScoreFromAggregate, bandFull, bandChip, BAND_DESC } from '../lib/mo
 import { track } from '../lib/track'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
-
+const BETA_ACTIVATE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-beta-base`
 type PendingSport = 'bjj' | 'bodybuilding'
 
 const SPORT_LABELS: Record<PendingSport, { short: string; wordmark: string }> = {
@@ -132,8 +132,8 @@ export function ResultsPreview() {
         .eq('id', user.id)
         .maybeSingle()
 
-      // Only 'active' unlocks the dashboard - set exclusively by the Stripe
-      // webhook. Never set client-side (see incident 2026-06-10).
+      // Only 'active' unlocks the dashboard. Set by Stripe webhook OR
+      // activate-beta-base during free beta. Never set client-side (incident 2026-06-10).
       if (userRow?.base_status === 'active') {
         navigate('/dashboard/my-body', { replace: true })
         return
@@ -154,11 +154,45 @@ export function ResultsPreview() {
   }, [user, navigate])
 
   const handleUnlock = async (includePendingSport: boolean) => {
-    track('results_unlock_clicked', { include_pending_sport: includePendingSport, pending_sport: pendingSport ?? null })
+    track('results_unlock_clicked', {
+      include_pending_sport: includePendingSport,
+      pending_sport: pendingSport ?? null,
+    })
     if (!session || !user) return
     setPaying(true)
     setError('')
     try {
+      // TEMP free Unlock (ops.feature_flags.free_unlock / FREE_UNLOCK_ENABLED):
+      // server sets base_status=active via service_role. Never client-side (incident 2026-06-10).
+      // Flag OFF → 402 checkout_required → Stripe fallthrough (paywall restored).
+      // Sport packs are NOT invented here — Base only.
+      {
+        const res = await fetch(BETA_ACTIVATE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({}),
+        })
+        const data = await res.json().catch(() => ({} as Record<string, unknown>))
+        if (res.ok && (data as { ok?: boolean; base_status?: string }).ok) {
+          navigate('/dashboard/my-body', { replace: true })
+          return
+        }
+        // free_unlock_disabled / checkout_required → fall through to Stripe
+        const checkoutRequired = (data as { checkout_required?: boolean }).checkout_required === true
+          || (data as { error?: string }).error === 'free_unlock_disabled'
+          || (data as { error?: string }).error === 'beta_ended'
+        if (!checkoutRequired && res.status !== 402) {
+          setError((data as { message?: string; error?: string }).message
+            ?? (data as { error?: string }).error
+            ?? 'Unlock failed. Please try again.')
+          return
+        }
+      }
+
       const body: Record<string, string> = {
         mode: 'base',
         user_id: user.id,
@@ -294,7 +328,7 @@ export function ResultsPreview() {
               disabled={paying}
               className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              {paying ? 'Setting up payment...' : <>
+              {paying ? 'Unlocking…' : <>
                 <Unlock size={18} /> Unlock Base + {sportCopy.short} (free through Dec 31, 2026)
               </>}
             </button>
@@ -316,7 +350,7 @@ export function ResultsPreview() {
             disabled={paying}
             className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            {paying ? 'Setting up payment...' : <>
+            {paying ? 'Unlocking…' : <>
               <Unlock size={18} /> Unlock My Dashboard (free through Dec 31, 2026)
             </>}
           </button>
