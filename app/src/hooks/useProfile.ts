@@ -21,7 +21,7 @@ export interface Profile {
   height_bucket?: string | null
   weight_bucket?: string | null
   marketing_opt_out?: boolean | null
-  /** Base (HQ) subscription status. Gates access to /dashboard/*. Set to 'active' only by the Stripe webhook. */
+  /** Base (HQ) subscription status. Gates /dashboard/*. Set 'active' by Stripe webhook or activate-beta-base (beta). */
   base_status?: 'inactive' | 'active' | 'past_due' | 'canceled'
   base_stripe_subscription_id?: string
   base_expiry?: string

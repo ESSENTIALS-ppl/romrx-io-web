@@ -9,6 +9,13 @@ import { bandScoreFromAggregate, bandFull, bandChip, BAND_DESC } from '../lib/mo
 import { track } from '../lib/track'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
+const BETA_ACTIVATE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-beta-base`
+/** Exclusive end of free Base beta (UTC). Billing starts 2027-01-01. */
+const BETA_ENDS_AT_MS = Date.parse('2027-01-01T00:00:00.000Z')
+
+function isBetaFreeWindow(now = Date.now()): boolean {
+  return now < BETA_ENDS_AT_MS
+}
 
 type PendingSport = 'bjj' | 'bodybuilding'
 
@@ -132,8 +139,8 @@ export function ResultsPreview() {
         .eq('id', user.id)
         .maybeSingle()
 
-      // Only 'active' unlocks the dashboard - set exclusively by the Stripe
-      // webhook. Never set client-side (see incident 2026-06-10).
+      // Only 'active' unlocks the dashboard. Set by Stripe webhook OR
+      // activate-beta-base during free beta. Never set client-side (incident 2026-06-10).
       if (userRow?.base_status === 'active') {
         navigate('/dashboard/my-body', { replace: true })
         return
@@ -154,11 +161,43 @@ export function ResultsPreview() {
   }, [user, navigate])
 
   const handleUnlock = async (includePendingSport: boolean) => {
-    track('results_unlock_clicked', { include_pending_sport: includePendingSport, pending_sport: pendingSport ?? null })
+    track('results_unlock_clicked', {
+      include_pending_sport: includePendingSport,
+      pending_sport: pendingSport ?? null,
+      beta_free: isBetaFreeWindow(),
+    })
     if (!session || !user) return
     setPaying(true)
     setError('')
     try {
+      // Beta free path (through Dec 31 2026 UTC): server-side activate-beta-base
+      // sets base_status=active via service_role. Never set active client-side
+      // (incident 2026-06-10 / guard_users_protected_columns).
+      // Sport packs are NOT invented here — Base only. Dual CTA still unlocks Base.
+      if (isBetaFreeWindow()) {
+        const res = await fetch(BETA_ACTIVATE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({}),
+        })
+        const data = await res.json().catch(() => ({} as Record<string, unknown>))
+        if (res.ok && (data as { ok?: boolean; base_status?: string }).ok) {
+          navigate('/dashboard/my-body', { replace: true })
+          return
+        }
+        // beta_ended or other failure → fall through to Stripe checkout
+        if ((data as { error?: string }).error !== 'beta_ended' && (data as { checkout_required?: boolean }).checkout_required !== true) {
+          setError((data as { message?: string; error?: string }).message
+            ?? (data as { error?: string }).error
+            ?? 'Unlock failed. Please try again.')
+          return
+        }
+      }
+
       const body: Record<string, string> = {
         mode: 'base',
         user_id: user.id,
@@ -294,7 +333,7 @@ export function ResultsPreview() {
               disabled={paying}
               className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              {paying ? 'Setting up payment...' : <>
+              {paying ? (isBetaFreeWindow() ? 'Unlocking…' : 'Setting up payment...') : <>
                 <Unlock size={18} /> Unlock Base + {sportCopy.short} (free through Dec 31, 2026)
               </>}
             </button>
@@ -316,7 +355,7 @@ export function ResultsPreview() {
             disabled={paying}
             className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            {paying ? 'Setting up payment...' : <>
+            {paying ? (isBetaFreeWindow() ? 'Unlocking…' : 'Setting up payment...') : <>
               <Unlock size={18} /> Unlock My Dashboard (free through Dec 31, 2026)
             </>}
           </button>
