@@ -103,7 +103,7 @@ if (phase === 'setup') {
             <CheckCircle2 size={32} className="text-cobalt" fill="currentColor" strokeWidth={0} />
           </div>
           <h2 className="font-display font-bold text-xl text-cobalt-ink">Check your email!</h2>
-          <p className="text-sm text-slate-500">We sent your Position Readiness results and a link to unlock your full dashboard to <strong>{email}</strong>.</p>
+          <p className="text-sm text-slate-500">We sent your Personal Readiness Profile and a link to unlock your full dashboard to <strong>{email}</strong>.</p>
         </div>
       </div>
     )
@@ -117,7 +117,7 @@ if (phase === 'setup') {
             <CheckCircle2 size={32} className="text-cobalt" fill="currentColor" strokeWidth={0} />
           </div>
           <h2 className="font-display font-bold text-xl text-cobalt-ink">Assessment complete!</h2>
-          <p className="text-sm text-slate-500">Computing your Position Readiness Score...</p>
+          <p className="text-sm text-slate-500">Computing your Personal Readiness Profile...</p>
           <div className="w-6 h-6 border-[3px] border-cobalt/30 border-t-cobalt rounded-full animate-spin mx-auto" />
         </div>
       </div>
