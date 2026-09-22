@@ -106,11 +106,10 @@
 
     var isEu = mode === 'eu_uk';
     var title = isEu ? 'Ads cookies' : 'Cookies and ads measurement';
+    // 1A Pixel-PARKED US body (Jim GO 2026-09-22). HOLD 1B Pixel-ON variant.
     var body = isEu
       ? 'We use Meta Pixel cookies and limited event data to measure ads. This is optional. Essential cookies still work either way.'
-      : 'We use essential cookies to run ROMRx. We also use Meta (Facebook and Instagram) tools to measure our ads. That can include cookies such as _fbp and _fbc and limited event data. We do not sell your data for money. You can opt out of sharing for ads measurement anytime.';
-    var primary = isEu ? 'Allow ads cookies' : 'OK';
-    var secondary = isEu ? 'Reject ads cookies' : 'Do Not Sell or Share';
+      : 'We use essential cookies so ROMRx works. We do not sell your personal information. When we reach people who can really use this, California law may treat some of that as a "sale" or "share." Don\'t Sell or Share turns those uses off. Reject declines anything that is not essential.';
 
     var el = document.createElement('div');
     el.id = 'rx-consent-banner';
@@ -118,28 +117,51 @@
     el.setAttribute('role', 'dialog');
     el.setAttribute('aria-labelledby', 'rx-consent-title');
     el.setAttribute('aria-describedby', 'rx-consent-body');
-    el.innerHTML =
-      '<p class="rx-consent-title" id="rx-consent-title"></p>' +
-      '<p class="rx-consent-body" id="rx-consent-body"></p>' +
-      '<div class="rx-consent-actions">' +
-      '<button type="button" class="rx-consent-btn rx-consent-btn-primary" data-rx-consent="grant"></button>' +
-      '<button type="button" class="rx-consent-btn rx-consent-btn-secondary" data-rx-consent="deny"></button>' +
-      '<a class="rx-consent-link" href="' + PRIVACY_URL + '">Privacy Policy</a>' +
-      '</div>';
-    el.querySelector('#rx-consent-title').textContent = title;
-    el.querySelector('#rx-consent-body').textContent = body;
-    el.querySelector('[data-rx-consent="grant"]').textContent = primary;
-    el.querySelector('[data-rx-consent="deny"]').textContent = secondary;
 
-    el.querySelector('[data-rx-consent="grant"]').addEventListener('click', function () {
-      writeRecord('granted');
-      hideBanner();
-    });
-    el.querySelector('[data-rx-consent="deny"]').addEventListener('click', function () {
-      writeRecord('denied');
-      hideBanner();
-      optOutConfirm();
-    });
+    if (isEu) {
+      el.innerHTML =
+        '<p class="rx-consent-title" id="rx-consent-title"></p>' +
+        '<p class="rx-consent-body" id="rx-consent-body"></p>' +
+        '<div class="rx-consent-actions">' +
+        '<button type="button" class="rx-consent-btn rx-consent-btn-primary" data-rx-consent="grant"></button>' +
+        '<button type="button" class="rx-consent-btn rx-consent-btn-secondary" data-rx-consent="deny"></button>' +
+        '<a class="rx-consent-link" href="' + PRIVACY_URL + '">Privacy Policy</a>' +
+        '</div>';
+      el.querySelector('#rx-consent-title').textContent = title;
+      el.querySelector('#rx-consent-body').textContent = body;
+      el.querySelector('[data-rx-consent="grant"]').textContent = 'Allow ads cookies';
+      el.querySelector('[data-rx-consent="deny"]').textContent = 'Reject ads cookies';
+      el.querySelector('[data-rx-consent="grant"]').addEventListener('click', function () {
+        writeRecord('granted');
+        hideBanner();
+      });
+      el.querySelector('[data-rx-consent="deny"]').addEventListener('click', function () {
+        writeRecord('denied');
+        hideBanner();
+        optOutConfirm();
+      });
+    } else {
+      // US 1A: Reject | Don't Sell or Share | Privacy Policy - equal weight. Both opt-out actions.
+      el.innerHTML =
+        '<p class="rx-consent-title" id="rx-consent-title"></p>' +
+        '<p class="rx-consent-body" id="rx-consent-body"></p>' +
+        '<div class="rx-consent-actions">' +
+        '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="reject"></button>' +
+        '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="deny"></button>' +
+        '<a class="rx-consent-btn rx-consent-btn-equal rx-consent-btn-link" href="' + PRIVACY_URL + '">Privacy Policy</a>' +
+        '</div>';
+      el.querySelector('#rx-consent-title').textContent = title;
+      el.querySelector('#rx-consent-body').textContent = body;
+      el.querySelector('[data-rx-consent="reject"]').textContent = 'Reject';
+      el.querySelector('[data-rx-consent="deny"]').textContent = "Don't Sell or Share";
+      function usOptOut() {
+        writeRecord('denied');
+        hideBanner();
+        optOutConfirm();
+      }
+      el.querySelector('[data-rx-consent="reject"]').addEventListener('click', usOptOut);
+      el.querySelector('[data-rx-consent="deny"]').addEventListener('click', usOptOut);
+    }
 
     document.body.appendChild(el);
   }
