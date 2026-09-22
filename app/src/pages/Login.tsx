@@ -204,7 +204,7 @@ export function Login() {
           New athlete?{' '}
           <Link to="/signup" className="text-cobalt underline">Create an account</Link>
         </p>
-        <p className="text-center text-xs text-slate-500 mt-3">Position Readiness Protocol™ by ROMRx</p>
+        <p className="text-center text-xs text-slate-500 mt-3">ROMRx™ and related marks are trademarks of ROMRx LLC. All rights reserved.</p>
         <div className="text-center mt-4"><DoNotSellLink /></div>
       </div>
     </div>
