@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { Spinner } from '../components/Spinner'
 import { AlertTriangle, CheckCircle, Unlock, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
-import { bandScoreFromAggregate, bandFull, BAND_DESC } from '../lib/mobilityBands'
+import { bandScoreFromAggregate, bandFull, bandChip, BAND_DESC } from '../lib/mobilityBands'
 import { track } from '../lib/track'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
@@ -262,11 +262,11 @@ export function ResultsPreview() {
               <p className="text-xs text-white/60">Full joint breakdown, personalized protocol, ROMBot</p>
             </div>
           </div>
-          <p className="text-xs font-bold text-cobalt-light uppercase tracking-wide mb-2">My Body - Joint Readiness</p>
+          <p className="text-xs font-bold text-cobalt-light uppercase tracking-wide mb-2">My Body - Mobility bands</p>
           <div className="flex gap-2">
-            <span className="text-xs bg-cobalt/20 text-cobalt-light px-3 py-1 rounded-full font-bold">GREEN</span>
-            <span className="text-xs bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full font-bold">YELLOW</span>
-            <span className="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full font-bold">RED</span>
+            <span className="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full font-bold">{bandChip(1)}</span>
+            <span className="text-xs bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full font-bold">{bandChip(2)}</span>
+            <span className="text-xs bg-cobalt/20 text-cobalt-light px-3 py-1 rounded-full font-bold">{bandChip(3)}</span>
           </div>
           <div className="space-y-2">
             {[
