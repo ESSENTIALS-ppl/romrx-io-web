@@ -271,9 +271,9 @@ export function ResultsPreview() {
           <div className="space-y-2">
             {[
               'My Protocol - Top 3 Priority Joints',
-              sportCopy
-                ? `My Sport - ${sportCopy.wordmark} (after Base)`
-                : 'My Sport - Offense + Defense Flow',
+              ...(sportCopy
+                ? [`My Sport - ${sportCopy.wordmark} (after Base)`]
+                : []),
               'ROMBot - Ask anything about your data',
             ].map(item => (
               <div key={item} className="flex items-center gap-2">
