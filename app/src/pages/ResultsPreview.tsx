@@ -112,7 +112,17 @@ export function ResultsPreview() {
   const sportCopy = pendingSport ? SPORT_LABELS[pendingSport] : null
 
   useEffect(() => {
-    track('results_viewed', { authenticated: !!user, pending_sport: pendingSport ?? null })
+    // Once per browser tab session (survives React StrictMode remount).
+    // Live cut Tue AM: results_viewed 6322 vs signup_completed 26 — mount spam.
+    try {
+      const key = 'romrx.hq.results_viewed'
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1')
+        track('results_viewed', { authenticated: !!user, pending_sport: pendingSport ?? null })
+      }
+    } catch {
+      track('results_viewed', { authenticated: !!user, pending_sport: pendingSport ?? null })
+    }
     if (!user) { setLoading(false); return }
     ;(async () => {
       // Check if base subscription is already active
