@@ -10,13 +10,6 @@ import { track } from '../lib/track'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
 const BETA_ACTIVATE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-beta-base`
-/** Exclusive end of free Base beta (UTC). Billing starts 2027-01-01. */
-const BETA_ENDS_AT_MS = Date.parse('2027-01-01T00:00:00.000Z')
-
-function isBetaFreeWindow(now = Date.now()): boolean {
-  return now < BETA_ENDS_AT_MS
-}
-
 type PendingSport = 'bjj' | 'bodybuilding'
 
 const SPORT_LABELS: Record<PendingSport, { short: string; wordmark: string }> = {
@@ -164,17 +157,16 @@ export function ResultsPreview() {
     track('results_unlock_clicked', {
       include_pending_sport: includePendingSport,
       pending_sport: pendingSport ?? null,
-      beta_free: isBetaFreeWindow(),
     })
     if (!session || !user) return
     setPaying(true)
     setError('')
     try {
-      // Beta free path (through Dec 31 2026 UTC): server-side activate-beta-base
-      // sets base_status=active via service_role. Never set active client-side
-      // (incident 2026-06-10 / guard_users_protected_columns).
-      // Sport packs are NOT invented here — Base only. Dual CTA still unlocks Base.
-      if (isBetaFreeWindow()) {
+      // TEMP free Unlock (ops.feature_flags.free_unlock / FREE_UNLOCK_ENABLED):
+      // server sets base_status=active via service_role. Never client-side (incident 2026-06-10).
+      // Flag OFF → 402 checkout_required → Stripe fallthrough (paywall restored).
+      // Sport packs are NOT invented here — Base only.
+      {
         const res = await fetch(BETA_ACTIVATE_URL, {
           method: 'POST',
           headers: {
@@ -189,8 +181,11 @@ export function ResultsPreview() {
           navigate('/dashboard/my-body', { replace: true })
           return
         }
-        // beta_ended or other failure → fall through to Stripe checkout
-        if ((data as { error?: string }).error !== 'beta_ended' && (data as { checkout_required?: boolean }).checkout_required !== true) {
+        // free_unlock_disabled / checkout_required → fall through to Stripe
+        const checkoutRequired = (data as { checkout_required?: boolean }).checkout_required === true
+          || (data as { error?: string }).error === 'free_unlock_disabled'
+          || (data as { error?: string }).error === 'beta_ended'
+        if (!checkoutRequired && res.status !== 402) {
           setError((data as { message?: string; error?: string }).message
             ?? (data as { error?: string }).error
             ?? 'Unlock failed. Please try again.')
@@ -333,7 +328,7 @@ export function ResultsPreview() {
               disabled={paying}
               className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              {paying ? (isBetaFreeWindow() ? 'Unlocking…' : 'Setting up payment...') : <>
+              {paying ? 'Unlocking…' : <>
                 <Unlock size={18} /> Unlock Base + {sportCopy.short} (free through Dec 31, 2026)
               </>}
             </button>
@@ -355,7 +350,7 @@ export function ResultsPreview() {
             disabled={paying}
             className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            {paying ? (isBetaFreeWindow() ? 'Unlocking…' : 'Setting up payment...') : <>
+            {paying ? 'Unlocking…' : <>
               <Unlock size={18} /> Unlock My Dashboard (free through Dec 31, 2026)
             </>}
           </button>
