@@ -13,6 +13,8 @@ import {
   bandChip,
   jointBandsForAssessment,
   jointKeyBase,
+  jointPercent,
+  jointPercentsForAssessment,
   formatScoreBand,
   mobilityScoreForAssessment,
   overallBandForAssessment,
@@ -21,6 +23,7 @@ import {
   BAND_TONE,
   BAND_LEGEND,
   type BandScore,
+  type JointScoreRow,
 } from '../lib/mobilityBands'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
 
@@ -75,55 +78,48 @@ function getBandTier(band: BandScore) {
   }
 }
 
-// Elite athlete targets - scoring against these gives meaningful differentiation.
-const OPTIMAL: Record<string, number> = {
-  'Hip ER': 80, 'Hip IR': 50, 'Hip Abd': 60, 'Hip Flex': 130,
-  'Shoulder ER': 95, 'Shoulder Flex': 180, 'Ankle DF': 20,
-  'Lumbar Flex': 70, 'Lumbar Ext': 35,
-  'Cervical Lat': 50, 'Cervical Flex': 65, 'Cervical Ext': 75,
-}
-
-function norm(val: number, optimal: number) {
-  return Math.min(100, Math.round((val / optimal) * 100))
-}
-
-const JOINTS = [
-  { key: 'Hip ER', get: (a: Assessment) => norm(Math.max(a.hip_er_l ?? 0, a.hip_er_r ?? 0), OPTIMAL['Hip ER']) },
-  { key: 'Hip IR', get: (a: Assessment) => norm(Math.max(a.hip_ir_l ?? 0, a.hip_ir_r ?? 0), OPTIMAL['Hip IR']) },
-  { key: 'Hip Abd', get: (a: Assessment) => norm(Math.max(a.hip_abd_l ?? 0, a.hip_abd_r ?? 0), OPTIMAL['Hip Abd']) },
-  { key: 'Hip Flex', get: (a: Assessment) => norm(Math.max(a.hip_flex_l ?? 0, a.hip_flex_r ?? 0), OPTIMAL['Hip Flex']) },
-  { key: 'Shoulder ER', get: (a: Assessment) => norm(Math.max(a.shoulder_er_l ?? 0, a.shoulder_er_r ?? 0), OPTIMAL['Shoulder ER']) },
-  { key: 'Shoulder Flex', get: (a: Assessment) => norm(Math.max(a.shoulder_flex_l ?? 0, a.shoulder_flex_r ?? 0), OPTIMAL['Shoulder Flex']) },
-  { key: 'Ankle DF', get: (a: Assessment) => norm(Math.max(a.ankle_df_l ?? 0, a.ankle_df_r ?? 0), OPTIMAL['Ankle DF']) },
-  { key: 'Lumbar Flex', get: (a: Assessment) => norm(a.lumbar_flex ?? 0, OPTIMAL['Lumbar Flex']) },
-  { key: 'Lumbar Ext', get: (a: Assessment) => norm(a.lumbar_ext ?? 0, OPTIMAL['Lumbar Ext']) },
-  { key: 'Cerv Lat', get: (a: Assessment) => norm(Math.max(a.cervical_lat_l ?? 0, a.cervical_lat_r ?? 0), OPTIMAL['Cervical Lat']) },
-  { key: 'Cerv Flex', get: (a: Assessment) => norm(a.cervical_flex ?? 0, OPTIMAL['Cervical Flex']) },
-  { key: 'Cerv Ext', get: (a: Assessment) => norm(a.cervical_ext ?? 0, OPTIMAL['Cervical Ext']) },
+// Base radar + Joint Breakdown use THE shared per-joint % (lib/mobilityBands
+// jointPercent: worse side / JOINT_SCORE_TARGETS, floored, clamped into the
+// joint's band). No elite sport-pack targets on Base (Fix A, Jim LOCK 2026-09-24).
+const RADAR_JOINTS: ReadonlyArray<{ label: string; key: string }> = [
+  { label: 'Hip ER', key: 'hip_er' },
+  { label: 'Hip IR', key: 'hip_ir' },
+  { label: 'Hip Abd', key: 'hip_abd' },
+  { label: 'Hip Flex', key: 'hip_flex' },
+  { label: 'Shoulder ER', key: 'shoulder_er' },
+  { label: 'Shoulder Flex', key: 'shoulder_flex' },
+  { label: 'Ankle DF', key: 'ankle_df' },
+  { label: 'Lumbar Flex', key: 'lumbar_flex' },
+  { label: 'Lumbar Ext', key: 'lumbar_ext' },
+  { label: 'Cerv Lat', key: 'cervical_lat' },
+  { label: 'Cerv Flex', key: 'cervical_flex' },
+  { label: 'Cerv Ext', key: 'cervical_ext' },
 ]
 
-function buildRadar(assessments: Assessment[]) {
-  return JOINTS.map(j => {
-    const row: Record<string, string | number> = { joint: j.key }
-    assessments.forEach((a, i) => { row[`v${i}`] = j.get(a) })
+function buildRadar(assessments: Assessment[], current: Assessment, jointScores: JointScoreRow[] | null | undefined) {
+  // Persisted joint_scores belong to the current assessment only; older ones use the formula.
+  const pcts = assessments.map(a => jointPercentsForAssessment(a, a.id === current.id ? jointScores : null))
+  return RADAR_JOINTS.map(j => {
+    const row: Record<string, string | number> = { joint: j.label }
+    pcts.forEach((m, i) => { row[`v${i}`] = m.get(j.key) ?? 0 })
     return row
   })
 }
 
-function JointBar({ label, left, right, midline, optimal, jointKey, scoreMap }: {
+function JointBar({ label, left, right, midline, jointKey, scoreMap }: {
   label: string; left?: number | null; right?: number | null
-  midline?: number | null; optimal: number
+  midline?: number | null
   jointKey: string
   scoreMap: Map<string, BandScore>
 }) {
-  const best = midline ?? Math.max(left ?? 0, right ?? 0)
-  const pct = Math.min(100, Math.round((best / optimal) * 100))
   const asym = left != null && right != null ? Math.abs(left - right) : 0
 
   // Single source of truth: band from joint_scores / compute_joint_scores formula.
   // Name, bar, % and chip colours all derive from this band (no separate threshold).
   const jointBand: BandScore | null = scoreMap.get(jointKey) ?? null
   const tone = jointBand != null ? BAND_TONE[jointBand] : null
+  // Shared per-joint % (worse side / Base target), clamped into this joint's band.
+  const pct = jointPercent(jointKey, { left, right, midline }, jointBand) ?? 0
 
   return (
     <div className="flex items-center gap-3 py-2">
@@ -178,12 +174,12 @@ export function MyBody() {
     />
   )
 
-  const radarData = buildRadar(assessments.length > 0 ? assessments : [assessment])
+  const radarData = buildRadar(assessments.length > 0 ? assessments : [assessment], assessment, jointScores)
   const RADAR_COLORS = ['#1D4ED8', '#f59e0b', '#60a5fa', '#c084fc']
   const RADAR_LABELS = assessments.map(a =>
     new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
   )
-  const prs = mobilityScoreForAssessment(assessment)
+  const prs = mobilityScoreForAssessment(assessment, jointScores)
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreas(assessment.worst_joints)
@@ -421,20 +417,20 @@ export function MyBody() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Joint Breakdown" subtitle="Best side shown - % of optimal range">
+      <SectionCard title="Joint Breakdown" subtitle="Worse side shown - % of your Base target">
         <div className="divide-y divide-cobalt/10">
-          <JointBar label="Hip ER" left={assessment.hip_er_l} right={assessment.hip_er_r} optimal={OPTIMAL['Hip ER']} jointKey="hip_er" scoreMap={scoreMap} />
-          <JointBar label="Hip IR" left={assessment.hip_ir_l} right={assessment.hip_ir_r} optimal={OPTIMAL['Hip IR']} jointKey="hip_ir" scoreMap={scoreMap} />
-          <JointBar label="Hip Abduction" left={assessment.hip_abd_l} right={assessment.hip_abd_r} optimal={OPTIMAL['Hip Abd']} jointKey="hip_abd" scoreMap={scoreMap} />
-          <JointBar label="Hip Flexion" left={assessment.hip_flex_l} right={assessment.hip_flex_r} optimal={OPTIMAL['Hip Flex']} jointKey="hip_flex" scoreMap={scoreMap} />
-          <JointBar label="Shoulder ER" left={assessment.shoulder_er_l} right={assessment.shoulder_er_r} optimal={OPTIMAL['Shoulder ER']} jointKey="shoulder_er" scoreMap={scoreMap} />
-          <JointBar label="Shoulder Flex" left={assessment.shoulder_flex_l} right={assessment.shoulder_flex_r} optimal={OPTIMAL['Shoulder Flex']} jointKey="shoulder_flex" scoreMap={scoreMap} />
-          <JointBar label="Ankle DF" left={assessment.ankle_df_l} right={assessment.ankle_df_r} optimal={OPTIMAL['Ankle DF']} jointKey="ankle_df" scoreMap={scoreMap} />
-          <JointBar label="Lumbar Flex" midline={assessment.lumbar_flex} optimal={OPTIMAL['Lumbar Flex']} jointKey="lumbar_flex" scoreMap={scoreMap} />
-          <JointBar label="Lumbar Ext" midline={assessment.lumbar_ext} optimal={OPTIMAL['Lumbar Ext']} jointKey="lumbar_ext" scoreMap={scoreMap} />
-          <JointBar label="Cervical Lat Flex" left={assessment.cervical_lat_l} right={assessment.cervical_lat_r} optimal={OPTIMAL['Cervical Lat']} jointKey="cervical_lat" scoreMap={scoreMap} />
-          <JointBar label="Cervical Flex" midline={assessment.cervical_flex} optimal={OPTIMAL['Cervical Flex']} jointKey="cervical_flex" scoreMap={scoreMap} />
-          <JointBar label="Cervical Ext" midline={assessment.cervical_ext} optimal={OPTIMAL['Cervical Ext']} jointKey="cervical_ext" scoreMap={scoreMap} />
+          <JointBar label="Hip ER" left={assessment.hip_er_l} right={assessment.hip_er_r} jointKey="hip_er" scoreMap={scoreMap} />
+          <JointBar label="Hip IR" left={assessment.hip_ir_l} right={assessment.hip_ir_r} jointKey="hip_ir" scoreMap={scoreMap} />
+          <JointBar label="Hip Abduction" left={assessment.hip_abd_l} right={assessment.hip_abd_r} jointKey="hip_abd" scoreMap={scoreMap} />
+          <JointBar label="Hip Flexion" left={assessment.hip_flex_l} right={assessment.hip_flex_r} jointKey="hip_flex" scoreMap={scoreMap} />
+          <JointBar label="Shoulder ER" left={assessment.shoulder_er_l} right={assessment.shoulder_er_r} jointKey="shoulder_er" scoreMap={scoreMap} />
+          <JointBar label="Shoulder Flex" left={assessment.shoulder_flex_l} right={assessment.shoulder_flex_r} jointKey="shoulder_flex" scoreMap={scoreMap} />
+          <JointBar label="Ankle DF" left={assessment.ankle_df_l} right={assessment.ankle_df_r} jointKey="ankle_df" scoreMap={scoreMap} />
+          <JointBar label="Lumbar Flex" midline={assessment.lumbar_flex} jointKey="lumbar_flex" scoreMap={scoreMap} />
+          <JointBar label="Lumbar Ext" midline={assessment.lumbar_ext} jointKey="lumbar_ext" scoreMap={scoreMap} />
+          <JointBar label="Cervical Lat Flex" left={assessment.cervical_lat_l} right={assessment.cervical_lat_r} jointKey="cervical_lat" scoreMap={scoreMap} />
+          <JointBar label="Cervical Flex" midline={assessment.cervical_flex} jointKey="cervical_flex" scoreMap={scoreMap} />
+          <JointBar label="Cervical Ext" midline={assessment.cervical_ext} jointKey="cervical_ext" scoreMap={scoreMap} />
         </div>
       </SectionCard>
     </div>
