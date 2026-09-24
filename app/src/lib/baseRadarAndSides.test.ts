@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { radarRadius, radarRadiusFloor40, BUILDING_RING_PCT } from './radarScale'
 import {
   ASSESSMENT_JOINTS,
   BAND_HEX,
@@ -20,7 +21,8 @@ import {
   jointDisplayRowsForAssessment,
   jointPercent,
   jointUnit,
-  radarDataForAssessments,
+  radarSideRowsForAssessment,
+  sidePercent,
   sideBandsForJoint,
   valueToneClass,
   type BandScore,
@@ -62,72 +64,136 @@ function randomRows(r: () => number, a: Record<string, unknown>): JointScoreRow[
   return [...bands].map(([joint_key, score]) => ({ joint_key, score }))
 }
 
-describe('My Body radar == Joint Breakdown bars', () => {
+describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () => {
   it('radar joint set and order is exactly the bar list', () => {
     const a = randomAssessment(rng(1), 'x')
-    const radar = radarDataForAssessments([a], a, null)
-    expect(radar.map(r => r.key)).toEqual(BASE_DISPLAY_JOINTS.map(j => j.key))
+    expect(radarSideRowsForAssessment(a).map(r => r.key)).toEqual(BASE_DISPLAY_JOINTS.map(j => j.key))
     expect(jointDisplayRowsForAssessment(a).map(r => r.key)).toEqual(BASE_DISPLAY_JOINTS.map(j => j.key))
   })
 
-  it('for 500 random assessments the radar value, band and bar % are identical and in-band', () => {
+  it('for 500 random assessments: worse side == bar %, sides consistent with side colours', () => {
     const r = rng(20260924)
     let checked = 0
     for (let n = 0; n < 500; n++) {
       const a = randomAssessment(r, `cur-${n}`)
-      const older = randomAssessment(r, `old-${n}`)
       const rows = randomRows(r, a)
       const bars = jointDisplayRowsForAssessment(a, rows)
-      const radar = radarDataForAssessments([a, older], a, rows)
+      const radar = radarSideRowsForAssessment(a, rows)
       const bands = jointBandsForAssessment(a, rows)
       bars.forEach((bar, i) => {
         const j = BASE_DISPLAY_JOINTS[i]
-        // independent recomputation: worse side / Base target, band-clamped
+        const rr = radar[i]
         const num = (k?: string) => (k == null || a[k] == null ? null : Number(a[k]))
         const expected = jointPercent(j.key, { left: num(j.l), right: num(j.r), midline: num(j.single) }, bands.get(j.key) ?? null) ?? 0
         expect([j.key, bar.pct]).toEqual([j.key, expected])
-        expect([j.key, radar[i].v0]).toEqual([j.key, bar.pct])
-        expect([j.key, radar[i].band]).toEqual([j.key, bar.band])
-        // older series uses its own values (formula bands)
-        expect(radar[i].v1).toBe(jointDisplayRowsForAssessment(older, null)[i].pct)
-        // scale: 0..100; full ring (100) iff Steady
-        expect(bar.pct).toBeGreaterThanOrEqual(0)
-        expect(bar.pct).toBeLessThanOrEqual(100)
-        if (bar.band === 3) expect(bar.pct).toBe(100)
-        if (bar.band === 2) expect(bar.pct >= 90 && bar.pct <= 99).toBe(true)
-        if (bar.band === 1) expect(bar.pct).toBeLessThanOrEqual(89)
+        // worse side (tooltip + dots) === bar %
+        expect([j.key, rr.worse]).toEqual([j.key, bar.pct])
+        expect([j.key, rr.band]).toEqual([j.key, bar.band])
+        if (!rr.measured) { checked++; return }
+        if (rr.midline) {
+          // one value on both lines
+          expect([rr.left, rr.right]).toEqual([bar.pct, bar.pct])
+        } else {
+          const sb = sideBandsForJoint(j.key, { left: num(j.l), right: num(j.r) }, bar.band)
+          expect([rr.leftBand, rr.rightBand]).toEqual([sb.left, sb.right])
+          for (const [pct, band] of [[rr.leftPct, rr.leftBand], [rr.rightPct, rr.rightBand]] as const) {
+            if (pct == null) continue
+            // each side's % sits inside the band its colour shows
+            if (band === 3) expect(pct).toBe(100)
+            if (band === 2) expect(pct >= 90 && pct <= 99).toBe(true)
+            if (band === 1) expect(pct).toBeLessThanOrEqual(89)
+          }
+          // the worse measured side is the bar %
+          const measuredSides = [rr.leftPct, rr.rightPct].filter((x): x is number => x != null)
+          expect(Math.min(...measuredSides)).toBe(bar.pct)
+          expect(Math.min(rr.left, rr.right)).toBe(bar.pct)
+        }
         checked++
       })
     }
     expect(checked).toBe(500 * BASE_DISPLAY_JOINTS.length)
   })
 
-  it('radar uses worse side, not best side or L/R average', () => {
-    const a = { id: 'a', hip_abd_l: 45, hip_abd_r: 90 } // worse 45/90 = 50%
-    const row = radarDataForAssessments([a], a, null).find(r => r.key === 'hip_abd')!
-    expect(row.v0).toBe(50)
-    expect(row.band).toBe(1)
+  it('asymmetry separates the lines; worse side, not best side or average', () => {
+    const a = { id: 'a', hip_abd_l: 45, hip_abd_r: 90 }
+    const row = radarSideRowsForAssessment(a).find(r => r.key === 'hip_abd')!
+    expect([row.left, row.right, row.worse, row.band]).toEqual([50, 100, 50, 1])
+    expect([row.leftBand, row.rightBand]).toEqual([1, 3])
   })
 
-  it('fixture values (EXPECTED-BANDS.md): 05 Ankle DF 17.9/19 → 89%, 03 Hip Abd 81/81.5 → 90%', () => {
-    const f05 = { id: '05', ankle_df_l: 17.9, ankle_df_r: 19, hip_abd_l: 81, hip_abd_r: 81.5 }
-    const rows = radarDataForAssessments([f05], f05, [{ joint_key: 'ankle_df', score: 1 }, { joint_key: 'hip_abd', score: 2 }])
-    expect(rows.find(r => r.key === 'ankle_df')!.v0).toBe(89)
-    expect(rows.find(r => r.key === 'hip_abd')!.v0).toBe(90)
+  it('fixture values (EXPECTED-BANDS.md)', () => {
+    const f05 = { id: '05', ankle_df_l: 17.9, ankle_df_r: 19, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
+    const rows = radarSideRowsForAssessment(f05, [{ joint_key: 'ankle_df', score: 1 }, { joint_key: 'hip_abd', score: 2 }])
+    const ank = rows.find(r => r.key === 'ankle_df')!
+    expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([89, 95, 89])
+    const abd = rows.find(r => r.key === 'hip_abd')!
+    expect([abd.leftPct, abd.rightPct, abd.worse]).toEqual([90, 90, 90])
+    const lf = rows.find(r => r.key === 'lumbar_flex')!
+    expect([lf.midline, lf.left, lf.right]).toEqual([true, 100, 100])
+    // fixture 02 Ankle DF 7 / 8.5 cm → L 35 / R 42
+    const f02 = radarSideRowsForAssessment({ ankle_df_l: 7, ankle_df_r: 8.5 }).find(r => r.key === 'ankle_df')!
+    expect([f02.leftPct, f02.rightPct, f02.worse]).toEqual([35, 42, 35])
   })
 
-  it('MyBody.tsx: fixed 0..100 radar scale, band-coloured dots, bars + radar from the same rows', () => {
+  it('sidePercent: floor, capped at 100, clamped into the side band', () => {
+    expect(sidePercent('hip_abd', 81, 2)).toBe(90)
+    expect(sidePercent('hip_abd', 95, 3)).toBe(100)
+    expect(sidePercent('ankle_df', 17.9, 1)).toBe(89)
+    expect(sidePercent('ankle_df', null, 1)).toBeNull()
+  })
+
+  it('MyBody.tsx renders BaseRadar from radarSideRowsForAssessment with the plain US caption', () => {
     const s = read(join(SRC, 'pages', 'MyBody.tsx'))
-    expect(s).toMatch(/<PolarRadiusAxis domain=\{\[0, 100\]\}/)
-    expect(s).toMatch(/BAND_HEX\[band\]/)
-    expect(s).toMatch(/jointRows\.map\(row => <JointBar/)
+    expect(s).toMatch(/<BaseRadar rows=\{radarRows\} \/>/)
+    expect(s).toMatch(/Each line is one side of your body, as a % of your Base target\. The dashed circle is Steady\. Dents and gaps between the lines show where to focus\./)
+    expect(s).not.toMatch(/\u2014/)
+    expect(s).not.toMatch(/recharts/)
     const code = s.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
     expect(code).not.toMatch(/OPTIMAL|optimal|elite/i)
-    // no band colour reused as a radar series colour (cobalt/amber read as Steady/Building)
-    expect(s).not.toMatch(/RADAR_COLORS = \[[^\]]*#1D4ED8/i)
-    expect(s).not.toMatch(/#f59e0b/i)
   })
 
+  it('BaseRadar.tsx: Steady target circle, gap tint, 90% ring, Left solid / Right dashed, worse-side band dots', () => {
+    const s = read(join(SRC, 'components', 'BaseRadar.tsx'))
+    expect(s).toMatch(/data-ring="steady-target"/)
+    expect(s).toMatch(/>Steady target</)
+    expect(s).toMatch(/data-ring="building-90"/)
+    expect(s).toMatch(/const ringR = R \* radius\(BUILDING_RING_PCT\)/)
+    expect(s).toMatch(/radius = radarRadius/)
+    expect(s).toMatch(/points=\{polygon\(worse\)\} fill="#ffffff"/)
+    expect(s).toMatch(/data-series="left"/)
+    expect(s).toMatch(/data-series="right"/)
+    expect(s).toMatch(/strokeDasharray=\{RIGHT_DASH\}/)
+    expect(s).toMatch(/point\(i, n, r\.worse\)/)
+    expect(s).toMatch(/BAND_HEX\[r\.band\]/)
+    expect(s).toMatch(/Left \{fmt\(act\.leftPct\)\} · Right \{fmt\(act\.rightPct\)\}/)
+    expect(s).not.toMatch(/\u2014/)
+  })
+})
+
+describe('radar scale (quadratic)', () => {
+  it('maps 0 → centre, 100 → Steady circle, monotonic, clamps', () => {
+    expect(radarRadius(0)).toBe(0)
+    expect(radarRadius(100)).toBe(1)
+    expect(radarRadius(150)).toBe(1)
+    expect(radarRadius(-5)).toBe(0)
+    expect(radarRadius(null)).toBe(0)
+    for (let p = 1; p <= 100; p++) expect(radarRadius(p)).toBeGreaterThan(radarRadius(p - 1))
+  })
+  it('89 vs 100 gap is about twice the linear gap; 35 vs 66 stays clearly separate and non-zero', () => {
+    const gapTop = radarRadius(100) - radarRadius(89)
+    expect(gapTop).toBeGreaterThan(0.2)
+    expect(gapTop).toBeGreaterThan(1.8 * 0.11)
+    expect(radarRadius(35)).toBeGreaterThan(0.1)
+    expect(radarRadius(66) - radarRadius(35)).toBeGreaterThan(0.3)
+    expect(radarRadius(BUILDING_RING_PCT)).toBeCloseTo(0.81, 5)
+  })
+  it('the floor-40 alternative pins low values (why it was not chosen)', () => {
+    expect(radarRadiusFloor40(35)).toBe(0)
+    expect(radarRadiusFloor40(20)).toBe(radarRadiusFloor40(35))
+  })
+})
+
+describe('My Body misc', () => {
   it('BAND_HEX hues match BAND_TONE families', () => {
     expect(BAND_HEX[1]).toBe('#DC2626')
     expect(BAND_HEX[2]).toBe('#EAB308')

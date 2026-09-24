@@ -543,7 +543,7 @@ describe('Fix A: no Base surface uses the elite OPTIMAL table or the old deducti
     const s = read(join(SRC, 'pages', 'MyBody.tsx'))
     // bars and radar both render jointDisplayRowsForAssessment rows (jointPercent inside)
     expect(s).toMatch(/jointDisplayRowsForAssessment\(assessment, jointScores\)/)
-    expect(s).toMatch(/radarDataForAssessments\(/)
+    expect(s).toMatch(/radarSideRowsForAssessment\(assessment, jointScores\)/)
     expect(s).not.toMatch(/function norm\(/)
   })
   it('My Body + My Protocol clamp /100 with the same joint_scores their band uses', () => {
