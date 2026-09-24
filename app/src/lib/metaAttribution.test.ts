@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os'
 import { createRequire } from 'node:module'
 import vm from 'node:vm'
 import { describe, expect, it, vi, afterEach } from 'vitest'
-import { installPixel, isMetaSafeLocation } from './metaAttribution'
+import { installPixel, isMetaSafeLocation, metaBrowserIds, validFbp, validFbc } from './metaAttribution'
 
 const REPO = resolve(__dirname, '../../..')
 const PIXEL = '2284396799046573'
@@ -84,11 +84,13 @@ describe('SPA load order (installPixel)', () => {
 })
 
 /** Run assets/meta-attribution.js in a sandbox with the hard flag forced ON. */
-function runMarketing(pathname: string, opts: { consent?: string; gpc?: boolean; search?: string } = {}) {
+function runMarketing(pathname: string, opts: { consent?: string; gpc?: boolean; search?: string; cookie?: string } = {}) {
   let src = readFileSync(join(REPO, 'assets/meta-attribution.js'), 'utf8')
   src = src.replace('var META_ATTRIBUTION_ENABLED = false;', 'var META_ATTRIBUTION_ENABLED = true;')
   expect(src).toContain('var META_ATTRIBUTION_ENABLED = true;')
-  const doc = fakeDoc()
+  const doc: any = fakeDoc()
+  doc.cookie = opts.cookie ?? ''
+  const timers: (() => void)[] = []
   const fetches: { url: string; body: any }[] = []
   const store: Record<string, string> = {}
   if (opts.consent) store['romrx.consent.v1'] = JSON.stringify({ state: opts.consent })
@@ -103,9 +105,12 @@ function runMarketing(pathname: string, opts: { consent?: string; gpc?: boolean;
     localStorage: { getItem: (k: string) => store[k] ?? null },
     fetch: (url: string, init: any) => { fetches.push({ url, body: JSON.parse(init.body) }); return Promise.resolve({}) },
     crypto: { randomUUID: () => 'eid-test-1' },
+    setTimeout: (fn: () => void) => { timers.push(fn) },
     console,
   }
   vm.runInNewContext(src, ctx)
+  // Drain the short _fbp wait (fbevents never loads in the sandbox).
+  for (let i = 0; i < 50 && timers.length; i++) timers.shift()!()
   return { window, doc, fetches }
 }
 
@@ -204,5 +209,149 @@ describe('CAPI function server-side signup allowlist (flag forced on)', () => {
     const b = /var META_ATTRIBUTION_ENABLED = (true|false);/.exec(readFileSync(join(REPO, 'assets/meta-attribution.js'), 'utf8'))![1]
     const c = /const META_ATTRIBUTION_ENABLED = (true|false);/.exec(readFileSync(join(REPO, 'netlify/functions/meta-capi.js'), 'utf8'))![1]
     expect(new Set([a, b, c]).size).toBe(1)
+  })
+})
+
+const FBP = 'fb.1.1596403881668.1116446470'
+const FBC_COOKIE = 'fb.1.1554763741205.AbCdEfGhIjKlMnOpQrStUvWxYz1234567890'
+
+describe('fbp/fbc format validation', () => {
+  it.each([FBP, 'fb.2.1596403881668.1116446470', 'fb.1.1596403881668.1116446470.ABcDEFGh'])('valid fbp %s', (v) =>
+    expect(validFbp(v)).toBe(true))
+  it.each([
+    '', 'fb.1.123.456', 'fb.3.1596403881668.1', 'xx.1.1596403881668.1', 'fb.1.1596403881668.abc',
+    'fb.1.1596403881668.1;evil', 'a@b.co', `fb.1.1596403881668.${'1'.repeat(200)}`, 42, null,
+  ])('invalid fbp %s', (v) => expect(validFbp(v)).toBe(false))
+  it.each([FBC_COOKIE, 'fb.1.1554763741205.test123', `${FBC_COOKIE}.ABcDEFGh`])('valid fbc %s', (v) =>
+    expect(validFbc(v)).toBe(true))
+  it.each([
+    'fb.1.1554763741205.', 'fb.1.1554763741205.a b', 'fb.1.1554763741205.<script>', 'https://romrx.io/?fbclid=x',
+    `fb.1.1554763741205.${'a'.repeat(600)}`, 'fb.1.1554763741205.a%40b', {},
+  ])('invalid fbc %s', (v) => expect(validFbc(v)).toBe(false))
+  it('metaBrowserIds reads cookies, builds fbc from ?fbclid, drops junk', () => {
+    expect(metaBrowserIds(`a=1; _fbp=${FBP}; _fbc=${FBC_COOKIE}`, '')).toEqual({ fbp: FBP, fbc: FBC_COOKIE })
+    expect(metaBrowserIds(`_fbp=${FBP}`, '?fbclid=test123', 1700000000123)).toEqual({ fbp: FBP, fbc: 'fb.1.1700000000123.test123' })
+    // cookie already holds this click -> keep the cookie value
+    expect(metaBrowserIds('_fbc=fb.1.1554763741205.test123', '?fbclid=test123').fbc).toBe('fb.1.1554763741205.test123')
+    // newer click in URL beats an older cookie
+    expect(metaBrowserIds(`_fbc=${FBC_COOKIE}`, '?fbclid=newclick', 1700000000123).fbc).toBe('fb.1.1700000000123.newclick')
+    expect(metaBrowserIds('_fbp=bogus; _fbc=a@b.co', '?fbclid=bad%20value')).toEqual({})
+  })
+})
+
+describe('marketing meta-attribution.js fbp/fbc (flag forced on)', () => {
+  it('Allow on /app/signup?fbclid=test123: CAPI body has fbp + fbc, URL has no fbclid', () => {
+    const r = runMarketing('/app/signup', { consent: 'granted', search: '?fbclid=test123', cookie: `_fbp=${FBP}` })
+    expect(r.fetches).toHaveLength(1)
+    const b = r.fetches[0].body
+    expect(b.fbp).toBe(FBP)
+    expect(b.fbc).toMatch(/^fb\.1\.\d{13}\.test123$/)
+    expect(b.event_source_url).toBe('https://romrx.io/app/signup')
+    expect(JSON.stringify(b)).not.toMatch(/fbclid|@/)
+  })
+  it('invalid cookies are dropped, event still sent', () => {
+    const r = runMarketing('/app/signup', { consent: 'granted', cookie: '_fbp=evil<script>; _fbc=a@b.co' })
+    expect(r.fetches).toHaveLength(1)
+    expect(r.fetches[0].body.fbp).toBeUndefined()
+    expect(r.fetches[0].body.fbc).toBeUndefined()
+  })
+  it.each([
+    ['GPC', { consent: 'granted', gpc: true }],
+    ['denied (Reject / Don\'t Sell)', { consent: 'denied' }],
+    ['revoked', { consent: 'revoked' }],
+    ['no consent', {}],
+  ])('%s: no CAPI, so no fbp/fbc', (_n, opts) => {
+    const r = runMarketing('/app/signup', { ...(opts as any), search: '?fbclid=test123', cookie: `_fbp=${FBP}; _fbc=${FBC_COOKIE}` })
+    expect(r.fetches).toHaveLength(0)
+  })
+  it.each(['/', '/legal', '/app/login'])('off-allowlist %s: no CAPI, so no fbp/fbc', (p) => {
+    const r = runMarketing(p, { consent: 'granted', cookie: `_fbp=${FBP}; _fbc=${FBC_COOKIE}` })
+    expect(r.fetches).toHaveLength(0)
+  })
+})
+
+/** SPA trackMetaEvent with stubbed browser globals (node env). */
+async function runSpa(opts: { consent?: string; gpc?: boolean; pathname?: string; search?: string; cookie?: string }) {
+  vi.resetModules()
+  vi.stubEnv('VITE_META_PIXEL_ID', PIXEL)
+  const store: Record<string, string> = {}
+  if (opts.consent) store['romrx.consent.v1'] = JSON.stringify({ state: opts.consent, policy_version: 'x', updated_at: 'x' })
+  const doc: any = fakeDoc()
+  doc.cookie = opts.cookie ?? ''
+  const fetches: any[] = []
+  vi.stubGlobal('window', {
+    location: { pathname: opts.pathname ?? '/app/signup', search: opts.search ?? '', origin: 'https://romrx.io' },
+    dispatchEvent: () => true,
+  })
+  vi.stubGlobal('document', doc)
+  vi.stubGlobal('localStorage', { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => { store[k] = v } })
+  vi.stubGlobal('navigator', { globalPrivacyControl: opts.gpc === true, languages: ['en-US'], language: 'en-US' })
+  vi.stubGlobal('fetch', (url: string, init: any) => { fetches.push({ url, body: JSON.parse(init.body) }); return Promise.resolve({ ok: true }) })
+  const mod = await import('./metaAttribution')
+  const eid = mod.trackMetaEvent('PageView')
+  await new Promise((r) => setTimeout(r, 20))
+  return { eid, fetches }
+}
+
+describe('SPA trackMetaEvent fbp/fbc (shipped flag)', () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.resetModules() })
+  const cookie = `_fbp=${FBP}; _fbc=${FBC_COOKIE}`
+  it('Allow on /app/signup?fbclid=test123: CAPI body carries fbp + fbc and same event_id', async () => {
+    const { eid, fetches } = await runSpa({ consent: 'granted', search: '?fbclid=test123', cookie: `_fbp=${FBP}` })
+    expect(eid).toBeTruthy()
+    expect(fetches).toHaveLength(1)
+    const b = fetches[0].body
+    expect(b.event_id).toBe(eid)
+    expect(b.fbp).toBe(FBP)
+    expect(b.fbc).toMatch(/^fb\.1\.\d{13}\.test123$/)
+    expect(b.event_source_url).toBe('https://romrx.io/app/signup')
+    expect(JSON.stringify(b)).not.toMatch(/fbclid|@|rom_?score|band|joint|protocol/i)
+  })
+  it('Allow with cookies only: forwards cookie fbp/fbc', async () => {
+    const { fetches } = await runSpa({ consent: 'granted', cookie })
+    expect(fetches[0].body).toMatchObject({ fbp: FBP, fbc: FBC_COOKIE })
+  })
+  it.each([
+    ['GPC', { consent: 'granted', gpc: true }],
+    ['denied (Reject / Don\'t Sell)', { consent: 'denied' }],
+    ['revoked', { consent: 'revoked' }],
+    ['no consent', {}],
+    ['off-allowlist /app/login', { consent: 'granted', pathname: '/app/login' }],
+    ['off-allowlist /app/dashboard/my-body', { consent: 'granted', pathname: '/app/dashboard/my-body' }],
+    ['?email= on signup', { consent: 'granted', search: '?email=a%40b.co' }],
+  ])('%s: no CAPI POST, no fbp/fbc', async (_n, opts) => {
+    const { eid, fetches } = await runSpa({ ...(opts as any), cookie })
+    expect(eid).toBeNull()
+    expect(fetches).toHaveLength(0)
+  })
+})
+
+describe('CAPI function fbp/fbc (flag forced on)', () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+  it('passes valid fbp/fbc as user_data, drops invalid/oversized', async () => {
+    vi.stubEnv('META_PIXEL_ID', PIXEL); vi.stubEnv('META_CAPI_TOKEN', 'test-token')
+    const f = vi.fn().mockResolvedValue({ ok: true }); vi.stubGlobal('fetch', f)
+    const { handler } = loadCapi()
+    await handler(capiEvent('https://romrx.io/app/signup', { fbp: FBP, fbc: 'fb.1.1554763741205.test123' }))
+    const ud = JSON.parse(f.mock.calls[0][1].body).data[0].user_data
+    expect(ud.fbp).toBe(FBP)
+    expect(ud.fbc).toBe('fb.1.1554763741205.test123')
+    expect(ud.em).toBeUndefined(); expect(ud.ph).toBeUndefined()
+    await handler(capiEvent('https://romrx.io/app/signup', { fbp: 'a@b.co', fbc: `fb.1.1554763741205.${'a'.repeat(600)}` }))
+    const ud2 = JSON.parse(f.mock.calls[1][1].body).data[0].user_data
+    expect(ud2.fbp).toBeUndefined(); expect(ud2.fbc).toBeUndefined()
+    await handler(capiEvent('https://romrx.io/app/signup', { fbp: { x: 1 }, fbc: ['fb.1.1554763741205.x'] }))
+    const ud3 = JSON.parse(f.mock.calls[2][1].body).data[0].user_data
+    expect(ud3.fbp).toBeUndefined(); expect(ud3.fbc).toBeUndefined()
+  })
+  it('gates run before fbp/fbc: GPC, denied, off-path never contact Meta', async () => {
+    vi.stubEnv('META_PIXEL_ID', PIXEL); vi.stubEnv('META_CAPI_TOKEN', 'test-token')
+    const f = vi.fn(); vi.stubGlobal('fetch', f)
+    const { handler } = loadCapi()
+    const ids = { fbp: FBP, fbc: FBC_COOKIE }
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', ids, { 'sec-gpc': '1' }))).body).reason).toBe('gpc_opt_out')
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', { ...ids, consent_state: 'denied' }))).body).reason).toBe('consent_blocked')
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/legal', ids))).body).reason).toBe('path_not_allowed')
+    expect(f).not.toHaveBeenCalled()
   })
 })

@@ -71,6 +71,78 @@ function metaSourceUrl(): string {
   return `${window.location.origin}${window.location.pathname}`.slice(0, 500)
 }
 
+/**
+ * Meta browser/click IDs for CAPI matching (fbp/fbc), Meta's documented format:
+ *   fbp = fb.<subdomainIndex>.<creationTimeMs>.<random>[.<appendix>]
+ *   fbc = fb.<subdomainIndex>.<creationTimeMs>.<fbclid>[.<appendix>]
+ * Read ONLY after canSendMeta() passes (flag + consent granted + no GPC +
+ * signup allowlist). Opaque first-party IDs: no email, no hashing, no health
+ * data. The fbclid is only embedded in fbc; it is never sent as a URL
+ * (event_source_url stays origin + path). Keep in sync with
+ * assets/meta-attribution.js and netlify/functions/meta-capi.js.
+ */
+export const FBP_MAX_LEN = 128
+export const FBC_MAX_LEN = 500
+export const FBP_RE = /^fb\.[0-2]\.\d{13}\.\d{1,24}(?:\.[A-Za-z0-9_-]{2,8})?$/
+export const FBC_RE = /^fb\.[0-2]\.\d{13}\.[A-Za-z0-9_-]{1,400}(?:\.[A-Za-z0-9_-]{2,8})?$/
+const FBCLID_RE = /^[A-Za-z0-9_-]{1,400}$/
+
+export function validFbp(v: unknown): v is string {
+  return typeof v === 'string' && v.length <= FBP_MAX_LEN && FBP_RE.test(v)
+}
+export function validFbc(v: unknown): v is string {
+  return typeof v === 'string' && v.length <= FBC_MAX_LEN && FBC_RE.test(v)
+}
+
+function readCookie(cookieStr: string, name: string): string | undefined {
+  for (const part of (cookieStr || '').split(';')) {
+    const i = part.indexOf('=')
+    if (i < 0) continue
+    if (part.slice(0, i).trim() !== name) continue
+    try { return decodeURIComponent(part.slice(i + 1).trim()) } catch { return undefined }
+  }
+  return undefined
+}
+
+/** Pure: pick valid fbp/fbc from cookies + ?fbclid. Invalid values are dropped. */
+export function metaBrowserIds(
+  cookieStr: string,
+  search: string,
+  nowMs: number = Date.now(),
+): { fbp?: string; fbc?: string } {
+  const out: { fbp?: string; fbc?: string } = {}
+  const fbp = readCookie(cookieStr, '_fbp')
+  if (validFbp(fbp)) out.fbp = fbp
+  const cookieFbc = readCookie(cookieStr, '_fbc')
+  let fbclid: string | null = null
+  try { fbclid = new URLSearchParams(search || '').get('fbclid') } catch { fbclid = null }
+  if (fbclid && FBCLID_RE.test(fbclid)) {
+    // Prefer the cookie when it already holds this click; else build from the URL.
+    const cookieMatches = validFbc(cookieFbc) &&
+      (cookieFbc.endsWith(`.${fbclid}`) || cookieFbc.includes(`.${fbclid}.`))
+    const fbc = cookieMatches ? cookieFbc : `fb.1.${Math.floor(nowMs)}.${fbclid}`
+    if (validFbc(fbc)) out.fbc = fbc
+  } else if (validFbc(cookieFbc)) {
+    out.fbc = cookieFbc
+  }
+  return out
+}
+
+/** First event after Allow: fbevents sets _fbp a moment after it loads. Wait briefly. */
+async function browserIdsWhenReady(maxWaitMs = 1500): Promise<{ fbp?: string; fbc?: string }> {
+  const read = () => metaBrowserIds(
+    typeof document !== 'undefined' ? document.cookie || '' : '',
+    typeof window !== 'undefined' ? window.location.search || '' : '',
+  )
+  let ids = read()
+  const start = Date.now()
+  while (!ids.fbp && Date.now() - start < maxWaitMs) {
+    await new Promise((r) => setTimeout(r, 150))
+    ids = read()
+  }
+  return ids
+}
+
 function canSendMeta(consent: ConsentState = effectiveConsentState()): boolean {
   return (
     META_ATTRIBUTION_ENABLED === true &&
@@ -159,8 +231,13 @@ async function sendCapi(payload: {
   consent_state: ConsentState
   properties?: Record<string, unknown>
 }): Promise<void> {
+  // Consent / GPC / Don't Sell / flag / signup-path gates run FIRST; cookies are read only after.
   if (!canSendMeta(payload.consent_state)) return
   try {
+    const ids = await browserIdsWhenReady()
+    // Consent may have changed while waiting for _fbp: re-check before sending.
+    const nowConsent = effectiveConsentState()
+    if (META_ATTRIBUTION_ENABLED !== true || nowConsent !== 'granted' || !isAdsMeasurementAllowed()) return
     await fetch(CAPI_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -173,6 +250,8 @@ async function sendCapi(payload: {
         consent_version: CONSENT_POLICY_VERSION,
         consent_state: payload.consent_state,
         properties: stripForbidden(payload.properties),
+        ...(ids.fbp ? { fbp: ids.fbp } : {}),
+        ...(ids.fbc ? { fbc: ids.fbc } : {}),
       }),
       keepalive: true,
     })
