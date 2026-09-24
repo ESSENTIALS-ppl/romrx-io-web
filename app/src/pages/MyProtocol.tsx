@@ -8,7 +8,17 @@ import { Spinner } from '../components/Spinner'
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { cn } from '../lib/cn'
-import { bandScoreFromAggregate, bandFull, BAND_DESC } from '../lib/mobilityBands'
+import {
+  bandFull,
+  jointBandsForAssessment,
+  jointKeyBase,
+  overallBandForAssessment,
+  topProblemAreas,
+  BAND_DESC,
+  BAND_TONE,
+  TOP_PROBLEM_AREAS_MAX,
+  type BandScore,
+} from '../lib/mobilityBands'
 import {
   AlertTriangle, ChevronDown, ChevronUp, CheckCircle2, Circle,
   ClipboardList, Dumbbell, Flame, PersonStanding,
@@ -64,7 +74,8 @@ const ROTATION: Record<number, number> = {
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const CYCLE_TARGET = 42
 
-// ---- PRS scoring (mirrors MyBody) ------------------------------------------
+// ---- PRS number (mirrors MyBody). Display number only: bands come from
+// overallBandForAssessment() in lib/mobilityBands (single source of truth).
 const PRS_BILATERAL = [
   { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40 },
   { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30 },
@@ -105,11 +116,9 @@ function computePRS(a: Assessment): number {
   return Math.max(0, Math.min(100, Math.round(score)))
 }
 
-function getPRSTier(s: number) {
-  const band = bandScoreFromAggregate(s)
-  if (band === 3) return { label: bandFull(3), color: 'text-cobalt', bg: 'bg-cobalt-light', desc: BAND_DESC[3] }
-  if (band === 2) return { label: bandFull(2), color: 'text-yellow-700', bg: 'bg-yellow-50', desc: BAND_DESC[2] }
-  return { label: bandFull(1), color: 'text-red-700', bg: 'bg-red-50', desc: BAND_DESC[1] }
+function getBandTier(band: BandScore) {
+  const tone = BAND_TONE[band]
+  return { label: bandFull(band), color: tone.color, bg: tone.bg, ring: tone.ring, desc: BAND_DESC[band] }
 }
 
 // ---- Joint config ----------------------------------------------------------
@@ -197,10 +206,11 @@ interface ScoredJoint {
   single: number | null
   asymmetry: number
   severity: number
-  atRisk: boolean
+  /** Band from lib/mobilityBands (joint_scores truth); null if unmeasured. */
+  band: BandScore | null
   gap: string
 }
-function scoreJoints(assessment: Assessment): ScoredJoint[] {
+function scoreJoints(assessment: Assessment, bands: Map<string, BandScore>): ScoredJoint[] {
   const rec = assessment as unknown as Record<string, number | null>
   return JOINTS.map(def => {
     const left   = def.leftKey   ? (rec[def.leftKey]   ?? null) : null
@@ -209,21 +219,19 @@ function scoreJoints(assessment: Assessment): ScoredJoint[] {
 
     let asymmetry = 0
     let severity  = 0
-    let atRisk    = false
     let gap       = ''
 
     if (left !== null && right !== null) {
       asymmetry = Math.abs(left - right)
       const worst = Math.min(left, right)
       severity = Math.max(0, def.normalMin - worst)
-      atRisk   = worst < def.riskBelow
       gap = `L ${left}${def.unit} vs R ${right}${def.unit} · ${asymmetry}${def.unit} gap`
     } else if (single !== null) {
       severity = Math.max(0, def.normalMin - single)
-      atRisk   = single < def.riskBelow
       gap = `${single}${def.unit} (normal >= ${def.normalMin}${def.unit})`
     }
-    return { def, left, right, single, asymmetry, severity, atRisk, gap }
+    const band = bands.get(def.key) ?? null
+    return { def, left, right, single, asymmetry, severity, band, gap }
   })
 }
 
@@ -686,7 +694,7 @@ function IssueCard({ ranked, rxLibrary, rank }: {
   rank: number
 }) {
   const [open, setOpen] = useState<boolean>(false)
-  const { def, left, right, single, atRisk, asymmetry, severity } = ranked
+  const { def, left, right, single, band, asymmetry, severity } = ranked
   const rx = rxLibrary[def.rxKey]
 
   const rankLabel = rank === 1 ? '#1 Priority' : rank === 2 ? '#2 Priority' : '#3 Priority'
@@ -707,9 +715,9 @@ function IssueCard({ ranked, rxLibrary, rank }: {
               <span className={cn('text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', rankColor)}>
                 {rankLabel}
               </span>
-              {atRisk && (
-                <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-full tracking-wider">
-                  <AlertTriangle size={9} /> Focus
+              {band != null && (
+                <span className={cn('flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full border tracking-wider', BAND_TONE[band].chip)}>
+                  {band === 1 && <AlertTriangle size={9} />} {bandFull(band)}
                 </span>
               )}
             </div>
@@ -789,19 +797,34 @@ const FULL_WHY  = "Got more time, or want to attack a specific restriction? This
 // ---- Main page -------------------------------------------------------------
 export function MyProtocol() {
   const { user } = useAuth()
-  const { assessment, loading } = useProfile(user?.id)
+  const { assessment, jointScores, loading } = useProfile(user?.id)
   const [tab, setTab] = useState<'daily' | 'full'>('daily')
   const [rxLibrary, setRxLibrary] = useState<Record<string, Prescription>>({})
   const [rxLoading, setRxLoading]  = useState(true)
 
-  const scored = useMemo(() => assessment ? scoreJoints(assessment) : [], [assessment])
-  const ranked = useMemo(() => scored
-    .filter(s => s.left !== null || s.right !== null || s.single !== null)
-    .sort((a, b) => {
-      if (b.asymmetry !== a.asymmetry) return b.asymmetry - a.asymmetry
-      return b.severity - a.severity
-    })
-    .slice(0, 3), [scored])
+  const bands = useMemo(() => jointBandsForAssessment(assessment, jointScores), [assessment, jointScores])
+  const scored = useMemo(() => assessment ? scoreJoints(assessment, bands) : [], [assessment, bands])
+  // Same top problem areas as My Body (worst_joints, deduped, max 3) lead the list;
+  // remaining slots fall back to asymmetry, then severity. Always capped at 3.
+  const problemOrder = useMemo(
+    () => topProblemAreas(assessment?.worst_joints).map(jointKeyBase),
+    [assessment],
+  )
+  const ranked = useMemo(() => {
+    const idx = (k: string) => {
+      const i = problemOrder.indexOf(k)
+      return i === -1 ? Number.POSITIVE_INFINITY : i
+    }
+    return scored
+      .filter(s => s.left !== null || s.right !== null || s.single !== null)
+      .sort((a, b) => {
+        const ia = idx(a.def.key), ib = idx(b.def.key)
+        if (ia !== ib) return ia - ib
+        if (b.asymmetry !== a.asymmetry) return b.asymmetry - a.asymmetry
+        return b.severity - a.severity
+      })
+      .slice(0, TOP_PROBLEM_AREAS_MAX)
+  }, [scored, problemOrder])
 
   // Fetch drills for the top-3 priority joints from Supabase.
   useEffect(() => {
@@ -848,7 +871,7 @@ export function MyProtocol() {
   const assessedAt = assessment.assessed_at
   const dateStr = new Date(assessedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   const prs  = computePRS(assessment)
-  const tier = getPRSTier(prs)
+  const tier = getBandTier(overallBandForAssessment(assessment, jointScores) ?? 3)
 
   return (
     <div className="space-y-5">
@@ -856,7 +879,7 @@ export function MyProtocol() {
 
       {/* Mobility band (matches MyBody so the two pages read as siblings) */}
       <div className={cn('flex items-center gap-4 rounded-card border p-4 border-cobalt/10', tier.bg)}>
-        <div className="w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0 border-cobalt/40">
+        <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
           <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
           <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
         </div>

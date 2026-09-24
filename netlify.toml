@@ -6,7 +6,9 @@
   # Marketing HTML at repo root is served as-is.
   # rm app/index.html after build so publish="." cannot serve Vite /src/main.tsx
   # for /app/ (Field RISK 2026-09-08). Local Vite still has its own index.
-  command = "cd app && npm install && npm run build && rm -f index.html"
+  # npm test = permanent Base band guard (src/lib/mobilityBands.test.ts); a
+  # failing band test blocks the deploy (P0 2026-09-24).
+  command = "cd app && npm install && npm test && npm run build && rm -f index.html"
 
 # HQ React app static asset passthrough. Serves /app/assets/* from app/dist/.
 # This must come BEFORE the SPA fallback below.
