@@ -378,3 +378,15 @@ describe('surface wiring (static): score + band via the shared helpers', () => {
     }
   })
 })
+
+describe('My Protocol cards: "#N Problem area" (Base only)', () => {
+  const s = read(join(SRC, 'pages', 'MyProtocol.tsx'))
+  it('card rank label is "#N Problem area"', () => {
+    expect(s).toMatch(/const rankLabel = `#\$\{rank\} Problem area`/)
+    for (const n of [1, 2, 3]) expect(`#${n} Problem area`).toMatch(/^#[123] Problem area$/)
+  })
+  it('no "#N Priority" / PRIORITY label and the rank chip is not uppercased', () => {
+    expect(s).not.toMatch(/#[123] Priority|PRIORITY/)
+    expect(s).not.toMatch(/uppercase[^'"]*['"],\s*rankColor/)
+  })
+})

@@ -657,7 +657,8 @@ function IssueCard({ ranked, rxLibrary, rank }: {
   const { def, left, right, single, band, asymmetry, severity } = ranked
   const rx = rxLibrary[def.rxKey]
 
-  const rankLabel = rank === 1 ? '#1 Priority' : rank === 2 ? '#2 Priority' : '#3 Priority'
+  // Base copy (Jim LOCK 2026-09-24): "#N Problem area", rendered as-is (no uppercase).
+  const rankLabel = `#${rank} Problem area`
   const rankColor = rank === 1 ? 'bg-red-600 text-white' : rank === 2 ? 'bg-yellow-500 text-white' : 'bg-cobalt text-white'
 
   const isBilateral = left !== null && right !== null
@@ -672,7 +673,7 @@ function IssueCard({ ranked, rxLibrary, rank }: {
         <div className="px-5 py-4 flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className={cn('text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', rankColor)}>
+              <span className={cn('text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full', rankColor)}>
                 {rankLabel}
               </span>
               {band != null && (
