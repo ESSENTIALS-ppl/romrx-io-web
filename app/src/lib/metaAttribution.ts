@@ -14,6 +14,8 @@
 import {
   effectiveConsentState,
   isAdsMeasurementAllowed,
+  metaConsentAllows,
+  metaConsentLabel,
   newEventId,
   CONSENT_POLICY_VERSION,
   type ConsentState,
@@ -146,7 +148,7 @@ async function browserIdsWhenReady(maxWaitMs = 1500): Promise<{ fbp?: string; fb
 function canSendMeta(consent: ConsentState = effectiveConsentState()): boolean {
   return (
     META_ATTRIBUTION_ENABLED === true &&
-    consent === 'granted' &&
+    metaConsentAllows(consent) &&
     isAdsMeasurementAllowed() &&
     !!PIXEL_ID &&
     isMetaSafeLocation()
@@ -237,7 +239,8 @@ async function sendCapi(payload: {
     const ids = await browserIdsWhenReady()
     // Consent may have changed while waiting for _fbp: re-check before sending.
     const nowConsent = effectiveConsentState()
-    if (META_ATTRIBUTION_ENABLED !== true || nowConsent !== 'granted' || !isAdsMeasurementAllowed()) return
+    const label = metaConsentLabel(nowConsent)
+    if (META_ATTRIBUTION_ENABLED !== true || !label || !isAdsMeasurementAllowed()) return
     await fetch(CAPI_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -248,7 +251,7 @@ async function sendCapi(payload: {
         action_source: 'website',
         event_source_url: payload.event_source_url.slice(0, 500),
         consent_version: CONSENT_POLICY_VERSION,
-        consent_state: payload.consent_state,
+        consent_state: label,
         properties: stripForbidden(payload.properties),
         ...(ids.fbp ? { fbp: ids.fbp } : {}),
         ...(ids.fbc ? { fbc: ids.fbc } : {}),

@@ -89,9 +89,31 @@ export function effectiveConsentState(): ConsentState {
   return readConsent()?.state ?? 'unknown'
 }
 
-/** True only when user affirmatively granted AND GPC is not set. */
+/**
+ * Jim LOCK 2026-09-24 5:38 PM ET (US opt-out, Stacy confirmed):
+ * US visitors with no choice yet ('unknown') are ON by default.
+ * Reject, Don't Sell or Share, and GPC write 'denied'/'revoked' and kill it.
+ * EU/UK stays opt-in: only an explicit 'granted' counts.
+ */
+export function metaConsentAllows(
+  state: ConsentState,
+  region: 'us' | 'eu_uk' = detectRegion(),
+  gpc: boolean = gpcEnabled(),
+): boolean {
+  if (gpc) return false
+  if (state === 'granted') return true
+  return state === 'unknown' && region === 'us'
+}
+
+/** Consent label sent to CAPI: 'granted' (explicit) or 'us_default' (US, no choice yet). */
+export function metaConsentLabel(state: ConsentState): 'granted' | 'us_default' | null {
+  if (!metaConsentAllows(state)) return null
+  return state === 'granted' ? 'granted' : 'us_default'
+}
+
+/** True when ads measurement may run: explicit grant, or US default with no opt-out and no GPC. */
 export function isAdsMeasurementAllowed(): boolean {
-  return effectiveConsentState() === 'granted'
+  return metaConsentAllows(effectiveConsentState())
 }
 
 export function subscribeConsent(fn: (r: ConsentRecord) => void): () => void {

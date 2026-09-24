@@ -84,7 +84,7 @@ describe('SPA load order (installPixel)', () => {
 })
 
 /** Run assets/meta-attribution.js in a sandbox with the hard flag forced ON. */
-function runMarketing(pathname: string, opts: { consent?: string; gpc?: boolean; search?: string; cookie?: string } = {}) {
+function runMarketing(pathname: string, opts: { consent?: string; gpc?: boolean; search?: string; cookie?: string; lang?: string } = {}) {
   let src = readFileSync(join(REPO, 'assets/meta-attribution.js'), 'utf8')
   src = src.replace('var META_ATTRIBUTION_ENABLED = false;', 'var META_ATTRIBUTION_ENABLED = true;')
   expect(src).toContain('var META_ATTRIBUTION_ENABLED = true;')
@@ -101,7 +101,7 @@ function runMarketing(pathname: string, opts: { consent?: string; gpc?: boolean;
   const ctx: any = {
     window,
     document: doc,
-    navigator: { globalPrivacyControl: opts.gpc === true },
+    navigator: { globalPrivacyControl: opts.gpc === true, languages: [opts.lang ?? 'en-US'], language: opts.lang ?? 'en-US' },
     localStorage: { getItem: (k: string) => store[k] ?? null },
     fetch: (url: string, init: any) => { fetches.push({ url, body: JSON.parse(init.body) }); return Promise.resolve({}) },
     crypto: { randomUUID: () => 'eid-test-1' },
@@ -140,7 +140,9 @@ describe('marketing meta-attribution.js (flag forced on)', () => {
     ['GPC', { consent: 'granted', gpc: true }],
     ['denied (Reject / Don\'t Sell)', { consent: 'denied' }],
     ['revoked', { consent: 'revoked' }],
-    ['no consent', {}],
+    ['no consent, EU/UK visitor (opt-in)', { lang: 'de-DE' }],
+    ['no consent, UK visitor (opt-in)', { lang: 'en-GB' }],
+    ['US Reject then GPC', { consent: 'denied', gpc: true }],
     ['?email= on signup', { consent: 'granted', search: '?email=a%40b.co' }],
   ])('%s on /app/signup: zero Meta', (_n, opts) => {
     const r = runMarketing('/app/signup', opts as any)
@@ -259,7 +261,9 @@ describe('marketing meta-attribution.js fbp/fbc (flag forced on)', () => {
     ['GPC', { consent: 'granted', gpc: true }],
     ['denied (Reject / Don\'t Sell)', { consent: 'denied' }],
     ['revoked', { consent: 'revoked' }],
-    ['no consent', {}],
+    ['no consent, EU/UK visitor (opt-in)', { lang: 'de-DE' }],
+    ['no consent, UK visitor (opt-in)', { lang: 'en-GB' }],
+    ['US Reject then GPC', { consent: 'denied', gpc: true }],
   ])('%s: no CAPI, so no fbp/fbc', (_n, opts) => {
     const r = runMarketing('/app/signup', { ...(opts as any), search: '?fbclid=test123', cookie: `_fbp=${FBP}; _fbc=${FBC_COOKIE}` })
     expect(r.fetches).toHaveLength(0)
@@ -271,7 +275,7 @@ describe('marketing meta-attribution.js fbp/fbc (flag forced on)', () => {
 })
 
 /** SPA trackMetaEvent with stubbed browser globals (node env). */
-async function runSpa(opts: { consent?: string; gpc?: boolean; pathname?: string; search?: string; cookie?: string }) {
+async function runSpa(opts: { consent?: string; gpc?: boolean; pathname?: string; search?: string; cookie?: string; lang?: string }) {
   vi.resetModules()
   vi.stubEnv('VITE_META_PIXEL_ID', PIXEL)
   const store: Record<string, string> = {}
@@ -285,7 +289,7 @@ async function runSpa(opts: { consent?: string; gpc?: boolean; pathname?: string
   })
   vi.stubGlobal('document', doc)
   vi.stubGlobal('localStorage', { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => { store[k] = v } })
-  vi.stubGlobal('navigator', { globalPrivacyControl: opts.gpc === true, languages: ['en-US'], language: 'en-US' })
+  vi.stubGlobal('navigator', { globalPrivacyControl: opts.gpc === true, languages: [opts.lang ?? 'en-US'], language: opts.lang ?? 'en-US' })
   vi.stubGlobal('fetch', (url: string, init: any) => { fetches.push({ url, body: JSON.parse(init.body) }); return Promise.resolve({ ok: true }) })
   const mod = await import('./metaAttribution')
   const eid = mod.trackMetaEvent('PageView')
@@ -315,7 +319,9 @@ describe('SPA trackMetaEvent fbp/fbc (shipped flag)', () => {
     ['GPC', { consent: 'granted', gpc: true }],
     ['denied (Reject / Don\'t Sell)', { consent: 'denied' }],
     ['revoked', { consent: 'revoked' }],
-    ['no consent', {}],
+    ['no consent, EU/UK visitor (opt-in)', { lang: 'de-DE' }],
+    ['no consent, UK visitor (opt-in)', { lang: 'en-GB' }],
+    ['US Reject then GPC', { consent: 'denied', gpc: true }],
     ['off-allowlist /app/login', { consent: 'granted', pathname: '/app/login' }],
     ['off-allowlist /app/dashboard/my-body', { consent: 'granted', pathname: '/app/dashboard/my-body' }],
     ['?email= on signup', { consent: 'granted', search: '?email=a%40b.co' }],
@@ -353,5 +359,57 @@ describe('CAPI function fbp/fbc (flag forced on)', () => {
     expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', { ...ids, consent_state: 'denied' }))).body).reason).toBe('consent_blocked')
     expect(JSON.parse((await handler(capiEvent('https://romrx.io/legal', ids))).body).reason).toBe('path_not_allowed')
     expect(f).not.toHaveBeenCalled()
+  })
+})
+
+describe('US opt-out default (Jim LOCK 2026-09-24 5:38 PM ET)', () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.resetModules() })
+  it('marketing: US, no choice yet, /app/signup: Pixel loads, CAPI sends us_default, path only', () => {
+    const r = runMarketing('/app/signup', { search: '?utm_source=x' })
+    expect(r.doc.appended).toHaveLength(1)
+    expect(r.fetches).toHaveLength(1)
+    expect(r.fetches[0].body.consent_state).toBe('us_default')
+    expect(r.fetches[0].body.event_source_url).toBe('https://romrx.io/app/signup')
+  })
+  it.each(['/', '/legal', '/beta', '/app/login', '/app/dashboard/my-body', '/app/onboarding/results'])(
+    'marketing: US default on %s: zero Meta', (p) => {
+      const r = runMarketing(p)
+      expect(r.doc.appended).toHaveLength(0)
+      expect(r.fetches).toHaveLength(0)
+    })
+  it('SPA: US, no choice yet, /app/signup: CAPI POST with us_default and no health data', async () => {
+    const { eid, fetches } = await runSpa({ cookie: `_fbp=${FBP}` })
+    expect(eid).toBeTruthy()
+    expect(fetches).toHaveLength(1)
+    expect(fetches[0].body.consent_state).toBe('us_default')
+    expect(fetches[0].body.event_source_url).toBe('https://romrx.io/app/signup')
+    expect(JSON.stringify(fetches[0].body)).not.toMatch(/rom_?score|band|joint|protocol|injur|assess|@/i)
+  })
+  it.each([
+    ['US default on /app/dashboard/my-body', { pathname: '/app/dashboard/my-body' }],
+    ['US default on /app/onboarding/assessment', { pathname: '/app/onboarding/assessment' }],
+    ['US default with ?email=', { search: '?email=a%40b.co' }],
+    ['US default + GPC', { gpc: true }],
+  ])('SPA: %s: zero Meta', async (_n, opts) => {
+    const { eid, fetches } = await runSpa(opts as any)
+    expect(eid).toBeNull()
+    expect(fetches).toHaveLength(0)
+  })
+  it('server: us_default dispatches only with US geo; non-US, unknown geo, GPC all block', async () => {
+    vi.stubEnv('META_PIXEL_ID', PIXEL); vi.stubEnv('META_CAPI_TOKEN', 'test-token')
+    const f = vi.fn().mockResolvedValue({ ok: true }); vi.stubGlobal('fetch', f)
+    const { handler } = loadCapi()
+    const us = { consent_state: 'us_default' }
+    const geo = (c: string) => Buffer.from(JSON.stringify({ country: { code: c } })).toString('base64')
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', us, { 'x-country': 'DE' }))).body).reason).toBe('consent_blocked_non_us')
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', us, { 'x-nf-geo': geo('GB') }))).body).reason).toBe('consent_blocked_non_us')
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', us))).body).reason).toBe('consent_blocked_non_us')
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', us, { 'x-country': 'US', 'sec-gpc': '1' }))).body).reason).toBe('gpc_opt_out')
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', { consent_state: 'unknown' }, { 'x-country': 'US' }))).body).reason).toBe('consent_blocked')
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/dashboard/my-body', us, { 'x-country': 'US' }))).body).reason).toBe('path_not_allowed')
+    expect(f).not.toHaveBeenCalled()
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup', us, { 'x-country': 'US' }))).body).dispatched).toBe(true)
+    expect(JSON.parse((await handler(capiEvent('https://romrx.io/app/signup/bjj', us, { 'x-nf-geo': geo('US') }))).body).dispatched).toBe(true)
+    expect(f).toHaveBeenCalledTimes(2)
   })
 })

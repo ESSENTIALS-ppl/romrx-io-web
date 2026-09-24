@@ -84,10 +84,32 @@
     }
   }
 
+  function detectRegion() {
+    try {
+      if (window.RomrxConsent && typeof window.RomrxConsent.region === 'function') return window.RomrxConsent.region();
+    } catch (e) { /* ignore */ }
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      if (/^(Europe\/|Atlantic\/Reykjavik|Atlantic\/Faroe)/.test(tz)) return 'eu_uk';
+      var lang = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+      if (/^(en-GB|en-IE|cy|gd|ga|fr|de|es|it|nl|pt|pl|sv|da|fi|nb|nn|cs|sk|hu|ro|bg|hr|sl|et|lv|lt|el|mt)/i.test(lang)) return 'eu_uk';
+    } catch (e) { /* ignore */ }
+    return 'us';
+  }
+
+  // Jim LOCK 2026-09-24 (US opt-out): US + no choice yet = on; Reject / Don't Sell / GPC = off.
+  // EU/UK: explicit 'granted' only. Returns the CAPI label or null.
+  function consentLabel() {
+    var st = readConsentState();
+    if (st === 'granted') return 'granted';
+    if (st === 'unknown' && detectRegion() === 'us') return 'us_default';
+    return null;
+  }
+
   function canSend() {
     return (
       META_ATTRIBUTION_ENABLED === true &&
-      readConsentState() === 'granted' &&
+      !!consentLabel() &&
       !!pixelId() &&
       safePath() &&
       safeLocation()
@@ -206,7 +228,7 @@
         action_source: 'website',
         event_source_url: ((window.location.origin || 'https://romrx.io') + (window.location.pathname || '/')).slice(0, 500),
         consent_version: '2026-09-21-privacy-b',
-        consent_state: 'granted',
+        consent_state: consentLabel(),
         properties: {},
       };
       if (ids.fbp) body.fbp = ids.fbp;
@@ -247,8 +269,7 @@
   }
 
   function onConsent(detail) {
-    var state = (detail && detail.state) || readConsentState();
-    if (state === 'granted') {
+    if (consentLabel()) {
       track('PageView');
     } else {
       revoke();
@@ -270,9 +291,9 @@
   // If consent already granted on load, attempt PageView (no-op while hard-off / empty ID).
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
-      if (readConsentState() === 'granted') track('PageView');
+      if (consentLabel()) track('PageView');
     });
-  } else if (readConsentState() === 'granted') {
+  } else if (consentLabel()) {
     track('PageView');
   }
 })();
