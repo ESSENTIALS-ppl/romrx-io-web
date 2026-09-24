@@ -79,6 +79,12 @@
   to = "/.netlify/functions/meta-capi"
   status = 200
 
+# Consent log (Legal 2026-09-24): append-only, server-side insert only.
+[[redirects]]
+  from = "/api/consent"
+  to = "/.netlify/functions/consent-log"
+  status = 200
+
 # Article library. Hub at /articles, articles at /articles/<slug>.
 # Real files (index.html, feed.xml) are served directly by Netlify before
 # these rewrites apply; only slug paths with no static file are rewritten.

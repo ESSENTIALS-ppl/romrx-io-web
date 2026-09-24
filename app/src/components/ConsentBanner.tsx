@@ -1,17 +1,23 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
+  applyGpcIfPresent,
   detectRegion,
-  effectiveConsentState,
   gpcEnabled,
+  GPC_HONORED_NOTE,
   OPT_OUT_CONFIRM,
   PRIVACY_POLICY_URL,
   readConsent,
-  writeConsent,
+  recordConsentChoice,
+  shouldShowBanner,
   type ConsentState,
 } from '../lib/consent'
 import { revokeMetaMeasurement } from '../lib/metaAttribution'
+import { syncConsentFromProfile, wireConsentAuth } from '../lib/consentProfile'
 
 type Phase = 'hidden' | 'banner' | 'toast'
+
+// Wire the Supabase session into consent logging before any effect can log.
+wireConsentAuth()
 
 const DNS_EVENT = 'romrx:dns-opt-out'
 
@@ -20,9 +26,10 @@ export function ConsentBanner() {
   const [region, setRegion] = useState<'us' | 'eu_uk'>('us')
   const [toast, setToast] = useState('')
 
-  const deny = useCallback(() => {
+  const deny = useCallback((method: 'banner' | 'footer' = 'banner') => {
     const prev = readConsent()?.state as ConsentState | undefined
-    writeConsent(prev === 'granted' ? 'revoked' : 'denied')
+    // Logged server-side (Legal 2026-09-24) whether tracking was on or off.
+    recordConsentChoice(prev === 'granted' ? 'revoked' : 'denied', method)
     revokeMetaMeasurement()
     setToast(OPT_OUT_CONFIRM)
     setPhase('toast')
@@ -34,34 +41,40 @@ export function ConsentBanner() {
     setRegion(r)
 
     if (gpcEnabled()) {
-      writeConsent('denied')
+      // Logs one 'gpc' row only if the stored state changes (not every load).
+      applyGpcIfPresent()
       revokeMetaMeasurement()
       setPhase('hidden')
       return
     }
 
-    const state = effectiveConsentState()
-    if (state === 'unknown') setPhase('banner')
-    else setPhase('hidden')
+    setPhase(shouldShowBanner() ? 'banner' : 'hidden')
+    // Signed in on a new browser: adopt the saved profile choice so a person who
+    // declined is not re-prompted (12-month quiet period).
+    let alive = true
+    void syncConsentFromProfile().then(() => {
+      if (alive && !shouldShowBanner()) setPhase((p) => (p === 'banner' ? 'hidden' : p))
+    })
 
     const onHash = () => {
       const hash = (window.location.hash || '').toLowerCase()
       if (hash === '#do-not-sell' || hash === '#dns' || hash === '#do-not-sell-or-share') {
-        deny()
+        deny('footer')
       }
     }
-    const onDns = () => deny()
+    const onDns = () => deny('footer')
     window.addEventListener('hashchange', onHash)
     window.addEventListener(DNS_EVENT, onDns)
     onHash()
     return () => {
+      alive = false
       window.removeEventListener('hashchange', onHash)
       window.removeEventListener(DNS_EVENT, onDns)
     }
   }, [deny])
 
   const grant = () => {
-    writeConsent('granted')
+    recordConsentChoice('granted', 'banner')
     setPhase('hidden')
   }
 
@@ -106,7 +119,7 @@ export function ConsentBanner() {
           <button type="button" className="btn-primary" onClick={grant}>
             Allow ads cookies
           </button>
-          <button type="button" className="btn-ghost" onClick={deny}>
+          <button type="button" className="btn-ghost" onClick={() => deny('banner')}>
             Reject ads cookies
           </button>
           <a href={PRIVACY_POLICY_URL} className="text-sm text-cobalt underline font-medium ml-1">
@@ -116,7 +129,7 @@ export function ConsentBanner() {
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           {/* Jim GO 5:47 PM ET: Decline | Privacy Policy | Accept, identical style (11 CCR 7004). Footer DNS link carries CCPA 1798.135. */}
-          <button type="button" className={equalBtn} onClick={deny}>
+          <button type="button" className={equalBtn} onClick={() => deny('banner')}>
             Decline
           </button>
           <a href={PRIVACY_POLICY_URL} className={equalBtn}>
@@ -133,8 +146,14 @@ export function ConsentBanner() {
 
 /** Persistent footer / settings control for DNS/S. */
 export function DoNotSellLink({ className = '' }: { className?: string }) {
+  const gpc = gpcEnabled()
   return (
     <div className={className}>
+      {gpc && (
+        <p role="status" className="mb-1.5 mx-auto max-w-md text-[11px] leading-snug text-slate-600">
+          {GPC_HONORED_NOTE}
+        </p>
+      )}
       <button
         type="button"
         className="text-xs underline text-slate-500 hover:text-slate-800"

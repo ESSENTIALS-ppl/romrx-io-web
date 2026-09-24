@@ -1,7 +1,11 @@
 /** First-party ads-measurement consent (Privacy B 2026-09-21).
  * Shared storage key with /assets/consent.js on marketing pages.
  * Terms checkbox is NOT tracking consent.
+ * Every user-made choice and every GPC-driven change is logged server-side
+ * via lib/consentLog.ts (Legal 2026-09-24). A missing GPC signal is never consent.
  */
+import { logConsentEvent, type ConsentMethod, type LoggedState } from './consentLog'
+
 export type ConsentState = 'unknown' | 'granted' | 'denied' | 'revoked'
 
 export interface ConsentRecord {
@@ -9,11 +13,18 @@ export interface ConsentRecord {
   policy_version: string
   updated_at: string
   region?: 'us' | 'eu_uk'
+  /** Last Decline / Reject / Don't Sell / GPC date. Suppresses re-prompts for 12 months. */
+  declined_at?: string
 }
 
 export const CONSENT_STORAGE_KEY = 'romrx.consent.v1'
 export const CONSENT_POLICY_VERSION = '2026-09-21-privacy-b'
 export const PRIVACY_POLICY_URL = 'https://romrx.io/legal#privacy'
+/** Which consent UI the person saw (logged with each row). Bump when copy or layout changes. */
+export const APP_BANNER_VERSION = 'app-banner-2026-09-24-us-optout'
+export const SETTINGS_UI_VERSION = 'app-settings-2026-09-24'
+/** No banner or opt-back-in prompt for 12 months after a decline (11 CCR 7026(k)). */
+export const REPROMPT_QUIET_MS = 365 * 24 * 60 * 60 * 1000
 
 const LISTENERS = new Set<(r: ConsentRecord) => void>()
 
@@ -56,15 +67,17 @@ export function readConsent(): ConsentRecord | null {
   }
 }
 
-export function writeConsent(state: ConsentState): ConsentRecord {
+export function writeConsent(state: ConsentState, opts: { declinedAt?: string } = {}): ConsentRecord {
   // Stacy GPC Field-test C.3: banner OK must not override Global Privacy Control.
   const effective: ConsentState = gpcEnabled() && state === 'granted' ? 'denied' : state
+  const now = new Date().toISOString()
   const rec: ConsentRecord = {
     state: effective,
     policy_version: CONSENT_POLICY_VERSION,
-    updated_at: new Date().toISOString(),
+    updated_at: now,
     region: detectRegion(),
   }
+  if (effective === 'denied' || effective === 'revoked') rec.declined_at = opts.declinedAt || now
   try {
     localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(rec))
   } catch { /* private mode */ }
@@ -77,17 +90,97 @@ export function writeConsent(state: ConsentState): ConsentRecord {
   return rec
 }
 
+/**
+ * A user click changed consent: store it and log it (whether tracking is on or off).
+ * Returns the stored record (GPC may have turned a grant into denied).
+ */
+export function recordConsentChoice(
+  state: Exclude<ConsentState, 'unknown'>,
+  method: Exclude<ConsentMethod, 'gpc'>,
+  bannerVersion: string = method === 'settings' ? SETTINGS_UI_VERSION : APP_BANNER_VERSION,
+): ConsentRecord {
+  const rec = writeConsent(state)
+  void logConsentEvent({
+    state: rec.state as LoggedState,
+    method,
+    policyVersion: CONSENT_POLICY_VERSION,
+    bannerVersion,
+    gpcPresent: gpcEnabled(),
+  })
+  return rec
+}
+
+/**
+ * GPC present: force denied. Writes and logs ONE 'gpc' row only when the stored
+ * state actually changes (no choice / unknown / granted), never on every page load.
+ * Returns true when it changed state.
+ */
+export function applyGpcIfPresent(): boolean {
+  if (!gpcEnabled()) return false
+  const existing = readConsent()
+  if (existing && existing.state !== 'granted' && existing.state !== 'unknown') return false
+  const rec = writeConsent('denied')
+  void logConsentEvent({
+    state: rec.state as LoggedState,
+    method: 'gpc',
+    policyVersion: CONSENT_POLICY_VERSION,
+    bannerVersion: APP_BANNER_VERSION,
+    gpcPresent: true,
+    conflictWithPriorAccept: existing?.state === 'granted',
+  })
+  return true
+}
+
 /** Effective state after GPC. GPC forces denied for ads measurement. */
 export function effectiveConsentState(): ConsentState {
   if (gpcEnabled()) {
-    const existing = readConsent()
-    if (!existing || existing.state === 'granted' || existing.state === 'unknown') {
-      writeConsent('denied')
-    }
+    applyGpcIfPresent()
     return 'denied'
   }
   return readConsent()?.state ?? 'unknown'
 }
+
+/** True while inside the 12-month no-reprompt window after a decline. */
+export function inRepromptQuietPeriod(rec: ConsentRecord | null = readConsent(), now: number = Date.now()): boolean {
+  if (!rec?.declined_at) return false
+  const t = Date.parse(rec.declined_at)
+  return Number.isFinite(t) && now - t < REPROMPT_QUIET_MS
+}
+
+/**
+ * Show the banner only to someone who has never chosen. Never after a decline
+ * (and never inside the 12-month quiet window), never when GPC is on.
+ * The person can still choose Accept themselves in Settings.
+ */
+export function shouldShowBanner(
+  rec: ConsentRecord | null = readConsent(),
+  gpc: boolean = gpcEnabled(),
+  now: number = Date.now(),
+): boolean {
+  if (gpc) return false
+  if (inRepromptQuietPeriod(rec, now)) return false
+  return !rec || rec.state === 'unknown'
+}
+
+/**
+ * Signed-in: adopt the choice saved on the profile when this browser has none,
+ * or when the profile choice is newer. No log row (not a new choice).
+ */
+export function adoptProfileChoice(
+  profile: { state: string | null; updatedAt: string | null; declinedAt: string | null } | null,
+): ConsentRecord | null {
+  if (!profile || (profile.state !== 'granted' && profile.state !== 'denied' && profile.state !== 'revoked')) return null
+  const local = readConsent()
+  const profT = Date.parse(profile.updatedAt || '') || 0
+  const localT = Date.parse(local?.updated_at || '') || 0
+  if (local && local.state !== 'unknown' && localT >= profT) return null
+  if (local?.state === profile.state) return null
+  return writeConsent(profile.state as ConsentState, { declinedAt: profile.declinedAt || undefined })
+}
+
+export const GPC_HONORED_NOTE =
+  "Your browser's Global Privacy Control signal was honored. Ads measurement is off."
+
 
 /**
  * Jim LOCK 2026-09-24 5:38 PM ET (US opt-out, Stacy confirmed):

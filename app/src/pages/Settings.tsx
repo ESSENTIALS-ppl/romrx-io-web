@@ -8,6 +8,7 @@ import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
 import { FeedbackWidget } from '../components/FeedbackWidget'
+import { AdsMeasurementSettings } from '../components/AdsMeasurementSettings'
 import { cn } from '../lib/cn'
 import {
   requestAccountDeletion, deletionErrorCopy, DELETION_BUTTON_LABEL, DELETION_SUCCESS_COPY,
@@ -593,6 +594,9 @@ export function Settings() {
           </div>
           <FeedbackWidget />
         </SectionCard>
+
+        {/* ── ADS MEASUREMENT (consent log, Legal 2026-09-24) ─────── */}
+        <AdsMeasurementSettings userId={user?.id} />
 
         {/* ── DANGER ZONE ────────────────────────────────────────── */}
         <SectionCard title="Danger zone">
