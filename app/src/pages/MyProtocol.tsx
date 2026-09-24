@@ -659,7 +659,8 @@ function IssueCard({ ranked, rxLibrary, rank }: {
 
   // Base copy (Jim LOCK 2026-09-24): "#N Problem area", rendered as-is (no uppercase).
   const rankLabel = `#${rank} Problem area`
-  const rankColor = rank === 1 ? 'bg-red-600 text-white' : rank === 2 ? 'bg-yellow-500 text-white' : 'bg-cobalt text-white'
+  // Neutral rank badge: colour must never imply a band (band lives only in the chip).
+  const rankColor = 'bg-slate-100 text-slate-700 border border-slate-200'
 
   const isBilateral = left !== null && right !== null
   const hasAsymmetry = isBilateral && asymmetry > 0
