@@ -428,3 +428,23 @@ describe('banner reacts in the same session', () => {
     expect(src).toMatch(/addEventListener\('romrx:consent', hideIfChosen\)/)
   })
 })
+
+describe('Settings reacts to banner choices in the same session', () => {
+  it('AdsMeasurementSettings subscribes to consent changes and re-reads state', () => {
+    const src = readFileSync(join(REPO, 'app/src/components/AdsMeasurementSettings.tsx'), 'utf8')
+    expect(src).toMatch(/subscribeConsent\(sync\)/)
+    expect(src).toMatch(/addEventListener\('romrx:consent', sync\)/)
+    expect(src).toMatch(/addEventListener\('storage', onStorage\)/)
+  })
+  it('a banner Decline reaches subscribers so Settings shows Off', async () => {
+    stubBrowser()
+    const c = await import('./consent')
+    const { adsSettingsView } = await import('./adsSettings')
+    let shown = adsSettingsView(c.effectiveConsentState(), 'us', false).summary
+    expect(shown).toMatch(/not made a choice/)
+    const unsub = c.subscribeConsent(() => { shown = adsSettingsView(c.effectiveConsentState(), 'us', false).summary })
+    c.recordConsentChoice('denied', 'banner')
+    unsub()
+    expect(shown).toBe('Off. You turned ads measurement off.')
+  })
+})
