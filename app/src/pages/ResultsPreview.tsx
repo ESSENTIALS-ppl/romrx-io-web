@@ -304,7 +304,7 @@ export function ResultsPreview() {
           </div>
           <div className="space-y-2">
             {[
-              'My Protocol - Top 3 Priority Joints',
+              'My Protocol: Your top three problem areas',
               ...(sportCopy
                 ? [`My Sport - ${sportCopy.wordmark} (after Base)`]
                 : []),

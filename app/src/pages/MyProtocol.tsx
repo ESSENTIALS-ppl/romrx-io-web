@@ -866,7 +866,7 @@ export function MyProtocol() {
             <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
           </div>
           <p className={cn('text-lg font-bold leading-tight', tier.color)}>{tier.label}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Your top-3 priority joints inform today's plan</p>
+          <p className="text-xs text-slate-500 mt-0.5">Your top three problem areas shape today's plan</p>
         </div>
       </div>
 
