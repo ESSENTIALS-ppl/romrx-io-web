@@ -413,3 +413,32 @@ describe('US opt-out default (Jim LOCK 2026-09-24 5:38 PM ET)', () => {
     expect(f).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('PageView dedupe + ?add= strip (Grant GO 2026-09-24)', () => {
+  it('treats /app/signup/:sport as redirect-only', async () => {
+    const { isSignupRedirectPath } = await import('./metaAttribution')
+    expect(isSignupRedirectPath('/app/signup/bjj')).toBe(true)
+    expect(isSignupRedirectPath('/app/signup/bodybuilding/')).toBe(true)
+    expect(isSignupRedirectPath('/app/signup')).toBe(false)
+    expect(isSignupRedirectPath('/app/signup/')).toBe(false)
+  })
+  it('removes only add, keeps utm/fbclid and hash, saves sport', async () => {
+    const { stripAddParam, SIGNUP_ADD_KEY } = await import('./metaAttribution')
+    const store: Record<string, string> = {}
+    const calls: string[] = []
+    const w: any = {
+      location: { pathname: '/app/signup', search: '?utm_source=x&add=BJJ&fbclid=abc', hash: '#h' },
+      history: { state: { k: 1 }, replaceState: (_s: unknown, _t: string, url: string) => calls.push(url) },
+      sessionStorage: { setItem: (k: string, v: string) => { store[k] = v } },
+    }
+    stripAddParam(w)
+    expect(calls).toEqual(['/app/signup?utm_source=x&fbclid=abc#h'])
+    expect(store[SIGNUP_ADD_KEY]).toBe('bjj')
+  })
+  it('no add: leaves URL alone', async () => {
+    const { stripAddParam } = await import('./metaAttribution')
+    const calls: string[] = []
+    stripAddParam({ location: { pathname: '/app/signup', search: '?utm_source=x', hash: '' }, history: { state: null, replaceState: (_a: unknown, _b: string, u: string) => calls.push(u) } } as any)
+    expect(calls).toHaveLength(0)
+  })
+})

@@ -295,7 +295,38 @@ export function trackMetaEvent(
   return eventId
 }
 
+/** sessionStorage key: sport intent (?add=) kept after it is removed from the address bar. */
+export const SIGNUP_ADD_KEY = 'romrx.signup.add'
+
+/** /app/signup/:sport only redirects to /app/signup?add=..; never count a PageView there. */
+export function isSignupRedirectPath(pathname: string): boolean {
+  return /^\/app\/signup\/[^/]+\/?$/i.test(pathname)
+}
+
+/**
+ * Grant GO 2026-09-24: browser Pixel URL should match CAPI (no ?add=).
+ * Removes only `add` from the address bar (utm_* and fbclid stay so Meta click
+ * attribution still works) and keeps the sport in sessionStorage for Signup.
+ * Uses history.replaceState, so React Router keeps its in-memory ?add.
+ * Exported for tests.
+ */
+export function stripAddParam(w: Pick<Window, 'location' | 'history'> & { sessionStorage?: Storage }): void {
+  try {
+    const params = new URLSearchParams(w.location.search || '')
+    const add = params.get('add')
+    if (add === null) return
+    try { w.sessionStorage?.setItem(SIGNUP_ADD_KEY, add.toLowerCase().slice(0, 32)) } catch { /* private mode */ }
+    params.delete('add')
+    const qs = params.toString()
+    w.history.replaceState(w.history.state, '', `${w.location.pathname}${qs ? `?${qs}` : ''}${w.location.hash || ''}`)
+  } catch { /* ignore */ }
+}
+
 export function trackMetaPageView(): void {
+  if (typeof window === 'undefined') return
+  if (isSignupRedirectPath(window.location.pathname)) return
+  if (!canSendMeta()) return
+  stripAddParam(window)
   trackMetaEvent('PageView')
 }
 
