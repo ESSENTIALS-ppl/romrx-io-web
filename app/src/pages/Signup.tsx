@@ -58,7 +58,7 @@ export function Signup() {
     if (password !== confirm) { setError('Passwords do not match.'); return }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     if (!agreedToTerms) { setError('You must agree to the Terms of Service to continue.'); return }
-    if (!gender || !ageBucket) { setError('Age group and gender are required.'); return }
+    if (!ageBucket) { setError('Age group is required.'); return }
     setLoading(true); setError('')
     captureUtmFromUrl()
     const { signup_source, meta: utmMeta } = getSignupAttribution()
@@ -78,7 +78,7 @@ export function Signup() {
           full_name: fullName,
           signup_source,
           age_bucket: ageBucket,
-          gender,
+          ...(gender ? { gender } : {}),
           ...utmMeta,
           ...(addSport ? { add_sport: addSport } : {}),
         },
@@ -100,7 +100,7 @@ export function Signup() {
       }
       const { error: demoErr } = await supabase.from('users').update({
         age_bucket: ageBucket,
-        gender,
+        gender: gender || null,
         ...utmPatch,
       }).eq('id', data.user.id)
       if (demoErr && import.meta.env.DEV) console.warn('[signup] demographics/utm update', demoErr.message)
@@ -191,13 +191,13 @@ export function Signup() {
           </div>
 
           <div>
-            <p className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Gender <span className="normal-case font-normal text-slate-400">(required)</span></p>
+            <p className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Gender <span className="normal-case font-normal text-slate-400">(optional)</span></p>
             <div className="flex gap-2 flex-wrap">
               {GENDERS.map(g => (
                 <button
                   key={g.v}
                   type="button"
-                  onClick={() => setGender(g.v)}
+                  onClick={() => setGender(gender === g.v ? '' : g.v)}
                   className={cn(
                     'px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
                     gender === g.v
@@ -237,7 +237,7 @@ export function Signup() {
 
           {error && <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
-          <button type="submit" disabled={loading || !agreedToTerms || !gender || !ageBucket} className="btn-primary w-full flex items-center justify-center gap-2 mt-2 disabled:opacity-50">
+          <button type="submit" disabled={loading || !agreedToTerms || !ageBucket} className="btn-primary w-full flex items-center justify-center gap-2 mt-2 disabled:opacity-50">
             {loading ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
             Create account & start assessment
           </button>
