@@ -20,6 +20,20 @@ const ALLOWED_ORIGINS = new Set([
   'http://127.0.0.1:8888',
 ]);
 
+// Approved scope (Jim 2026-09-24): public signup pages ONLY. Any event whose
+// event_source_url is not romrx.io + one of these paths is rejected.
+// Keep in sync with app/src/lib/metaAttribution.ts + assets/meta-attribution.js.
+const ALLOWED_HOSTS = new Set(['romrx.io', 'www.romrx.io']);
+const ALLOWED_PATHS = [/^\/app\/signup\/?$/, /^\/app\/signup\/[a-z0-9-]+\/?$/i];
+
+function isAllowedSourceUrl(raw) {
+  if (typeof raw !== 'string' || !raw) return false;
+  let u;
+  try { u = new URL(raw); } catch { return false; }
+  if (u.protocol !== 'https:' || !ALLOWED_HOSTS.has(u.hostname)) return false;
+  return ALLOWED_PATHS.some((re) => re.test(u.pathname));
+}
+
 // Best-effort dedupe within a warm function instance.
 const recentIds = new Map();
 const DEDUPE_TTL_MS = 10 * 60 * 1000;
@@ -86,17 +100,13 @@ exports.handler = async (event) => {
   const eventId = typeof payload.event_id === 'string' ? payload.event_id.slice(0, 128) : '';
   const consentState = payload.consent_state;
   const consentVersion = payload.consent_version;
-  // Origin + path only on romrx.io. Query/hash stripped so no email, lead token,
-  // or other PII can ride along to Meta.
-  let eventSourceUrl = 'https://romrx.io/';
-  if (typeof payload.event_source_url === 'string') {
-    try {
-      const u = new URL(payload.event_source_url);
-      if (u.hostname === 'romrx.io' || u.hostname === 'www.romrx.io') {
-        eventSourceUrl = `${u.origin}${u.pathname}`.slice(0, 500);
-      }
-    } catch { /* keep default */ }
+  // Signup-page allowlist, enforced server-side. Origin + path only (query/hash
+  // stripped) so no email, lead token, or other PII can ride along to Meta.
+  if (!isAllowedSourceUrl(payload.event_source_url)) {
+    return json(200, { ok: true, dispatched: false, reason: 'path_not_allowed' }, origin);
   }
+  const srcUrl = new URL(payload.event_source_url);
+  const eventSourceUrl = `${srcUrl.origin}${srcUrl.pathname}`.slice(0, 500);
 
   if (!ALLOWED_EVENTS.has(eventName) || !eventId) {
     return json(400, { ok: false, error: 'invalid_event' }, origin);
@@ -173,3 +183,5 @@ exports.handler = async (event) => {
     return json(200, { ok: true, dispatched: false, reason: 'fetch_failed' }, origin);
   }
 };
+
+exports._test = { isAllowedSourceUrl };
