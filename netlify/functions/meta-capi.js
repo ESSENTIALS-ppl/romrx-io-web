@@ -47,6 +47,22 @@ function cleanFbc(v) {
   return typeof v === 'string' && v.length <= 500 && FBC_RE.test(v) ? v : undefined;
 }
 
+// Visitor country from Netlify geo headers (x-country, or base64 JSON x-nf-geo).
+function requestCountry(headers) {
+  const h = headers || {};
+  const direct = String(h['x-country'] || h['X-Country'] || '').trim().toUpperCase();
+  if (/^[A-Z]{2}$/.test(direct)) return direct;
+  const geo = h['x-nf-geo'] || h['X-Nf-Geo'];
+  if (geo) {
+    try {
+      const parsed = JSON.parse(Buffer.from(String(geo), 'base64').toString('utf8'));
+      const c = String((parsed && parsed.country && parsed.country.code) || '').toUpperCase();
+      if (/^[A-Z]{2}$/.test(c)) return c;
+    } catch { /* ignore */ }
+  }
+  return '';
+}
+
 // Best-effort dedupe within a warm function instance.
 const recentIds = new Map();
 const DEDUPE_TTL_MS = 10 * 60 * 1000;
@@ -124,7 +140,14 @@ exports.handler = async (event) => {
   if (!ALLOWED_EVENTS.has(eventName) || !eventId) {
     return json(400, { ok: false, error: 'invalid_event' }, origin);
   }
-  if (consentState !== 'granted') {
+  // Jim LOCK 2026-09-24 (US opt-out): explicit 'granted' anywhere, or
+  // 'us_default' ONLY when Netlify geo says the request comes from the US.
+  // Unknown geo fails closed. EU/UK stays opt-in.
+  if (consentState === 'us_default') {
+    if (requestCountry(event.headers) !== 'US') {
+      return json(200, { ok: true, dispatched: false, reason: 'consent_blocked_non_us' }, origin);
+    }
+  } else if (consentState !== 'granted') {
     return json(200, { ok: true, dispatched: false, reason: 'consent_blocked' }, origin);
   }
   if (!consentVersion) {
@@ -202,4 +225,4 @@ exports.handler = async (event) => {
   }
 };
 
-exports._test = { isAllowedSourceUrl, cleanFbp, cleanFbc };
+exports._test = { isAllowedSourceUrl, cleanFbp, cleanFbc, requestCountry };
