@@ -276,3 +276,23 @@ describe('units + number formatting (Reid Field cosmetics)', () => {
     expect(formatMeasure(null)).toBe('-')
   })
 })
+
+describe('radar hover: dots win over spoke hit areas (Reid Field 2026-09-24)', () => {
+  it('rendered SVG paints every dot hit target after every spoke hit area, spokes skip the centre', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { createElement } = await import('react')
+    const { BaseRadar } = await import('../components/BaseRadar')
+    // fixture 02 (low scores crowd the centre)
+    const f02 = { hip_er_l: 30, hip_er_r: 32, hip_ir_l: 22, hip_ir_r: 25, hip_abd_l: 55, hip_abd_r: 60, hip_flex_l: 95, hip_flex_r: 100, shoulder_er_l: 65, shoulder_er_r: 70, shoulder_flex_l: 150, shoulder_flex_r: 155, ankle_df_l: 7, ankle_df_r: 8.5, lumbar_flex: 45, lumbar_ext: 16, cervical_lat_l: 38, cervical_lat_r: 40, cervical_flex: 46, cervical_ext: 60 }
+    const html = renderToStaticMarkup(createElement(BaseRadar, { rows: radarSideRowsForAssessment(f02) }))
+    const lastSpoke = html.lastIndexOf('data-hit="spoke"')
+    const firstDot = html.indexOf('data-hit="dot"')
+    expect(lastSpoke).toBeGreaterThan(0)
+    expect(firstDot).toBeGreaterThan(lastSpoke)
+    expect((html.match(/data-hit="dot"/g) || []).length).toBe(BASE_DISPLAY_JOINTS.length)
+    // no spoke hit line starts at the centre (CX,CY = 180,158)
+    expect(html).not.toMatch(/<line x1="180" y1="158"[^>]*stroke="transparent"/)
+    // Ankle DF dot (35%) sits near the centre and has its own hit circle
+    expect(html).toMatch(/data-joint="ankle_df"[^>]*>(<circle[^>]*r="7"[^>]*fill="transparent")/)
+  })
+})
