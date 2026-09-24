@@ -15,7 +15,7 @@ import { SectionCard } from './SectionCard'
 
 /**
  * Settings > Ads measurement (Legal 2026-09-24). Signed in: current choice comes
- * from the profile (public.users.ads_consent_*), else from this browser.
+ * from the profile (public.user_ads_consent), else from this browser.
  * Accept and Decline (EU/UK: Allow and Reject) look identical; neither is highlighted.
  * Each click is logged with method 'settings' whether tracking is on or off.
  */

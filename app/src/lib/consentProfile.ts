@@ -3,8 +3,9 @@
  * so those stay pure and testable).
  * - Access token for signed-in consent writes (server verifies it; user_id is
  *   never sent in the body).
- * - Current choice saved on public.users.ads_consent_* (written only by the
- *   consent-log function with the service role; users can read their own row).
+ * - Current choice saved in public.user_ads_consent (written only by the
+ *   consent-log function with the service role; users can read only their own
+ *   row; coaches and school admins cannot read it).
  */
 import { supabase } from './supabase'
 import { setConsentTokenGetter } from './consentLog'
@@ -28,18 +29,19 @@ export function wireConsentAuth(): void {
 
 export async function fetchProfileConsent(userId: string): Promise<ProfileConsent | null> {
   try {
+    // Own row only (RLS self read). Coaches / school admins cannot read this table.
     const { data, error } = await supabase
-      .from('users')
-      .select('ads_consent_state, ads_consent_updated_at, ads_consent_declined_at')
-      .eq('id', userId)
+      .from('user_ads_consent')
+      .select('state, updated_at, declined_at')
+      .eq('user_id', userId)
       .maybeSingle()
     if (error || !data) return null
-    const row = data as { ads_consent_state: string | null; ads_consent_updated_at: string | null; ads_consent_declined_at: string | null }
-    const s = row.ads_consent_state
+    const row = data as { state: string | null; updated_at: string | null; declined_at: string | null }
+    const s = row.state
     return {
       state: s === 'granted' || s === 'denied' || s === 'revoked' ? s : null,
-      updatedAt: row.ads_consent_updated_at,
-      declinedAt: row.ads_consent_declined_at,
+      updatedAt: row.updated_at,
+      declinedAt: row.declined_at,
     }
   } catch {
     return null
