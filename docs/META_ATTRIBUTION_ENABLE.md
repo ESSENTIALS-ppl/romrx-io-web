@@ -1,8 +1,16 @@
-# Meta Pixel + CAPI — enable later (NOT LIVE)
+# Meta Pixel + CAPI: enable (NOT LIVE YET)
 
-**Status:** CODE READY, measurement DISABLED.  
-**As of:** Tue Sep 22, 2026  
+**Status (Thu Sep 24, 2026):** Jim GO via Grant received. Pixel ID `2284396799046573` in hand (public; baked into `assets/meta-attribution.js`, inert while flag false). CAPI token received (secret, box only, never in repo). Consent gate hardened (see below). **BLOCKED on Netlify env:** no Netlify CLI auth on the ops box, so `VITE_META_PIXEL_ID`, `META_PIXEL_ID`, `META_CAPI_TOKEN` are not set. Hard flags stay `false` until env is set. SPEND HOLD: no ads, no Money GO.
 **Sacred:** Do not invent Pixel IDs, CAPI tokens, or Jim Money GO / spend. Do not ship HOLD **1B** Pixel-ON banner until measurement is live.
+
+## Consent gate hardening (2026-09-24)
+
+- SPA + marketing: Meta runs only on public funnel routes (SPA: `/app/`, `/app/signup`, `/app/signup/:sport`, `/app/login`). Assessment, results, dashboard, unlock, and auth callbacks never send Pixel or CAPI.
+- Any query key outside `utm_*`, `fbclid`, `sport`, `ref` (for example `email`, `name`, `lead`) blocks Meta on that page.
+- SPA Pixel: `disablePushState = true` so fbevents never auto-fires PageView on in-app navigation.
+- CAPI `event_source_url` is origin + path only (client and server), romrx.io hosts only.
+- Server honors `Sec-GPC: 1` (returns `gpc_opt_out`) even if the body claims `granted`; rejects foreign `Origin`.
+- Unchanged: GPC forces `denied` client-side, banner OK cannot override GPC, Reject / Don't Sell deny both paths, shared `event_id`, server allowlists `custom_data` to `content_name`, Advanced Matching OFF.
 
 ## Current live proof (keep green)
 

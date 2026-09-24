@@ -21,7 +21,30 @@
   // HARD OFF until Field PASS + real credentials via Grant.
   var META_ATTRIBUTION_ENABLED = false;
 
+  // Public Pixel ID (Jim via Grant 2026-09-24). Inert while the hard flag is false.
+  var DEFAULT_PIXEL_ID = '2284396799046573';
+
   var CONSENT_KEY = 'romrx.consent.v1';
+  var SAFE_QUERY = {
+    utm_source: 1, utm_medium: 1, utm_campaign: 1, utm_content: 1, utm_term: 1, fbclid: 1, sport: 1, ref: 1
+  };
+
+  // Any query key outside the allowlist (email, name, lead, token...) blocks Meta on this page.
+  function safeLocation() {
+    try {
+      var q = (window.location.search || '').replace(/^\?/, '');
+      if (!q) return true;
+      var parts = q.split('&');
+      for (var i = 0; i < parts.length; i++) {
+        if (!parts[i]) continue;
+        var key = decodeURIComponent(parts[i].split('=')[0] || '').toLowerCase();
+        if (!SAFE_QUERY[key]) return false;
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
   var CAPI_ENDPOINT = '/api/attribution/meta';
 
   function pixelId() {
@@ -30,8 +53,7 @@
         return window.__ROMRX_META_PIXEL_ID.trim();
       }
     } catch (e) { /* ignore */ }
-    // Intentionally empty — do not invent a Pixel ID.
-    return '';
+    return DEFAULT_PIXEL_ID;
   }
 
   function readConsentState() {
@@ -52,7 +74,8 @@
     return (
       META_ATTRIBUTION_ENABLED === true &&
       readConsentState() === 'granted' &&
-      !!pixelId()
+      !!pixelId() &&
+      safeLocation()
     );
   }
 
@@ -109,7 +132,7 @@
           event_id: eventId,
           event_time: Math.floor(Date.now() / 1000),
           action_source: 'website',
-          event_source_url: (window.location.href || '').split('#')[0].slice(0, 500),
+          event_source_url: ((window.location.origin || 'https://romrx.io') + (window.location.pathname || '/')).slice(0, 500),
           consent_version: '2026-09-21-privacy-b',
           consent_state: 'granted',
           properties: {},
