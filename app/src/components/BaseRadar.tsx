@@ -87,32 +87,25 @@ export function BaseRadar({ rows, radius = radarRadius }: { rows: RadarSideRow[]
           data-series="left"
         />
 
-        {/* Worse-side dots, band coloured; hover targets per joint */}
+        {/* Layer 1: spoke hover areas + labels. They start at 30% of the radius so the
+            crowded centre belongs to the dots, and they are painted BEFORE the dots. */}
         {rows.map((r, i) => {
-          const [x, y] = point(i, n, r.worse)
-          const [lx, ly] = point(i, n, 100)
           const a = -Math.PI / 2 + (2 * Math.PI * i) / n
+          const [sx, sy] = [CX + R * 0.3 * Math.cos(a), CY + R * 0.3 * Math.sin(a)]
+          const [lx, ly] = point(i, n, 100)
           const tx = CX + (R + 16) * Math.cos(a)
           const ty = CY + (R + 16) * Math.sin(a)
           const anchor = Math.abs(Math.cos(a)) < 0.2 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end'
           return (
             <g
-              key={r.key}
-              data-joint={r.key}
-              data-left={r.leftPct ?? ''}
-              data-right={r.rightPct ?? ''}
-              data-worse={r.worse}
-              data-band={r.band ?? ''}
-              data-left-band={r.leftBand ?? ''}
-              data-right-band={r.rightBand ?? ''}
+              key={`hit-${r.key}`}
+              data-hit="spoke"
+              data-hit-joint={r.key}
               onMouseEnter={() => setActive(i)}
               onClick={() => setActive(a2 => (a2 === i ? null : i))}
               style={{ cursor: 'pointer' }}
             >
-              <line x1={CX} y1={CY} x2={lx} y2={ly} stroke="transparent" strokeWidth={22} />
-              {r.measured && (
-                <circle cx={x} cy={y} r={active === i ? 5 : 4} fill={r.band != null ? BAND_HEX[r.band] : '#94a3b8'} stroke="#fff" strokeWidth={1.25} />
-              )}
+              <line x1={sx} y1={sy} x2={lx} y2={ly} stroke="transparent" strokeWidth={22} />
               <text
                 x={tx} y={ty + 3} fontSize={9.5} textAnchor={anchor}
                 fill={r.measured ? (active === i ? '#0f172a' : '#475569') : '#cbd5e1'}
@@ -120,6 +113,37 @@ export function BaseRadar({ rows, radius = radarRadius }: { rows: RadarSideRow[]
               >
                 {r.short}
               </text>
+            </g>
+          )
+        })}
+
+        {/* Layer 2 (on top): worse-side dots, band coloured, each with its own hit circle,
+            so a dot always wins over any spoke area (Reid Field 2026-09-24: 02 Ankle DF). */}
+        {rows.map((r, i) => {
+          const [x, y] = point(i, n, r.worse)
+          return (
+            <g
+              key={r.key}
+              data-hit="dot"
+              data-joint={r.key}
+              data-left={r.leftPct ?? ''}
+              data-right={r.rightPct ?? ''}
+              data-worse={r.worse}
+              data-band={r.band ?? ''}
+              data-left-band={r.leftBand ?? ''}
+              data-right-band={r.rightBand ?? ''}
+              data-cx={x.toFixed(1)}
+              data-cy={y.toFixed(1)}
+              onMouseEnter={() => setActive(i)}
+              onClick={() => setActive(a2 => (a2 === i ? null : i))}
+              style={{ cursor: 'pointer' }}
+            >
+              {r.measured && (
+                <>
+                  <circle cx={x} cy={y} r={7} fill="transparent" />
+                  <circle cx={x} cy={y} r={active === i ? 5 : 4} fill={r.band != null ? BAND_HEX[r.band] : '#94a3b8'} stroke="#fff" strokeWidth={1.25} />
+                </>
+              )}
             </g>
           )
         })}
