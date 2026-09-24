@@ -376,13 +376,14 @@ describe('consent-log handler', () => {
     expect(calls.map((c) => c.url)).toEqual([
       'https://proj.supabase.co/auth/v1/user',
       'https://proj.supabase.co/rest/v1/consent_events',
-      'https://proj.supabase.co/rest/v1/users?id=eq.11111111-2222-4333-8444-555555555555',
+      'https://proj.supabase.co/rest/v1/user_ads_consent?on_conflict=user_id',
     ])
     expect(calls[0].init.headers.apikey).toBe('anon-key')
     expect(JSON.parse(calls[1].init.body).user_id).toBe('11111111-2222-4333-8444-555555555555')
-    expect(calls[2].init.method).toBe('PATCH')
-    expect(JSON.parse(calls[2].init.body)).toMatchObject({ ads_consent_state: 'denied' })
-    expect(JSON.parse(calls[2].init.body).ads_consent_declined_at).toBeTruthy()
+    expect(calls[2].init.method).toBe('POST')
+    expect(calls[2].init.headers.Prefer).toContain('resolution=merge-duplicates')
+    expect(JSON.parse(calls[2].init.body)).toMatchObject({ user_id: '11111111-2222-4333-8444-555555555555', state: 'denied' })
+    expect(JSON.parse(calls[2].init.body).declined_at).toBeTruthy()
   })
   it('invalid JWT: stored as anonymous, no profile write', async () => {
     mockFetch(false)
@@ -405,5 +406,45 @@ describe('consent-log handler', () => {
   it('talks only to Supabase (never Meta or analytics)', () => {
     const src = readFileSync(join(REPO, 'netlify/functions/consent-log.js'), 'utf8')
     expect(src).not.toMatch(/facebook|graph\.|google-analytics|segment|x-nf-client-connection-ip|user-agent/i)
+  })
+})
+
+describe('banner reacts in the same session', () => {
+  it('a Settings choice notifies consent subscribers and the banner rule turns off', async () => {
+    stubBrowser()
+    const c = await import('./consent')
+    expect(c.shouldShowBanner()).toBe(true)
+    const seen: string[] = []
+    const unsub = c.subscribeConsent((r) => { seen.push(r.state) })
+    c.recordConsentChoice('denied', 'settings')
+    unsub()
+    expect(seen).toEqual(['denied'])
+    expect(c.shouldShowBanner()).toBe(false)
+  })
+  it('ConsentBanner subscribes to consent changes, storage, and romrx:consent', () => {
+    const src = readFileSync(join(REPO, 'app/src/components/ConsentBanner.tsx'), 'utf8')
+    expect(src).toMatch(/subscribeConsent\(hideIfChosen\)/)
+    expect(src).toMatch(/addEventListener\('storage'/)
+    expect(src).toMatch(/addEventListener\('romrx:consent', hideIfChosen\)/)
+  })
+})
+
+describe('Settings reacts to banner choices in the same session', () => {
+  it('AdsMeasurementSettings subscribes to consent changes and re-reads state', () => {
+    const src = readFileSync(join(REPO, 'app/src/components/AdsMeasurementSettings.tsx'), 'utf8')
+    expect(src).toMatch(/subscribeConsent\(sync\)/)
+    expect(src).toMatch(/addEventListener\('romrx:consent', sync\)/)
+    expect(src).toMatch(/addEventListener\('storage', onStorage\)/)
+  })
+  it('a banner Decline reaches subscribers so Settings shows Off', async () => {
+    stubBrowser()
+    const c = await import('./consent')
+    const { adsSettingsView } = await import('./adsSettings')
+    let shown = adsSettingsView(c.effectiveConsentState(), 'us', false).summary
+    expect(shown).toMatch(/not made a choice/)
+    const unsub = c.subscribeConsent(() => { shown = adsSettingsView(c.effectiveConsentState(), 'us', false).summary })
+    c.recordConsentChoice('denied', 'banner')
+    unsub()
+    expect(shown).toBe('Off. You turned ads measurement off.')
   })
 })

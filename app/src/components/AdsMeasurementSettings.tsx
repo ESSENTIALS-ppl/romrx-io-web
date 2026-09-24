@@ -6,6 +6,8 @@ import {
   gpcEnabled,
   readConsent,
   recordConsentChoice,
+  subscribeConsent,
+  CONSENT_STORAGE_KEY,
   type ConsentState,
 } from '../lib/consent'
 import { revokeMetaMeasurement } from '../lib/metaAttribution'
@@ -15,7 +17,7 @@ import { SectionCard } from './SectionCard'
 
 /**
  * Settings > Ads measurement (Legal 2026-09-24). Signed in: current choice comes
- * from the profile (public.users.ads_consent_*), else from this browser.
+ * from the profile (public.user_ads_consent), else from this browser.
  * Accept and Decline (EU/UK: Allow and Reject) look identical; neither is highlighted.
  * Each click is logged with method 'settings' whether tracking is on or off.
  */
@@ -25,13 +27,28 @@ export function AdsMeasurementSettings({ userId }: { userId?: string | null }) {
   const [state, setState] = useState<ConsentState>(() => effectiveConsentState())
   const [saved, setSaved] = useState('')
 
+  // Live state both ways: a banner / footer / other-tab choice updates this section.
+  useEffect(() => {
+    const sync = () => setState(effectiveConsentState())
+    const unsub = subscribeConsent(sync)
+    const onStorage = (e: StorageEvent) => { if (e.key === CONSENT_STORAGE_KEY) sync() }
+    window.addEventListener('romrx:consent', sync)
+    window.addEventListener('storage', onStorage)
+    return () => {
+      unsub()
+      window.removeEventListener('romrx:consent', sync)
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [])
+
   useEffect(() => {
     if (!userId) return
     let alive = true
     void fetchProfileConsent(userId).then((prof) => {
       if (!alive || !prof?.state) return
+      // Newer of profile vs this browser wins (adoptProfileChoice), then show that.
       adoptProfileChoice(prof)
-      setState(gpcEnabled() ? 'denied' : prof.state)
+      setState(effectiveConsentState())
     })
     return () => { alive = false }
   }, [userId])

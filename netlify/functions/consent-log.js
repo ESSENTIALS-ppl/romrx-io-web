@@ -12,7 +12,7 @@
  * - page_path: path only; query and hash are stripped.
  * - The log is compliance-only: never analytics, never ads, never forwarded to
  *   Meta or anyone else. This function talks to Supabase and nothing else.
- * - Signed-in writes also update public.users.ads_consent_* (current choice).
+ * - Signed-in writes also upsert public.user_ads_consent (current choice).
  */
 'use strict';
 
@@ -239,13 +239,14 @@ exports.handler = async (event) => {
 
   if (userId) {
     const now = new Date().toISOString();
-    const patch = { ads_consent_state: row.state, ads_consent_updated_at: now };
-    if (row.state !== 'granted') patch.ads_consent_declined_at = now;
+    const current = { user_id: userId, state: row.state, updated_at: now };
+    if (row.state !== 'granted') current.declined_at = now;
     try {
-      const res = await fetchWithTimeout(`${supabaseUrl}/rest/v1/users?id=eq.${encodeURIComponent(userId)}`, {
-        method: 'PATCH',
-        headers: { ...svc, Prefer: 'return=minimal' },
-        body: JSON.stringify(patch),
+      // Upsert the current choice (server-only table; coaches cannot read it).
+      const res = await fetchWithTimeout(`${supabaseUrl}/rest/v1/user_ads_consent?on_conflict=user_id`, {
+        method: 'POST',
+        headers: { ...svc, Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(current),
       });
       if (!res.ok) console.error('consent-log profile_status', res.status);
     } catch (err) {
