@@ -95,7 +95,7 @@ describe('logging calls (mock fetch)', () => {
     expect(f.body).toEqual({
       anon_id: ls.store['romrx.anon_id'], state: 'denied', method: 'banner', gpc_present: false,
       conflict_with_prior_accept: false, policy_version: c.CONSENT_POLICY_VERSION,
-      banner_version: c.APP_BANNER_VERSION, page_path: '/app/signup',
+      banner_version: c.APP_BANNER_VERSION, banner_region: 'us', page_path: '/app/signup',
     })
     // Never sends user_id, email, fbp/fbc, or the query string.
     expect(JSON.stringify(f.body)).not.toMatch(/user_id|email|fbp|fbc|fbclid|utm/)
@@ -446,5 +446,36 @@ describe('Settings reacts to banner choices in the same session', () => {
     c.recordConsentChoice('denied', 'banner')
     unsub()
     expect(shown).toBe('Off. You turned ads measurement off.')
+  })
+})
+
+describe('banner_region (which notice the visitor saw)', () => {
+  it('app: US and EU/UK visitors send the UI region on banner, settings and gpc rows', async () => {
+    const { fetches } = stubBrowser({ lang: 'de-DE' })
+    const c = await import('./consent')
+    c.recordConsentChoice('denied', 'banner')
+    c.recordConsentChoice('granted', 'settings')
+    await flush()
+    expect(fetches.map((f) => f.body.banner_region)).toEqual(['eu_uk', 'eu_uk'])
+    vi.resetModules()
+    const g = stubBrowser({ gpc: true })
+    const c2 = await import('./consent')
+    c2.effectiveConsentState()
+    await flush()
+    expect(g.fetches[0].body).toMatchObject({ method: 'gpc', banner_region: 'us' })
+  })
+  it('marketing consent.js sends banner_region', () => {
+    const r = runSiteConsent()
+    r.ctx.window.RomrxConsent.deny()
+    expect(r.fetches[0].body.banner_region).toBe('us')
+  })
+  it('function whitelists banner_region; anything else becomes null, row still stored', () => {
+    const { validateBody } = fn._test
+    expect(validateBody({ ...good, banner_region: 'eu_uk' }, {}).row.banner_region).toBe('eu_uk')
+    expect(validateBody({ ...good, banner_region: 'us' }, {}).row.banner_region).toBe('us')
+    const bad = validateBody({ ...good, banner_region: 'mars' }, {})
+    expect(bad.ok).toBe(true)
+    expect(bad.row.banner_region).toBeNull()
+    expect(validateBody(good, {}).row.banner_region).toBeNull()
   })
 })

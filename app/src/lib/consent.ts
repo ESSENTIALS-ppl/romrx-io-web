@@ -106,6 +106,7 @@ export function recordConsentChoice(
     policyVersion: CONSENT_POLICY_VERSION,
     bannerVersion,
     gpcPresent: gpcEnabled(),
+    bannerRegion: rec.region ?? detectRegion(),
   })
   return rec
 }
@@ -127,6 +128,7 @@ export function applyGpcIfPresent(): boolean {
     bannerVersion: APP_BANNER_VERSION,
     gpcPresent: true,
     conflictWithPriorAccept: existing?.state === 'granted',
+    bannerRegion: rec.region ?? detectRegion(),
   })
   return true
 }

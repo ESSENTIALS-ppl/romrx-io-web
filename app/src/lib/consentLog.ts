@@ -72,6 +72,8 @@ export interface ConsentLogEvent {
   gpcPresent: boolean
   conflictWithPriorAccept?: boolean
   pagePath?: string
+  /** Which notice the visitor saw: 'us' opt-out or 'eu_uk' opt-in (the UI's region decision). */
+  bannerRegion?: 'us' | 'eu_uk'
 }
 
 type TokenGetter = () => Promise<string | null>
@@ -103,6 +105,7 @@ export function buildConsentPayload(e: ConsentLogEvent, anonId: string): Record<
     conflict_with_prior_accept: e.method === 'gpc' && e.conflictWithPriorAccept === true,
     policy_version: e.policyVersion,
     banner_version: e.bannerVersion,
+    ...(e.bannerRegion === 'us' || e.bannerRegion === 'eu_uk' ? { banner_region: e.bannerRegion } : {}),
     page_path: sanitizePagePath(e.pagePath ?? (typeof window !== 'undefined' ? window.location.pathname : '/')),
   }
 }
