@@ -191,7 +191,7 @@ export function bandChip(score: BandScore): string {
 
 /** Progress-needed descriptions for aggregate chrome (non-threatening). */
 export const BAND_DESC: Record<BandScore, string> = {
-  1: 'Priority joints need work. Small daily progress moves you up.',
+  1: 'Your problem areas need work. Small daily progress moves you up.',
   2: 'Progress needed on key joints. Stay consistent with your plan.',
   3: 'Solid mobility foundation. Keep training and retest regularly.',
 }

@@ -1,6 +1,6 @@
 # ROMRx
 
-> ROMRx builds assessment-first range of motion (ROM) software. ROMRx Base is a free ROM assessment that identifies your priority joints and turns them into a trackable mobility plan; sport packs (ROMRx+BJJ, ROMRx+BodyBuilding) stack on top. The article library below is educational, grounded in peer-reviewed research and reputable medical sources, and is not medical advice.
+> ROMRx builds assessment-first range of motion (ROM) software. ROMRx Base is a free ROM assessment that identifies your top three problem areas and turns them into a trackable mobility plan; sport packs (ROMRx+BJJ, ROMRx+BodyBuilding) stack on top. The article library below is educational, grounded in peer-reviewed research and reputable medical sources, and is not medical advice.
 
 ## Product
 - [ROMRx Base](https://romrx.io/): Free range of motion assessment and ROM Readiness Protocol.

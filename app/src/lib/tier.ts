@@ -44,7 +44,7 @@ export function tierIntro(tier: Tier): string {
     case 'DEVELOPING':
       return 'Caution: your ROM has limitations that are affecting your movement readiness. Continue to the dashboard for your individualized plan and start making progress today.'
     case 'RESTRICTED':
-      return 'Significant restrictions detected. Prioritize your protocol. Continue to the dashboard to get your targeted plan built around your top-3 priority joints.'
+      return 'Significant restrictions detected. Prioritize your protocol. Continue to the dashboard to get your targeted plan built around your top three problem areas.'
     case 'AT_RISK':
       return 'Urgent: your assessment flagged multiple AT RISK joints. Continue to the dashboard to begin your targeted, individualized plan and start reversing this today.'
   }

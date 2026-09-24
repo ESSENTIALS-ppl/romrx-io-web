@@ -446,7 +446,7 @@ export function MyBody() {
           <div className="space-y-3 mt-2">
             {assessment.worst_joints && assessment.worst_joints.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Priority joints</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Top problem areas</p>
                 <div className="flex flex-wrap gap-1.5">
                   {assessment.worst_joints.map(j => {
                     const jb = bandForPriorityJoint(assessment, j, scoreMap) ?? 1
