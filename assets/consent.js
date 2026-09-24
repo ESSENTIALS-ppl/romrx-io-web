@@ -61,6 +61,8 @@
           conflict_with_prior_accept: method === 'gpc' && conflict === true,
           policy_version: POLICY_VERSION,
           banner_version: BANNER_VERSION,
+          // Which notice the visitor saw (same region decision the banner uses).
+          banner_region: detectRegion(),
           page_path: cleanPath(location.pathname),
         }),
         keepalive: true,

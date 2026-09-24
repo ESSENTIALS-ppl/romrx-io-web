@@ -39,6 +39,7 @@ const SITE_BY_HOST = {
 };
 
 const STATES = new Set(['granted', 'denied', 'revoked']);
+const BANNER_REGIONS = new Set(['us', 'eu_uk']);
 // 'email' rows are entered by staff for emailed requests, not via this endpoint.
 const METHODS = new Set(['banner', 'footer', 'settings', 'gpc']);
 const ANON_RE = /^[A-Za-z0-9-]{16,64}$/;
@@ -154,6 +155,9 @@ function validateBody(body, headers) {
       denial_reason: null,
       policy_version: policyVersion,
       banner_version: bannerVersion,
+      // Client's notice region (what the visitor saw). Whitelisted; anything else -> null
+      // so a consent record is never lost. Geo columns below stay server-derived.
+      banner_region: BANNER_REGIONS.has(body.banner_region) ? body.banner_region : null,
       site: siteFrom(headers),
       schema_version: 1,
       page_path: sanitizePagePath(body.page_path),
