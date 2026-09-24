@@ -29,7 +29,11 @@ export function Signup() {
   const leadToken = searchParams.get('lead')
   const leadEmail = searchParams.get('email')
   const leadName = searchParams.get('name')
-  const addSport = searchParams.get('add')
+  // ?add= may have been removed from the address bar before the Meta PageView
+  // (router still has it in memory; sessionStorage covers a reload).
+  const addSport = searchParams.get('add') ?? (() => {
+    try { return sessionStorage.getItem('romrx.signup.add') } catch { return null }
+  })()
   const sportKey = (addSport ?? '').toLowerCase()
   const SPORT_PROTOCOL_LABELS: Record<string, string> = {
     bjj: 'Position Readiness Protocol\u2122 by ROMRx+BJJ',
