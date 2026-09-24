@@ -4,8 +4,14 @@
  * public.compute_joint_scores() (persisted joint_scores.score).
  *
  * Product truth: joint_scores 1 → Needs focus, 2 → Building, 3 → Steady.
- * Chips (space-tight): Focus · Building · Steady
+ * SINGLE SOURCE OF TRUTH for Base bands (P0 2026-09-24): every surface (My Body
+ * header + chips + bar colours, My Protocol, results preview, Settings history,
+ * lead submit) must resolve bands through this file. Thresholds live ONLY in
+ * bandScoreFromTargetRatio (mirrors public.compute_joint_scores()). Colours come
+ * from BAND_TONE[band], never from a separate %/threshold check.
+ * Labels are exactly Needs focus · Building · Steady everywhere (chips included).
  * Progress-needed tone; never AT RISK / RESTRICTED / ELITE / Position Readiness.
+ * Guarded by src/lib/mobilityBands.test.ts (npm test).
  */
 
 export const BAND_FULL = {
@@ -14,11 +20,8 @@ export const BAND_FULL = {
   3: 'Steady',
 } as const
 
-export const BAND_CHIP = {
-  1: 'Focus',
-  2: 'Building',
-  3: 'Steady',
-} as const
+/** Chips use the exact same labels as the full band (no 'Focus' shorthand). */
+export const BAND_CHIP = BAND_FULL
 
 export type BandScore = 1 | 2 | 3
 
@@ -84,28 +87,6 @@ export function bandScoreFromTargetRatio(worse: number, target: number): BandSco
   const ratio = worse / target
   if (ratio >= 1.0) return 3
   if (ratio >= 0.9) return 2
-  return 1
-}
-
-/** Map a measured value against riskBelow / normalMin (legacy FE / PRS chrome). */
-export function bandScoreFromThresholds(
-  val: number,
-  riskBelow: number,
-  normalMin: number,
-): BandScore {
-  if (val < riskBelow) return 1
-  if (val < normalMin) return 2
-  return 3
-}
-
-/**
- * Map aggregate 0-100 mobility score (legacy PRS) onto the locked 3 bands.
- * >=70 Steady, >=40 Building, else Needs focus.
- * Do NOT use for My Body overall when joint_scores exist.
- */
-export function bandScoreFromAggregate(score: number): BandScore {
-  if (score >= 70) return 3
-  if (score >= 40) return 2
   return 1
 }
 
@@ -197,24 +178,33 @@ export const BAND_DESC: Record<BandScore, string> = {
 }
 
 /** Tailwind tone tokens for band chips / chrome (cobalt locked). */
-export const BAND_TONE: Record<BandScore, { color: string; bg: string; ring: string; chip: string }> = {
+export const BAND_TONE: Record<
+  BandScore,
+  { color: string; bg: string; ring: string; chip: string; label: string; bar: string }
+> = {
   1: {
     color: 'text-red-700',
     bg: 'bg-red-50',
     ring: 'border-red-400/40',
     chip: 'bg-red-50 text-red-700 border-red-200',
+    label: 'text-red-700',
+    bar: 'bg-red-400',
   },
   2: {
     color: 'text-yellow-700',
     bg: 'bg-yellow-50',
     ring: 'border-yellow-400/40',
     chip: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    label: 'text-yellow-700',
+    bar: 'bg-yellow-500',
   },
   3: {
     color: 'text-cobalt',
     bg: 'bg-cobalt-light',
     ring: 'border-cobalt/40',
     chip: 'bg-cobalt-light text-cobalt border-cobalt/20',
+    label: 'text-cobalt-ink',
+    bar: 'bg-cobalt',
   },
 }
 
@@ -224,3 +214,90 @@ export const BAND_LEGEND: ReadonlyArray<{ score: BandScore; full: string; chip: 
   { score: 2, full: BAND_FULL[2], chip: BAND_CHIP[2] },
   { score: 3, full: BAND_FULL[3], chip: BAND_CHIP[3] },
 ]
+
+// ---------------------------------------------------------------------------
+// Assessment-level resolvers (shared by every surface)
+// ---------------------------------------------------------------------------
+
+/** Joints scored by public.compute_joint_scores() (same columns, same order). */
+export const ASSESSMENT_JOINTS: ReadonlyArray<{ key: string; l?: string; r?: string; single?: string }> = [
+  { key: 'hip_er', l: 'hip_er_l', r: 'hip_er_r' },
+  { key: 'hip_ir', l: 'hip_ir_l', r: 'hip_ir_r' },
+  { key: 'hip_abd', l: 'hip_abd_l', r: 'hip_abd_r' },
+  { key: 'hip_flex', l: 'hip_flex_l', r: 'hip_flex_r' },
+  { key: 'shoulder_er', l: 'shoulder_er_l', r: 'shoulder_er_r' },
+  { key: 'shoulder_flex', l: 'shoulder_flex_l', r: 'shoulder_flex_r' },
+  { key: 'ankle_df', l: 'ankle_df_l', r: 'ankle_df_r' },
+  { key: 'cervical_rot', l: 'cervical_rot_l', r: 'cervical_rot_r' },
+  { key: 'cervical_lat', l: 'cervical_lat_l', r: 'cervical_lat_r' },
+  { key: 'lumbar_flex', single: 'lumbar_flex' },
+  { key: 'lumbar_ext', single: 'lumbar_ext' },
+  { key: 'cervical_flex', single: 'cervical_flex' },
+  { key: 'cervical_ext', single: 'cervical_ext' },
+]
+
+function toNum(v: unknown): number | null {
+  if (v == null || v === '') return null
+  const n = typeof v === 'number' ? v : Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
+/**
+ * Per-joint bands for one assessment. Persisted joint_scores win; any joint
+ * without a row is scored with the identical compute_joint_scores() formula.
+ */
+export function jointBandsForAssessment(
+  assessment: object | null | undefined,
+  jointScores?: JointScoreRow[] | null,
+): Map<string, BandScore> {
+  const map = bandMapFromJointScores(jointScores)
+  if (!assessment) return map
+  const rec = assessment as Record<string, unknown>
+  for (const j of ASSESSMENT_JOINTS) {
+    if (map.has(j.key)) continue
+    const band = bandForJointKey(j.key, map, {
+      left: j.l ? toNum(rec[j.l]) : null,
+      right: j.r ? toNum(rec[j.r]) : null,
+      midline: j.single ? toNum(rec[j.single]) : null,
+    })
+    if (band != null) map.set(j.key, band)
+  }
+  return map
+}
+
+/**
+ * THE overall Mobility band for an assessment (My Body, My Protocol, results
+ * preview, Settings history, lead submit): worst joint band, same as ROMBot CBase.
+ * null only when no joint is measured.
+ */
+export function overallBandForAssessment(
+  assessment: object | null | undefined,
+  jointScores?: JointScoreRow[] | null,
+): BandScore | null {
+  return worstBandScore([...jointBandsForAssessment(assessment, jointScores).values()])
+}
+
+/** Copy says "top three problem areas" — never show more than this. */
+export const TOP_PROBLEM_AREAS_MAX = 3
+
+/**
+ * Top problem areas from assessments.worst_joints (compute-tiers writes 5,
+ * side-specific keys, worst first). Dedupe by joint (keep the worse side that
+ * appears first) and cap at TOP_PROBLEM_AREAS_MAX.
+ */
+export function topProblemAreas(
+  worstJoints: ReadonlyArray<string> | null | undefined,
+  max: number = TOP_PROBLEM_AREAS_MAX,
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const k of worstJoints ?? []) {
+    if (!k) continue
+    const base = jointKeyBase(k)
+    if (seen.has(base)) continue
+    seen.add(base)
+    out.push(k)
+    if (out.length >= max) break
+  }
+  return out
+}

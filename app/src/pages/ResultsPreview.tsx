@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { Spinner } from '../components/Spinner'
 import { AlertTriangle, CheckCircle, Unlock, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
-import { bandScoreFromAggregate, bandFull, bandChip, BAND_DESC } from '../lib/mobilityBands'
+import { bandFull, bandChip, overallBandForAssessment, BAND_DESC, BAND_TONE, type BandScore } from '../lib/mobilityBands'
 import { track } from '../lib/track'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
@@ -71,12 +71,10 @@ function computePRS(assessment: Record<string, number | null>): number {
   return Math.max(0, Math.min(100, Math.round(score)))
 }
 
-function getPRSTier(score: number): { label: string; color: string; bg: string; desc: string } {
-  // Locked Base bands: 1 Needs focus / 2 Building / 3 Steady (progress-needed tone)
-  const band = bandScoreFromAggregate(score)
-  if (band === 3) return { label: bandFull(3), color: 'text-cobalt', bg: 'bg-cobalt-light', desc: BAND_DESC[3] }
-  if (band === 2) return { label: bandFull(2), color: 'text-yellow-700', bg: 'bg-yellow-50', desc: BAND_DESC[2] }
-  return { label: bandFull(1), color: 'text-red-700', bg: 'bg-red-50', desc: BAND_DESC[1] }
+function getBandTier(band: BandScore): { label: string; color: string; bg: string; ring: string; desc: string } {
+  // Locked Base bands via lib/mobilityBands (single source of truth, same as My Body / My Protocol)
+  const tone = BAND_TONE[band]
+  return { label: bandFull(band), color: tone.color, bg: tone.bg, ring: tone.ring, desc: BAND_DESC[band] }
 }
 
 function getTopAsymmetries(assessment: Record<string, number | null>): Array<{ joint: string; gap: number; left: number; right: number }> {
@@ -236,7 +234,7 @@ export function ResultsPreview() {
   )
 
   const prs = computePRS(assessment)
-  const tier = getPRSTier(prs)
+  const tier = getBandTier(overallBandForAssessment(assessment) ?? 3)
   const asymmetries = getTopAsymmetries(assessment)
 
   return (
@@ -252,7 +250,7 @@ export function ResultsPreview() {
         {/* PRS Score Card */}
         <div className="bg-white/5 rounded-card border border-cobalt/30 p-6 text-center">
           <p className="text-xs font-bold text-cobalt-light uppercase tracking-widest mb-4">Mobility band</p>
-          <div className={cn('inline-flex items-center justify-center w-32 h-32 rounded-full border-4 mb-4', tier.bg, tier.color === 'text-cobalt' ? 'border-cobalt/40' : tier.color === 'text-yellow-700' ? 'border-yellow-400/40' : 'border-red-400/40')}>
+          <div className={cn('inline-flex items-center justify-center w-32 h-32 rounded-full border-4 mb-4', tier.bg, tier.ring)}>
             <div>
               <span className={cn('font-display font-bold text-5xl leading-none block', tier.color)}>{prs}</span>
               <span className={cn('text-xs font-bold uppercase tracking-wide', tier.color)}>/ 100</span>

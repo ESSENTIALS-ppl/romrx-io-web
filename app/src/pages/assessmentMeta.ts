@@ -1,3 +1,5 @@
+import { JOINT_SCORE_TARGETS, bandScoreFromTargetRatio, jointKeyBase, type BandScore } from '../lib/mobilityBands'
+
 export interface Field {
   key: string
   label: string
@@ -29,11 +31,16 @@ export const SETUP_STEPS = [
 ]
 
 
-export function getScore(val: string, field: Field) {
+/**
+ * Live band chip while measuring. Uses the single Base band source of truth
+ * (lib/mobilityBands → compute_joint_scores targets) so the chip matches
+ * My Body / My Protocol after submit. null = no chip (blank or unscored joint).
+ */
+export function getScore(val: string, field: Field): BandScore | null {
   const n = parseFloat(val)
   if (isNaN(n) || val === '') return null
-  if (n < field.riskBelow) return 'risk'
-  if (n >= field.normalLow) return 'functional'
-  return 'yellow'
+  const target = JOINT_SCORE_TARGETS[jointKeyBase(field.key)]
+  if (target == null) return null
+  return bandScoreFromTargetRatio(n, target)
 }
 

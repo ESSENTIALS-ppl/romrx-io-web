@@ -1,12 +1,14 @@
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { type Field, getScore } from './assessmentMeta'
+import { bandFull, BAND_TONE } from '../lib/mobilityBands'
 
 // -- Single field input ----------------------------------------------------------
 export function MeasureInput({ field, value, onChange }: {
   field: Field; value: string; onChange: (k: string, v: string) => void
 }) {
   const score = getScore(value, field)
+  const tone = score != null ? BAND_TONE[score] : null
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
@@ -21,26 +23,15 @@ export function MeasureInput({ field, value, onChange }: {
           placeholder=""
           className={cn(
             'w-24 px-3 py-2.5 rounded-card border text-sm text-center font-mono font-bold transition-all focus:outline-none',
-            score === 'risk' ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-400' :
-            score === 'functional' ? 'border-cobalt/40 bg-cobalt/5 text-cobalt focus:border-cobalt' :
-            score === 'yellow' ? 'border-yellow-300 bg-yellow-50 text-yellow-700 focus:border-yellow-400' :
-            'border-cobalt/10 bg-surface focus:border-cobalt focus:bg-white'
+            tone ? cn(tone.chip, 'focus:border-cobalt') : 'border-cobalt/10 bg-surface focus:border-cobalt focus:bg-white'
           )}
         />
         <span className="text-sm text-slate-500">{field.unit}</span>
-        {score === 'risk' && (
-          <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded-full">
-            <AlertTriangle size={10} /> Focus
-          </span>
-        )}
-        {score === 'functional' && (
-          <span className="flex items-center gap-1 text-xs font-semibold text-cobalt bg-cobalt-light px-2 py-0.5 rounded-full">
-            <CheckCircle2 size={10} /> Steady
-          </span>
-        )}
-        {score === 'yellow' && (
-          <span className="flex items-center gap-1 text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full">
-            Building
+        {score != null && tone && (
+          <span className={cn('flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border', tone.chip)}>
+            {score === 1 && <AlertTriangle size={10} />}
+            {score === 3 && <CheckCircle2 size={10} />}
+            {bandFull(score)}
           </span>
         )}
       </div>

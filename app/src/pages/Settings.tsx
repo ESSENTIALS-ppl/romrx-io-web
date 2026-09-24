@@ -9,7 +9,7 @@ import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
 import { FeedbackWidget } from '../components/FeedbackWidget'
 import { cn } from '../lib/cn'
-import { bandScoreFromAggregate, bandFull } from '../lib/mobilityBands'
+import { bandFull, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
 import {
   Save, Loader2, ExternalLink, LogOut, Mail, HelpCircle, ChevronRight,
   ClipboardList, TrendingUp, Bell, KeyRound, Trash2, MessageSquarePlus,
@@ -60,12 +60,10 @@ function computePRS(a: Assessment): number {
   return Math.max(0, Math.min(100, Math.round(score)))
 }
 
-function getPRSTier(s: number) {
-  // Locked Base bands: 1 Needs focus / 2 Building / 3 Steady (cobalt tokens)
-  const band = bandScoreFromAggregate(s)
-  if (band === 3) return { label: bandFull(3), color: 'text-cobalt', bg: 'bg-cobalt-light' }
-  if (band === 2) return { label: bandFull(2), color: 'text-amber-700', bg: 'bg-amber-50' }
-  return { label: bandFull(1), color: 'text-red-700', bg: 'bg-red-50' }
+function getBandTier(band: BandScore) {
+  // Locked Base bands via lib/mobilityBands (single source of truth)
+  const tone = BAND_TONE[band]
+  return { label: bandFull(band), color: tone.color, bg: tone.bg }
 }
 
 const GENDERS = [
@@ -476,7 +474,7 @@ export function Settings() {
             <div className="divide-y divide-slate-100">
               {history.map((a, i) => {
                 const prs = computePRS(a)
-                const tier = getPRSTier(prs)
+                const tier = getBandTier(overallBandForAssessment(a) ?? 3)
                 return (
                   <div key={a.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                     <div className="flex items-center gap-3">
