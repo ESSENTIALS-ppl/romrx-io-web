@@ -517,30 +517,6 @@ export function jointDisplayRowsForAssessment(
   })
 }
 
-/**
- * Radar data for My Body: one row per BASE_DISPLAY_JOINTS entry (same order as
- * the bars), `v0` = the current assessment's per-joint % (identical to the bar
- * %), `v1..` = older assessments (formula bands, no persisted rows), `band` =
- * the current joint band (dot colour + tooltip). Scale is 0..100.
- */
-export function radarDataForAssessments(
-  assessments: ReadonlyArray<{ id?: string } & object>,
-  current: { id?: string } & object,
-  jointScores?: JointScoreRow[] | null,
-): Array<Record<string, string | number | null>> {
-  const currentRows = jointDisplayRowsForAssessment(current, jointScores)
-  const perAssessment = assessments.map(a =>
-    a === current || (a.id != null && a.id === current.id)
-      ? currentRows
-      : jointDisplayRowsForAssessment(a, null),
-  )
-  return currentRows.map((cur, idx) => {
-    const row: Record<string, string | number | null> = { joint: cur.short, key: cur.key, band: cur.band }
-    perAssessment.forEach((rows, i) => { row[`v${i}`] = rows[idx].pct })
-    return row
-  })
-}
-
 /** Hex band colours for SVG (radar dots); same hues as BAND_TONE[band].badge. */
 export const BAND_HEX: Record<BandScore, string> = {
   1: '#DC2626', // red-600
@@ -579,4 +555,70 @@ export function sideBandsForJoint(
 /** Text colour class for a side / single value: BAND_TONE colour, neutral when unmeasured. */
 export function valueToneClass(band: BandScore | null | undefined): string {
   return band != null ? BAND_TONE[band].color : 'text-slate-500'
+}
+
+// ---------------------------------------------------------------------------
+// Radar v2 (Jim 2026-09-24): Left and Right outlines, each side as % of the
+// Base target, scored with the SAME per-side band rule as the My Protocol L/R
+// colours (sideBandsForJoint). The worse side equals the bar % exactly.
+// ---------------------------------------------------------------------------
+
+/** % of Base target for ONE side, floored and clamped into that side's band. */
+export function sidePercent(jointKey: string, value: number | null | undefined, sideBand: BandScore | null): number | null {
+  const target = JOINT_SCORE_TARGETS[jointKeyBase(jointKey)]
+  const v = value == null ? null : Number(value)
+  const raw = cappedRatioPct(v, target)
+  if (raw == null || v == null) return null
+  const b = sideBand ?? bandScoreFromTargetRatio(v, target)
+  return clampPercentToBand(Math.floor(raw), b)
+}
+
+export interface RadarSideRow {
+  key: string
+  label: string
+  short: string
+  /** true for cervical / lumbar single-value joints: one value on both lines. */
+  midline: boolean
+  measured: boolean
+  /** Plotted Left / Right % (a missing side is drawn at the other side's value). */
+  left: number
+  right: number
+  /** Measured side %, null when that side was not measured (tooltip shows "-"). */
+  leftPct: number | null
+  rightPct: number | null
+  leftBand: BandScore | null
+  rightBand: BandScore | null
+  /** Worse-side % = the Joint Breakdown bar % (jointPercent). */
+  worse: number
+  /** Joint band (card / chip / bar band). */
+  band: BandScore | null
+}
+
+/** One row per BASE_DISPLAY_JOINTS entry, same order as the bars. */
+export function radarSideRowsForAssessment(
+  assessment: object | null | undefined,
+  jointScores?: JointScoreRow[] | null,
+): RadarSideRow[] {
+  return jointDisplayRowsForAssessment(assessment, jointScores).map(r => {
+    const isMid = BASE_DISPLAY_JOINTS.find(j => j.key === r.key)?.single != null
+    if (isMid) {
+      const measured = r.midline != null
+      return {
+        key: r.key, label: r.label, short: r.short, midline: true, measured,
+        left: r.pct, right: r.pct,
+        leftPct: measured ? r.pct : null, rightPct: measured ? r.pct : null,
+        leftBand: r.band, rightBand: r.band, worse: r.pct, band: r.band,
+      }
+    }
+    const sb = sideBandsForJoint(r.key, { left: r.left, right: r.right }, r.band)
+    const lp = sidePercent(r.key, r.left, sb.left)
+    const rp = sidePercent(r.key, r.right, sb.right)
+    const measured = lp != null || rp != null
+    return {
+      key: r.key, label: r.label, short: r.short, midline: false, measured,
+      left: lp ?? rp ?? 0, right: rp ?? lp ?? 0,
+      leftPct: lp, rightPct: rp, leftBand: sb.left, rightBand: sb.right,
+      worse: r.pct, band: r.band,
+    }
+  })
 }

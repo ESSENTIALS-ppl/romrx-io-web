@@ -5,7 +5,7 @@ import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { EmptyState } from '../components/EmptyState'
 import { Spinner } from '../components/Spinner'
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { BaseRadar } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
 import {
   bandFull,
@@ -13,7 +13,7 @@ import {
   jointBandsForAssessment,
   jointKeyBase,
   jointDisplayRowsForAssessment,
-  radarDataForAssessments,
+  radarSideRowsForAssessment,
   formatMeasure,
   formatScoreBand,
   mobilityScoreForAssessment,
@@ -22,7 +22,6 @@ import {
   BAND_DESC,
   BAND_TONE,
   BAND_LEGEND,
-  BAND_HEX,
   type BandScore,
   type JointDisplayRow,
 } from '../lib/mobilityBands'
@@ -79,28 +78,10 @@ function getBandTier(band: BandScore) {
   }
 }
 
-// Base radar + Joint Breakdown render the SAME rows (lib/mobilityBands
-// jointDisplayRowsForAssessment): same joints, same order, same per-joint %
-// (worse side / JOINT_SCORE_TARGETS, floored, clamped into the joint's band),
-// same band (radarDataForAssessments). Radar scale is fixed 0..100 so the
-// outer ring = Steady (100%). No elite sport-pack targets on Base (Fix A, Jim LOCK 2026-09-24).
-// Radar series colours: neutral slate so no series reads as a band colour.
-// Band lives on the current assessment's dots (BAND_HEX) and in the tooltip.
-const RADAR_COLORS = ['#334155', '#94a3b8', '#64748b', '#cbd5e1']
-
-function BandDot(props: { cx?: number; cy?: number; payload?: { band?: BandScore | null } }) {
-  const { cx, cy, payload } = props
-  if (cx == null || cy == null) return <g />
-  const band = payload?.band ?? null
-  return (
-    <circle
-      cx={cx} cy={cy} r={3.5}
-      fill={band != null ? BAND_HEX[band] : '#94a3b8'}
-      stroke="#fff" strokeWidth={1}
-      data-band={band ?? ''}
-    />
-  )
-}
+// Base radar + Joint Breakdown use the SAME rows (lib/mobilityBands):
+// bars = jointDisplayRowsForAssessment, radar = radarSideRowsForAssessment
+// (Left/Right outlines; worse side === bar %, same joints, same order, same band).
+// No elite sport-pack targets on Base (Fix A, Jim LOCK 2026-09-24).
 
 function JointBar({ row }: { row: JointDisplayRow }) {
   const { label, left, right, midline, band: jointBand, pct, unit } = row
@@ -165,11 +146,7 @@ export function MyBody() {
     />
   )
 
-  const radarAssessments = assessments.length > 0 ? assessments : [assessment]
-  const radarData = radarDataForAssessments(radarAssessments, assessment, jointScores)
-  const RADAR_LABELS = radarAssessments.map(a =>
-    new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
-  )
+  const radarRows = radarSideRowsForAssessment(assessment, jointScores)
   const prs = mobilityScoreForAssessment(assessment, jointScores)
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
   const jointRows = jointDisplayRowsForAssessment(assessment, jointScores)
@@ -282,41 +259,9 @@ export function MyBody() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <SectionCard title="ROM Profile">
-          <ResponsiveContainer width="100%" height={280}>
-            <RadarChart data={radarData} margin={{ top: 4, right: 20, bottom: 4, left: 20 }}>
-              <PolarGrid stroke="#dbeafe" />
-              <PolarAngleAxis dataKey="joint" tick={{ fontSize: 9, fill: '#475569', fontFamily: 'Inter Tight' }} />
-              {/* Fixed 0..100 scale: outer ring = Steady (100% of Base target), never auto-scaled to the data */}
-              <PolarRadiusAxis domain={[0, 100]} ticks={[50, 90, 100]} tick={false} axisLine={false} />
-              {[...RADAR_LABELS].reverse().map((label, ri) => {
-                const i = RADAR_LABELS.length - 1 - ri
-                return (
-                  <Radar
-                    key={`${label}-${i}`}
-                    name={label}
-                    dataKey={`v${i}`}
-                    stroke={RADAR_COLORS[i]}
-                    fill={RADAR_COLORS[i]}
-                    fillOpacity={i === 0 ? 0.08 : 0}
-                    strokeWidth={i === 0 ? 2 : 1.5}
-                    strokeDasharray={i === 0 ? undefined : '5 3'}
-                    dot={i === 0 ? <BandDot /> : false}
-                    isAnimationActive={false}
-                  />
-                )
-              })}
-              <Tooltip
-                contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #dbeafe', fontFamily: 'Inter Tight' }}
-                formatter={(v, name, item) => {
-                  const band = (item?.payload as { band?: BandScore | null } | undefined)?.band
-                  return [name === RADAR_LABELS[0] && band != null ? `${v}% \u00B7 ${bandFull(band)}` : `${v}%`, name]
-                }}
-              />
-              {RADAR_LABELS.length > 1 && <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />}
-            </RadarChart>
-          </ResponsiveContainer>
-          <p className="text-[11px] text-slate-500 mt-1 text-center">
-            Worse side, % of your Base target. Outer ring is Steady (100%), next ring in is 90%. Dot color shows the band.
+          <BaseRadar rows={radarRows} />
+          <p className="text-[11px] text-slate-500 mt-1.5 text-center">
+            Each line is one side of your body, as a % of your Base target. The dashed circle is Steady. Dents and gaps between the lines show where to focus.
           </p>
         </SectionCard>
 
