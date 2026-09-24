@@ -21,7 +21,7 @@ import {
 
 /** Hard off until Field PASS + real credentials. Do not flip via env alone. */
 /** Flip to true only after Reid Field PASS + real IDs. Default false. */
-export const META_ATTRIBUTION_ENABLED: boolean = false
+export const META_ATTRIBUTION_ENABLED: boolean = true
 
 const PIXEL_ID = (import.meta.env.VITE_META_PIXEL_ID as string | undefined)?.trim() || ''
 const CAPI_ENDPOINT = '/api/attribution/meta'
@@ -37,12 +37,42 @@ export type MetaEventName = 'PageView' | 'Lead' | 'CompleteRegistration'
 
 const ALLOWED_EVENTS = new Set<MetaEventName>(['PageView', 'Lead', 'CompleteRegistration'])
 
+/**
+ * Meta only runs on public funnel routes (router paths, base '/app/').
+ * Assessment, results, dashboard (My Body / Protocol / Fuel / Sport / ROMBot),
+ * unlock tokens, and auth callbacks never send Pixel or CAPI.
+ */
+const META_SAFE_PATHS = [/^\/?$/, /^\/signup\/?$/, /^\/signup\/[a-z0-9-]+\/?$/i, /^\/login\/?$/]
+/** Query keys allowed in URLs Meta can see. Anything else (email, name, lead, token, code) blocks Meta. */
+const META_SAFE_QUERY = new Set([
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'sport', 'ref',
+])
+
+export function isMetaSafeLocation(loc: { pathname: string; search: string } | null =
+  typeof window !== 'undefined' ? window.location : null): boolean {
+  if (!loc) return false
+  const path = loc.pathname.replace(/^\/app(?=\/|$)/, '') || '/'
+  if (!META_SAFE_PATHS.some((re) => re.test(path))) return false
+  const params = new URLSearchParams(loc.search || '')
+  for (const key of params.keys()) {
+    if (!META_SAFE_QUERY.has(key.toLowerCase())) return false
+  }
+  return true
+}
+
+/** Origin + path only. Query and hash never go to CAPI. */
+function metaSourceUrl(): string {
+  if (typeof window === 'undefined') return 'https://romrx.io'
+  return `${window.location.origin}${window.location.pathname}`.slice(0, 500)
+}
+
 function canSendMeta(consent: ConsentState = effectiveConsentState()): boolean {
   return (
     META_ATTRIBUTION_ENABLED === true &&
     consent === 'granted' &&
     isAdsMeasurementAllowed() &&
-    !!PIXEL_ID
+    !!PIXEL_ID &&
+    isMetaSafeLocation()
   )
 }
 
@@ -65,6 +95,10 @@ function ensurePixelLoaded(): boolean {
     const n: any = function (...args: unknown[]) {
       n.callMethod ? n.callMethod(...args) : n.queue.push(args)
     }
+    // SPA: never auto-fire PageView on pushState (would hit dashboard/results
+    // routes without event_id). We fire PageView ourselves on safe routes only.
+    n.disablePushState = true
+    n.allowDuplicatePageViews = true
     if (!w._fbq) w._fbq = n
     n.push = n
     n.loaded = true
@@ -143,7 +177,7 @@ export function trackMetaEvent(
   if (!canSendMeta(consent)) return null
 
   const eventId = options.eventId || newEventId()
-  const eventSourceUrl = typeof window !== 'undefined' ? window.location.href.split('#')[0] : 'https://romrx.io'
+  const eventSourceUrl = metaSourceUrl()
 
   if (!ensurePixelLoaded()) return null
 

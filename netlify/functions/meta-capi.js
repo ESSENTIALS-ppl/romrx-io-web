@@ -8,7 +8,7 @@
 'use strict';
 
 // HARD OFF until Reid Field PASS + Jim credentials via Grant.
-const META_ATTRIBUTION_ENABLED = false;
+const META_ATTRIBUTION_ENABLED = true;
 
 const ALLOWED_EVENTS = new Set(['PageView', 'Lead', 'CompleteRegistration']);
 const ALLOWED_ORIGINS = new Set([
@@ -59,6 +59,16 @@ exports.handler = async (event) => {
     return json(200, { ok: true, dispatched: false, reason: 'attribution_disabled' }, origin);
   }
 
+  // Server-side GPC: a browser sending Sec-GPC: 1 is opted out, whatever the body says.
+  const gpcHeader = String(event.headers['sec-gpc'] || event.headers['Sec-GPC'] || '').trim();
+  if (gpcHeader === '1') {
+    return json(200, { ok: true, dispatched: false, reason: 'gpc_opt_out' }, origin);
+  }
+  // Only our own pages may trigger CAPI.
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return json(403, { ok: false, error: 'origin_not_allowed' }, origin);
+  }
+
   const pixelId = (process.env.META_PIXEL_ID || process.env.VITE_META_PIXEL_ID || '').trim();
   const token = (process.env.META_CAPI_TOKEN || '').trim();
   if (!pixelId || !token) {
@@ -76,9 +86,17 @@ exports.handler = async (event) => {
   const eventId = typeof payload.event_id === 'string' ? payload.event_id.slice(0, 128) : '';
   const consentState = payload.consent_state;
   const consentVersion = payload.consent_version;
-  const eventSourceUrl = typeof payload.event_source_url === 'string'
-    ? payload.event_source_url.slice(0, 500)
-    : 'https://romrx.io';
+  // Origin + path only on romrx.io. Query/hash stripped so no email, lead token,
+  // or other PII can ride along to Meta.
+  let eventSourceUrl = 'https://romrx.io/';
+  if (typeof payload.event_source_url === 'string') {
+    try {
+      const u = new URL(payload.event_source_url);
+      if (u.hostname === 'romrx.io' || u.hostname === 'www.romrx.io') {
+        eventSourceUrl = `${u.origin}${u.pathname}`.slice(0, 500);
+      }
+    } catch { /* keep default */ }
+  }
 
   if (!ALLOWED_EVENTS.has(eventName) || !eventId) {
     return json(400, { ok: false, error: 'invalid_event' }, origin);
