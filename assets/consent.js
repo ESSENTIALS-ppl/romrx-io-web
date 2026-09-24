@@ -106,10 +106,10 @@
 
     var isEu = mode === 'eu_uk';
     var title = isEu ? 'Ads cookies' : 'Cookies and ads measurement';
-    // 1A Pixel-PARKED US body (Jim GO 2026-09-22). HOLD 1B Pixel-ON variant.
+    // US opt-out copy: Stacy exact text 2026-09-24, Jim GO. EU/UK unchanged.
     var body = isEu
       ? 'We use Meta Pixel cookies and limited event data to measure ads. This is optional. Essential cookies still work either way.'
-      : 'We use essential cookies so ROMRx works. We do not sell your personal information. When we reach people who can really use this, California law may treat some of that as a "sale" or "share." Don\'t Sell or Share turns those uses off. Reject declines anything that is not essential.';
+      : 'We use essential cookies so ROMRx works. On signup pages, we also use Meta Pixel cookies and limited event data to measure our ads. We do not sell your personal information, but California law may call this a "sale" or "share." Reject turns ads measurement off for this browser. Essential cookies still work either way.';
 
     var el = document.createElement('div');
     el.id = 'rx-consent-banner';
@@ -141,26 +141,29 @@
         optOutConfirm();
       });
     } else {
-      // US 1A: Reject | Don't Sell or Share | Privacy Policy - equal weight. Both opt-out actions.
+      // US: Accept | Reject | Privacy Policy, equal weight (11 CCR 7004). Footer DNS link carries CCPA 1798.135.
       el.innerHTML =
         '<p class="rx-consent-title" id="rx-consent-title"></p>' +
         '<p class="rx-consent-body" id="rx-consent-body"></p>' +
         '<div class="rx-consent-actions">' +
+        '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="grant"></button>' +
         '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="reject"></button>' +
-        '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="deny"></button>' +
         '<a class="rx-consent-btn rx-consent-btn-equal rx-consent-btn-link" href="' + PRIVACY_URL + '">Privacy Policy</a>' +
         '</div>';
       el.querySelector('#rx-consent-title').textContent = title;
       el.querySelector('#rx-consent-body').textContent = body;
+      el.querySelector('[data-rx-consent="grant"]').textContent = 'Accept';
       el.querySelector('[data-rx-consent="reject"]').textContent = 'Reject';
-      el.querySelector('[data-rx-consent="deny"]').textContent = "Don't Sell or Share";
+      el.querySelector('[data-rx-consent="grant"]').addEventListener('click', function () {
+        writeRecord('granted'); // GPC still forces denied inside writeRecord
+        hideBanner();
+      });
       function usOptOut() {
         writeRecord('denied');
         hideBanner();
         optOutConfirm();
       }
       el.querySelector('[data-rx-consent="reject"]').addEventListener('click', usOptOut);
-      el.querySelector('[data-rx-consent="deny"]').addEventListener('click', usOptOut);
     }
 
     document.body.appendChild(el);
