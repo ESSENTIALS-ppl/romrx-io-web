@@ -8,7 +8,7 @@
 'use strict';
 
 // HARD OFF until Reid Field PASS + Jim credentials via Grant.
-const META_ATTRIBUTION_ENABLED = false;
+const META_ATTRIBUTION_ENABLED = true;
 
 const ALLOWED_EVENTS = new Set(['PageView', 'Lead', 'CompleteRegistration']);
 const ALLOWED_ORIGINS = new Set([

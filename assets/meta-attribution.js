@@ -19,7 +19,7 @@
   'use strict';
 
   // HARD OFF until Field PASS + real credentials via Grant.
-  var META_ATTRIBUTION_ENABLED = false;
+  var META_ATTRIBUTION_ENABLED = true;
 
   // Public Pixel ID (Jim via Grant 2026-09-24). Inert while the hard flag is false.
   var DEFAULT_PIXEL_ID = '2284396799046573';
