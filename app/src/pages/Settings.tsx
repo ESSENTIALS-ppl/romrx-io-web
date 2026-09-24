@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -9,6 +9,9 @@ import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
 import { FeedbackWidget } from '../components/FeedbackWidget'
 import { cn } from '../lib/cn'
+import {
+  requestAccountDeletion, deletionErrorCopy, DELETION_BUTTON_LABEL, DELETION_SUCCESS_COPY,
+} from '../lib/accountDeletionRequest'
 import { bandFull, formatScoreBand, mobilityScoreForAssessment, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
 import {
   Save, Loader2, ExternalLink, LogOut, Mail, HelpCircle, ChevronRight,
@@ -115,6 +118,9 @@ export function Settings() {
   const [showDelete, setShowDelete] = useState(false)
   const [deleteText, setDeleteText] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [deleteDone, setDeleteDone] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const deleteInFlight = useRef(false)
 
   // ── Hydrate profile fields ─────────────────────────────────────────────
   useEffect(() => {
@@ -256,23 +262,23 @@ export function Settings() {
     setConfirmPw('')
   }
 
-  // ── Delete account ─────────────────────────────────────────────────────
+  // ── Request account deletion ───────────────────────────────────────────
+  // Emails privacy@romrx.io via the request-account-deletion edge function.
+  // Nothing is deleted or canceled here, and the user stays signed in.
   const handleDelete = async () => {
-    if (!user || deleteText !== 'DELETE') return
+    if (!user || deleteText !== 'DELETE' || deleteDone || deleteInFlight.current) return
+    deleteInFlight.current = true
     setDeleting(true)
+    setDeleteError(null)
     try {
-      // Soft-signal via feedback + sign out. Actual hard delete is a support-mediated action.
-      await supabase.functions.invoke('submit-feedback', {
-        body: {
-          category: 'general',
-          message: `Account deletion requested by ${user.email} (id: ${user.id})`,
-          sport: 'base',
-          page_url: '/settings',
-        },
-      })
-      await signOut()
-      window.location.href = '/'
+      const result = await requestAccountDeletion(
+        (name, opts) => supabase.functions.invoke(name, opts),
+        'romrx.io',
+      )
+      if (result.ok) setDeleteDone(true)
+      else setDeleteError(deletionErrorCopy(result.reason))
     } finally {
+      deleteInFlight.current = false
       setDeleting(false)
     }
   }
@@ -596,8 +602,8 @@ export function Settings() {
           >
             <Trash2 size={15} className="shrink-0" />
             <span className="flex-1 text-left">
-              Delete account
-              <span className="block text-xs font-normal mt-0.5 opacity-70">Closes your account and cancels access</span>
+              {DELETION_BUTTON_LABEL}
+              <span className="block text-xs font-normal mt-0.5 opacity-70">Sends a deletion request to our privacy team</span>
             </span>
             <ChevronRight size={14} />
           </button>
@@ -612,35 +618,54 @@ export function Settings() {
               <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center shrink-0">
                 <Trash2 size={16} className="text-red-700" />
               </div>
-              <h3 className="font-display font-bold text-lg text-cobalt-ink">Delete account</h3>
+              <h3 className="font-display font-bold text-lg text-cobalt-ink">{DELETION_BUTTON_LABEL}</h3>
             </div>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              This closes your account and cancels your access. Aggregated data may be retained for legal, security, and analytics purposes.
-              Type <span className="font-bold text-cobalt-ink">DELETE</span> to confirm.
-            </p>
-            <input
-              type="text"
-              value={deleteText}
-              onChange={e => setDeleteText(e.target.value)}
-              placeholder="Type DELETE"
-              className="input"
-            />
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={() => { setShowDelete(false); setDeleteText('') }}
-                className="btn-ghost flex-1 text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleteText !== 'DELETE' || deleting}
-                className="flex-1 px-4 py-2.5 rounded-card bg-red-600 text-white text-sm font-medium disabled:opacity-40 hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-              >
-                {deleting && <Loader2 size={14} className="animate-spin" />}
-                {deleting ? 'Submitting...' : 'Request delete'}
-              </button>
-            </div>
+            {deleteDone ? (
+              <>
+                <p role="status" className="text-sm text-cobalt-ink leading-relaxed">{DELETION_SUCCESS_COPY}</p>
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={() => { setShowDelete(false); setDeleteText('') }}
+                    className="btn-ghost flex-1 text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  This sends a deletion request to our privacy team. Nothing is deleted right away.
+                  Type <span className="font-bold text-cobalt-ink">DELETE</span> to confirm.
+                </p>
+                <input
+                  type="text"
+                  value={deleteText}
+                  onChange={e => setDeleteText(e.target.value)}
+                  placeholder="Type DELETE"
+                  className="input"
+                />
+                {deleteError && (
+                  <p role="alert" className="text-sm text-red-700">{deleteError}</p>
+                )}
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={() => { setShowDelete(false); setDeleteText(''); setDeleteError(null) }}
+                    className="btn-ghost flex-1 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleteText !== 'DELETE' || deleting}
+                    className="flex-1 px-4 py-2.5 rounded-card bg-red-600 text-white text-sm font-medium disabled:opacity-40 hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {deleting && <Loader2 size={14} className="animate-spin" />}
+                    {deleting ? 'Sending...' : 'Send request'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
