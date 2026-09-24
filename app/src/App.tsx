@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { PageViewTracker } from './components/PageViewTracker'
@@ -19,13 +19,13 @@ import { ROMBot } from './pages/ROMBot'
 import { Settings } from './pages/Settings'
 import { CompleteProfile } from './pages/CompleteProfile'
 
-const KNOWN_SPORTS = new Set(['bjj', 'bodybuilding'])
+import { signupSportRedirectTarget } from './lib/signupRedirect'
 
 function SignupSportRedirect() {
   const { sport } = useParams<{ sport: string }>()
-  const key = (sport ?? '').toLowerCase()
-  const to = KNOWN_SPORTS.has(key) ? `/signup?add=${encodeURIComponent(key)}` : '/signup'
-  return <Navigate to={to} replace />
+  const { search, hash } = useLocation()
+  // Keep utm_* / fbclid so Meta click matching (_fbc) survives the hop.
+  return <Navigate to={signupSportRedirectTarget(sport, search, hash)} replace />
 }
 
 export default function App() {
