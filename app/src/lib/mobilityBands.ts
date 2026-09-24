@@ -200,7 +200,7 @@ export const BAND_TONE: Record<
     bg: 'bg-cobalt-light',
     ring: 'border-cobalt/40',
     chip: 'bg-cobalt-light text-cobalt border-cobalt/20',
-    label: 'text-cobalt-ink',
+    label: 'text-cobalt',
     bar: 'bg-cobalt',
     badge: 'bg-cobalt text-white border border-cobalt',
   },
@@ -440,4 +440,143 @@ export const SCORE_BAND_SEPARATOR = ' \u00B7 '
  */
 export function formatScoreBand(score: number, band: BandScore): string {
   return `${score}/100${SCORE_BAND_SEPARATOR}${bandFull(band)}`
+}
+
+// ---------------------------------------------------------------------------
+// My Body display rows (Joint Breakdown bars AND the radar), side colours,
+// units. One list, one per-joint %, one band: the radar can never disagree
+// with the bars (2026-09-24, radar + L/R follow-up to Fix A).
+// ---------------------------------------------------------------------------
+
+/**
+ * Unit each joint is MEASURED and STORED in (assessment input fields,
+ * assessmentSteps*.ts). Ankle DF is the knee-to-wall test, recorded in cm, and
+ * its JOINT_SCORE_TARGETS value (20) is cm. Everything else is degrees.
+ */
+export const JOINT_UNITS: Record<string, '°' | 'cm'> = {
+  ankle_df: 'cm',
+}
+export function jointUnit(jointKey: string): '°' | 'cm' {
+  return JOINT_UNITS[jointKeyBase(jointKey)] ?? '°'
+}
+
+/** Format a measured value or L/R gap: max 1 decimal, no float noise (1.1000000000000014 → 1.1). */
+export function formatMeasure(v: number | null | undefined): string {
+  if (v == null || !Number.isFinite(Number(v))) return '-'
+  return String(Math.round(Number(v) * 10) / 10)
+}
+
+/** Joints on My Body Joint Breakdown and the radar: same set, same order. */
+export const BASE_DISPLAY_JOINTS: ReadonlyArray<{
+  key: string; label: string; short: string; l?: string; r?: string; single?: string
+}> = [
+  { key: 'hip_er', label: 'Hip ER', short: 'Hip ER', l: 'hip_er_l', r: 'hip_er_r' },
+  { key: 'hip_ir', label: 'Hip IR', short: 'Hip IR', l: 'hip_ir_l', r: 'hip_ir_r' },
+  { key: 'hip_abd', label: 'Hip Abduction', short: 'Hip Abd', l: 'hip_abd_l', r: 'hip_abd_r' },
+  { key: 'hip_flex', label: 'Hip Flexion', short: 'Hip Flex', l: 'hip_flex_l', r: 'hip_flex_r' },
+  { key: 'shoulder_er', label: 'Shoulder ER', short: 'Shoulder ER', l: 'shoulder_er_l', r: 'shoulder_er_r' },
+  { key: 'shoulder_flex', label: 'Shoulder Flex', short: 'Shoulder Flex', l: 'shoulder_flex_l', r: 'shoulder_flex_r' },
+  { key: 'ankle_df', label: 'Ankle DF', short: 'Ankle DF', l: 'ankle_df_l', r: 'ankle_df_r' },
+  { key: 'lumbar_flex', label: 'Lumbar Flex', short: 'Lumbar Flex', single: 'lumbar_flex' },
+  { key: 'lumbar_ext', label: 'Lumbar Ext', short: 'Lumbar Ext', single: 'lumbar_ext' },
+  { key: 'cervical_lat', label: 'Cervical Lat Flex', short: 'Cerv Lat', l: 'cervical_lat_l', r: 'cervical_lat_r' },
+  { key: 'cervical_flex', label: 'Cervical Flex', short: 'Cerv Flex', single: 'cervical_flex' },
+  { key: 'cervical_ext', label: 'Cervical Ext', short: 'Cerv Ext', single: 'cervical_ext' },
+]
+
+export interface JointDisplayRow {
+  key: string
+  label: string
+  short: string
+  unit: '°' | 'cm'
+  left: number | null
+  right: number | null
+  midline: number | null
+  /** Band shown for this joint (persisted joint_scores first). null = unmeasured. */
+  band: BandScore | null
+  /** THE per-joint % (jointPercent). 0 when unmeasured (bar empty, radar at centre). */
+  pct: number
+}
+
+/** Rows for My Body Joint Breakdown AND radar (same values, same order). */
+export function jointDisplayRowsForAssessment(
+  assessment: object | null | undefined,
+  jointScores?: JointScoreRow[] | null,
+): JointDisplayRow[] {
+  const rec = (assessment ?? {}) as Record<string, unknown>
+  const bands = jointBandsForAssessment(assessment, jointScores)
+  return BASE_DISPLAY_JOINTS.map(j => {
+    const m = measuredFor(rec, j)
+    const band = bands.get(j.key) ?? null
+    return {
+      key: j.key, label: j.label, short: j.short, unit: jointUnit(j.key),
+      left: m.left, right: m.right, midline: m.midline,
+      band,
+      pct: jointPercent(j.key, m, band) ?? 0,
+    }
+  })
+}
+
+/**
+ * Radar data for My Body: one row per BASE_DISPLAY_JOINTS entry (same order as
+ * the bars), `v0` = the current assessment's per-joint % (identical to the bar
+ * %), `v1..` = older assessments (formula bands, no persisted rows), `band` =
+ * the current joint band (dot colour + tooltip). Scale is 0..100.
+ */
+export function radarDataForAssessments(
+  assessments: ReadonlyArray<{ id?: string } & object>,
+  current: { id?: string } & object,
+  jointScores?: JointScoreRow[] | null,
+): Array<Record<string, string | number | null>> {
+  const currentRows = jointDisplayRowsForAssessment(current, jointScores)
+  const perAssessment = assessments.map(a =>
+    a === current || (a.id != null && a.id === current.id)
+      ? currentRows
+      : jointDisplayRowsForAssessment(a, null),
+  )
+  return currentRows.map((cur, idx) => {
+    const row: Record<string, string | number | null> = { joint: cur.short, key: cur.key, band: cur.band }
+    perAssessment.forEach((rows, i) => { row[`v${i}`] = rows[idx].pct })
+    return row
+  })
+}
+
+/** Hex band colours for SVG (radar dots); same hues as BAND_TONE[band].badge. */
+export const BAND_HEX: Record<BandScore, string> = {
+  1: '#DC2626', // red-600
+  2: '#EAB308', // yellow-500
+  3: '#1D4ED8', // cobalt
+}
+
+/**
+ * Band for each side of a bilateral joint (My Protocol Left/Right numbers).
+ * Each side is scored with the SAME rule as the joint (side / JOINT_SCORE_TARGETS
+ * via bandScoreFromTargetRatio). The worse side always shows exactly the card's
+ * band, and the better side is never shown below it, so a side colour can never
+ * contradict the card chip even if persisted joint_scores differ from the formula.
+ */
+export function sideBandsForJoint(
+  jointKey: string,
+  sides: { left?: number | null; right?: number | null },
+  jointBand?: BandScore | null,
+): { left: BandScore | null; right: BandScore | null } {
+  const target = JOINT_SCORE_TARGETS[jointKeyBase(jointKey)]
+  const one = (v: number | null | undefined): BandScore | null =>
+    v == null || target == null || !Number.isFinite(Number(v)) ? null : bandScoreFromTargetRatio(Number(v), target)
+  let left = one(sides.left)
+  let right = one(sides.right)
+  if (jointBand != null) {
+    const l = sides.left == null ? null : Number(sides.left)
+    const r = sides.right == null ? null : Number(sides.right)
+    const leftIsWorse = l != null && (r == null || l <= r)
+    const rightIsWorse = r != null && (l == null || r <= l)
+    if (left != null) left = leftIsWorse ? jointBand : (Math.max(left, jointBand) as BandScore)
+    if (right != null) right = rightIsWorse ? jointBand : (Math.max(right, jointBand) as BandScore)
+  }
+  return { left, right }
+}
+
+/** Text colour class for a side / single value: BAND_TONE colour, neutral when unmeasured. */
+export function valueToneClass(band: BandScore | null | undefined): string {
+  return band != null ? BAND_TONE[band].color : 'text-slate-500'
 }

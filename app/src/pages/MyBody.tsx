@@ -1,20 +1,20 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
-import type { Assessment } from '../hooks/useProfile'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { EmptyState } from '../components/EmptyState'
 import { Spinner } from '../components/Spinner'
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import { cn } from '../lib/cn'
 import {
   bandFull,
   bandChip,
   jointBandsForAssessment,
   jointKeyBase,
-  jointPercent,
-  jointPercentsForAssessment,
+  jointDisplayRowsForAssessment,
+  radarDataForAssessments,
+  formatMeasure,
   formatScoreBand,
   mobilityScoreForAssessment,
   overallBandForAssessment,
@@ -22,8 +22,9 @@ import {
   BAND_DESC,
   BAND_TONE,
   BAND_LEGEND,
+  BAND_HEX,
   type BandScore,
-  type JointScoreRow,
+  type JointDisplayRow,
 } from '../lib/mobilityBands'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
 
@@ -78,56 +79,44 @@ function getBandTier(band: BandScore) {
   }
 }
 
-// Base radar + Joint Breakdown use THE shared per-joint % (lib/mobilityBands
-// jointPercent: worse side / JOINT_SCORE_TARGETS, floored, clamped into the
-// joint's band). No elite sport-pack targets on Base (Fix A, Jim LOCK 2026-09-24).
-const RADAR_JOINTS: ReadonlyArray<{ label: string; key: string }> = [
-  { label: 'Hip ER', key: 'hip_er' },
-  { label: 'Hip IR', key: 'hip_ir' },
-  { label: 'Hip Abd', key: 'hip_abd' },
-  { label: 'Hip Flex', key: 'hip_flex' },
-  { label: 'Shoulder ER', key: 'shoulder_er' },
-  { label: 'Shoulder Flex', key: 'shoulder_flex' },
-  { label: 'Ankle DF', key: 'ankle_df' },
-  { label: 'Lumbar Flex', key: 'lumbar_flex' },
-  { label: 'Lumbar Ext', key: 'lumbar_ext' },
-  { label: 'Cerv Lat', key: 'cervical_lat' },
-  { label: 'Cerv Flex', key: 'cervical_flex' },
-  { label: 'Cerv Ext', key: 'cervical_ext' },
-]
+// Base radar + Joint Breakdown render the SAME rows (lib/mobilityBands
+// jointDisplayRowsForAssessment): same joints, same order, same per-joint %
+// (worse side / JOINT_SCORE_TARGETS, floored, clamped into the joint's band),
+// same band (radarDataForAssessments). Radar scale is fixed 0..100 so the
+// outer ring = Steady (100%). No elite sport-pack targets on Base (Fix A, Jim LOCK 2026-09-24).
+// Radar series colours: neutral slate so no series reads as a band colour.
+// Band lives on the current assessment's dots (BAND_HEX) and in the tooltip.
+const RADAR_COLORS = ['#334155', '#94a3b8', '#64748b', '#cbd5e1']
 
-function buildRadar(assessments: Assessment[], current: Assessment, jointScores: JointScoreRow[] | null | undefined) {
-  // Persisted joint_scores belong to the current assessment only; older ones use the formula.
-  const pcts = assessments.map(a => jointPercentsForAssessment(a, a.id === current.id ? jointScores : null))
-  return RADAR_JOINTS.map(j => {
-    const row: Record<string, string | number> = { joint: j.label }
-    pcts.forEach((m, i) => { row[`v${i}`] = m.get(j.key) ?? 0 })
-    return row
-  })
+function BandDot(props: { cx?: number; cy?: number; payload?: { band?: BandScore | null } }) {
+  const { cx, cy, payload } = props
+  if (cx == null || cy == null) return <g />
+  const band = payload?.band ?? null
+  return (
+    <circle
+      cx={cx} cy={cy} r={3.5}
+      fill={band != null ? BAND_HEX[band] : '#94a3b8'}
+      stroke="#fff" strokeWidth={1}
+      data-band={band ?? ''}
+    />
+  )
 }
 
-function JointBar({ label, left, right, midline, jointKey, scoreMap }: {
-  label: string; left?: number | null; right?: number | null
-  midline?: number | null
-  jointKey: string
-  scoreMap: Map<string, BandScore>
-}) {
+function JointBar({ row }: { row: JointDisplayRow }) {
+  const { label, left, right, midline, band: jointBand, pct, unit } = row
   const asym = left != null && right != null ? Math.abs(left - right) : 0
 
   // Single source of truth: band from joint_scores / compute_joint_scores formula.
   // Name, bar, % and chip colours all derive from this band (no separate threshold).
-  const jointBand: BandScore | null = scoreMap.get(jointKey) ?? null
   const tone = jointBand != null ? BAND_TONE[jointBand] : null
-  // Shared per-joint % (worse side / Base target), clamped into this joint's band.
-  const pct = jointPercent(jointKey, { left, right, midline }, jointBand) ?? 0
 
   return (
-    <div className="flex items-center gap-3 py-2">
+    <div className="flex items-center gap-3 py-2" data-joint={row.key} data-pct={pct} data-band={jointBand ?? ''}>
       <div className="w-32 shrink-0">
-        <p className={cn('text-xs font-medium', tone ? tone.label : 'text-cobalt-ink')}>{label}</p>
+        <p className={cn('text-xs font-medium', tone ? tone.label : 'text-slate-500')}>{label}</p>
         {asym > 10 && (
           <p className="text-xs text-yellow-600 flex items-center gap-0.5 mt-0.5">
-            <AlertTriangle size={9} /> {asym}° gap
+            <AlertTriangle size={9} /> {formatMeasure(asym)}{unit} gap
           </p>
         )}
       </div>
@@ -138,7 +127,9 @@ function JointBar({ label, left, right, midline, jointKey, scoreMap }: {
         />
       </div>
       <div className="w-20 text-right shrink-0 text-xs text-slate-500">
-        {midline != null ? `${midline}°` : `${left ?? 0}° / ${right ?? 0}°`}
+        {midline != null
+          ? `${formatMeasure(midline)}${unit}`
+          : `${formatMeasure(left ?? 0)}${unit} / ${formatMeasure(right ?? 0)}${unit}`}
       </div>
       <div className="w-8 text-right shrink-0">
         <span className={cn('text-xs font-bold', tone ? tone.color : 'text-slate-500')}>
@@ -174,13 +165,14 @@ export function MyBody() {
     />
   )
 
-  const radarData = buildRadar(assessments.length > 0 ? assessments : [assessment], assessment, jointScores)
-  const RADAR_COLORS = ['#1D4ED8', '#f59e0b', '#60a5fa', '#c084fc']
-  const RADAR_LABELS = assessments.map(a =>
+  const radarAssessments = assessments.length > 0 ? assessments : [assessment]
+  const radarData = radarDataForAssessments(radarAssessments, assessment, jointScores)
+  const RADAR_LABELS = radarAssessments.map(a =>
     new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
   )
   const prs = mobilityScoreForAssessment(assessment, jointScores)
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
+  const jointRows = jointDisplayRowsForAssessment(assessment, jointScores)
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreas(assessment.worst_joints)
   const tier = getBandTier(overallBand)
@@ -294,29 +286,38 @@ export function MyBody() {
             <RadarChart data={radarData} margin={{ top: 4, right: 20, bottom: 4, left: 20 }}>
               <PolarGrid stroke="#dbeafe" />
               <PolarAngleAxis dataKey="joint" tick={{ fontSize: 9, fill: '#475569', fontFamily: 'Inter Tight' }} />
+              {/* Fixed 0..100 scale: outer ring = Steady (100% of Base target), never auto-scaled to the data */}
+              <PolarRadiusAxis domain={[0, 100]} ticks={[50, 90, 100]} tick={false} axisLine={false} />
               {[...RADAR_LABELS].reverse().map((label, ri) => {
                 const i = RADAR_LABELS.length - 1 - ri
                 return (
                   <Radar
-                    key={label}
+                    key={`${label}-${i}`}
                     name={label}
                     dataKey={`v${i}`}
                     stroke={RADAR_COLORS[i]}
                     fill={RADAR_COLORS[i]}
-                    fillOpacity={i === 0 ? 0.1 : 0}
-                    strokeWidth={i === 0 ? 2.5 : 2}
+                    fillOpacity={i === 0 ? 0.08 : 0}
+                    strokeWidth={i === 0 ? 2 : 1.5}
                     strokeDasharray={i === 0 ? undefined : '5 3'}
-                    dot={i === 0 ? { fill: RADAR_COLORS[i], r: 3 } : false}
+                    dot={i === 0 ? <BandDot /> : false}
+                    isAnimationActive={false}
                   />
                 )
               })}
               <Tooltip
                 contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #dbeafe', fontFamily: 'Inter Tight' }}
-                formatter={(v, name) => [`${v}%`, name]}
+                formatter={(v, name, item) => {
+                  const band = (item?.payload as { band?: BandScore | null } | undefined)?.band
+                  return [name === RADAR_LABELS[0] && band != null ? `${v}% \u00B7 ${bandFull(band)}` : `${v}%`, name]
+                }}
               />
               {RADAR_LABELS.length > 1 && <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />}
             </RadarChart>
           </ResponsiveContainer>
+          <p className="text-[11px] text-slate-500 mt-1 text-center">
+            Worse side, % of your Base target. Outer ring is Steady (100%), next ring in is 90%. Dot colour shows the band.
+          </p>
         </SectionCard>
 
         <SectionCard title="Summary">
@@ -419,18 +420,7 @@ export function MyBody() {
 
       <SectionCard title="Joint Breakdown" subtitle="Worse side shown - % of your Base target">
         <div className="divide-y divide-cobalt/10">
-          <JointBar label="Hip ER" left={assessment.hip_er_l} right={assessment.hip_er_r} jointKey="hip_er" scoreMap={scoreMap} />
-          <JointBar label="Hip IR" left={assessment.hip_ir_l} right={assessment.hip_ir_r} jointKey="hip_ir" scoreMap={scoreMap} />
-          <JointBar label="Hip Abduction" left={assessment.hip_abd_l} right={assessment.hip_abd_r} jointKey="hip_abd" scoreMap={scoreMap} />
-          <JointBar label="Hip Flexion" left={assessment.hip_flex_l} right={assessment.hip_flex_r} jointKey="hip_flex" scoreMap={scoreMap} />
-          <JointBar label="Shoulder ER" left={assessment.shoulder_er_l} right={assessment.shoulder_er_r} jointKey="shoulder_er" scoreMap={scoreMap} />
-          <JointBar label="Shoulder Flex" left={assessment.shoulder_flex_l} right={assessment.shoulder_flex_r} jointKey="shoulder_flex" scoreMap={scoreMap} />
-          <JointBar label="Ankle DF" left={assessment.ankle_df_l} right={assessment.ankle_df_r} jointKey="ankle_df" scoreMap={scoreMap} />
-          <JointBar label="Lumbar Flex" midline={assessment.lumbar_flex} jointKey="lumbar_flex" scoreMap={scoreMap} />
-          <JointBar label="Lumbar Ext" midline={assessment.lumbar_ext} jointKey="lumbar_ext" scoreMap={scoreMap} />
-          <JointBar label="Cervical Lat Flex" left={assessment.cervical_lat_l} right={assessment.cervical_lat_r} jointKey="cervical_lat" scoreMap={scoreMap} />
-          <JointBar label="Cervical Flex" midline={assessment.cervical_flex} jointKey="cervical_flex" scoreMap={scoreMap} />
-          <JointBar label="Cervical Ext" midline={assessment.cervical_ext} jointKey="cervical_ext" scoreMap={scoreMap} />
+          {jointRows.map(row => <JointBar key={row.key} row={row} />)}
         </div>
       </SectionCard>
     </div>

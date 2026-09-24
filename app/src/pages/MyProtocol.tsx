@@ -16,6 +16,11 @@ import {
   mobilityScoreForAssessment,
   overallBandForAssessment,
   rankBadgeClass,
+  sideBandsForJoint,
+  valueToneClass,
+  formatMeasure,
+  jointUnit,
+  JOINT_SCORE_TARGETS,
   topProblemAreas,
   BAND_DESC,
   BAND_TONE,
@@ -90,10 +95,6 @@ interface JointDef {
   leftKey?: string
   rightKey?: string
   singleKey?: string
-  normalMin: number
-  normalMax: number
-  riskBelow: number
-  unit: string
   rxKey: string
 }
 const JOINTS: JointDef[] = [
@@ -101,61 +102,61 @@ const JOINTS: JointDef[] = [
     key: 'hip_er', label: 'Hip External Rotation',
     why: 'Deep squats, wide stances, hip mobility for everyday movement and lower-back protection.',
     leftKey: 'hip_er_l', rightKey: 'hip_er_r',
-    normalMin: 40, normalMax: 60, riskBelow: 40, unit: '°', rxKey: 'hip_er',
+    rxKey: 'hip_er',
   },
   {
     key: 'hip_ir', label: 'Hip Internal Rotation',
     why: 'Rotational sports, walking gait, knee tracking, and lower-back health.',
     leftKey: 'hip_ir_l', rightKey: 'hip_ir_r',
-    normalMin: 30, normalMax: 45, riskBelow: 30, unit: '°', rxKey: 'hip_ir',
+    rxKey: 'hip_ir',
   },
   {
     key: 'hip_abd', label: 'Hip Abduction',
     why: 'Lateral stability, glute strength, single-leg balance, and pelvic control.',
     leftKey: 'hip_abd_l', rightKey: 'hip_abd_r',
-    normalMin: 40, normalMax: 50, riskBelow: 30, unit: '°', rxKey: 'hip_abd',
+    rxKey: 'hip_abd',
   },
   {
     key: 'hip_flex', label: 'Hip Flexion',
     why: 'Squat depth, stair climbing, sitting posture, and low-back load management.',
     leftKey: 'hip_flex_l', rightKey: 'hip_flex_r',
-    normalMin: 100, normalMax: 120, riskBelow: 100, unit: '°', rxKey: 'hip_flex',
+    rxKey: 'hip_flex',
   },
   {
     key: 'shoulder_er', label: 'Shoulder External Rotation',
     why: 'Overhead pressing, throwing, rotator cuff health, and shoulder injury prevention.',
     leftKey: 'shoulder_er_l', rightKey: 'shoulder_er_r',
-    normalMin: 60, normalMax: 90, riskBelow: 60, unit: '°', rxKey: 'shoulder_er',
+    rxKey: 'shoulder_er',
   },
   {
     key: 'shoulder_flex', label: 'Shoulder Flexion',
     why: 'Reaching overhead, pressing, pulling, and thoracic-spine coupled movement.',
     leftKey: 'shoulder_flex_l', rightKey: 'shoulder_flex_r',
-    normalMin: 140, normalMax: 180, riskBelow: 120, unit: '°', rxKey: 'shoulder_flex',
+    rxKey: 'shoulder_flex',
   },
   {
     key: 'ankle_df', label: 'Ankle Dorsiflexion',
     why: 'Squat depth, balance, walking mechanics, and knee-joint protection.',
     leftKey: 'ankle_df_l', rightKey: 'ankle_df_r',
-    normalMin: 10, normalMax: 20, riskBelow: 10, unit: 'cm', rxKey: 'ankle_df',
+    rxKey: 'ankle_df',
   },
   {
     key: 'lumbar_flex', label: 'Lumbar Flexion',
     why: 'Bending forward, deadlift setup, and functional daily movement patterns.',
     singleKey: 'lumbar_flex',
-    normalMin: 40, normalMax: 60, riskBelow: 40, unit: '°', rxKey: 'lumbar_flex',
+    rxKey: 'lumbar_flex',
   },
   {
     key: 'lumbar_ext', label: 'Lumbar Extension',
     why: 'Standing posture, back-strength foundation, and disc health.',
     singleKey: 'lumbar_ext',
-    normalMin: 20, normalMax: 35, riskBelow: 15, unit: '°', rxKey: 'lumbar_ext',
+    rxKey: 'lumbar_ext',
   },
   {
     key: 'cervical_rot', label: 'Cervical Rotation',
     why: 'Driving safety, situational awareness, and reducing neck strain from screens.',
     leftKey: 'cervical_rot_l', rightKey: 'cervical_rot_r',
-    normalMin: 70, normalMax: 90, riskBelow: 60, unit: '°', rxKey: 'cervical_rot',
+    rxKey: 'cervical_rot',
   },
 ]
 
@@ -182,14 +183,17 @@ function scoreJoints(assessment: Assessment, bands: Map<string, BandScore>): Sco
     let severity  = 0
     let gap       = ''
 
+    // Base target (JOINT_SCORE_TARGETS, same as the band) and the measured unit.
+    const target = JOINT_SCORE_TARGETS[def.key]
+    const unit = jointUnit(def.key)
     if (left !== null && right !== null) {
-      asymmetry = Math.abs(left - right)
+      asymmetry = Math.round(Math.abs(left - right) * 10) / 10
       const worst = Math.min(left, right)
-      severity = Math.max(0, def.normalMin - worst)
-      gap = `L ${left}${def.unit} vs R ${right}${def.unit} · ${asymmetry}${def.unit} gap`
+      severity = target != null ? Math.max(0, target - worst) : 0
+      gap = `L ${formatMeasure(left)}${unit} vs R ${formatMeasure(right)}${unit} · ${formatMeasure(asymmetry)}${unit} gap`
     } else if (single !== null) {
-      severity = Math.max(0, def.normalMin - single)
-      gap = `${single}${def.unit} (normal >= ${def.normalMin}${def.unit})`
+      severity = target != null ? Math.max(0, target - single) : 0
+      gap = `${formatMeasure(single)}${unit} (target ${target ?? '-'}${unit})`
     }
     const band = bands.get(def.key) ?? null
     return { def, left, right, single, asymmetry, severity, band, gap }
@@ -666,6 +670,12 @@ function IssueCard({ ranked, rxLibrary, rank }: {
 
   const isBilateral = left !== null && right !== null
   const hasAsymmetry = isBilateral && asymmetry > 0
+  // Unit as measured/stored (Ankle DF = knee-to-wall cm, everything else degrees).
+  const unit = jointUnit(def.key)
+  // Each side coloured by Base band (side / JOINT_SCORE_TARGETS); the worse side = card band.
+  const sideBands = sideBandsForJoint(def.key, { left, right }, band)
+  // Base target from JOINT_SCORE_TARGETS (the one that sets the band), e.g. "90°".
+  const targetValue = JOINT_SCORE_TARGETS[def.key]
 
   return (
     <div className="bg-white rounded-card border border-cobalt/10 shadow-sm overflow-hidden">
@@ -698,20 +708,20 @@ function IssueCard({ ranked, rxLibrary, rank }: {
             <>
               <div className="bg-slate-50 rounded-xl px-3 py-1.5 text-center">
                 <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Left</p>
-                <p className={cn('text-sm font-bold', (left ?? 0) < def.riskBelow ? 'text-red-700' : (left ?? 0) < def.normalMin ? 'text-yellow-600' : 'text-cobalt')}>
-                  {left}{def.unit}
+                <p className={cn('text-sm font-bold', valueToneClass(sideBands.left))} data-band={sideBands.left ?? ''}>
+                  {formatMeasure(left)}{unit}
                 </p>
               </div>
               <div className="bg-slate-50 rounded-xl px-3 py-1.5 text-center">
                 <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Right</p>
-                <p className={cn('text-sm font-bold', (right ?? 0) < def.riskBelow ? 'text-red-700' : (right ?? 0) < def.normalMin ? 'text-yellow-600' : 'text-cobalt')}>
-                  {right}{def.unit}
+                <p className={cn('text-sm font-bold', valueToneClass(sideBands.right))} data-band={sideBands.right ?? ''}>
+                  {formatMeasure(right)}{unit}
                 </p>
               </div>
               {hasAsymmetry && (
-                <div className="bg-yellow-50 rounded-xl px-3 py-1.5 text-center">
-                  <p className="text-[10px] text-yellow-700 font-bold uppercase tracking-wide">Asymmetry</p>
-                  <p className="text-sm font-bold text-yellow-700">{asymmetry}{def.unit} gap</p>
+                <div className="bg-slate-50 rounded-xl px-3 py-1.5 text-center">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Asymmetry</p>
+                  <p className="text-sm font-bold text-slate-700">{formatMeasure(asymmetry)}{unit} gap</p>
                 </div>
               )}
             </>
@@ -719,22 +729,24 @@ function IssueCard({ ranked, rxLibrary, rank }: {
             <>
               <div className="bg-slate-50 rounded-xl px-3 py-1.5">
                 <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Value</p>
-                <p className={cn('text-sm font-bold', (single ?? 0) < def.riskBelow ? 'text-red-700' : (single ?? 0) < def.normalMin ? 'text-yellow-600' : 'text-cobalt')}>
-                  {single}{def.unit}
+                <p className={cn('text-sm font-bold', valueToneClass(band))} data-band={band ?? ''}>
+                  {formatMeasure(single)}{unit}
                 </p>
               </div>
-              {severity > 0 && (
-                <div className="bg-red-50 rounded-xl px-3 py-1.5">
-                  <p className="text-[10px] text-red-700 font-bold uppercase tracking-wide">Below Normal</p>
-                  <p className="text-sm font-bold text-red-700">{severity}{def.unit}</p>
+              {severity > 0 && band != null && band < 3 && (
+                <div className={cn('rounded-xl px-3 py-1.5', BAND_TONE[band].bg)}>
+                  <p className={cn('text-[10px] font-bold uppercase tracking-wide', BAND_TONE[band].color)}>Below target</p>
+                  <p className={cn('text-sm font-bold', BAND_TONE[band].color)}>{formatMeasure(severity)}{unit}</p>
                 </div>
               )}
             </>
           ) : null}
-          <div className="bg-slate-50 rounded-xl px-3 py-1.5">
-            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Normal</p>
-            <p className="text-xs font-semibold text-cobalt-ink">{def.normalMin}-{def.normalMax}{def.unit}</p>
-          </div>
+          {targetValue != null && (
+            <div className="bg-slate-50 rounded-xl px-3 py-1.5">
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Steady target</p>
+              <p className="text-xs font-semibold text-cobalt-ink">{targetValue}{unit}</p>
+            </div>
+          )}
         </div>
       </button>
 
