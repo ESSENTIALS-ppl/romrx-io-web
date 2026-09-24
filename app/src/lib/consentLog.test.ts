@@ -219,7 +219,7 @@ describe('Settings copy', () => {
 })
 
 /* ── Marketing mirror: assets/consent.js ─────────────────────────────── */
-function runSiteConsent(env: { gpc?: boolean; consent?: Record<string, unknown>; hash?: string; auth?: Record<string, unknown> } = {}) {
+function runSiteConsent(env: { gpc?: boolean; consent?: Record<string, unknown>; hash?: string; auth?: Record<string, unknown>; lang?: string } = {}) {
   const init: Record<string, string> = {}
   if (env.consent) init['romrx.consent.v1'] = JSON.stringify(env.consent)
   if (env.auth) init['romrx.hq.auth'] = JSON.stringify(env.auth)
@@ -240,7 +240,7 @@ function runSiteConsent(env: { gpc?: boolean; consent?: Record<string, unknown>;
   const ctx: any = {
     window: { addEventListener() {}, dispatchEvent: () => true },
     document: doc, localStorage: ls.api,
-    navigator: { globalPrivacyControl: env.gpc === true, languages: ['en-US'], language: 'en-US' },
+    navigator: { globalPrivacyControl: env.gpc === true, languages: [env.lang ?? 'en-US'], language: env.lang ?? 'en-US' },
     location: { pathname: '/legal', search: '?utm_source=x', hash: env.hash ?? '' },
     crypto: { randomUUID: () => UUID },
     CustomEvent: class { constructor(public type: string, public init?: any) {} },
@@ -468,6 +468,40 @@ describe('banner_region (which notice the visitor saw)', () => {
     const r = runSiteConsent()
     r.ctx.window.RomrxConsent.deny()
     expect(r.fetches[0].body.banner_region).toBe('us')
+  })
+  it('app: banner_version matches the region (EU/UK opt-in label, never the US label)', async () => {
+    const { fetches } = stubBrowser({ lang: 'en-GB' })
+    const c = await import('./consent')
+    c.recordConsentChoice('denied', 'banner')
+    c.recordConsentChoice('denied', 'footer')
+    c.recordConsentChoice('granted', 'settings')
+    await flush()
+    expect(fetches.map((f) => [f.body.banner_region, f.body.banner_version])).toEqual([
+      ['eu_uk', 'app-banner-2026-09-24-eu-optin'],
+      ['eu_uk', 'app-banner-2026-09-24-eu-optin'],
+      ['eu_uk', c.SETTINGS_UI_VERSION],
+    ])
+    expect(c.appBannerVersion('us')).toBe('app-banner-2026-09-24-us-optout')
+    vi.resetModules()
+    const us = stubBrowser()
+    const c2 = await import('./consent')
+    c2.recordConsentChoice('denied', 'banner')
+    await flush()
+    expect(us.fetches[0].body).toMatchObject({ banner_region: 'us', banner_version: 'app-banner-2026-09-24-us-optout' })
+    vi.resetModules()
+    const g = stubBrowser({ gpc: true, lang: 'fr-FR' })
+    const c3 = await import('./consent')
+    c3.effectiveConsentState()
+    await flush()
+    expect(g.fetches[0].body).toMatchObject({ method: 'gpc', banner_region: 'eu_uk', banner_version: 'app-banner-2026-09-24-eu-optin' })
+  })
+  it('marketing consent.js: banner_version matches the region', () => {
+    const eu = runSiteConsent({ lang: 'en-GB' })
+    eu.ctx.window.RomrxConsent.choose('denied', 'banner')
+    expect(eu.fetches[0].body).toMatchObject({ banner_region: 'eu_uk', banner_version: 'site-banner-2026-09-24-eu-optin' })
+    const us = runSiteConsent()
+    us.ctx.window.RomrxConsent.choose('denied', 'banner')
+    expect(us.fetches[0].body).toMatchObject({ banner_region: 'us', banner_version: 'site-banner-2026-09-24-us-optout' })
   })
   it('function whitelists banner_region; anything else becomes null, row still stored', () => {
     const { validateBody } = fn._test

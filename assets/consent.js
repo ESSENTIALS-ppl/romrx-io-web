@@ -10,7 +10,10 @@
   // Compliance only: never analytics, never Meta.
   var ANON_ID_KEY = 'romrx.anon_id';
   var LOG_ENDPOINT = '/api/consent';
-  var BANNER_VERSION = 'site-banner-2026-09-24-us-optout';
+  // Which notice the visitor saw: US opt-out or EU/UK opt-in (logged with banner_region).
+  var BANNER_VERSION_US = 'site-banner-2026-09-24-us-optout';
+  var BANNER_VERSION_EU = 'site-banner-2026-09-24-eu-optin';
+  function bannerVersion(region) { return region === 'eu_uk' ? BANNER_VERSION_EU : BANNER_VERSION_US; }
   var GPC_NOTE = "Your browser's Global Privacy Control signal was honored. Ads measurement is off.";
 
   function anonId() {
@@ -48,6 +51,7 @@
     try {
       if (typeof fetch !== 'function') return;
       var headers = { 'Content-Type': 'application/json' };
+      var region = detectRegion();
       var tok = accessToken();
       if (tok) headers.Authorization = 'Bearer ' + tok;
       fetch(LOG_ENDPOINT, {
@@ -60,9 +64,9 @@
           gpc_present: gpcEnabled(),
           conflict_with_prior_accept: method === 'gpc' && conflict === true,
           policy_version: POLICY_VERSION,
-          banner_version: BANNER_VERSION,
+          banner_version: bannerVersion(region),
           // Which notice the visitor saw (same region decision the banner uses).
-          banner_region: detectRegion(),
+          banner_region: region,
           page_path: cleanPath(location.pathname),
         }),
         keepalive: true,

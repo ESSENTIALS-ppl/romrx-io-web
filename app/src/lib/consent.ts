@@ -21,7 +21,14 @@ export const CONSENT_STORAGE_KEY = 'romrx.consent.v1'
 export const CONSENT_POLICY_VERSION = '2026-09-21-privacy-b'
 export const PRIVACY_POLICY_URL = 'https://romrx.io/legal#privacy'
 /** Which consent UI the person saw (logged with each row). Bump when copy or layout changes. */
-export const APP_BANNER_VERSION = 'app-banner-2026-09-24-us-optout'
+export const APP_BANNER_VERSION_US = 'app-banner-2026-09-24-us-optout'
+export const APP_BANNER_VERSION_EU = 'app-banner-2026-09-24-eu-optin'
+/** US label, kept for existing imports. Use appBannerVersion(region) for logging. */
+export const APP_BANNER_VERSION = APP_BANNER_VERSION_US
+/** Banner version for the notice this region sees (US opt-out vs EU/UK opt-in). */
+export function appBannerVersion(region: 'us' | 'eu_uk'): string {
+  return region === 'eu_uk' ? APP_BANNER_VERSION_EU : APP_BANNER_VERSION_US
+}
 export const SETTINGS_UI_VERSION = 'app-settings-2026-09-24'
 /** No banner or opt-back-in prompt for 12 months after a decline (11 CCR 7026(k)). */
 export const REPROMPT_QUIET_MS = 365 * 24 * 60 * 60 * 1000
@@ -97,16 +104,18 @@ export function writeConsent(state: ConsentState, opts: { declinedAt?: string } 
 export function recordConsentChoice(
   state: Exclude<ConsentState, 'unknown'>,
   method: Exclude<ConsentMethod, 'gpc'>,
-  bannerVersion: string = method === 'settings' ? SETTINGS_UI_VERSION : APP_BANNER_VERSION,
+  bannerVersion?: string,
 ): ConsentRecord {
   const rec = writeConsent(state)
+  const region = rec.region ?? detectRegion()
   void logConsentEvent({
     state: rec.state as LoggedState,
     method,
     policyVersion: CONSENT_POLICY_VERSION,
-    bannerVersion,
+    // Version and region come from the same decision, so an EU/UK row never carries the US label.
+    bannerVersion: bannerVersion ?? (method === 'settings' ? SETTINGS_UI_VERSION : appBannerVersion(region)),
     gpcPresent: gpcEnabled(),
-    bannerRegion: rec.region ?? detectRegion(),
+    bannerRegion: region,
   })
   return rec
 }
@@ -121,14 +130,15 @@ export function applyGpcIfPresent(): boolean {
   const existing = readConsent()
   if (existing && existing.state !== 'granted' && existing.state !== 'unknown') return false
   const rec = writeConsent('denied')
+  const region = rec.region ?? detectRegion()
   void logConsentEvent({
     state: rec.state as LoggedState,
     method: 'gpc',
     policyVersion: CONSENT_POLICY_VERSION,
-    bannerVersion: APP_BANNER_VERSION,
+    bannerVersion: appBannerVersion(region),
     gpcPresent: true,
     conflictWithPriorAccept: existing?.state === 'granted',
-    bannerRegion: rec.region ?? detectRegion(),
+    bannerRegion: region,
   })
   return true
 }
