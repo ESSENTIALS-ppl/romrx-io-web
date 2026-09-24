@@ -21,7 +21,7 @@ import {
 
 /** Hard off until Field PASS + real credentials. Do not flip via env alone. */
 /** Flip to true only after Reid Field PASS + real IDs. Default false. */
-export const META_ATTRIBUTION_ENABLED: boolean = true
+export const META_ATTRIBUTION_ENABLED: boolean = false
 
 const PIXEL_ID = (import.meta.env.VITE_META_PIXEL_ID as string | undefined)?.trim() || ''
 const CAPI_ENDPOINT = '/api/attribution/meta'
