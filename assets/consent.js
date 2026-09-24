@@ -5,6 +5,88 @@
   var STORAGE_KEY = 'romrx.consent.v1';
   var POLICY_VERSION = '2026-09-21-privacy-b';
   var PRIVACY_URL = 'https://romrx.io/legal#privacy';
+  // Consent log (Legal 2026-09-24). Same endpoint and anon_id key as the app
+  // (app/src/lib/consentLog.ts). The server stores only an HMAC of anon_id.
+  // Compliance only: never analytics, never Meta.
+  var ANON_ID_KEY = 'romrx.anon_id';
+  var LOG_ENDPOINT = '/api/consent';
+  var BANNER_VERSION = 'site-banner-2026-09-24-us-optout';
+  var GPC_NOTE = "Your browser's Global Privacy Control signal was honored. Ads measurement is off.";
+
+  function anonId() {
+    try {
+      var v = localStorage.getItem(ANON_ID_KEY);
+      if (v && /^[A-Za-z0-9-]{16,64}$/.test(v)) return v;
+    } catch (e) {}
+    var id = uuid();
+    try { localStorage.setItem(ANON_ID_KEY, id); } catch (e2) {}
+    return id;
+  }
+
+  function cleanPath(p) {
+    p = String(p || '/').split('#')[0].split('?')[0].replace(/[\u0000-\u001f\u007f\s]/g, '');
+    if (p.charAt(0) !== '/') p = '/' + p;
+    return p.replace(/\/{2,}/g, '/').slice(0, 512) || '/';
+  }
+
+  // Signed-in app session (same origin) so the server can attach user_id after verifying it.
+  function accessToken() {
+    try {
+      var raw = localStorage.getItem('romrx.hq.auth');
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      var t = s && (s.access_token || (s.currentSession && s.currentSession.access_token));
+      var exp = s && (s.expires_at || (s.currentSession && s.currentSession.expires_at));
+      if (typeof t !== 'string' || !t) return null;
+      if (exp && Number(exp) * 1000 < Date.now()) return null;
+      return t;
+    } catch (e) { return null; }
+  }
+
+  // Fire and forget; runs whether ads measurement is on or off.
+  function logChoice(state, method, conflict) {
+    try {
+      if (typeof fetch !== 'function') return;
+      var headers = { 'Content-Type': 'application/json' };
+      var tok = accessToken();
+      if (tok) headers.Authorization = 'Bearer ' + tok;
+      fetch(LOG_ENDPOINT, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          anon_id: anonId(),
+          state: state,
+          method: method,
+          gpc_present: gpcEnabled(),
+          conflict_with_prior_accept: method === 'gpc' && conflict === true,
+          policy_version: POLICY_VERSION,
+          banner_version: BANNER_VERSION,
+          page_path: cleanPath(location.pathname),
+        }),
+        keepalive: true,
+        credentials: 'same-origin',
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
+  function showGpcNote() {
+    try {
+      if (document.getElementById('rx-gpc-note')) return;
+      var link = document.querySelector('[data-rx-dns]');
+      var el = document.createElement('p');
+      el.id = 'rx-gpc-note';
+      el.className = 'rx-gpc-note';
+      el.setAttribute('role', 'status');
+      el.textContent = GPC_NOTE;
+      el.style.cssText = 'font-size:12px;line-height:1.4;opacity:.8;margin:6px 0 0;';
+      if (link && link.parentNode) link.parentNode.insertBefore(el, link.nextSibling);
+      else {
+        el.style.cssText += 'position:fixed;left:12px;bottom:8px;z-index:9999;background:#fff;color:#334155;padding:4px 8px;border-radius:8px;border:1px solid #e2e8f0;';
+        document.body.appendChild(el);
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 8000);
+      }
+    } catch (e) {}
+  }
 
   function uuid() {
     try {
@@ -28,12 +110,15 @@
   function writeRecord(state) {
     // Stacy GPC Field-test C.3: banner OK must not override Global Privacy Control.
     if (gpcEnabled() && state === 'granted') state = 'denied';
+    var now = new Date().toISOString();
     var rec = {
       state: state,
       policy_version: POLICY_VERSION,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
       region: detectRegion(),
     };
+    // Decline date: no banner or opt-back-in prompt for 12 months (11 CCR 7026(k)).
+    if (state === 'denied' || state === 'revoked') rec.declined_at = now;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(rec));
     } catch (e) {}
@@ -41,6 +126,25 @@
       window.dispatchEvent(new CustomEvent('romrx:consent', { detail: rec }));
     } catch (e2) {}
     return rec;
+  }
+
+  /** A user click: store it and log it. Decline after an Accept is a revoke. */
+  function recordChoice(state, method) {
+    var prev = readRecord();
+    if (state === 'denied' && prev && prev.state === 'granted') state = 'revoked';
+    var rec = writeRecord(state);
+    logChoice(rec.state, method, false);
+    return rec;
+  }
+
+  /** GPC: one 'denied' row only when the stored state changes. */
+  function applyGpc() {
+    if (!gpcEnabled()) return false;
+    var existing = readRecord();
+    if (existing && existing.state !== 'granted' && existing.state !== 'unknown') return false;
+    var rec = writeRecord('denied');
+    logChoice(rec.state, 'gpc', !!(existing && existing.state === 'granted'));
+    return true;
   }
 
   function detectRegion() {
@@ -132,11 +236,11 @@
       el.querySelector('[data-rx-consent="grant"]').textContent = 'Allow ads cookies';
       el.querySelector('[data-rx-consent="deny"]').textContent = 'Reject ads cookies';
       el.querySelector('[data-rx-consent="grant"]').addEventListener('click', function () {
-        writeRecord('granted');
+        recordChoice('granted', 'banner');
         hideBanner();
       });
       el.querySelector('[data-rx-consent="deny"]').addEventListener('click', function () {
-        writeRecord('denied');
+        recordChoice('denied', 'banner');
         hideBanner();
         optOutConfirm();
       });
@@ -155,11 +259,11 @@
       el.querySelector('[data-rx-consent="grant"]').textContent = 'Accept';
       el.querySelector('[data-rx-consent="reject"]').textContent = 'Decline';
       el.querySelector('[data-rx-consent="grant"]').addEventListener('click', function () {
-        writeRecord('granted'); // GPC still forces denied inside writeRecord
+        recordChoice('granted', 'banner'); // GPC still forces denied inside writeRecord
         hideBanner();
       });
       function usOptOut() {
-        writeRecord('denied');
+        recordChoice('denied', 'banner');
         hideBanner();
         optOutConfirm();
       }
@@ -170,7 +274,7 @@
   }
 
   function applyDnsOptOut(fromGpc) {
-    writeRecord('denied');
+    recordChoice('denied', 'footer');
     hideBanner();
     if (!fromGpc) optOutConfirm();
   }
@@ -198,17 +302,16 @@
     bindFooterDns();
 
     if (gpcEnabled()) {
-      var existing = readRecord();
-      if (!existing || existing.state === 'granted' || existing.state === 'unknown') {
-        writeRecord('denied');
-      }
+      applyGpc();
       hideBanner();
+      showGpcNote();
       maybeHandleHash();
       return;
     }
 
     var rec = readRecord();
     var region = detectRegion();
+    // Only someone who has never chosen sees the banner. A decline suppresses it (12 months minimum).
     if (!rec || rec.state === 'unknown') {
       renderBanner(region);
     } else {
@@ -220,6 +323,7 @@
   window.RomrxConsent = {
     get: readRecord,
     set: writeRecord,
+    choose: recordChoice,
     deny: function () { applyDnsOptOut(false); },
     region: detectRegion,
     STORAGE_KEY: STORAGE_KEY,

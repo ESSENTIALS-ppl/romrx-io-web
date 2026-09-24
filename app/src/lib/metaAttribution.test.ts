@@ -328,7 +328,9 @@ describe('SPA trackMetaEvent fbp/fbc (shipped flag)', () => {
   ])('%s: no CAPI POST, no fbp/fbc', async (_n, opts) => {
     const { eid, fetches } = await runSpa({ ...(opts as any), cookie })
     expect(eid).toBeNull()
-    expect(fetches).toHaveLength(0)
+    // A GPC state change is logged to the first-party consent log (Legal 2026-09-24); never Meta.
+    expect(fetches.filter((f) => f.url !== '/api/consent')).toHaveLength(0)
+    for (const f of fetches) expect(JSON.stringify(f.body)).not.toMatch(/fbp|fbc|event_name/)
   })
 })
 
@@ -393,7 +395,7 @@ describe('US opt-out default (Jim LOCK 2026-09-24 5:38 PM ET)', () => {
   ])('SPA: %s: zero Meta', async (_n, opts) => {
     const { eid, fetches } = await runSpa(opts as any)
     expect(eid).toBeNull()
-    expect(fetches).toHaveLength(0)
+    expect(fetches.filter((f) => f.url !== '/api/consent')).toHaveLength(0)
   })
   it('server: us_default dispatches only with US geo; non-US, unknown geo, GPC all block', async () => {
     vi.stubEnv('META_PIXEL_ID', PIXEL); vi.stubEnv('META_CAPI_TOKEN', 'test-token')
