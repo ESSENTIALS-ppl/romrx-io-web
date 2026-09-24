@@ -173,7 +173,7 @@ export function Settings() {
     setProfileSaving(true); setProfileSaved(false); setProfileErr('')
 
     const userUpdate: Record<string, unknown> = { full_name: fullName || null }
-    if (gender) userUpdate.gender = gender
+    userUpdate.gender = gender || null
     if (ageBucket) userUpdate.age_bucket = ageBucket
     if (heightBucket) userUpdate.height_bucket = heightBucket
     if (weightBucket) userUpdate.weight_bucket = weightBucket
@@ -300,13 +300,13 @@ export function Settings() {
             </div>
 
             <div>
-              <p className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Gender</p>
+              <p className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Gender <span className="normal-case font-normal text-slate-400">(optional)</span></p>
               <div className="flex gap-2 flex-wrap">
                 {GENDERS.map(g => (
                   <button
                     key={g.v}
                     type="button"
-                    onClick={() => setGender(g.v)}
+                    onClick={() => setGender(gender === g.v ? '' : g.v)}
                     className={cn(
                       'px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
                       gender === g.v

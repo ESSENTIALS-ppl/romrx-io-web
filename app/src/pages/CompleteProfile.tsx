@@ -21,7 +21,7 @@ const AGE_BUCKETS = [
   { v: '60+', l: '60 and over' },
 ] as const
 
-/** Required age_bucket + gender wall. Writes existing users columns only. */
+/** Required age_bucket wall; gender optional (saved as null when skipped). Writes existing users columns only. */
 export function CompleteProfile() {
   const { user } = useAuth()
   const [gender, setGender] = useState('')
@@ -31,14 +31,14 @@ export function CompleteProfile() {
 
   const handleSave = async () => {
     if (!user) return
-    if (!gender || !ageBucket) {
-      setErr('Age group and gender are required.')
+    if (!ageBucket) {
+      setErr('Age group is required.')
       return
     }
     setSaving(true)
     setErr('')
     const { error } = await supabase.from('users').update({
-      gender,
+      gender: gender || null,
       age_bucket: ageBucket,
     }).eq('id', user.id)
     setSaving(false)
@@ -51,7 +51,7 @@ export function CompleteProfile() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Finish your profile" subtitle="Age group and gender help us interpret your ROM scores" />
+      <PageHeader title="Finish your profile" subtitle="Age group helps us interpret your ROM scores. Gender is optional." />
       <SectionCard title="Required details">
         <div className="space-y-4">
           <div className="rounded-card border border-cobalt/30 bg-cobalt-light px-4 py-3 text-sm text-cobalt-ink">
@@ -60,13 +60,13 @@ export function CompleteProfile() {
           </div>
 
           <div>
-            <p className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Gender <span className="normal-case font-normal text-slate-400">(required)</span></p>
+            <p className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Gender <span className="normal-case font-normal text-slate-400">(optional)</span></p>
             <div className="flex gap-2 flex-wrap">
               {GENDERS.map(g => (
                 <button
                   key={g.v}
                   type="button"
-                  onClick={() => setGender(g.v)}
+                  onClick={() => setGender(gender === g.v ? '' : g.v)}
                   className={cn(
                     'px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
                     gender === g.v
@@ -89,7 +89,7 @@ export function CompleteProfile() {
           </div>
 
           {err && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{err}</p>}
-          <button onClick={handleSave} disabled={saving || !gender || !ageBucket} className="btn-primary text-sm flex items-center gap-1.5 disabled:opacity-50">
+          <button onClick={handleSave} disabled={saving || !ageBucket} className="btn-primary text-sm flex items-center gap-1.5 disabled:opacity-50">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             Save and continue
           </button>

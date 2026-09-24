@@ -33,8 +33,9 @@ export function Layout() {
     navigate('/')
   }
 
-  const demo = profile as { age_bucket?: string | null; gender?: string | null } | null
-  const needsDemographics = !!profile && (!demo?.age_bucket || !demo?.gender)
+  const demo = profile as { age_bucket?: string | null } | null
+  // Gender is optional; only a missing age group routes to CompleteProfile.
+  const needsDemographics = !!profile && !demo?.age_bucket
   const onGate = location.pathname.startsWith('/dashboard/complete-profile')
     || location.pathname.startsWith('/dashboard/settings')
   if (!profileLoading && needsDemographics && !onGate) {
