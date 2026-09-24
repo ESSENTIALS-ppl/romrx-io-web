@@ -15,6 +15,7 @@ import {
   formatScoreBand,
   mobilityScoreForAssessment,
   overallBandForAssessment,
+  rankBadgeClass,
   topProblemAreas,
   BAND_DESC,
   BAND_TONE,
@@ -659,8 +660,9 @@ function IssueCard({ ranked, rxLibrary, rank }: {
 
   // Base copy (Jim LOCK 2026-09-24): "#N Problem area", rendered as-is (no uppercase).
   const rankLabel = `#${rank} Problem area`
-  // Neutral rank badge: colour must never imply a band (band lives only in the chip).
-  const rankColor = 'bg-slate-100 text-slate-700 border border-slate-200'
+  // Rank badge coloured by THIS joint's band (Grant's call 2026-09-24, replaces the
+  // neutral slate from #74): solid badge in BAND_TONE[band], same band as the chip.
+  const rankColor = rankBadgeClass(band)
 
   const isBilateral = left !== null && right !== null
   const hasAsymmetry = isBilateral && asymmetry > 0
@@ -832,7 +834,7 @@ export function MyProtocol() {
 
   const assessedAt = assessment.assessed_at
   const dateStr = new Date(assessedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  const prs  = mobilityScoreForAssessment(assessment)
+  const prs  = mobilityScoreForAssessment(assessment, jointScores)
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const tier = getBandTier(overallBand)
 

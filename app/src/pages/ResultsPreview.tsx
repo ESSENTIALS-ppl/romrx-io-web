@@ -11,7 +11,7 @@ import {
   formatScoreBand,
   mobilityScoreForAssessment,
   overallBandForAssessment,
-  SCORE_BILATERAL_JOINTS,
+  ASSESSMENT_JOINTS,
   BAND_DESC,
   BAND_TONE,
   type BandScore,
@@ -48,11 +48,13 @@ function getBandTier(band: BandScore): { label: string; color: string; bg: strin
 }
 
 function getTopAsymmetries(assessment: Record<string, number | null>): Array<{ joint: string; gap: number; left: number; right: number }> {
-  return SCORE_BILATERAL_JOINTS
+  // Bilateral joints with a label (same set the asymmetry flags always covered).
+  return ASSESSMENT_JOINTS
+    .filter(j => j.l && j.r && JOINT_LABELS[j.key])
     .map(j => {
-      const l = assessment[j.l], r = assessment[j.r]
+      const l = assessment[j.l!], r = assessment[j.r!]
       if (l == null || r == null) return null
-      return { joint: JOINT_LABELS[j.l.replace('_l', '')] ?? j.l, gap: Math.abs(l - r), left: l, right: r }
+      return { joint: JOINT_LABELS[j.key], gap: Math.abs(l - r), left: l, right: r }
     })
     .filter((x): x is { joint: string; gap: number; left: number; right: number } => x !== null)
     .sort((a, b) => b.gap - a.gap)
