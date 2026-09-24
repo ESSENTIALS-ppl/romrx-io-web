@@ -12,6 +12,8 @@ import {
   bandFull,
   jointBandsForAssessment,
   jointKeyBase,
+  formatScoreBand,
+  mobilityScoreForAssessment,
   overallBandForAssessment,
   topProblemAreas,
   BAND_DESC,
@@ -73,48 +75,6 @@ const ROTATION: Record<number, number> = {
 }
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const CYCLE_TARGET = 42
-
-// ---- PRS number (mirrors MyBody). Display number only: bands come from
-// overallBandForAssessment() in lib/mobilityBands (single source of truth).
-const PRS_BILATERAL = [
-  { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40 },
-  { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30 },
-  { l: 'hip_abd_l', r: 'hip_abd_r', riskBelow: 30, normalMin: 40 },
-  { l: 'hip_flex_l', r: 'hip_flex_r', riskBelow: 100, normalMin: 100 },
-  { l: 'shoulder_er_l', r: 'shoulder_er_r', riskBelow: 60, normalMin: 60 },
-  { l: 'shoulder_flex_l', r: 'shoulder_flex_r', riskBelow: 120, normalMin: 140 },
-  { l: 'ankle_df_l', r: 'ankle_df_r', riskBelow: 10, normalMin: 10 },
-  { l: 'cervical_lat_l', r: 'cervical_lat_r', riskBelow: 30, normalMin: 40 },
-]
-const PRS_UNILATERAL = [
-  { key: 'lumbar_flex', riskBelow: 40, normalMin: 40 },
-  { key: 'lumbar_ext', riskBelow: 15, normalMin: 20 },
-  { key: 'cervical_flex', riskBelow: 35, normalMin: 45 },
-  { key: 'cervical_ext', riskBelow: 40, normalMin: 55 },
-]
-function computePRS(a: Assessment): number {
-  let score = 100
-  const rec = a as unknown as Record<string, number | null>
-  for (const j of PRS_BILATERAL) {
-    const l = rec[j.l]; const r = rec[j.r]
-    if (l != null && r != null) {
-      const minVal = Math.min(l, r)
-      const gap = Math.abs(l - r)
-      if (minVal < j.riskBelow) score -= 8
-      else if (minVal < j.normalMin) score -= 4
-      if (gap >= 15) score -= 6
-      else if (gap >= 8) score -= 3
-    }
-  }
-  for (const j of PRS_UNILATERAL) {
-    const v = rec[j.key]
-    if (v != null) {
-      if (v < j.riskBelow) score -= 6
-      else if (v < j.normalMin) score -= 3
-    }
-  }
-  return Math.max(0, Math.min(100, Math.round(score)))
-}
 
 function getBandTier(band: BandScore) {
   const tone = BAND_TONE[band]
@@ -870,8 +830,9 @@ export function MyProtocol() {
 
   const assessedAt = assessment.assessed_at
   const dateStr = new Date(assessedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  const prs  = computePRS(assessment)
-  const tier = getBandTier(overallBandForAssessment(assessment, jointScores) ?? 3)
+  const prs  = mobilityScoreForAssessment(assessment)
+  const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
+  const tier = getBandTier(overallBand)
 
   return (
     <div className="space-y-5">
@@ -888,7 +849,7 @@ export function MyProtocol() {
             <TrendingUp size={13} className={tier.color} />
             <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
           </div>
-          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{tier.label}</p>
+          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{formatScoreBand(prs, overallBand)}</p>
           <p className="text-xs text-slate-500 mt-0.5">Your top three problem areas shape today's plan</p>
         </div>
       </div>

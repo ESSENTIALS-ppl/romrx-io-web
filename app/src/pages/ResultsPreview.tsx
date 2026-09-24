@@ -5,7 +5,17 @@ import { supabase } from '../lib/supabase'
 import { Spinner } from '../components/Spinner'
 import { AlertTriangle, CheckCircle, Unlock, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
-import { bandFull, bandChip, overallBandForAssessment, BAND_DESC, BAND_TONE, type BandScore } from '../lib/mobilityBands'
+import {
+  bandFull,
+  bandChip,
+  formatScoreBand,
+  mobilityScoreForAssessment,
+  overallBandForAssessment,
+  SCORE_BILATERAL_JOINTS,
+  BAND_DESC,
+  BAND_TONE,
+  type BandScore,
+} from '../lib/mobilityBands'
 import { track } from '../lib/track'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
@@ -23,52 +33,12 @@ function normalizePendingSport(raw: unknown): PendingSport | null {
   return null
 }
 
-// -- PRS scoring algorithm ------------------------------------------------------
-const BILATERAL_JOINTS = [
-  { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40 },
-  { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30 },
-  { l: 'hip_abd_l', r: 'hip_abd_r', riskBelow: 30, normalMin: 40 },
-  { l: 'hip_flex_l', r: 'hip_flex_r', riskBelow: 100, normalMin: 100 },
-  { l: 'shoulder_er_l', r: 'shoulder_er_r', riskBelow: 60, normalMin: 60 },
-  { l: 'shoulder_flex_l', r: 'shoulder_flex_r', riskBelow: 120, normalMin: 140 },
-  { l: 'ankle_df_l', r: 'ankle_df_r', riskBelow: 10, normalMin: 10 },
-  { l: 'cervical_lat_l', r: 'cervical_lat_r', riskBelow: 30, normalMin: 40 },
-]
-const UNILATERAL_JOINTS = [
-  { key: 'lumbar_flex', riskBelow: 40, normalMin: 40 },
-  { key: 'lumbar_ext', riskBelow: 15, normalMin: 20 },
-  { key: 'cervical_flex', riskBelow: 35, normalMin: 45 },
-  { key: 'cervical_ext', riskBelow: 40, normalMin: 55 },
-]
 const JOINT_LABELS: Record<string, string> = {
   hip_er: 'Hip External Rotation', hip_ir: 'Hip Internal Rotation',
   hip_abd: 'Hip Abduction', hip_flex: 'Hip Flexion',
   shoulder_er: 'Shoulder External Rotation', shoulder_flex: 'Shoulder Flexion',
   ankle_df: 'Ankle Dorsiflexion', cervical_lat: 'Cervical Lateral Flex',
   lumbar_flex: 'Lumbar Flexion', lumbar_ext: 'Lumbar Extension',
-}
-
-function computePRS(assessment: Record<string, number | null>): number {
-  let score = 100
-  for (const j of BILATERAL_JOINTS) {
-    const l = assessment[j.l], r = assessment[j.r]
-    if (l != null && r != null) {
-      const minVal = Math.min(l, r)
-      const gap = Math.abs(l - r)
-      if (minVal < j.riskBelow) score -= 8
-      else if (minVal < j.normalMin) score -= 4
-      if (gap >= 15) score -= 6
-      else if (gap >= 8) score -= 3
-    }
-  }
-  for (const j of UNILATERAL_JOINTS) {
-    const v = assessment[j.key]
-    if (v != null) {
-      if (v < j.riskBelow) score -= 6
-      else if (v < j.normalMin) score -= 3
-    }
-  }
-  return Math.max(0, Math.min(100, Math.round(score)))
 }
 
 function getBandTier(band: BandScore): { label: string; color: string; bg: string; ring: string; desc: string } {
@@ -78,7 +48,7 @@ function getBandTier(band: BandScore): { label: string; color: string; bg: strin
 }
 
 function getTopAsymmetries(assessment: Record<string, number | null>): Array<{ joint: string; gap: number; left: number; right: number }> {
-  return BILATERAL_JOINTS
+  return SCORE_BILATERAL_JOINTS
     .map(j => {
       const l = assessment[j.l], r = assessment[j.r]
       if (l == null || r == null) return null
@@ -233,8 +203,9 @@ export function ResultsPreview() {
     </div>
   )
 
-  const prs = computePRS(assessment)
-  const tier = getBandTier(overallBandForAssessment(assessment) ?? 3)
+  const prs = mobilityScoreForAssessment(assessment)
+  const overallBand: BandScore = overallBandForAssessment(assessment) ?? 3
+  const tier = getBandTier(overallBand)
   const asymmetries = getTopAsymmetries(assessment)
 
   return (
@@ -258,7 +229,7 @@ export function ResultsPreview() {
           </div>
           <div className={cn('inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold mb-3', tier.bg, tier.color)}>
             <TrendingUp size={14} />
-            {tier.label}
+            {formatScoreBand(prs, overallBand)}
           </div>
           <p className="text-sm text-white/70 leading-relaxed">{tier.desc}</p>
         </div>

@@ -301,3 +301,83 @@ export function topProblemAreas(
   }
   return out
 }
+
+// ---------------------------------------------------------------------------
+// Mobility score (/100) — ONE shared number for every Base surface
+// ---------------------------------------------------------------------------
+//
+// Display number only (bands still come from overallBandForAssessment above).
+// Moved verbatim from the four duplicated computePRS() copies in MyBody.tsx,
+// MyProtocol.tsx, Settings.tsx and ResultsPreview.tsx (2026-09-24). The
+// formula is UNCHANGED on purpose: a separate decision on it is pending with
+// Jim. Do not tune the riskBelow/normalMin deductions here without that call.
+
+/** Bilateral joints scored by the /100 number (riskBelow / normalMin cutoffs). */
+export const SCORE_BILATERAL_JOINTS: ReadonlyArray<{
+  l: string
+  r: string
+  riskBelow: number
+  normalMin: number
+}> = [
+  { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40 },
+  { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30 },
+  { l: 'hip_abd_l', r: 'hip_abd_r', riskBelow: 30, normalMin: 40 },
+  { l: 'hip_flex_l', r: 'hip_flex_r', riskBelow: 100, normalMin: 100 },
+  { l: 'shoulder_er_l', r: 'shoulder_er_r', riskBelow: 60, normalMin: 60 },
+  { l: 'shoulder_flex_l', r: 'shoulder_flex_r', riskBelow: 120, normalMin: 140 },
+  { l: 'ankle_df_l', r: 'ankle_df_r', riskBelow: 10, normalMin: 10 },
+  { l: 'cervical_lat_l', r: 'cervical_lat_r', riskBelow: 30, normalMin: 40 },
+]
+
+/** Midline joints scored by the /100 number. */
+export const SCORE_UNILATERAL_JOINTS: ReadonlyArray<{
+  key: string
+  riskBelow: number
+  normalMin: number
+}> = [
+  { key: 'lumbar_flex', riskBelow: 40, normalMin: 40 },
+  { key: 'lumbar_ext', riskBelow: 15, normalMin: 20 },
+  { key: 'cervical_flex', riskBelow: 35, normalMin: 45 },
+  { key: 'cervical_ext', riskBelow: 40, normalMin: 55 },
+]
+
+/**
+ * THE /100 mobility score for one assessment (My Body, My Protocol, results
+ * preview, Settings history, My Body delta, lead submit). Pure: the same
+ * assessment always gives the same number.
+ */
+export function mobilityScoreForAssessment(assessment: object | null | undefined): number {
+  let score = 100
+  const rec = (assessment ?? {}) as Record<string, number | null>
+  for (const j of SCORE_BILATERAL_JOINTS) {
+    const l = rec[j.l]
+    const r = rec[j.r]
+    if (l != null && r != null) {
+      const minVal = Math.min(l, r)
+      const gap = Math.abs(l - r)
+      if (minVal < j.riskBelow) score -= 8
+      else if (minVal < j.normalMin) score -= 4
+      if (gap >= 15) score -= 6
+      else if (gap >= 8) score -= 3
+    }
+  }
+  for (const j of SCORE_UNILATERAL_JOINTS) {
+    const v = rec[j.key]
+    if (v != null) {
+      if (v < j.riskBelow) score -= 6
+      else if (v < j.normalMin) score -= 3
+    }
+  }
+  return Math.max(0, Math.min(100, Math.round(score)))
+}
+
+/** Separator between score and band: U+00B7 MIDDLE DOT, never an em dash. */
+export const SCORE_BAND_SEPARATOR = ' \u00B7 '
+
+/**
+ * Score + band together, exactly "96/100 · Steady". Used by every Base
+ * surface that shows the overall band.
+ */
+export function formatScoreBand(score: number, band: BandScore): string {
+  return `${score}/100${SCORE_BAND_SEPARATOR}${bandFull(band)}`
+}

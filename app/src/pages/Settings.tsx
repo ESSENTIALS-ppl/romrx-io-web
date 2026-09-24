@@ -9,7 +9,7 @@ import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
 import { FeedbackWidget } from '../components/FeedbackWidget'
 import { cn } from '../lib/cn'
-import { bandFull, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
+import { bandFull, formatScoreBand, mobilityScoreForAssessment, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
 import {
   Save, Loader2, ExternalLink, LogOut, Mail, HelpCircle, ChevronRight,
   ClipboardList, TrendingUp, Bell, KeyRound, Trash2, MessageSquarePlus,
@@ -17,48 +17,6 @@ import {
 } from 'lucide-react'
 
 const PORTAL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-portal-session`
-
-// PRS scoring mirror of MyBody.tsx / BJJ Settings for Assessment History rows
-const PRS_BILATERAL = [
-  { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40 },
-  { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30 },
-  { l: 'hip_abd_l', r: 'hip_abd_r', riskBelow: 30, normalMin: 40 },
-  { l: 'hip_flex_l', r: 'hip_flex_r', riskBelow: 100, normalMin: 100 },
-  { l: 'shoulder_er_l', r: 'shoulder_er_r', riskBelow: 60, normalMin: 60 },
-  { l: 'shoulder_flex_l', r: 'shoulder_flex_r', riskBelow: 120, normalMin: 140 },
-  { l: 'ankle_df_l', r: 'ankle_df_r', riskBelow: 10, normalMin: 10 },
-  { l: 'cervical_lat_l', r: 'cervical_lat_r', riskBelow: 30, normalMin: 40 },
-]
-const PRS_UNILATERAL = [
-  { key: 'lumbar_flex', riskBelow: 40, normalMin: 40 },
-  { key: 'lumbar_ext', riskBelow: 15, normalMin: 20 },
-  { key: 'cervical_flex', riskBelow: 35, normalMin: 45 },
-  { key: 'cervical_ext', riskBelow: 40, normalMin: 55 },
-]
-
-function computePRS(a: Assessment): number {
-  let score = 100
-  const rec = a as unknown as Record<string, number | null>
-  for (const j of PRS_BILATERAL) {
-    const l = rec[j.l], r = rec[j.r]
-    if (l != null && r != null) {
-      const minVal = Math.min(l, r)
-      const gap = Math.abs(l - r)
-      if (minVal < j.riskBelow) score -= 8
-      else if (minVal < j.normalMin) score -= 4
-      if (gap >= 15) score -= 6
-      else if (gap >= 8) score -= 3
-    }
-  }
-  for (const j of PRS_UNILATERAL) {
-    const v = rec[j.key]
-    if (v != null) {
-      if (v < j.riskBelow) score -= 6
-      else if (v < j.normalMin) score -= 3
-    }
-  }
-  return Math.max(0, Math.min(100, Math.round(score)))
-}
 
 function getBandTier(band: BandScore) {
   // Locked Base bands via lib/mobilityBands (single source of truth)
@@ -473,8 +431,9 @@ export function Settings() {
           ) : (
             <div className="divide-y divide-slate-100">
               {history.map((a, i) => {
-                const prs = computePRS(a)
-                const tier = getBandTier(overallBandForAssessment(a) ?? 3)
+                const prs = mobilityScoreForAssessment(a)
+                const band: BandScore = overallBandForAssessment(a) ?? 3
+                const tier = getBandTier(band)
                 return (
                   <div key={a.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                     <div className="flex items-center gap-3">
@@ -485,7 +444,7 @@ export function Settings() {
                         <p className="text-sm font-medium text-cobalt-ink">
                           {new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
-                        <p className={cn('text-xs font-bold', tier.color)}>{tier.label}</p>
+                        <p className={cn('text-xs font-bold', tier.color)}>{formatScoreBand(prs, band)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">

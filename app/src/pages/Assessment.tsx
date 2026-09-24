@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { bandFull, overallBandForAssessment } from '../lib/mobilityBands'
+import { bandFull, mobilityScoreForAssessment, overallBandForAssessment } from '../lib/mobilityBands'
 import { STEPS } from './assessmentSteps'
 import { AssessmentPhases } from './AssessmentPhases'
 import { track } from '../lib/track'
@@ -83,7 +83,8 @@ export function Assessment() {
     }
 
     // Unauthenticated lead capture (marketing funnel) — keep lead edge.
-    const prs_score = 100 // TODO(phase1): server computes authoritative PRS; client sends raw data only.
+    // Same shared /100 number every Base surface shows (lib/mobilityBands).
+    const prs_score = mobilityScoreForAssessment(assessment_data)
     const body: Record<string, unknown> = {
       assessment_data,
       prs_score,

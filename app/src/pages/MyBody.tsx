@@ -13,6 +13,8 @@ import {
   bandChip,
   jointBandsForAssessment,
   jointKeyBase,
+  formatScoreBand,
+  mobilityScoreForAssessment,
   overallBandForAssessment,
   topProblemAreas,
   BAND_DESC,
@@ -60,48 +62,6 @@ function computeStreak(sessionDates: string[]): number {
     cursor.setDate(cursor.getDate() - 1)
   }
   return count
-}
-
-// -- Mobility band (aggregate from joint thresholds) ------------------------------
-const PRS_BILATERAL = [
-  { l: 'hip_er_l', r: 'hip_er_r', riskBelow: 40, normalMin: 40, base: 'hip_er' },
-  { l: 'hip_ir_l', r: 'hip_ir_r', riskBelow: 30, normalMin: 30, base: 'hip_ir' },
-  { l: 'hip_abd_l', r: 'hip_abd_r', riskBelow: 30, normalMin: 40, base: 'hip_abd' },
-  { l: 'hip_flex_l', r: 'hip_flex_r', riskBelow: 100, normalMin: 100, base: 'hip_flex' },
-  { l: 'shoulder_er_l', r: 'shoulder_er_r', riskBelow: 60, normalMin: 60, base: 'shoulder_er' },
-  { l: 'shoulder_flex_l', r: 'shoulder_flex_r', riskBelow: 120, normalMin: 140, base: 'shoulder_flex' },
-  { l: 'ankle_df_l', r: 'ankle_df_r', riskBelow: 10, normalMin: 10, base: 'ankle_df' },
-  { l: 'cervical_lat_l', r: 'cervical_lat_r', riskBelow: 30, normalMin: 40, base: 'cervical_lat' },
-]
-const PRS_UNILATERAL = [
-  { key: 'lumbar_flex', riskBelow: 40, normalMin: 40 },
-  { key: 'lumbar_ext', riskBelow: 15, normalMin: 20 },
-  { key: 'cervical_flex', riskBelow: 35, normalMin: 45 },
-  { key: 'cervical_ext', riskBelow: 40, normalMin: 55 },
-]
-
-function computePRS(a: Assessment): number {
-  let score = 100
-  for (const j of PRS_BILATERAL) {
-    const l = (a as unknown as Record<string, number | null>)[j.l]
-    const r = (a as unknown as Record<string, number | null>)[j.r]
-    if (l != null && r != null) {
-      const minVal = Math.min(l, r)
-      const gap = Math.abs(l - r)
-      if (minVal < j.riskBelow) score -= 8
-      else if (minVal < j.normalMin) score -= 4
-      if (gap >= 15) score -= 6
-      else if (gap >= 8) score -= 3
-    }
-  }
-  for (const j of PRS_UNILATERAL) {
-    const v = (a as unknown as Record<string, number | null>)[j.key]
-    if (v != null) {
-      if (v < j.riskBelow) score -= 6
-      else if (v < j.normalMin) score -= 3
-    }
-  }
-  return Math.max(0, Math.min(100, Math.round(score)))
 }
 
 function getBandTier(band: BandScore) {
@@ -223,7 +183,7 @@ export function MyBody() {
   const RADAR_LABELS = assessments.map(a =>
     new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
   )
-  const prs = computePRS(assessment)
+  const prs = mobilityScoreForAssessment(assessment)
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreas(assessment.worst_joints)
@@ -231,7 +191,7 @@ export function MyBody() {
 
   // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
   const previousAssessment = assessments.length > 1 ? assessments[1] : null
-  const previousPrs = previousAssessment ? computePRS(previousAssessment) : null
+  const previousPrs = previousAssessment ? mobilityScoreForAssessment(previousAssessment) : null
   const prsDelta = previousPrs != null ? prs - previousPrs : null
   const previousDateStr = previousAssessment
     ? new Date(previousAssessment.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -279,7 +239,7 @@ export function MyBody() {
                 </span>
               )}
             </div>
-            <p className={cn('text-lg font-bold leading-tight', tier.color)}>{tier.label}</p>
+            <p className={cn('text-lg font-bold leading-tight', tier.color)}>{formatScoreBand(prs, overallBand)}</p>
             <p className="text-xs text-slate-500 mt-0.5">Retest every 6 weeks to track progress</p>
           </div>
         </div>
