@@ -109,7 +109,7 @@
     // US opt-out copy: Stacy exact text 2026-09-24, Jim GO. EU/UK unchanged.
     var body = isEu
       ? 'We use Meta Pixel cookies and limited event data to measure ads. This is optional. Essential cookies still work either way.'
-      : 'We use essential cookies so ROMRx works. On signup pages, we also use Meta Pixel cookies and limited event data to measure our ads. We do not sell your personal information, but California law may call this a "sale" or "share." Reject turns ads measurement off for this browser. Essential cookies still work either way.';
+      : 'We use essential cookies so ROMRx works. On signup pages, we also use Meta Pixel cookies and limited event data to measure our ads. We do not sell your personal information, but California law may call this a "sale" or "share." Decline turns ads measurement off for this browser. Essential cookies still work either way.';
 
     var el = document.createElement('div');
     el.id = 'rx-consent-banner';
@@ -141,19 +141,19 @@
         optOutConfirm();
       });
     } else {
-      // US: Accept | Reject | Privacy Policy, equal weight (11 CCR 7004). Footer DNS link carries CCPA 1798.135.
+      // US (Jim GO 5:47 PM ET): Decline | Privacy Policy | Accept, identical style (11 CCR 7004). Footer DNS link carries CCPA 1798.135.
       el.innerHTML =
         '<p class="rx-consent-title" id="rx-consent-title"></p>' +
         '<p class="rx-consent-body" id="rx-consent-body"></p>' +
         '<div class="rx-consent-actions">' +
-        '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="grant"></button>' +
         '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="reject"></button>' +
         '<a class="rx-consent-btn rx-consent-btn-equal rx-consent-btn-link" href="' + PRIVACY_URL + '">Privacy Policy</a>' +
+        '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="grant"></button>' +
         '</div>';
       el.querySelector('#rx-consent-title').textContent = title;
       el.querySelector('#rx-consent-body').textContent = body;
       el.querySelector('[data-rx-consent="grant"]').textContent = 'Accept';
-      el.querySelector('[data-rx-consent="reject"]').textContent = 'Reject';
+      el.querySelector('[data-rx-consent="reject"]').textContent = 'Decline';
       el.querySelector('[data-rx-consent="grant"]').addEventListener('click', function () {
         writeRecord('granted'); // GPC still forces denied inside writeRecord
         hideBanner();

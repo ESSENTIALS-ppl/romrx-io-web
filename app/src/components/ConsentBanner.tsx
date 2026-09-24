@@ -83,7 +83,7 @@ export function ConsentBanner() {
   // US opt-out copy: Stacy exact text 2026-09-24, Jim GO. EU/UK unchanged.
   const body = isEu
     ? 'We use Meta Pixel cookies and limited event data to measure ads. This is optional. Essential cookies still work either way.'
-    : 'We use essential cookies so ROMRx works. On signup pages, we also use Meta Pixel cookies and limited event data to measure our ads. We do not sell your personal information, but California law may call this a "sale" or "share." Reject turns ads measurement off for this browser. Essential cookies still work either way.'
+    : 'We use essential cookies so ROMRx works. On signup pages, we also use Meta Pixel cookies and limited event data to measure our ads. We do not sell your personal information, but California law may call this a "sale" or "share." Decline turns ads measurement off for this browser. Essential cookies still work either way.'
 
   const equalBtn =
     'inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50'
@@ -115,16 +115,16 @@ export function ConsentBanner() {
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          {/* Accept | Reject | Privacy Policy, equal weight (11 CCR 7004). Footer DNS link carries CCPA 1798.135. */}
-          <button type="button" className={equalBtn} onClick={grant}>
-            Accept
-          </button>
+          {/* Jim GO 5:47 PM ET: Decline | Privacy Policy | Accept, identical style (11 CCR 7004). Footer DNS link carries CCPA 1798.135. */}
           <button type="button" className={equalBtn} onClick={deny}>
-            Reject
+            Decline
           </button>
           <a href={PRIVACY_POLICY_URL} className={equalBtn}>
             Privacy Policy
           </a>
+          <button type="button" className={equalBtn} onClick={grant}>
+            Accept
+          </button>
         </div>
       )}
     </div>
