@@ -217,7 +217,7 @@ ARTICLES_LIST += [
         },
         "sections": [
             ("The short answer on how long to hold a stretch", """
-<p>For flexibility gains, a systematic review and meta-analysis on <a href="%(dose)s">optimising the dose of static stretching</a> found the sweet spot is a cumulative 4 minutes per muscle group in a single session and about 10 minutes per muscle group per week, with no added benefit beyond that. A single hold of 30 to 60 seconds, repeated for a few sets, reaches those targets comfortably.</p>
+<p>For flexibility gains, a systematic review and meta-analysis on <a href="%(dose)s">optimizing the dose of static stretching</a> found the sweet spot is a cumulative 4 minutes per muscle group in a single session and about 10 minutes per muscle group per week, with no added benefit beyond that. A single hold of 30 to 60 seconds, repeated for a few sets, reaches those targets comfortably.</p>
 """ % {"dose": L_DOSE}),
             ("Why total weekly time matters more than a single hold", """
 <p>A review of <a href="%(dose2)s">stretching typology and duration</a> concluded that range-of-motion gains depend mainly on total weekly stretching time rather than the length of any one hold, with a minimum around 5 minutes per week per muscle to see change. In other words, frequency and total volume drive results.</p>

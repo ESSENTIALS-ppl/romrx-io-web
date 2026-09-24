@@ -316,7 +316,7 @@ export function MyBody() {
             </RadarChart>
           </ResponsiveContainer>
           <p className="text-[11px] text-slate-500 mt-1 text-center">
-            Worse side, % of your Base target. Outer ring is Steady (100%), next ring in is 90%. Dot colour shows the band.
+            Worse side, % of your Base target. Outer ring is Steady (100%), next ring in is 90%. Dot color shows the band.
           </p>
         </SectionCard>
 
