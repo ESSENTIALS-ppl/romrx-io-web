@@ -69,11 +69,11 @@ export function BaseRadar({ rows, radius = radarRadius }: { rows: RadarSideRow[]
 
         {/* Steady target reference circle */}
         <circle cx={CX} cy={CY} r={R} fill="none" stroke={TARGET_COLOR} strokeWidth={1.5} strokeDasharray={TARGET_DASH} data-ring="steady-target" />
-        <text
-          x={CX + (R - 11) * Math.cos(-Math.PI * 5 / 12)} y={CY + (R - 11) * Math.sin(-Math.PI * 5 / 12) + 3}
-          fontSize={8} fontWeight={600} fill={TARGET_COLOR} textAnchor="middle"
-          stroke="#ffffff" strokeWidth={3} paintOrder="stroke"
-        >Steady target</text>
+        {/* Label sits in the empty bottom-left corner, outside the plot: never collides with lines */}
+        <g data-label="steady-target">
+          <line x1={6} y1={H - 10} x2={24} y2={H - 10} stroke={TARGET_COLOR} strokeWidth={1.5} strokeDasharray={TARGET_DASH} />
+          <text x={28} y={H - 7} fontSize={9} fontWeight={600} fill={TARGET_COLOR}>Steady target</text>
+        </g>
 
         {/* Right (dashed teal) then Left (solid slate) on top */}
         <polygon
