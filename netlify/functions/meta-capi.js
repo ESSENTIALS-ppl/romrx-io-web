@@ -34,6 +34,19 @@ function isAllowedSourceUrl(raw) {
   return ALLOWED_PATHS.some((re) => re.test(u.pathname));
 }
 
+// Meta browser/click IDs (fbp/fbc), Meta's documented format, validated and
+// length-capped; anything else is dropped. Opaque first-party IDs only: no
+// email, no hashing, no health data. Only read after every gate below passes.
+// Keep in sync with app/src/lib/metaAttribution.ts + assets/meta-attribution.js.
+const FBP_RE = /^fb\.[0-2]\.\d{13}\.\d{1,24}(?:\.[A-Za-z0-9_-]{2,8})?$/;
+const FBC_RE = /^fb\.[0-2]\.\d{13}\.[A-Za-z0-9_-]{1,400}(?:\.[A-Za-z0-9_-]{2,8})?$/;
+function cleanFbp(v) {
+  return typeof v === 'string' && v.length <= 128 && FBP_RE.test(v) ? v : undefined;
+}
+function cleanFbc(v) {
+  return typeof v === 'string' && v.length <= 500 && FBC_RE.test(v) ? v : undefined;
+}
+
 // Best-effort dedupe within a warm function instance.
 const recentIds = new Map();
 const DEDUPE_TTL_MS = 10 * 60 * 1000;
@@ -149,6 +162,11 @@ exports.handler = async (event) => {
   const userData = {};
   if (clientIp) userData.client_ip_address = clientIp;
   if (userAgent) userData.client_user_agent = userAgent;
+  // fbp/fbc: reached only after flag, GPC, origin, signup-path, and consent gates.
+  const fbp = cleanFbp(payload.fbp);
+  const fbc = cleanFbc(payload.fbc);
+  if (fbp) userData.fbp = fbp;
+  if (fbc) userData.fbc = fbc;
   // Automatic Advanced Matching OFF: do not attach em/ph from client.
 
   const body = {
@@ -184,4 +202,4 @@ exports.handler = async (event) => {
   }
 };
 
-exports._test = { isAllowedSourceUrl };
+exports._test = { isAllowedSourceUrl, cleanFbp, cleanFbc };

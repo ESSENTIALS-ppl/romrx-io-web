@@ -140,22 +140,81 @@
     return 'm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
   }
 
-  function sendCapi(eventName, eventId) {
-    if (!canSend()) return;
+  // Meta browser/click IDs (fbp/fbc) for CAPI matching, Meta's documented format:
+  //   fbp = fb.<idx>.<creationTimeMs>.<random>[.<appendix>]
+  //   fbc = fb.<idx>.<creationTimeMs>.<fbclid>[.<appendix>]
+  // Read ONLY after canSend() (flag + granted + no GPC + signup allowlist).
+  // fbclid is never sent as a URL; event_source_url stays origin + path.
+  // Keep in sync with app/src/lib/metaAttribution.ts + netlify/functions/meta-capi.js.
+  var FBP_RE = /^fb\.[0-2]\.\d{13}\.\d{1,24}(?:\.[A-Za-z0-9_-]{2,8})?$/;
+  var FBC_RE = /^fb\.[0-2]\.\d{13}\.[A-Za-z0-9_-]{1,400}(?:\.[A-Za-z0-9_-]{2,8})?$/;
+  var FBCLID_RE = /^[A-Za-z0-9_-]{1,400}$/;
+  function validFbp(v) { return typeof v === 'string' && v.length <= 128 && FBP_RE.test(v); }
+  function validFbc(v) { return typeof v === 'string' && v.length <= 500 && FBC_RE.test(v); }
+  function readCookie(name) {
     try {
+      var parts = (document.cookie || '').split(';');
+      for (var i = 0; i < parts.length; i++) {
+        var j = parts[i].indexOf('=');
+        if (j < 0) continue;
+        if (parts[i].slice(0, j).trim() === name) return decodeURIComponent(parts[i].slice(j + 1).trim());
+      }
+    } catch (e) { /* ignore */ }
+    return undefined;
+  }
+  function queryParam(name) {
+    try {
+      var q = (window.location.search || '').replace(/^\?/, '').split('&');
+      for (var i = 0; i < q.length; i++) {
+        var kv = q[i].split('=');
+        if (decodeURIComponent(kv[0] || '') === name) return decodeURIComponent((kv[1] || '').replace(/\+/g, ' '));
+      }
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+  function browserIds() {
+    var out = {};
+    var fbp = readCookie('_fbp');
+    if (validFbp(fbp)) out.fbp = fbp;
+    var cookieFbc = readCookie('_fbc');
+    var fbclid = queryParam('fbclid');
+    if (fbclid && FBCLID_RE.test(fbclid)) {
+      var matches = validFbc(cookieFbc) &&
+        (cookieFbc.slice(-(fbclid.length + 1)) === '.' + fbclid || cookieFbc.indexOf('.' + fbclid + '.') >= 0);
+      var fbc = matches ? cookieFbc : 'fb.1.' + Date.now() + '.' + fbclid;
+      if (validFbc(fbc)) out.fbc = fbc;
+    } else if (validFbc(cookieFbc)) {
+      out.fbc = cookieFbc;
+    }
+    return out;
+  }
+
+  // First event after Allow: fbevents sets _fbp shortly after it loads; wait briefly.
+  function sendCapi(eventName, eventId, waitedMs) {
+    if (!canSend()) return;
+    var ids = browserIds();
+    waitedMs = waitedMs || 0;
+    if (!ids.fbp && waitedMs < 1500) {
+      setTimeout(function () { sendCapi(eventName, eventId, waitedMs + 150); }, 150);
+      return;
+    }
+    try {
+      var body = {
+        event_name: eventName,
+        event_id: eventId,
+        event_time: Math.floor(Date.now() / 1000),
+        action_source: 'website',
+        event_source_url: ((window.location.origin || 'https://romrx.io') + (window.location.pathname || '/')).slice(0, 500),
+        consent_version: '2026-09-21-privacy-b',
+        consent_state: 'granted',
+        properties: {},
+      };
+      if (ids.fbp) body.fbp = ids.fbp;
+      if (ids.fbc) body.fbc = ids.fbc;
       fetch(CAPI_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event_name: eventName,
-          event_id: eventId,
-          event_time: Math.floor(Date.now() / 1000),
-          action_source: 'website',
-          event_source_url: ((window.location.origin || 'https://romrx.io') + (window.location.pathname || '/')).slice(0, 500),
-          consent_version: '2026-09-21-privacy-b',
-          consent_state: 'granted',
-          properties: {},
-        }),
+        body: JSON.stringify(body),
         keepalive: true,
       }).catch(function () { /* Meta outage must not block */ });
     } catch (e) { /* ignore */ }
