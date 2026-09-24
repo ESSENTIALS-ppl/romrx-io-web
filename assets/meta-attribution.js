@@ -26,8 +26,22 @@
 
   var CONSENT_KEY = 'romrx.consent.v1';
   var SAFE_QUERY = {
-    utm_source: 1, utm_medium: 1, utm_campaign: 1, utm_content: 1, utm_term: 1, fbclid: 1, sport: 1, ref: 1
+    utm_source: 1, utm_medium: 1, utm_campaign: 1, utm_content: 1, utm_term: 1, fbclid: 1, sport: 1, ref: 1, add: 1
   };
+  // Approved scope (Jim 2026-09-24): public signup pages ONLY. Marketing pages
+  // (/, /legal, /beta, ...) never load fbevents or POST CAPI, even with consent.
+  // Keep in sync with app/src/lib/metaAttribution.ts + netlify/functions/meta-capi.js.
+  var SAFE_PATHS = [/^\/app\/signup\/?$/, /^\/app\/signup\/[a-z0-9-]+\/?$/i];
+
+  function safePath() {
+    try {
+      var p = window.location.pathname || '/';
+      for (var i = 0; i < SAFE_PATHS.length; i++) {
+        if (SAFE_PATHS[i].test(p)) return true;
+      }
+    } catch (e) { /* ignore */ }
+    return false;
+  }
 
   // Any query key outside the allowlist (email, name, lead, token...) blocks Meta on this page.
   function safeLocation() {
@@ -75,6 +89,7 @@
       META_ATTRIBUTION_ENABLED === true &&
       readConsentState() === 'granted' &&
       !!pixelId() &&
+      safePath() &&
       safeLocation()
     );
   }
@@ -89,6 +104,8 @@
       return pixelReady;
     }
     var id = pixelId();
+    // fbevents already running (revoked earlier, now re-granted) -> grant the live instance.
+    var alreadyRunning = typeof window.fbq === 'function' && typeof window.fbq.callMethod === 'function';
     /* Meta stub pattern */
     if (!window.fbq) {
       var n = function () {
@@ -101,10 +118,12 @@
       n.queue = [];
       window.fbq = n;
     }
-    window.fbq('consent', 'revoke');
+    // Only reached after consent === 'granted'. NO pre-load consent revoke:
+    // fbevents pauses its queue on a queued revoke and never runs the later
+    // grant (live self-check FAIL 2026-09-24).
+    if (alreadyRunning) window.fbq('consent', 'grant');
     window.fbq('set', 'autoConfig', false, id);
     window.fbq('init', id);
-    window.fbq('consent', 'grant');
     var s = document.createElement('script');
     s.async = true;
     s.src = 'https://connect.facebook.net/en_US/fbevents.js';
@@ -157,7 +176,12 @@
   function revoke() {
     pixelReady = false;
     try {
-      if (typeof window.fbq === 'function') window.fbq('consent', 'revoke');
+      var f = window.fbq;
+      if (typeof f === 'function') {
+        // Live fbevents: revoke. Stub not loaded yet: drop queued calls (a queued revoke stalls fbevents).
+        if (typeof f.callMethod === 'function') f('consent', 'revoke');
+        else if (f.queue && f.queue.length) f.queue.length = 0;
+      }
     } catch (e) { /* ignore */ }
     var s = document.querySelector('script[data-rx-meta-pixel]');
     if (s) s.remove();
