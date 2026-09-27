@@ -8,7 +8,11 @@
   # for /app/ (Field RISK 2026-09-08). Local Vite still has its own index.
   # npm test = permanent Base band guard (src/lib/mobilityBands.test.ts); a
   # failing band test blocks the deploy (P0 2026-09-24).
-  command = "cd app && npm install && npm test && npm run build && rm -f index.html"
+  # stamp-asset-version: rewrites every non-hashed /assets/*.js|css reference
+  # (HTML pages, partials.js -> consent.js, consent.js -> consent.css) to
+  # ?v=<COMMIT_REF> so returning browsers get a NEW URL each deploy; fails the
+  # build if any bare reference is left (Field 2026-09-27, stale cookie banner).
+  command = "node scripts/stamp-asset-version.mjs && cd app && npm install && npm test && npm run build && rm -f index.html"
 
 # HQ React app static asset passthrough. Serves /app/assets/* from app/dist/.
 # This must come BEFORE the SPA fallback below.
@@ -58,19 +62,20 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
 
-[[headers]]
-  for = "/assets/*.js"
-  [headers.values]
-    # Consent + Meta stubs must not be immutable — enable / copy flips need refresh.
-    Cache-Control = "public, max-age=300, must-revalidate"
-
-[[headers]]
-  for = "/assets/*.css"
-  [headers.values]
-    Cache-Control = "public, max-age=300, must-revalidate"
-
+# Non-hashed /assets/* (consent.js, partials.js, design-tokens.css, fonts,
+# images): NEVER immutable. These filenames do not change when content does;
+# a year-long immutable cache kept the pre-#79 cookie banner in returning
+# browsers (Field 2026-09-27). One rule only: the old /assets/*.js and
+# /assets/*.css max-age=300 rules never took effect live; /assets/* immutable won.
+# HTML references them as ?v=<COMMIT_REF> (scripts/stamp-asset-version.mjs).
 [[headers]]
   for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Vite bundles are content-hashed (index-<hash>.js), so immutable is safe here.
+[[headers]]
+  for = "/app/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
