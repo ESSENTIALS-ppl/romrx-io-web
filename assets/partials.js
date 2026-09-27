@@ -44,6 +44,23 @@ const RX_NAV = `
 </nav>
 `;
 
+/* Minimal chrome (Jim via Grant 2026-09-27): pages with
+   <body data-rx-chrome="minimal"> (/legal) get the SAME header the homepage
+   renders (wordmark -> /, Log in, Start Free Assessment), no universe footer,
+   and the legal footer without the Articles link. Nothing else on the site is
+   reachable from the privacy page. */
+const RX_NAV_MINIMAL = `
+<nav class="rx-nav rx-home-nav">
+  <div class="rx-nav-inner">
+    <a href="/" class="rx-wordmark">ROMRx</a>
+    <div class="rx-nav-links">
+      <a href="/app/login" class="nav-login mobile-hide-ok">Log in</a>
+    </div>
+    <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start Free Assessment →</a>
+  </div>
+</nav>
+`;
+
 const RX_UNIVERSE = ({ here }) => {
   const rows = [
     { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   href: 'https://romrxbjj.com' },
@@ -125,8 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const navSlot = document.querySelector('[data-rx-slot="nav"]');
   const uniSlot = document.querySelector('[data-rx-slot="universe"]');
   const legalSlot = document.querySelector('[data-rx-slot="legal"]');
+  const minimal = document.body.dataset.rxChrome === 'minimal';
 
-  if (navSlot) {
+  if (navSlot && minimal) {
+    navSlot.outerHTML = RX_NAV_MINIMAL;
+  } else if (navSlot) {
     navSlot.outerHTML = RX_NAV;
     // Mark active nav link
     const path = window.location.pathname.replace(/\/$/, '') || '/';
@@ -137,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el) el.classList.add('active');
     }
   }
-  if (uniSlot) uniSlot.outerHTML = RX_UNIVERSE({ here });
-  if (legalSlot) legalSlot.outerHTML = RX_LEGAL;
+  if (uniSlot) uniSlot.outerHTML = minimal ? '' : RX_UNIVERSE({ here });
+  if (legalSlot) legalSlot.outerHTML = minimal ? RX_LEGAL.replace('<a href="/articles">Articles</a> ·', '') : RX_LEGAL;
   ensureConsentScript();
   ensureMetaAttributionScript();
 });
