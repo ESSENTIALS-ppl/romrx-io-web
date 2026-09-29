@@ -176,7 +176,7 @@
         <button type="submit" class="rx-cta primary" style="width:100%;">Send Inquiry &rarr;</button>
         <p class="rx-form-msg" id="partner-msg"></p>
       </form>
-      <p class="rx-fine rx-center rx-mt-md">Or email <a href="mailto:partners@romrx.io" class="rx-inline-link">partners@romrx.io</a> directly.</p>
+      <p class="rx-fine rx-center rx-mt-md">Or email <a href="mailto:hello@romrx.io" class="rx-inline-link">hello@romrx.io</a> directly.</p>
     </div>
   </section>
 
@@ -192,8 +192,8 @@
       try {
         const res = await fetch(form.action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (res.ok) { msg.textContent = 'Thanks. Jim will be in touch within 2 business days.'; form.reset(); }
-        else { msg.textContent = 'Something went wrong. Please email partners@romrx.io directly.'; }
-      } catch { msg.textContent = 'Network error. Please email partners@romrx.io directly.'; }
+        else { msg.textContent = 'Something went wrong. Please email hello@romrx.io directly.'; }
+      } catch { msg.textContent = 'Network error. Please email hello@romrx.io directly.'; }
     });
   </script>
 </body>
