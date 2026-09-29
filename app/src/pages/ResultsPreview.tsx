@@ -318,7 +318,7 @@ export function ResultsPreview() {
               Unlock Base only (free through Dec 31, 2026)
             </button>
             <p className="text-center text-xs text-white/40">
-              Base is free through December 31, 2026 (billing starts January 1, 2027). {sportCopy.wordmark} is an add-on after Base.
+              Base is free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime. {sportCopy.wordmark} is an add-on after Base.
               Combo checkout starts Base and carries your sport intent for the next step.
             </p>
           </div>
@@ -335,7 +335,7 @@ export function ResultsPreview() {
         )}
 
         <p className="text-center text-xs text-white/30">
-          ROMRx Base is free through December 31, 2026. Billing starts January 1, 2027. Cancel anytime. Results saved permanently.
+          ROMRx Base is free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime. Results saved permanently.
         </p>
       </div>
     </div>
