@@ -1,6 +1,12 @@
 // ROMRx, Partner Inquiry
 // Persists to Supabase `partner_inquiries` and emails partners@romrx.io via Resend.
 
+// Supabase server key: prefer the new secret key (sb_secret_..., env SUPABASE_SECRET_KEY),
+// fall back to the legacy service_role JWT. sb_ keys go on `apikey` only (Bearer is rejected);
+// legacy JWTs need both headers. (sec 2026-09-29, prep for disabling legacy keys)
+const SB_SERVER_KEY = (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+const sbServerHeaders = (k) => (k.startsWith('sb_') ? { apikey: k } : { apikey: k, Authorization: `Bearer ${k}` });
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -35,13 +41,12 @@ exports.handler = async (event) => {
     created_at: new Date().toISOString(),
   };
 
-  if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+  if (SUPABASE_URL && SB_SERVER_KEY) {
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/partner_inquiries`, {
         method: 'POST',
         headers: {
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          ...sbServerHeaders(SB_SERVER_KEY),
           'Content-Type': 'application/json',
           Prefer: 'return=minimal',
         },
