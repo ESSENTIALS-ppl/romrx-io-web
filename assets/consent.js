@@ -204,9 +204,43 @@
     );
   }
 
+  // Bottom padding while the banner is open, on every page that loads this script: the footer
+  // Don't Sell link and explainer must be reachable above the banner (Field #99, 2026-09-29: the
+  // home page at 375px hid them under the tall mobile banner; only /legal had opted in before).
+  // Padding = the banner's measured height, kept in sync by ResizeObserver/resize, removed on hide.
+  // CSS in consent.css.
+  var padObserver = null;
+  function syncBannerPad() {
+    var root = document.documentElement;
+    if (!root || !root.classList || !root.style) return;
+    var b = document.getElementById('rx-consent-banner');
+    var open = !!b && !b.hasAttribute('hidden');
+    if (!open || !document.body) {
+      root.classList.remove('rx-consent-open');
+      root.style.removeProperty('--rx-consent-pad');
+      return;
+    }
+    if (typeof b.getBoundingClientRect !== 'function') return;
+    var r = b.getBoundingClientRect();
+    // banner height + its gap from the bottom edge + 16px breathing room
+    var pad = Math.ceil(r.height + Math.max(0, window.innerHeight - r.bottom) + 16);
+    root.style.setProperty('--rx-consent-pad', pad + 'px');
+    root.classList.add('rx-consent-open');
+  }
+  function watchBannerPad(el) {
+    syncBannerPad();
+    if (padObserver) { try { padObserver.disconnect(); } catch (e) {} padObserver = null; }
+    if (el && typeof ResizeObserver !== 'undefined') {
+      padObserver = new ResizeObserver(syncBannerPad);
+      padObserver.observe(el);
+    }
+  }
+  if (typeof window.addEventListener === 'function') window.addEventListener('resize', syncBannerPad);
+
   function hideBanner() {
     var b = document.getElementById('rx-consent-banner');
     if (b) b.setAttribute('hidden', '');
+    syncBannerPad();
   }
 
   function renderBanner(mode) {
@@ -277,6 +311,7 @@
     }
 
     document.body.appendChild(el);
+    watchBannerPad(el);
   }
 
   function applyDnsOptOut(fromGpc) {

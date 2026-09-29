@@ -101,7 +101,7 @@ interface JointDef {
 const JOINTS: JointDef[] = [
   {
     key: 'hip_er', label: 'Hip External Rotation',
-    why: 'Deep squats, wide stances, hip mobility for everyday movement and lower-back protection.',
+    why: 'Deep squats, wide stances, and hip mobility for everyday movement.',
     leftKey: 'hip_er_l', rightKey: 'hip_er_r',
     rxKey: 'hip_er',
   },
@@ -125,7 +125,7 @@ const JOINTS: JointDef[] = [
   },
   {
     key: 'shoulder_er', label: 'Shoulder External Rotation',
-    why: 'Overhead pressing, throwing, rotator cuff health, and shoulder injury prevention.',
+    why: 'Overhead pressing, throwing, and everyday reaching.',
     leftKey: 'shoulder_er_l', rightKey: 'shoulder_er_r',
     rxKey: 'shoulder_er',
   },
@@ -137,7 +137,7 @@ const JOINTS: JointDef[] = [
   },
   {
     key: 'ankle_df', label: 'Ankle Dorsiflexion',
-    why: 'Squat depth, balance, walking mechanics, and knee-joint protection.',
+    why: 'Squat depth, balance, and walking mechanics.',
     leftKey: 'ankle_df_l', rightKey: 'ankle_df_r',
     rxKey: 'ankle_df',
   },

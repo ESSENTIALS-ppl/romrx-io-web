@@ -24,8 +24,8 @@ Plain HTML / CSS / JS. Client-side partial injection (nav, universe footer, lega
 
 ## Netlify Functions
 
-- `investor-request`, POST → Supabase `investor_requests` + email `investors@romrx.io`
-- `partner-inquiry`, POST → Supabase `partner_inquiries` + email `partners@romrx.io`
+- `investor-request`, POST → Supabase `investor_requests`; DB trigger → edge fn `notify-inbound-lead` emails jim@romrx.io (reply-to = submitter)
+- `partner-inquiry`, POST → Supabase `partner_inquiries`; DB trigger → edge fn `notify-inbound-lead` emails jim@romrx.io (reply-to = submitter)
 - `waitlist`, POST → Supabase `sport_pack_waitlist`
 
 ## Required env vars (Netlify)
@@ -39,13 +39,13 @@ RESEND_API_KEY
 ## Supabase tables to create
 
 - `investor_requests`, name, email, firm, stage, notes, source, created_at
-- `partner_inquiries`, name, email, org, track, athletes, notes, source, created_at
+- `partner_inquiries`, name, email, org, website, product_category, offer_type, notes, source, created_at (track, athletes: legacy, old form only)
 - `sport_pack_waitlist`, email, sport, sport_interest, notes, source, created_at (unique on email)
 
 ## Google Workspace aliases to create
 
 - `investors@romrx.io` → forward to `send.jim.scott@gmail.com`
-- `partners@romrx.io` → forward to `send.jim.scott@gmail.com`
+- `partners@romrx.io`: retired Sep 29, 2026 (use hello@romrx.io)
 - `hello@romrx.io` → forward to `send.jim.scott@gmail.com`
 - `privacy@romrx.io` → forward to `send.jim.scott@gmail.com`
 - `no-reply@romrx.io` → configured in Resend

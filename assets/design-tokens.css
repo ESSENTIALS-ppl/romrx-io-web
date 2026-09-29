@@ -96,6 +96,7 @@ img, svg { max-width: 100%; display: block; }
 .rx-nav-inner {
   max-width: var(--rx-max); margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; /* wordmark / Log in / CTA never touch (Field 2026-09-28, 375px) */
   padding: 18px 32px;
 }
 .rx-wordmark {
@@ -405,6 +406,15 @@ img, svg { max-width: 100%; display: block; }
   .rx-legal-inner { padding: 0 20px; flex-direction: column; text-align: center; }
   .rx-trademarks { padding: 12px 20px 0; }
 }
+/* Phones (375px): keep a visible gap between wordmark, Log in and the CTA. */
+@media (max-width: 420px) {
+  .rx-nav-inner { padding: 14px 16px; gap: 12px; }
+  .rx-nav .rx-cta { padding: 9px 12px; font-size: 0.84rem; white-space: nowrap; }
+}
+@media (max-width: 360px) {
+  .rx-nav-inner { gap: 10px; }
+  .rx-nav .rx-cta { white-space: normal; line-height: 1.25; text-align: center; }
+}
 
 /* ============================================================
    EXTENDED CLASSES (v3.2 subpages)
@@ -618,6 +628,8 @@ img, svg { max-width: 100%; display: block; }
 /* Legal doc */
 .rx-legal-doc { display: flex; flex-direction: column; gap: 12px; line-height: 1.65; }
 .rx-legal-doc h2 { margin-top: 32px; }
+/* /legal#privacy etc.: anchored headings land below the sticky header (nav is ~76-84px tall). */
+.rx-legal-doc [id] { scroll-margin-top: 104px; }
 .rx-legal-doc h3 { margin-top: 20px; color: var(--rx-text); }
 .rx-hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 40px 0; }
 

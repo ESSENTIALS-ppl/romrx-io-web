@@ -262,7 +262,7 @@ export function ResultsPreview() {
                 </div>
               </div>
             ))}
-            <p className="text-xs text-white/40 pt-1">Asymmetry is one of the top predictors of injury risk in athletes.</p>
+            <p className="text-xs text-white/40 pt-1">Left/right gaps are worth tracking as you retest.</p>
           </div>
         )}
 
