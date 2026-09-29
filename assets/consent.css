@@ -16,6 +16,12 @@
   font-family: var(--rx-font-body, Inter, system-ui, sans-serif);
 }
 .rx-consent-banner[hidden] { display: none !important; }
+/* Pages with <body data-rx-banner-pad> (/legal) reserve room under the open banner so the
+   footer Don't Sell explainer can scroll above it (same idea as the app, #87). Only while open. */
+html.rx-consent-open body[data-rx-banner-pad] {
+  padding-bottom: var(--rx-consent-pad, 0px);
+}
+html.rx-consent-open:has(body[data-rx-banner-pad]) { scroll-padding-bottom: var(--rx-consent-pad, 0px); }
 .rx-consent-title {
   font-family: var(--rx-font-display, Inter Tight, Inter, sans-serif);
   font-weight: 700;
