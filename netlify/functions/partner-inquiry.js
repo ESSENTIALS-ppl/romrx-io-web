@@ -7,11 +7,16 @@
 // 2026-09-29: returns 502 unless the row is actually stored, so the page shows
 // the "please email us" fallback instead of a false "Thanks".
 //
-// Stored fields: name, email, org, track, athletes, notes, source, created_at.
+// Stored fields (the live /partners form, #100): name, email, org, website,
+// product_category, offer_type, notes, source, created_at. track/athletes are
+// legacy columns from the old 3-track form; stored only if a caller still sends them.
+//
+// 2026-09-29 fix: website, product_category and offer_type were dropped (saved as
+// null) because this function still read the old track/athletes names.
 //
 // Required env vars (Netlify): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
-const LIMITS = { name: 200, email: 320, org: 200, track: 100, athletes: 100, notes: 5000 };
+const LIMITS = { name: 200, email: 320, org: 200, website: 500, product_category: 100, offer_type: 100, track: 100, athletes: 100, notes: 5000 };
 const EMAIL_RE = /^[^\s@<>(),;:"]+@[^\s@<>(),;:"]+\.[^\s@<>(),;:"]+$/;
 
 const clean = (v, max) => {
@@ -58,6 +63,9 @@ exports.handler = async (event) => {
     name,
     email,
     org,
+    website: clean(payload.website, LIMITS.website),
+    product_category: clean(payload.product_category, LIMITS.product_category),
+    offer_type: clean(payload.offer_type, LIMITS.offer_type),
     track: clean(payload.track, LIMITS.track),
     athletes: clean(payload.athletes, LIMITS.athletes),
     notes: clean(payload.notes, LIMITS.notes),

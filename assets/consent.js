@@ -204,9 +204,40 @@
     );
   }
 
+  // Bottom padding while the banner is open, for pages that opt in with <body data-rx-banner-pad>
+  // (/legal): the footer Don't Sell explainer must be reachable above the banner. CSS in consent.css.
+  var padObserver = null;
+  function syncBannerPad() {
+    var root = document.documentElement;
+    if (!root || !root.classList || !root.style) return;
+    var b = document.getElementById('rx-consent-banner');
+    var open = !!b && !b.hasAttribute('hidden');
+    if (!open || !document.body || !document.body.hasAttribute('data-rx-banner-pad')) {
+      root.classList.remove('rx-consent-open');
+      root.style.removeProperty('--rx-consent-pad');
+      return;
+    }
+    if (typeof b.getBoundingClientRect !== 'function') return;
+    var r = b.getBoundingClientRect();
+    // banner height + its gap from the bottom edge + 16px breathing room
+    var pad = Math.ceil(r.height + Math.max(0, window.innerHeight - r.bottom) + 16);
+    root.style.setProperty('--rx-consent-pad', pad + 'px');
+    root.classList.add('rx-consent-open');
+  }
+  function watchBannerPad(el) {
+    syncBannerPad();
+    if (padObserver) { try { padObserver.disconnect(); } catch (e) {} padObserver = null; }
+    if (el && typeof ResizeObserver !== 'undefined') {
+      padObserver = new ResizeObserver(syncBannerPad);
+      padObserver.observe(el);
+    }
+  }
+  if (typeof window.addEventListener === 'function') window.addEventListener('resize', syncBannerPad);
+
   function hideBanner() {
     var b = document.getElementById('rx-consent-banner');
     if (b) b.setAttribute('hidden', '');
+    syncBannerPad();
   }
 
   function renderBanner(mode) {
@@ -277,6 +308,7 @@
     }
 
     document.body.appendChild(el);
+    watchBannerPad(el);
   }
 
   function applyDnsOptOut(fromGpc) {
