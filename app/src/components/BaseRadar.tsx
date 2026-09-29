@@ -12,7 +12,8 @@ import { radarRadius, BUILDING_RING_PCT } from '../lib/radarScale'
 
 export const RADAR_LEFT_COLOR = '#334155' // slate-700, solid
 export const RADAR_RIGHT_COLOR = '#0F766E' // teal-700, dashed
-const RIGHT_DASH = '6 4'
+export const RADAR_RIGHT_DASH = '6 4'
+const RIGHT_DASH = RADAR_RIGHT_DASH
 const TARGET_COLOR = '#1D4ED8' // cobalt = Steady
 const TARGET_DASH = '2 4'
 const GAP_TINT = 'rgba(239, 68, 68, 0.14)' // light red
@@ -180,7 +181,7 @@ export function BaseRadar({ rows, radius = radarRadius }: { rows: RadarSideRow[]
         </span>
         <span className="inline-flex items-center gap-1.5">
           <svg width="22" height="6" aria-hidden><line x1="0" y1="3" x2="22" y2="3" stroke={TARGET_COLOR} strokeWidth="1.5" strokeDasharray={TARGET_DASH} /></svg>
-          Steady target
+          <span className="font-semibold" style={{ color: TARGET_COLOR }} data-band-label="3">Steady target</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-sm" style={{ background: GAP_TINT, border: '1px solid rgba(239,68,68,0.3)' }} />
