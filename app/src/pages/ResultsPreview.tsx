@@ -335,7 +335,7 @@ export function ResultsPreview() {
         )}
 
         <p className="text-center text-xs text-white/30">
-          ROMRx Base is free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime. Results saved permanently.
+          ROMRx Base is free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime. Your results are saved to your account.
         </p>
       </div>
     </div>
