@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Loader2, UserPlus, Mail } from 'lucide-react'
 import { track } from '../lib/track'
-import { trackMetaLead } from '../lib/metaAttribution'
+import { trackMetaCompleteRegistration, trackMetaLead } from '../lib/metaAttribution'
 import { captureUtmFromUrl, getSignupAttribution } from '../lib/utm'
 import { cn } from '../lib/cn'
 import { DoNotSellLink } from '../components/ConsentBanner'
@@ -105,12 +105,14 @@ export function Signup() {
       }).eq('id', data.user.id)
       if (demoErr && import.meta.env.DEV) console.warn('[signup] demographics/utm update', demoErr.message)
       trackMetaLead()
+      trackMetaCompleteRegistration(data.user.id)
       navigate(nextDest, { replace: true })
       return
     }
 
     if (data.user) {
       trackMetaLead()
+      trackMetaCompleteRegistration(data.user.id)
       setCheckEmail(true)
       setLoading(false)
       return
