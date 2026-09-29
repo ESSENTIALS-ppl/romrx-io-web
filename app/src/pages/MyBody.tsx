@@ -91,9 +91,15 @@ function JointBar({ row }: { row: JointDisplayRow }) {
   // Name, bar, % and chip colours all derive from this band (no separate threshold).
   const tone = jointBand != null ? BAND_TONE[jointBand] : null
 
+  // Layout: phones (< sm) use a 2-row grid so the row never needs more width than the card:
+  // [label ......... chip] then [bar | value | %], with fixed value/% columns so every bar
+  // lines up. sm and up keep the original single row (label w-32 | bar | value w-20 | % w-8 | chip w-20).
   return (
-    <div className="flex items-center gap-3 py-2" data-joint={row.key} data-pct={pct} data-band={jointBand ?? ''}>
-      <div className="w-32 shrink-0">
+    <div
+      className="grid grid-cols-[minmax(0,1fr)_4.5rem_2.5rem] items-center gap-x-3 gap-y-1.5 py-2 sm:flex sm:gap-3"
+      data-joint={row.key} data-pct={pct} data-band={jointBand ?? ''}
+    >
+      <div className="col-start-1 row-start-1 min-w-0 sm:w-32 sm:shrink-0">
         <p className={cn('text-xs font-medium', tone ? tone.label : 'text-slate-500')}>{label}</p>
         {asym > 10 && (
           <p className="text-xs text-yellow-600 flex items-center gap-0.5 mt-0.5">
@@ -101,23 +107,23 @@ function JointBar({ row }: { row: JointDisplayRow }) {
           </p>
         )}
       </div>
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="col-start-1 row-start-2 min-w-0 h-2 bg-gray-100 rounded-full overflow-hidden sm:flex-1">
         <div
           className={cn('h-full rounded-full transition-all duration-500', tone ? tone.bar : 'bg-slate-300')}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="w-20 text-right shrink-0 text-xs text-slate-500">
+      <div className="col-start-2 row-start-2 text-right whitespace-nowrap text-xs text-slate-500 sm:w-20 sm:shrink-0">
         {midline != null
           ? `${formatMeasure(midline)}${unit}`
           : `${formatMeasure(left ?? 0)}${unit} / ${formatMeasure(right ?? 0)}${unit}`}
       </div>
-      <div className="w-8 text-right shrink-0">
+      <div className="col-start-3 row-start-2 justify-self-end w-8 text-right sm:shrink-0">
         <span className={cn('text-xs font-bold', tone ? tone.color : 'text-slate-500')}>
           {pct}%
         </span>
       </div>
-      <div className="w-20 shrink-0 flex justify-end">
+      <div className="col-start-2 col-end-4 row-start-1 justify-self-end flex justify-end sm:w-20 sm:shrink-0">
         {jointBand != null && tone && (
           <span className={cn(
             'text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap',
