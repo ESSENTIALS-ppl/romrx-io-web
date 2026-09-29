@@ -19,6 +19,7 @@ import {
   type BandScore,
 } from '../lib/mobilityBands'
 import { track } from '../lib/track'
+import { withStripeTestFlag } from '../lib/stripeTestMode'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
 const BETA_ACTIVATE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-beta-base`
@@ -189,7 +190,7 @@ export function ResultsPreview() {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(withStripeTestFlag(body)),
       })
       const { url, error: err } = await res.json()
       if (url) { window.location.href = url; return }

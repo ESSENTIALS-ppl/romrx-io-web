@@ -7,6 +7,7 @@ import { Spinner } from '../components/Spinner'
 import { ExternalLink, Trophy, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { CHECKOUT_URL, SPORT_PRICE_IDS } from '../lib/stripe'
+import { withStripeTestFlag } from '../lib/stripeTestMode'
 
 // Sport app URLs. Each sport add-on ships its own dashboard.
 const SPORT_APPS: Record<string, string> = {
@@ -54,7 +55,7 @@ export function MySport() {
       const res = await fetch(CHECKOUT_URL, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ mode: 'base', user_id: user.id, email: user.email }),
+        body: JSON.stringify(withStripeTestFlag({ mode: 'base', user_id: user.id, email: user.email })),
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
@@ -82,7 +83,7 @@ export function MySport() {
       const res = await fetch(CHECKOUT_URL, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ mode: 'unlock', token: slug, price_id: SPORT_PRICE_IDS[slug] }),
+        body: JSON.stringify(withStripeTestFlag({ mode: 'unlock', token: slug, price_id: SPORT_PRICE_IDS[slug] })),
       })
       const data = await res.json()
       if (res.status === 409 && data.error === 'base_required') {

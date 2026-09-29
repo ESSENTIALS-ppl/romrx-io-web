@@ -12,7 +12,9 @@ import { AdsMeasurementSettings } from '../components/AdsMeasurementSettings'
 import { cn } from '../lib/cn'
 import {
   fetchCancelStatus, openCancelFlow, CANCEL_BUTTON_LABEL, CANCEL_BASE_CASCADE_NOTE, type CancelStatus,
+  EMPTY_CANCEL_STATUS, canceledMessage, statusLabel,
 } from '../lib/cancelSubscription'
+import { withStripeTestFlag } from '../lib/stripeTestMode'
 import {
   requestAccountDeletion, deletionErrorCopy, DELETION_BUTTON_LABEL, DELETION_SUCCESS_COPY,
 } from '../lib/accountDeletionRequest'
@@ -99,8 +101,9 @@ export function Settings() {
   // Subscription / billing
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalErr, setPortalErr] = useState('')
-  const [cancelStatus, setCancelStatus] = useState<CancelStatus>({ cancelable: false, kind: null })
-  const [cancelLoading, setCancelLoading] = useState(false)
+  const [cancelStatus, setCancelStatus] = useState<CancelStatus>(EMPTY_CANCEL_STATUS)
+  const [cancelStatusLoading, setCancelStatusLoading] = useState(true)
+  const [cancelLoading, setCancelLoading] = useState<string | null>(null)
 
   // Notifications
   const [notifLoading, setNotifLoading] = useState(true)
@@ -152,13 +155,17 @@ export function Settings() {
       })
   }, [user?.id])
 
-  // ── Cancel subscription: show the button only when the server says the caller has an active subscription ──
+  // ── Cancel subscription: server says which subscriptions are active, canceling, or canceled ──
+  // Re-read after the portal sends the user back with ?canceled=1 (webhook may land a moment later).
   useEffect(() => {
     if (!user?.id) return
     let alive = true
-    fetchCancelStatus((name, opts) => supabase.functions.invoke(name, opts))
-      .then(st => { if (alive) setCancelStatus(st) })
-    return () => { alive = false }
+    const load = () => fetchCancelStatus((name, opts) => supabase.functions.invoke(name, opts))
+      .then(st => { if (alive) { setCancelStatus(st); setCancelStatusLoading(false) } })
+    load()
+    const cameBack = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('canceled') === '1'
+    const timers = cameBack ? [setTimeout(load, 3000), setTimeout(load, 8000)] : []
+    return () => { alive = false; timers.forEach(clearTimeout) }
   }, [user?.id])
 
   // ── Load notification prefs ────────────────────────────────────────────
@@ -214,7 +221,7 @@ export function Settings() {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify({ user_id: user?.id }),
+        body: JSON.stringify(withStripeTestFlag({ user_id: user?.id })),
       })
       const { url, error: err } = await res.json()
       if (url) { window.location.href = url; return }
@@ -227,12 +234,12 @@ export function Settings() {
   }
 
   // ── Cancel subscription (Stripe portal, straight to the cancel screen) ──
-  const handleCancelSubscription = async () => {
+  const handleCancelSubscription = async (target: string) => {
     if (!session) return
-    setCancelLoading(true); setPortalErr('')
-    const result = await openCancelFlow((name, opts) => supabase.functions.invoke(name, opts))
+    setCancelLoading(target); setPortalErr('')
+    const result = await openCancelFlow((name, opts) => supabase.functions.invoke(name, opts), target)
     if (result.ok) { window.location.href = result.url; return }
-    setCancelLoading(false)
+    setCancelLoading(null)
     setPortalErr('Could not open billing portal.')
   }
 
@@ -420,17 +427,38 @@ export function Settings() {
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b border-cobalt/10">
               <span className="text-sm text-slate-500">Base plan</span>
-              <span className="text-sm font-semibold text-cobalt-ink capitalize">{profile?.base_status ?? 'inactive'}</span>
+              <span data-testid="base-status" className="text-sm font-semibold text-cobalt-ink capitalize">{statusLabel(profile?.base_status, cancelStatus.base?.state, cancelStatusLoading)}</span>
             </div>
+            {canceledMessage(cancelStatus.base?.state, cancelStatus.base?.date) && (
+              <p data-testid="base-canceled-message" className="text-sm text-cobalt-ink">{canceledMessage(cancelStatus.base?.state, cancelStatus.base?.date)}</p>
+            )}
             {profile?.sport_entitlements && profile.sport_entitlements.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sport packs</p>
-                {profile.sport_entitlements.map(e => (
-                  <div key={e.sport} className="flex justify-between items-center py-1.5">
-                    <span className="text-sm text-cobalt-ink capitalize">{e.sport}</span>
-                    <span className="text-xs font-bold bg-cobalt-light text-cobalt px-2 py-0.5 rounded-full capitalize">{e.status}</span>
-                  </div>
-                ))}
+                {profile.sport_entitlements.map(e => {
+                  const srv = cancelStatus.sports.find(x => x.sport === e.sport)
+                  const msg = canceledMessage(srv?.state, srv?.date)
+                  return (
+                    <div key={e.sport} className="py-1.5 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-cobalt-ink capitalize">{e.sport}</span>
+                        <span className="text-xs font-bold bg-cobalt-light text-cobalt px-2 py-0.5 rounded-full capitalize">{statusLabel(e.status, srv?.state, cancelStatusLoading)}</span>
+                      </div>
+                      {msg && <p className="text-xs text-cobalt-ink">{msg}</p>}
+                      {srv?.cancelable && (
+                        <button
+                          onClick={() => handleCancelSubscription(e.sport)}
+                          disabled={cancelLoading !== null}
+                          data-testid={`cancel-subscription-${e.sport}`}
+                          className="text-xs font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-card border border-red-200 bg-white text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                        >
+                          {cancelLoading === e.sport ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
+                          {CANCEL_BUTTON_LABEL}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
             {portalErr && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{portalErr}</p>}
@@ -439,19 +467,19 @@ export function Settings() {
                 {portalLoading ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
                 Manage billing
               </button>
-              {cancelStatus.cancelable && (
+              {(cancelStatus.base ? cancelStatus.base.cancelable : (cancelStatus.cancelable && cancelStatus.kind === 'base')) && (
                 <button
-                  onClick={handleCancelSubscription}
-                  disabled={cancelLoading}
+                  onClick={() => handleCancelSubscription('base')}
+                  disabled={cancelLoading !== null}
                   data-testid="cancel-subscription"
                   className="text-sm font-semibold flex items-center gap-1.5 px-4 py-2 rounded-card border border-red-200 bg-white text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors"
                 >
-                  {cancelLoading ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                  {cancelLoading === 'base' ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
                   {CANCEL_BUTTON_LABEL}
                 </button>
               )}
             </div>
-            {cancelStatus.cancelable && cancelStatus.kind === 'base' && (
+            {(cancelStatus.base ? cancelStatus.base.cancelable : (cancelStatus.cancelable && cancelStatus.kind === 'base')) && (
               <p className="text-xs text-slate-500">{CANCEL_BASE_CASCADE_NOTE}</p>
             )}
           </div>
