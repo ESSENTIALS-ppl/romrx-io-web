@@ -7,6 +7,7 @@ import { trackMetaCompleteRegistration, trackMetaLead } from '../lib/metaAttribu
 import { captureUtmFromUrl, getSignupAttribution } from '../lib/utm'
 import { cn } from '../lib/cn'
 import { DoNotSellLink } from '../components/ConsentBanner'
+import { signupDisclosure, SIGNUP_TERMS_SALES_SENTENCE } from '../lib/signupDisclosure'
 
 const GENDERS = [
   { v: 'male', l: 'Male' },
@@ -233,11 +234,15 @@ export function Signup() {
               <a href="https://romrx.io/legal" target="_blank" rel="noopener noreferrer" className="text-cobalt underline font-medium">
                 Terms of Service, Privacy Policy & Refund Policy
               </a>
-              , a company-wide agreement with ROMRx LLC covering ROMRx Base, ROMRx+BJJ, ROMRx+BodyBuilding, and other ROMRx products, including the collection and anonymized use of my ROM data for research and product development. All sales are final.
+              , a company-wide agreement with ROMRx LLC covering ROMRx Base, ROMRx+BJJ, ROMRx+BodyBuilding, and other ROMRx products, including the collection and anonymized use of my ROM data for research and product development. {SIGNUP_TERMS_SALES_SENTENCE}
             </span>
           </label>
 
           {error && <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+
+          <p data-testid="signup-arl-disclosure" className="text-sm font-semibold text-cobalt-ink leading-snug mt-2">
+            {signupDisclosure(addSport)}
+          </p>
 
           <button type="submit" disabled={loading || !agreedToTerms || !ageBucket} className="btn-primary w-full flex items-center justify-center gap-2 mt-2 disabled:opacity-50">
             {loading ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
