@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 
@@ -9,6 +9,7 @@ import { useProfile } from '../hooks/useProfile'
 export function ProtectedRoute() {
   const { session, user, loading } = useAuth()
   const { profile, loading: profileLoading } = useProfile(user?.id)
+  const location = useLocation()
 
   if (loading || (session && profileLoading)) {
     return (
@@ -28,7 +29,10 @@ export function ProtectedRoute() {
   // Paywall gate. Anyone whose base_status is not 'active' (e.g. 'inactive',
   // 'past_due', 'canceled', undefined) gets routed to the assessment/checkout
   // flow instead of the dashboard.
-  if (profile && profile.base_status !== 'active') {
+  // Jim 2026-09-29 (decision c): cancel ends access immediately. A canceled user can still open Settings only,
+  // to see the canceled message and billing history; every other dashboard page stays closed.
+  const canceledOnSettings = profile?.base_status === 'canceled' && location.pathname.replace(/\/+$/, '').endsWith('/dashboard/settings')
+  if (profile && profile.base_status !== 'active' && !canceledOnSettings) {
     return <Navigate to="/onboarding/results" replace />
   }
 
