@@ -4,6 +4,7 @@ import { AlertTriangle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { CHECKOUT_URL, SPORT_PRICE_IDS } from '../lib/stripe'
+import { checkoutErrorMessage } from '../lib/checkoutErrors'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 
 export function Unlock() {
@@ -63,7 +64,7 @@ export function Unlock() {
               return
             }
             setStatus('error')
-            setMessage(baseData.error ?? 'Could not start Base checkout.')
+            setMessage(baseData.error === 'base_checkout_unavailable' ? checkoutErrorMessage(baseData, '') : (baseData.error ?? 'Could not start Base checkout.'))
             return
           }
 
@@ -134,7 +135,7 @@ export function Unlock() {
           return
         }
         setStatus('error')
-        setMessage(data.message || data.error || `Could not start Base checkout (HTTP ${res.status}).`)
+        setMessage(checkoutErrorMessage(data, `Could not start Base checkout (HTTP ${res.status}).`))
       } catch (e) {
         setStatus('error')
         setMessage((e as Error)?.message || 'Something went wrong. Please try again.')
