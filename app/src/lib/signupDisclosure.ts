@@ -21,9 +21,9 @@ export function signupDisclosure(add: string | null | undefined): string {
   const charge = pack
     ? `$${base} per year for Base plus $${packPrice} per year for ${pack}`
     : `$${base} per year`
-  return `Free through December 31, 2026. Then ${charge}, charged to your card on January 1, 2027 and every year after until you cancel. Cancel online anytime in Settings. Cancel before January 1, 2027 and you pay nothing.`
+  return `Free through December 31, 2026. Then ${charge}, charged to your card on January 1, 2027 and every year after until you cancel. Cancel online anytime in Settings. Canceling ends your access right away. Cancel before January 1, 2027 and you pay nothing.`
 }
 
-/** Last sentence(s) of the signup terms checkbox label (Legal ruling, Sep 29, 2026). One constant so it changes in one place. */
+/** Last sentence(s) of the signup terms checkbox label (Legal ruling, Sep 29, 2026; updated for Jim decision (c): cancel ends access immediately). One constant so it changes in one place. */
 export const SIGNUP_TERMS_SALES_SENTENCE =
-  'Cancel anytime in Settings to stop future renewals. After a charge, all sales are final, except where the law requires a refund.'
+  'Cancel anytime in Settings. Canceling ends your access right away and stops future charges. After a charge, all sales are final, except where the law requires a refund.'
