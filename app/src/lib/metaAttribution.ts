@@ -27,6 +27,8 @@ export const META_ATTRIBUTION_ENABLED: boolean = true
 
 const PIXEL_ID = (import.meta.env.VITE_META_PIXEL_ID as string | undefined)?.trim() || ''
 const CAPI_ENDPOINT = '/api/attribution/meta'
+/** CAPI proxy call is fire-and-forget; abort it after this long so it can never hang a page. */
+export const CAPI_TIMEOUT_MS = 5000
 
 declare global {
   interface Window {
@@ -235,12 +237,15 @@ async function sendCapi(payload: {
 }): Promise<void> {
   // Consent / GPC / Don't Sell / flag / signup-path gates run FIRST; cookies are read only after.
   if (!canSendMeta(payload.consent_state)) return
+  let timer: ReturnType<typeof setTimeout> | undefined
   try {
     const ids = await browserIdsWhenReady()
     // Consent may have changed while waiting for _fbp: re-check before sending.
     const nowConsent = effectiveConsentState()
     const label = metaConsentLabel(nowConsent)
     if (META_ATTRIBUTION_ENABLED !== true || !label || !isAdsMeasurementAllowed()) return
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null
+    if (ctrl) timer = setTimeout(() => ctrl.abort(), CAPI_TIMEOUT_MS)
     await fetch(CAPI_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -257,9 +262,12 @@ async function sendCapi(payload: {
         ...(ids.fbc ? { fbc: ids.fbc } : {}),
       }),
       keepalive: true,
+      ...(ctrl ? { signal: ctrl.signal } : {}),
     })
   } catch {
     /* Meta outage must not block product */
+  } finally {
+    if (timer) clearTimeout(timer)
   }
 }
 
@@ -332,6 +340,37 @@ export function trackMetaPageView(): void {
 
 export function trackMetaLead(): void {
   trackMetaEvent('Lead')
+}
+
+/** sessionStorage prefix: CompleteRegistration already sent for this signup (local only, never sent to Meta). */
+export const CR_SENT_KEY = 'romrx.meta.cr_sent'
+const crSentThisPage = new Set<string>()
+
+/**
+ * Signup success ONLY (Jim standing lock 2026-09-29): one CompleteRegistration,
+ * browser Pixel + CAPI with the same event_id, through the same gates as every
+ * other Meta event (hard flag, US default / granted, no Reject / Don't Sell,
+ * no GPC, /app/signup allowlist). Payload: event name, time, id, source URL
+ * (origin + path), fbp/fbc. No email, name, user id, ROM, gender, or
+ * assessment data. `onceKey` (the new account id) only dedupes locally so a
+ * double submit or re-render never fires twice; it never leaves the browser.
+ * Fire and forget: never throws, never awaited by signup.
+ */
+export function trackMetaCompleteRegistration(onceKey: string): string | null {
+  try {
+    const key = String(onceKey || 'signup').slice(0, 64)
+    if (crSentThisPage.has(key)) return null
+    let ss: Storage | undefined
+    try { ss = typeof window !== 'undefined' ? window.sessionStorage : undefined } catch { ss = undefined }
+    try { if (ss?.getItem(`${CR_SENT_KEY}:${key}`)) return null } catch { /* private mode */ }
+    const eventId = trackMetaEvent('CompleteRegistration')
+    if (!eventId) return null
+    crSentThisPage.add(key)
+    try { ss?.setItem(`${CR_SENT_KEY}:${key}`, '1') } catch { /* private mode */ }
+    return eventId
+  } catch {
+    return null
+  }
 }
 
 /** Kill Pixel path on opt-out: mark consent revoked and never load script. */

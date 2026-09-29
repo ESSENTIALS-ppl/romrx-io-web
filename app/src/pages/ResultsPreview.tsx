@@ -12,6 +12,8 @@ import {
   mobilityScoreForAssessment,
   overallBandForAssessment,
   ASSESSMENT_JOINTS,
+  formatMeasure,
+  jointUnit,
   BAND_DESC,
   BAND_TONE,
   type BandScore,
@@ -47,16 +49,21 @@ function getBandTier(band: BandScore): { label: string; color: string; bg: strin
   return { label: bandFull(band), color: tone.color, bg: tone.bg, ring: tone.ring, desc: BAND_DESC[band] }
 }
 
-function getTopAsymmetries(assessment: Record<string, number | null>): Array<{ joint: string; gap: number; left: number; right: number }> {
+type AsymmetryFlag = { joint: string; gap: number; left: number; right: number; unit: '°' | 'cm' }
+
+function getTopAsymmetries(assessment: Record<string, number | null>): AsymmetryFlag[] {
   // Bilateral joints with a label (same set the asymmetry flags always covered).
+  // Gap rounded to 1 decimal like My Body / My Protocol (19 - 17.9 = 1.1, not 1.1000000000000014);
+  // unit as measured (Ankle DF = knee-to-wall cm, everything else degrees).
   return ASSESSMENT_JOINTS
     .filter(j => j.l && j.r && JOINT_LABELS[j.key])
     .map(j => {
       const l = assessment[j.l!], r = assessment[j.r!]
       if (l == null || r == null) return null
-      return { joint: JOINT_LABELS[j.key], gap: Math.abs(l - r), left: l, right: r }
+      const gap = Math.round(Math.abs(Number(l) - Number(r)) * 10) / 10
+      return { joint: JOINT_LABELS[j.key], gap, left: Number(l), right: Number(r), unit: jointUnit(j.key) }
     })
-    .filter((x): x is { joint: string; gap: number; left: number; right: number } => x !== null)
+    .filter((x): x is AsymmetryFlag => x !== null)
     .sort((a, b) => b.gap - a.gap)
     .slice(0, 3)
 }
@@ -247,14 +254,14 @@ export function ResultsPreview() {
               <div key={i} className="flex items-center justify-between">
                 <span className="text-sm text-white/80">{a.joint}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/50">L {a.left}° / R {a.right}°</span>
+                  <span className="text-xs text-white/50">L {formatMeasure(a.left)}{a.unit} / R {formatMeasure(a.right)}{a.unit}</span>
                   <span className={cn('text-xs font-bold px-2 py-0.5 rounded-full', a.gap >= 15 ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400')}>
-                    {a.gap}° gap
+                    {formatMeasure(a.gap)}{a.unit} gap
                   </span>
                 </div>
               </div>
             ))}
-            <p className="text-xs text-white/40 pt-1">Asymmetry is one of the top predictors of injury risk in athletes.</p>
+            <p className="text-xs text-white/40 pt-1">Left/right gaps are worth tracking as you retest.</p>
           </div>
         )}
 

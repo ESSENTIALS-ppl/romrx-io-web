@@ -206,12 +206,30 @@ exports.handler = async (event) => {
     ],
   };
 
+  // Optional Meta Events Manager test code (env only, never from the client).
+  const testEventCode = (process.env.META_TEST_EVENT_CODE || '').trim();
+  if (testEventCode) body.test_event_code = testEventCode.slice(0, 64);
+
+  // Dry run (env only): log the request SHAPE, never the token or raw IP/UA, and do not send.
+  if ((process.env.META_CAPI_DRY_RUN || '').trim() === '1') {
+    const shape = JSON.parse(JSON.stringify(body));
+    const ud = shape.data[0].user_data;
+    if (ud.client_ip_address) ud.client_ip_address = '[redacted]';
+    if (ud.client_user_agent) ud.client_user_agent = '[redacted]';
+    if (ud.fbp) ud.fbp = '[present]';
+    if (ud.fbc) ud.fbc = '[present]';
+    console.log('meta-capi dry_run', JSON.stringify(shape));
+    return json(200, { ok: true, dispatched: false, reason: 'dry_run', event_name: eventName }, origin);
+  }
+
   try {
     const url = `https://graph.facebook.com/v19.0/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(token)}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      // Never let a slow Meta hold the function open.
+      ...(typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? { signal: AbortSignal.timeout(5000) } : {}),
     });
     // Never log token or raw PII.
     if (!res.ok) {

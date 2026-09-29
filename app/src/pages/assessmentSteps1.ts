@@ -26,7 +26,7 @@ export const STEPS_PART1: Step[] = [
 {
     id: 'hip_ir',
     title: 'Hip Internal Rotation',
-    why: 'Protects the knee and supports hip escapes and rotational movement.',
+    why: 'Supports hip escapes and rotational movement.',
     tool: 'Same chair, same phone placement - only the foot direction changes.',
     position: [
       'Stay in the same chair. Do NOT move your position.',
@@ -48,7 +48,7 @@ export const STEPS_PART1: Step[] = [
 {
     id: 'shoulder_er',
     title: 'Shoulder External Rotation',
-    why: 'Supports overhead and pressing positions and helps protect the shoulder joint.',
+    why: 'Supports overhead and pressing positions.',
     tool: 'iPhone: Measure -> Level. Android: Simple Inclinometer. Seated in chair.',
     position: [
       'Sit upright. Raise one arm straight out to the side at shoulder height, like a T. Bend your elbow to 90°.',

@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { Spinner } from '../components/Spinner'
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
+import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
 import {
   bandFull,
@@ -100,7 +101,7 @@ interface JointDef {
 const JOINTS: JointDef[] = [
   {
     key: 'hip_er', label: 'Hip External Rotation',
-    why: 'Deep squats, wide stances, hip mobility for everyday movement and lower-back protection.',
+    why: 'Deep squats, wide stances, and hip mobility for everyday movement.',
     leftKey: 'hip_er_l', rightKey: 'hip_er_r',
     rxKey: 'hip_er',
   },
@@ -124,7 +125,7 @@ const JOINTS: JointDef[] = [
   },
   {
     key: 'shoulder_er', label: 'Shoulder External Rotation',
-    why: 'Overhead pressing, throwing, rotator cuff health, and shoulder injury prevention.',
+    why: 'Overhead pressing, throwing, and everyday reaching.',
     leftKey: 'shoulder_er_l', rightKey: 'shoulder_er_r',
     rxKey: 'shoulder_er',
   },
@@ -136,7 +137,7 @@ const JOINTS: JointDef[] = [
   },
   {
     key: 'ankle_df', label: 'Ankle Dorsiflexion',
-    why: 'Squat depth, balance, walking mechanics, and knee-joint protection.',
+    why: 'Squat depth, balance, and walking mechanics.',
     leftKey: 'ankle_df_l', rightKey: 'ankle_df_r',
     rxKey: 'ankle_df',
   },
@@ -652,6 +653,21 @@ function RxItem({
   )
 }
 
+// ---- Left / Right indicator (same convention as the My Body radar) ---------
+// Left = solid slate line, Right = dashed teal line (components/BaseRadar legend).
+// The number under it keeps its band colour; only the side indicator follows the radar.
+function SideSwatch({ side }: { side: 'left' | 'right' }) {
+  const color = side === 'left' ? RADAR_LEFT_COLOR : RADAR_RIGHT_COLOR
+  return (
+    <svg width="14" height="6" aria-hidden data-side-swatch={side} className="shrink-0">
+      <line
+        x1="0" y1="3" x2="14" y2="3" stroke={color} strokeWidth="2"
+        strokeDasharray={side === 'right' ? RADAR_RIGHT_DASH : undefined}
+      />
+    </svg>
+  )
+}
+
 // ---- Issue card (full protocol per-joint) ----------------------------------
 function IssueCard({ ranked, rxLibrary, rank }: {
   ranked: ScoredJoint
@@ -707,13 +723,17 @@ function IssueCard({ ranked, rxLibrary, rank }: {
           {isBilateral ? (
             <>
               <div className="bg-slate-50 rounded-xl px-3 py-1.5 text-center">
-                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Left</p>
+                <p className="text-[10px] font-medium uppercase tracking-wide inline-flex items-center gap-1" style={{ color: RADAR_LEFT_COLOR }}>
+                  <SideSwatch side="left" />Left
+                </p>
                 <p className={cn('text-sm font-bold', valueToneClass(sideBands.left))} data-band={sideBands.left ?? ''}>
                   {formatMeasure(left)}{unit}
                 </p>
               </div>
               <div className="bg-slate-50 rounded-xl px-3 py-1.5 text-center">
-                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Right</p>
+                <p className="text-[10px] font-medium uppercase tracking-wide inline-flex items-center gap-1" style={{ color: RADAR_RIGHT_COLOR }}>
+                  <SideSwatch side="right" />Right
+                </p>
                 <p className={cn('text-sm font-bold', valueToneClass(sideBands.right))} data-band={sideBands.right ?? ''}>
                   {formatMeasure(right)}{unit}
                 </p>
@@ -743,8 +763,9 @@ function IssueCard({ ranked, rxLibrary, rank }: {
           ) : null}
           {targetValue != null && (
             <div className="bg-slate-50 rounded-xl px-3 py-1.5">
-              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Steady target</p>
-              <p className="text-xs font-semibold text-cobalt-ink">{targetValue}{unit}</p>
+              {/* "Steady" is a band name: Steady cobalt (BAND_TONE[3]), never black/grey. */}
+              <p className={cn('text-[10px] font-medium uppercase tracking-wide', BAND_TONE[3].color)} data-band-label="3">Steady target</p>
+              <p className={cn('text-xs font-semibold', BAND_TONE[3].color)}>{targetValue}{unit}</p>
             </div>
           )}
         </div>
