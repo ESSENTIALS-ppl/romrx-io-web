@@ -261,7 +261,7 @@ export function MyBody() {
         <SectionCard title="ROM Profile">
           <BaseRadar rows={radarRows} />
           <p className="text-[11px] text-slate-500 mt-1.5 text-center">
-            Each line is one side of your body, as a % of your Base target. The dashed circle is Steady. Dents and gaps between the lines show where to focus.
+            Each line is one side of your body, as a % of your Base target. The dashed circle is <span className={cn('font-semibold', BAND_TONE[3].color)}>Steady</span>. Dents and gaps between the lines show where to focus.
           </p>
         </SectionCard>
 

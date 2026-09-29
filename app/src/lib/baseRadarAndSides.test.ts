@@ -145,7 +145,8 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
   it('MyBody.tsx renders BaseRadar from radarSideRowsForAssessment with the plain US caption', () => {
     const s = read(join(SRC, 'pages', 'MyBody.tsx'))
     expect(s).toMatch(/<BaseRadar rows=\{radarRows\} \/>/)
-    expect(s).toMatch(/Each line is one side of your body, as a % of your Base target\. The dashed circle is Steady\. Dents and gaps between the lines show where to focus\./)
+    // Same words; "Steady" is wrapped in the Steady band colour (2026-09-29 cosmetics).
+    expect(s).toMatch(/Each line is one side of your body, as a % of your Base target\. The dashed circle is <span className=\{cn\('font-semibold', BAND_TONE\[3\]\.color\)\}>Steady<\/span>\. Dents and gaps between the lines show where to focus\./)
     expect(s).not.toMatch(/\u2014/)
     expect(s).not.toMatch(/recharts/)
     const code = s.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
@@ -294,5 +295,48 @@ describe('radar hover: dots win over spoke hit areas (Reid Field 2026-09-24)', (
     expect(html).not.toMatch(/<line x1="180" y1="158"[^>]*stroke="transparent"/)
     // Ankle DF dot (35%) sits near the centre and has its own hit circle
     expect(html).toMatch(/data-joint="ankle_df"[^>]*>(<circle[^>]*r="7"[^>]*fill="transparent")/)
+  })
+})
+
+describe('2026-09-29 cosmetics: asymmetry rounding, Ankle DF unit, band label colours, L/R indicators', () => {
+  it('ResultsPreview asymmetry flags: gap rounded to 1 decimal and unit from jointUnit (Ankle DF cm)', () => {
+    const s = read(join(SRC, 'pages', 'ResultsPreview.tsx'))
+    expect(s).toMatch(/Math\.round\(Math\.abs\(Number\(l\) - Number\(r\)\) \* 10\) \/ 10/)
+    expect(s).toMatch(/unit: jointUnit\(j\.key\)/)
+    expect(s).toMatch(/\{formatMeasure\(a\.gap\)\}\{a\.unit\} gap/)
+    expect(s).toMatch(/L \{formatMeasure\(a\.left\)\}\{a\.unit\} \/ R \{formatMeasure\(a\.right\)\}\{a\.unit\}/)
+    // No hard-coded degree sign on the flags any more (Ankle DF is cm).
+    expect(s).not.toMatch(/\{a\.gap\}°|\{a\.left\}°|\{a\.right\}°/)
+  })
+
+  it('every gap renderer rounds through formatMeasure (My Body, My Protocol, ResultsPreview)', () => {
+    expect(read(join(SRC, 'pages', 'MyBody.tsx'))).toMatch(/\{formatMeasure\(asym\)\}\{unit\} gap/)
+    expect(read(join(SRC, 'pages', 'MyProtocol.tsx'))).toMatch(/\{formatMeasure\(asymmetry\)\}\{unit\} gap/)
+    expect(read(join(SRC, 'pages', 'ResultsPreview.tsx'))).toMatch(/\{formatMeasure\(a\.gap\)\}\{a\.unit\} gap/)
+  })
+
+  it('"Steady target" labels use the Steady cobalt, not black/grey (My Protocol card + radar legend)', () => {
+    const p = read(join(SRC, 'pages', 'MyProtocol.tsx'))
+    expect(p).toMatch(/BAND_TONE\[3\]\.color\)\} data-band-label="3">Steady target</)
+    expect(p).not.toMatch(/text-slate-500 font-medium uppercase tracking-wide">Steady target/)
+    const r = read(join(SRC, 'components', 'BaseRadar.tsx'))
+    expect(r).toMatch(/style=\{\{ color: TARGET_COLOR \}\} data-band-label="3">Steady target</)
+    expect(r).toMatch(/const TARGET_COLOR = '#1D4ED8'/)
+    expect(BAND_HEX[3]).toBe('#1D4ED8')
+  })
+
+  it('My Protocol Left/Right indicators follow the radar: Left solid slate, Right dashed teal', () => {
+    const p = read(join(SRC, 'pages', 'MyProtocol.tsx'))
+    expect(p).toMatch(/import \{ RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH \} from '..\/components\/BaseRadar'/)
+    expect(p).toMatch(/<SideSwatch side="left" \/>Left/)
+    expect(p).toMatch(/<SideSwatch side="right" \/>Right/)
+    expect(p).toMatch(/strokeDasharray=\{side === 'right' \? RADAR_RIGHT_DASH : undefined\}/)
+    const r = read(join(SRC, 'components', 'BaseRadar.tsx'))
+    expect(r).toMatch(/export const RADAR_LEFT_COLOR = '#334155'/)
+    expect(r).toMatch(/export const RADAR_RIGHT_COLOR = '#0F766E'/)
+    expect(r).toMatch(/export const RADAR_RIGHT_DASH = '6 4'/)
+    // Values keep their band colour (#83); only the indicator follows the radar.
+    expect(p).toMatch(/valueToneClass\(sideBands\.left\)/)
+    expect(p).toMatch(/valueToneClass\(sideBands\.right\)/)
   })
 })
