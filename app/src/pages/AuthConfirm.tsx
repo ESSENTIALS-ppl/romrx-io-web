@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { completeAuthFromUrl } from '../lib/authRedirect'
 import { resolvePostAuthDest } from '../lib/postAuthDest'
+import { isAllowedAgeBucket } from '../lib/ageBuckets'
 
 // Handles the Supabase magic-link / signup confirmation redirect at
 // /app/auth/confirm. Accepts token_hash (PKCE verify), code (PKCE), and hash
@@ -30,7 +31,7 @@ export function AuthConfirm() {
         }
         // Persist signup demographics + first-touch UTM into public.users (ops).
         const meta = data.user.user_metadata ?? {}
-        const age_bucket = typeof meta.age_bucket === 'string' ? meta.age_bucket : null
+        const age_bucket = isAllowedAgeBucket(meta.age_bucket) ? meta.age_bucket : null
         const gender = typeof meta.gender === 'string' ? meta.gender : null
         const str = (k: string) => (typeof meta[k] === 'string' && (meta[k] as string).trim() ? (meta[k] as string).trim() : null)
         const patch: Record<string, string> = {}
