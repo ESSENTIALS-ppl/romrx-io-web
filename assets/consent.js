@@ -204,15 +204,18 @@
     );
   }
 
-  // Bottom padding while the banner is open, for pages that opt in with <body data-rx-banner-pad>
-  // (/legal): the footer Don't Sell explainer must be reachable above the banner. CSS in consent.css.
+  // Bottom padding while the banner is open, on every page that loads this script: the footer
+  // Don't Sell link and explainer must be reachable above the banner (Field #99, 2026-09-29: the
+  // home page at 375px hid them under the tall mobile banner; only /legal had opted in before).
+  // Padding = the banner's measured height, kept in sync by ResizeObserver/resize, removed on hide.
+  // CSS in consent.css.
   var padObserver = null;
   function syncBannerPad() {
     var root = document.documentElement;
     if (!root || !root.classList || !root.style) return;
     var b = document.getElementById('rx-consent-banner');
     var open = !!b && !b.hasAttribute('hidden');
-    if (!open || !document.body || !document.body.hasAttribute('data-rx-banner-pad')) {
+    if (!open || !document.body) {
       root.classList.remove('rx-consent-open');
       root.style.removeProperty('--rx-consent-pad');
       return;
