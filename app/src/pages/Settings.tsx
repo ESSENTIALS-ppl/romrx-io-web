@@ -11,13 +11,16 @@ import { FeedbackWidget } from '../components/FeedbackWidget'
 import { AdsMeasurementSettings } from '../components/AdsMeasurementSettings'
 import { cn } from '../lib/cn'
 import {
+  fetchCancelStatus, openCancelFlow, CANCEL_BUTTON_LABEL, CANCEL_BASE_CASCADE_NOTE, type CancelStatus,
+} from '../lib/cancelSubscription'
+import {
   requestAccountDeletion, deletionErrorCopy, DELETION_BUTTON_LABEL, DELETION_SUCCESS_COPY,
 } from '../lib/accountDeletionRequest'
 import { bandFull, formatScoreBand, mobilityScoreForAssessment, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
 import {
   Save, Loader2, ExternalLink, LogOut, Mail, HelpCircle, ChevronRight,
   ClipboardList, TrendingUp, Bell, KeyRound, Trash2, MessageSquarePlus,
-  CheckCircle2,
+  CheckCircle2, XCircle,
 } from 'lucide-react'
 
 const PORTAL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-portal-session`
@@ -96,6 +99,8 @@ export function Settings() {
   // Subscription / billing
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalErr, setPortalErr] = useState('')
+  const [cancelStatus, setCancelStatus] = useState<CancelStatus>({ cancelable: false, kind: null })
+  const [cancelLoading, setCancelLoading] = useState(false)
 
   // Notifications
   const [notifLoading, setNotifLoading] = useState(true)
@@ -145,6 +150,15 @@ export function Settings() {
         setHistory((data ?? []) as Assessment[])
         setHistoryLoading(false)
       })
+  }, [user?.id])
+
+  // ── Cancel subscription: show the button only when the server says the caller has an active subscription ──
+  useEffect(() => {
+    if (!user?.id) return
+    let alive = true
+    fetchCancelStatus((name, opts) => supabase.functions.invoke(name, opts))
+      .then(st => { if (alive) setCancelStatus(st) })
+    return () => { alive = false }
   }, [user?.id])
 
   // ── Load notification prefs ────────────────────────────────────────────
@@ -210,6 +224,16 @@ export function Settings() {
     } finally {
       setPortalLoading(false)
     }
+  }
+
+  // ── Cancel subscription (Stripe portal, straight to the cancel screen) ──
+  const handleCancelSubscription = async () => {
+    if (!session) return
+    setCancelLoading(true); setPortalErr('')
+    const result = await openCancelFlow((name, opts) => supabase.functions.invoke(name, opts))
+    if (result.ok) { window.location.href = result.url; return }
+    setCancelLoading(false)
+    setPortalErr('Could not open billing portal.')
   }
 
   // ── Save notifications ─────────────────────────────────────────────────
@@ -410,10 +434,26 @@ export function Settings() {
               </div>
             )}
             {portalErr && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{portalErr}</p>}
-            <button onClick={handleManageBilling} disabled={portalLoading} className="btn-ghost text-sm flex items-center gap-1.5">
-              {portalLoading ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
-              Manage billing
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={handleManageBilling} disabled={portalLoading} className="btn-ghost text-sm flex items-center gap-1.5">
+                {portalLoading ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
+                Manage billing
+              </button>
+              {cancelStatus.cancelable && (
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={cancelLoading}
+                  data-testid="cancel-subscription"
+                  className="text-sm font-semibold flex items-center gap-1.5 px-4 py-2 rounded-card border border-red-200 bg-white text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                >
+                  {cancelLoading ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                  {CANCEL_BUTTON_LABEL}
+                </button>
+              )}
+            </div>
+            {cancelStatus.cancelable && cancelStatus.kind === 'base' && (
+              <p className="text-xs text-slate-500">{CANCEL_BASE_CASCADE_NOTE}</p>
+            )}
           </div>
         </SectionCard>
 
