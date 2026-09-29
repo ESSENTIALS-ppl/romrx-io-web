@@ -320,6 +320,21 @@ img, svg { max-width: 100%; display: block; }
   color: var(--rx-text-muted);
   font-size: 0.95rem;
 }
+/* /science only (data-rx-universe="headline"): headline in place of eyebrow. */
+.rx-universe-featured { padding: 88px 0 72px; margin-top: 24px; }
+.rx-universe-featured .rx-uni-headline {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 40px;
+}
+.rx-universe-featured .rx-uni-headline .rx-grad {
+  background: var(--rx-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.rx-universe-featured .rx-uni-row { padding: 20px 24px; }
+.rx-universe-featured .rx-uni-name { font-size: 1.1rem; }
 
 /* ===== Legal footer ===== */
 .rx-legal {
