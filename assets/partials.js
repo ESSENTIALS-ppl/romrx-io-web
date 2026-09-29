@@ -61,7 +61,12 @@ const RX_NAV_MINIMAL = `
 </nav>
 `;
 
-const RX_UNIVERSE = ({ here }) => {
+/* Universe headline (Jim via CoS 2026-09-29): pages with
+   <body data-rx-universe="headline"> (/science only) swap the small
+   "Part of the ROMRx Universe" eyebrow for a full headline, "All of this leads
+   to the ROMRx Universe", with the same grid shown prominently under it. Every
+   other page keeps the footer eyebrow. Rows are identical either way. */
+const RX_UNIVERSE = ({ here, headline = false }) => {
   const rows = [
     { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   href: 'https://romrxbjj.com' },
     { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   href: 'https://romrxbodybuilding.com' },
@@ -87,9 +92,11 @@ const RX_UNIVERSE = ({ here }) => {
       : `<div class="${cls}">${inner}</div>`;
   }).join('');
   return `
-    <section class="rx-universe-footer">
+    <section class="${headline ? 'rx-universe-footer rx-universe-featured' : 'rx-universe-footer'}">
       <div class="rx-container">
-        <p class="rx-eyebrow">Part of the ROMRx Universe</p>
+        ${headline
+          ? '<h2 class="rx-h2 rx-uni-headline">All of this leads to the <span class="rx-grad">ROMRx Universe</span></h2>'
+          : '<p class="rx-eyebrow">Part of the ROMRx Universe</p>'}
         <div class="rx-universe-grid">${html}</div>
         <p class="rx-uni-tag">One ROM assessment. Every sport your body plays.</p>
       </div>
@@ -143,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const uniSlot = document.querySelector('[data-rx-slot="universe"]');
   const legalSlot = document.querySelector('[data-rx-slot="legal"]');
   const minimal = document.body.dataset.rxChrome === 'minimal';
+  const uniHeadline = document.body.dataset.rxUniverse === 'headline';
 
   if (navSlot && minimal) {
     navSlot.outerHTML = RX_NAV_MINIMAL;
@@ -157,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el) el.classList.add('active');
     }
   }
-  if (uniSlot) uniSlot.outerHTML = minimal ? '' : RX_UNIVERSE({ here });
+  if (uniSlot) uniSlot.outerHTML = minimal ? '' : RX_UNIVERSE({ here, headline: uniHeadline });
   if (legalSlot) legalSlot.outerHTML = minimal ? RX_LEGAL.replace('<a href="/articles">Articles</a> ·', '') : RX_LEGAL;
   ensureConsentScript();
   ensureMetaAttributionScript();
