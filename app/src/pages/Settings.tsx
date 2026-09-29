@@ -429,15 +429,15 @@ export function Settings() {
               <span className="text-sm text-slate-500">Base plan</span>
               <span data-testid="base-status" className="text-sm font-semibold text-cobalt-ink capitalize">{statusLabel(profile?.base_status, cancelStatus.base?.state, cancelStatusLoading)}</span>
             </div>
-            {canceledMessage(cancelStatus.base?.state, cancelStatus.base?.date) && (
-              <p data-testid="base-canceled-message" className="text-sm text-cobalt-ink">{canceledMessage(cancelStatus.base?.state, cancelStatus.base?.date)}</p>
+            {canceledMessage(cancelStatus.base?.state) && (
+              <p data-testid="base-canceled-message" className="text-sm text-cobalt-ink">{canceledMessage(cancelStatus.base?.state)}</p>
             )}
             {profile?.sport_entitlements && profile.sport_entitlements.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sport packs</p>
                 {profile.sport_entitlements.map(e => {
                   const srv = cancelStatus.sports.find(x => x.sport === e.sport)
-                  const msg = canceledMessage(srv?.state, srv?.date)
+                  const msg = canceledMessage(srv?.state)
                   return (
                     <div key={e.sport} className="py-1.5 space-y-1">
                       <div className="flex justify-between items-center">

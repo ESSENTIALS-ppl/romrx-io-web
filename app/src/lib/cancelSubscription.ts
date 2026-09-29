@@ -9,10 +9,11 @@ import { withStripeTestFlag } from './stripeTestMode'
 // Labels are Legal's exact text (plan sections 3c and 4B, Sep 29 revisions). American spelling.
 export const CANCEL_BUTTON_LABEL = 'Cancel subscription'
 export const CANCEL_BASE_CASCADE_NOTE = 'Canceling Base also cancels any sport packs.'
-export const CANCELED_SCHEDULED = (date: string) => `Canceled. Your plan will not renew and you will not be charged on ${date}.`
-export const CANCELED_NOW = 'Canceled. You will not be charged.'
+export const CANCELED_NOW = 'Canceled. Your access has ended and you will not be charged again.'
 
-export type SubState = 'active' | 'canceling' | 'canceled' | 'none'
+// Jim 2026-09-29 (decision c): cancel ends access immediately, so there is no 'canceling until {date}' state.
+// An older server reply of 'canceling' is still treated as canceled.
+export type SubState = 'active' | 'canceled' | 'none'
 export type SportStatus = { sport: string; state: string; date: string | null; own_subscription: boolean; cancelable: boolean }
 export type CancelStatus = {
   cancelable: boolean
@@ -26,7 +27,7 @@ export const EMPTY_CANCEL_STATUS: CancelStatus = { cancelable: false, kind: null
 type InvokeResult = { data: unknown; error: unknown }
 export type InvokeFn = (name: string, opts: { body: Record<string, unknown> }) => Promise<InvokeResult>
 
-const STATES: SubState[] = ['active', 'canceling', 'canceled', 'none']
+const STATES: string[] = ['active', 'canceling', 'canceled', 'none']
 
 export async function fetchCancelStatus(invoke: InvokeFn): Promise<CancelStatus> {
   try {
@@ -36,11 +37,11 @@ export async function fetchCancelStatus(invoke: InvokeFn): Promise<CancelStatus>
     const kind = d?.kind === 'base' || d?.kind === 'sport' ? d.kind : null
     const b = d?.base
     const base = b && STATES.includes(b.state)
-      ? { state: b.state as SubState, date: typeof b.date === 'string' ? b.date : null, cancelable: b.cancelable === true }
+      ? { state: (b.state === 'canceling' ? 'canceled' : b.state) as SubState, date: null, cancelable: b.cancelable === true }
       : null
     const sports: SportStatus[] = Array.isArray(d?.sports)
       ? d!.sports.filter((s: any) => s && typeof s.sport === 'string').map((s: any) => ({
-          sport: s.sport, state: String(s.state ?? ''), date: typeof s.date === 'string' ? s.date : null,
+          sport: s.sport, state: s.state === 'canceling' ? 'canceled' : String(s.state ?? ''), date: null,
           own_subscription: s.own_subscription === true, cancelable: s.cancelable === true,
         }))
       : []
@@ -66,26 +67,13 @@ export async function openCancelFlow(invoke: InvokeFn, target?: string): Promise
   }
 }
 
-/** "January 1, 2027" in Eastern time (Stripe period ends fall at midnight ET on Jan 1 for beta trials). */
-export function formatCancelDate(iso: string | null | undefined): string | null {
-  if (!iso) return null
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return null
-  return d.toLocaleDateString('en-US', { timeZone: 'America/New_York', year: 'numeric', month: 'long', day: 'numeric' })
-}
-
-/** Legal's canceled message for a state, or null when the subscription is not canceled. */
-export function canceledMessage(state: string | null | undefined, date: string | null | undefined): string | null {
-  if (state === 'canceled') return CANCELED_NOW
-  if (state === 'canceling') {
-    const f = formatCancelDate(date)
-    return f ? CANCELED_SCHEDULED(f) : CANCELED_NOW
-  }
-  return null
+/** Legal's canceled message, or null when the subscription is not canceled. Only one variant (decision c). */
+export function canceledMessage(state: string | null | undefined): string | null {
+  return state === 'canceled' || state === 'canceling' ? CANCELED_NOW : null
 }
 
 /**
- * Status label for a row. Never "active" for a canceled-but-not-yet-ended subscription: a canceling/canceled
+ * Status label for a row. Never "active" once canceled (or scheduled to cancel): a canceling/canceled
  * state from the server always wins over the raw DB status. While the server state is still loading, an
  * active raw status shows a neutral placeholder instead of "active".
  */
