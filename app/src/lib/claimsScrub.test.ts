@@ -13,10 +13,10 @@ const ROOT = resolve(__dirname, '..', '..', '..')
 const read = (p: string) => readFileSync(p, 'utf8')
 
 describe('claims scrub leftovers (2026-09-29)', () => {
-  it('Results preview: no injury-predictor claim; plain gap explainer instead', () => {
+  it('Results preview: no injury-predictor claim; Legal-approved line instead (CoS GO 2026-09-29)', () => {
     const s = read(join(SRC, 'pages', 'ResultsPreview.tsx'))
     expect(s).not.toMatch(/predictors? of injury/i)
-    expect(s).toMatch(/Gap is the difference between your left and right side\./)
+    expect(s).toMatch(/>Left\/right gaps are worth tracking as you retest\.</)
   })
 
   it('no "140+" style counts on the scoped pages', () => {

@@ -261,7 +261,7 @@ export function ResultsPreview() {
                 </div>
               </div>
             ))}
-            <p className="text-xs text-white/40 pt-1">Gap is the difference between your left and right side.</p>
+            <p className="text-xs text-white/40 pt-1">Left/right gaps are worth tracking as you retest.</p>
           </div>
         )}
 
