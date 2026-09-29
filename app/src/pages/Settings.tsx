@@ -19,6 +19,7 @@ import {
   ClipboardList, TrendingUp, Bell, KeyRound, Trash2, MessageSquarePlus,
   CheckCircle2,
 } from 'lucide-react'
+import { AGE_BUCKETS, isAllowedAgeBucket } from '../lib/ageBuckets'
 
 const PORTAL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-portal-session`
 
@@ -33,14 +34,6 @@ const GENDERS = [
   { v: 'female', l: 'Female' },
   { v: 'other', l: 'Other' },
   { v: 'prefer_not_to_say', l: 'Prefer not to say' },
-] as const
-
-const AGE_BUCKETS = [
-  { v: '13-17', l: '13 to 17' },
-  { v: '18-29', l: '18 to 29' },
-  { v: '30-44', l: '30 to 44' },
-  { v: '45-59', l: '45 to 59' },
-  { v: '60+', l: '60 and over' },
 ] as const
 
 const HEIGHT_BUCKETS = [
@@ -127,7 +120,7 @@ export function Settings() {
   useEffect(() => {
     if (profile?.full_name) setFullName(profile.full_name)
     if (ext?.gender) setGender(ext.gender)
-    if (ext?.age_bucket) setAgeBucket(ext.age_bucket)
+    if (isAllowedAgeBucket(ext?.age_bucket)) setAgeBucket(ext.age_bucket)
     if (ext?.height_bucket) setHeightBucket(ext.height_bucket)
     if (ext?.weight_bucket) setWeightBucket(ext.weight_bucket)
     if (ext?.marketing_opt_out != null) setMarketingOptOut(!!ext.marketing_opt_out)

@@ -15,14 +15,16 @@ describe('/legal chrome cosmetics', () => {
   it('legal anchors get scroll-margin-top below the sticky nav', () => {
     expect(read('assets/design-tokens.css')).toMatch(/\.rx-legal-doc \[id\] \{ scroll-margin-top: 104px; \}/)
   })
-  it('/legal opts in to banner bottom padding; consent.js keeps it in sync and clears it on hide', () => {
+  it('banner bottom padding is site-wide (Field #99); consent.js keeps it in sync and clears it on hide', () => {
     expect(read('legal.html')).toMatch(/<body data-rx-here="romrx" data-rx-chrome="minimal" data-rx-banner-pad>/)
     const js = read('assets/consent.js')
     expect(js).toMatch(/function syncBannerPad\(\)/)
-    expect(js).toMatch(/hasAttribute\('data-rx-banner-pad'\)/)
+    expect(js).not.toMatch(/hasAttribute\('data-rx-banner-pad'\)/)
+    expect(js).toMatch(/if \(!open \|\| !document\.body\) \{/)
     expect(js).toMatch(/document\.body\.appendChild\(el\);\n    watchBannerPad\(el\);/)
     expect(js).toMatch(/if \(b\) b\.setAttribute\('hidden', ''\);\n    syncBannerPad\(\);/)
-    expect(read('assets/consent.css')).toMatch(/html\.rx-consent-open body\[data-rx-banner-pad\] \{\n  padding-bottom: var\(--rx-consent-pad, 0px\);/)
+    expect(read('assets/consent.css')).toMatch(/html\.rx-consent-open body \{\n  padding-bottom: var\(--rx-consent-pad, 0px\);/)
+    expect(read('assets/consent.css')).not.toMatch(/body\[data-rx-banner-pad\]/)
   })
   it('legal.html text is unchanged apart from the body attribute (no copy edits here)', () => {
     const s = read('legal.html')

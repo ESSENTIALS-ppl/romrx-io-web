@@ -8,20 +8,13 @@ import { captureUtmFromUrl, getSignupAttribution } from '../lib/utm'
 import { cn } from '../lib/cn'
 import { DoNotSellLink } from '../components/ConsentBanner'
 import { signupDisclosure, SIGNUP_TERMS_SALES_SENTENCE } from '../lib/signupDisclosure'
+import { AGE_BUCKETS } from '../lib/ageBuckets'
 
 const GENDERS = [
   { v: 'male', l: 'Male' },
   { v: 'female', l: 'Female' },
   { v: 'other', l: 'Other' },
   { v: 'prefer_not_to_say', l: 'Prefer not to say' },
-] as const
-
-const AGE_BUCKETS = [
-  { v: '13-17', l: '13 to 17' },
-  { v: '18-29', l: '18 to 29' },
-  { v: '30-44', l: '30 to 44' },
-  { v: '45-59', l: '45 to 59' },
-  { v: '60+', l: '60 and over' },
 ] as const
 
 export function Signup() {
