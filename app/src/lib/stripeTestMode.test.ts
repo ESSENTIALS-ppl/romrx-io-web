@@ -25,4 +25,13 @@ describe('stripeTestMode', () => {
   it('ignores other values', () => {
     expect(isStripeTestRequested('?stripe_test=true')).toBe(false)
   })
+  it('latches from the landing URL alone, so a later page without the param still sends the flag', () => {
+    // App start: only the URL is read, no request is built yet.
+    expect(isStripeTestRequested('?stripe_test=1')).toBe(true)
+    // Later Settings load, no query string: the flag is still on for cancel_status / cancel.
+    expect(withStripeTestFlag({ action: 'cancel' }, '')).toEqual({ action: 'cancel', stripe_test_mode: true })
+  })
+  it('never adds the flag for a tab that did not ask for it', () => {
+    expect(withStripeTestFlag({ action: 'cancel', target: 'base' }, '')).toEqual({ action: 'cancel', target: 'base' })
+  })
 })
