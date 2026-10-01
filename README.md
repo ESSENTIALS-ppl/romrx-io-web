@@ -14,7 +14,7 @@ Plain HTML / CSS / JS. Client-side partial injection (nav, universe footer, lega
 |---|---|
 | `/` | Home, Protocol-as-moat story, universe stack, investor band |
 | `/universe` | Full upgrade path, all sport packs (live + coming) |
-| `/platform` | Engine deep-dive, 14 joints, Protocol layer, ROMBot™, 6-Week Cycle |
+| `/platform` | Engine deep-dive, 12 joints, Protocol layer, ROMBot™, 6-Week Cycle |
 | `/science` | Peer-reviewed citations |
 | `/investors` | Thesis, platform diagram, market, gated Request Access form |
 | `/partners` | 3 tracks (Federations / Academies / Tactical), inquiry form |
