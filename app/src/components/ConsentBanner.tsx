@@ -5,7 +5,7 @@ import {
   gpcEnabled,
   GPC_HONORED_NOTE,
   OPT_OUT_CONFIRM,
-  PRIVACY_POLICY_URL,
+  COOKIE_POLICY_URL,
   readConsent,
   recordConsentChoice,
   shouldShowBanner,
@@ -170,8 +170,8 @@ export function ConsentBanner() {
           <button type="button" className="btn-ghost" onClick={() => deny('banner')}>
             Reject ads cookies
           </button>
-          <a href={PRIVACY_POLICY_URL} className="text-sm text-cobalt underline font-medium ml-1">
-            Privacy Policy
+          <a href={COOKIE_POLICY_URL} className="text-sm text-cobalt underline font-medium ml-1">
+            Privacy and Cookie Policy
           </a>
         </div>
       ) : (
@@ -180,8 +180,8 @@ export function ConsentBanner() {
           <button type="button" className={equalBtn} onClick={() => deny('banner')}>
             Decline
           </button>
-          <a href={PRIVACY_POLICY_URL} className={equalBtn}>
-            Privacy Policy
+          <a href={COOKIE_POLICY_URL} className={equalBtn}>
+            Privacy and Cookie Policy
           </a>
           <button type="button" className={equalBtn} onClick={grant}>
             Accept
