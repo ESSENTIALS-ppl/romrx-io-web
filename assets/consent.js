@@ -5,6 +5,7 @@
   var STORAGE_KEY = 'romrx.consent.v1';
   var POLICY_VERSION = '2026-09-21-privacy-b';
   var PRIVACY_URL = 'https://romrx.io/legal#privacy';
+  var COOKIE_URL = 'https://romrx.io/legal#cookies';
   // Consent log (Legal 2026-09-24). Same endpoint and anon_id key as the app
   // (app/src/lib/consentLog.ts). The server stores only an HMAC of anon_id.
   // Compliance only: never analytics, never Meta.
@@ -269,7 +270,7 @@
         '<div class="rx-consent-actions">' +
         '<button type="button" class="rx-consent-btn rx-consent-btn-primary" data-rx-consent="grant"></button>' +
         '<button type="button" class="rx-consent-btn rx-consent-btn-secondary" data-rx-consent="deny"></button>' +
-        '<a class="rx-consent-link" href="' + PRIVACY_URL + '">Privacy Policy</a>' +
+        '<a class="rx-consent-link" href="' + COOKIE_URL + '">Privacy and Cookie Policy</a>' +
         '</div>';
       el.querySelector('#rx-consent-title').textContent = title;
       el.querySelector('#rx-consent-body').textContent = body;
@@ -291,7 +292,7 @@
         '<p class="rx-consent-body" id="rx-consent-body"></p>' +
         '<div class="rx-consent-actions">' +
         '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="reject"></button>' +
-        '<a class="rx-consent-btn rx-consent-btn-equal rx-consent-btn-link" href="' + PRIVACY_URL + '">Privacy Policy</a>' +
+        '<a class="rx-consent-btn rx-consent-btn-equal rx-consent-btn-link" href="' + COOKIE_URL + '">Privacy and Cookie Policy</a>' +
         '<button type="button" class="rx-consent-btn rx-consent-btn-equal" data-rx-consent="grant"></button>' +
         '</div>';
       el.querySelector('#rx-consent-title').textContent = title;

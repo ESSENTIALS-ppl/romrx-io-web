@@ -20,6 +20,7 @@ export interface ConsentRecord {
 export const CONSENT_STORAGE_KEY = 'romrx.consent.v1'
 export const CONSENT_POLICY_VERSION = '2026-09-21-privacy-b'
 export const PRIVACY_POLICY_URL = 'https://romrx.io/legal#privacy'
+export const COOKIE_POLICY_URL = 'https://romrx.io/legal#cookies'
 /** Which consent UI the person saw (logged with each row). Bump when copy or layout changes. */
 export const APP_BANNER_VERSION_US = 'app-banner-2026-09-24-us-optout'
 export const APP_BANNER_VERSION_EU = 'app-banner-2026-09-24-eu-optin'
