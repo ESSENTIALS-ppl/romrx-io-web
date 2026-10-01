@@ -1,4 +1,17 @@
-# Meta Pixel + CAPI: enable (NOT LIVE YET)
+# Meta Pixel + CAPI: enable runbook
+
+> **STATE AS OF 2026-10-01 (read this first; the rest of this file is the original enable runbook and is partly stale).**
+> Pixel and CAPI are ENABLED in production, consent-gated, since Sep 24 (Jim GO). Spend is still on hold.
+> - The three `META_ATTRIBUTION_ENABLED` flags are `true` on main (SPA, marketing JS, CAPI function).
+> - Netlify production env has `VITE_META_PIXEL_ID`, `META_PIXEL_ID`, `META_CAPI_TOKEN` set (names only here; never print values).
+> - Pixel ID `2284396799046573` is public and is in the live bundle.
+> - Scope: US opt-out default and EU/UK opt-in, public signup pages only (`/app/signup`, `/app/signup/:sport`). GPC and Reject / Don't Sell turn off both Pixel and CAPI.
+> - Events: PageView, Lead, CompleteRegistration (signup success only, PR #102). Browser Pixel and server CAPI share one `event_id` for dedupe. CAPI dedupe on our side is a best-effort in-memory set.
+> - Test tooling (env only): `META_TEST_EVENT_CODE` sends to Events Manager Test Events; `META_CAPI_DRY_RUN=1` logs the request shape without sending.
+> - Rollback: set the three flags to `false` and redeploy.
+> - Live gate probes (Oct 1, no event sent): denied consent returns `consent_blocked`; non-signup path returns `path_not_allowed`; `Sec-GPC: 1` returns `gpc_opt_out`; foreign Origin returns 403; unknown event name returns 400.
+> - NOT verified from our side: that Meta accepts the events with the stored token. Reid should confirm in Events Manager (use `META_TEST_EVENT_CODE`) before any ad spend.
+
 
 **Status (Thu Sep 24, 2026):** Jim GO via Grant received. Pixel ID `2284396799046573` in hand (public; baked into `assets/meta-attribution.js`, inert while flag false). CAPI token received (secret, box only, never in repo). Consent gate hardened (see below). **BLOCKED on Netlify env:** no Netlify CLI auth on the ops box, so `VITE_META_PIXEL_ID`, `META_PIXEL_ID`, `META_CAPI_TOKEN` are not set. Hard flags stay `false` until env is set. SPEND HOLD: no ads, no Money GO.
 **Sacred:** Do not invent Pixel IDs, CAPI tokens, or Jim Money GO / spend. Do not ship HOLD **1B** Pixel-ON banner until measurement is live.
