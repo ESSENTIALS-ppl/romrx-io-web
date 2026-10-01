@@ -1,0 +1,186 @@
+# ROMRx corporate, Netlify config
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  # Build the HQ React app into app/dist/ (Vite base='/app/').
+  # Marketing HTML at repo root is served as-is.
+  # rm app/index.html after build so publish="." cannot serve Vite /src/main.tsx
+  # for /app/ (Field RISK 2026-09-08). Local Vite still has its own index.
+  # npm test = permanent Base band guard (src/lib/mobilityBands.test.ts); a
+  # failing band test blocks the deploy (P0 2026-09-24).
+  # stamp-asset-version: rewrites every non-hashed /assets/*.js|css reference
+  # (HTML pages, partials.js -> consent.js, consent.js -> consent.css) to
+  # ?v=<COMMIT_REF> so returning browsers get a NEW URL each deploy; fails the
+  # build if any bare reference is left (Field 2026-09-27, stale cookie banner).
+  command = "node scripts/stamp-asset-version.mjs && cd app && npm install && npm test && npm run build && rm -f index.html"
+
+# HQ React app static asset passthrough. Serves /app/assets/* from app/dist/.
+# This must come BEFORE the SPA fallback below.
+[[redirects]]
+  from = "/app/assets/*"
+  to = "/app/dist/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/app/favicon.ico"
+  to = "/app/dist/favicon.ico"
+  status = 200
+
+# SPA entry: force=true overrides any static app/index.html left in publish.
+# Without force, Netlify serves repo app/index.html (Vite /src/main.tsx) for
+# /app and /app/ ahead of redirects — Field RISK 2026-09-08.
+[[redirects]]
+  from = "/app"
+  to = "/app/dist/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/app/"
+  to = "/app/dist/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/app/index.html"
+  to = "/app/dist/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/app/*"
+  to = "/app/dist/index.html"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+
+# Non-hashed /assets/* (consent.js, partials.js, design-tokens.css, fonts,
+# images): NEVER immutable. These filenames do not change when content does;
+# a year-long immutable cache kept the pre-#79 cookie banner in returning
+# browsers (Field 2026-09-27). One rule only: the old /assets/*.js and
+# /assets/*.css max-age=300 rules never took effect live; /assets/* immutable won.
+# HTML references them as ?v=<COMMIT_REF> (scripts/stamp-asset-version.mjs).
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Vite bundles are content-hashed (index-<hash>.js), so immutable is safe here.
+[[headers]]
+  for = "/app/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[redirects]]
+  from = "/api/attribution/meta"
+  to = "/.netlify/functions/meta-capi"
+  status = 200
+
+# Consent log (Legal 2026-09-24): append-only, server-side insert only.
+[[redirects]]
+  from = "/api/consent"
+  to = "/.netlify/functions/consent-log"
+  status = 200
+
+# Article library. Hub at /articles, articles at /articles/<slug>.
+# Real files (index.html, feed.xml) are served directly by Netlify before
+# these rewrites apply; only slug paths with no static file are rewritten.
+[[redirects]]
+  from = "/articles"
+  to = "/articles/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/articles/*"
+  to = "/articles/:splat.html"
+  status = 200
+
+# Pretty URLs, allow /investors instead of /investors.html
+[[redirects]]
+  from = "/investors"
+  to = "/investors.html"
+  status = 200
+
+[[redirects]]
+  from = "/partners"
+  to = "/partners.html"
+  status = 200
+
+[[redirects]]
+  from = "/universe"
+  to = "/universe.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/platform"
+  to = "/dashboard.html"
+  status = 301
+
+[[redirects]]
+  from = "/science"
+  to = "/science.html"
+  status = 200
+
+[[redirects]]
+  from = "/about"
+  to = "/about.html"
+  status = 200
+
+[[redirects]]
+  from = "/beta"
+  to = "/beta.html"
+  status = 200
+
+[[redirects]]
+  from = "/faq"
+  to = "/faq.html"
+  status = 200
+
+[[redirects]]
+  from = "/ambassador"
+  to = "/"
+  status = 301
+  force = true
+
+# The public cohort/waitlist assessment page is retired. Send every direct or
+# historical request straight to the Base signup funnel. force = true so this
+# fires even if a stale /assessment.html is ever restored to the publish dir.
+[[redirects]]
+  from = "/assessment"
+  to = "/app/signup"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/legal"
+  to = "/legal.html"
+  status = 200
+
+[[redirects]]
+  from = "/bjj"
+  to = "/bjj.html"
+  status = 200
+
+[[redirects]]
+  from = "/bodybuilding"
+  to = "/bodybuilding.html"
+  status = 200
+
+# /bb is a short alias that redirects to the +BodyBuilding landing page.
+[[redirects]]
+  from = "/bb"
+  to = "/bodybuilding"
+  status = 301

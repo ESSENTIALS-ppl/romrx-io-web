@@ -1,0 +1,7 @@
+{
+  "name": "romrx-io-web",
+  "private": true,
+  "scripts": {
+    "test:gpc": "node scripts/gpc-consent-unit.mjs"
+  }
+}
