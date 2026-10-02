@@ -213,7 +213,7 @@ exports.handler = async (event) => {
   if (!v.ok) return reply(400, origin, { ok: false, error: v.error });
 
   const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim().replace(/\/+$/, '');
-  const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  const serviceKey = (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
   const anonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
   const hmacKey = (process.env.CONSENT_ANON_HMAC_KEY || '').trim();
   if (!supabaseUrl || !serviceKey || hmacKey.length < 32) {
@@ -223,7 +223,10 @@ exports.handler = async (event) => {
 
   const userId = await verifyUser(supabaseUrl, anonKey, header(headers, 'authorization'));
   const row = { ...v.row, anon_id_hash: hashAnonId(hmacKey, v.anonId), user_id: userId };
-  const svc = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' };
+  // sb_secret_ keys go on apikey only (Bearer is rejected); legacy JWT needs both. (sec 2026-09-29)
+  const svc = serviceKey.startsWith('sb_')
+    ? { apikey: serviceKey, 'Content-Type': 'application/json' }
+    : { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' };
 
   try {
     const res = await fetchWithTimeout(`${supabaseUrl}/rest/v1/consent_events`, {
