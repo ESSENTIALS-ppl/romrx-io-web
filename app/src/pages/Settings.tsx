@@ -8,6 +8,7 @@ import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
 import { FeedbackWidget } from '../components/FeedbackWidget'
+import { BothSurveyCard, BOTH_SURVEY_ENABLED } from '../components/BothSurveyCard'
 import { AdsMeasurementSettings } from '../components/AdsMeasurementSettings'
 import { cn } from '../lib/cn'
 import {
@@ -65,7 +66,7 @@ type ExtProfile = {
 
 export function Settings() {
   const { user, session, signOut } = useAuth()
-  const { profile, loading } = useProfile(user?.id)
+  const { profile, assessment, loading } = useProfile(user?.id)
   const ext = profile as unknown as ExtProfile | null
   const browserTimezone = useMemo(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
@@ -578,6 +579,17 @@ export function Settings() {
             </a>
           </div>
         </SectionCard>
+
+        {/* ── RATE BASE (Both survey) — DRAFT, gated until Jim GO ─ */}
+        {BOTH_SURVEY_ENABLED && (
+          <SectionCard title="Rate Base">
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
+              <MessageSquarePlus size={14} className="text-cobalt" />
+              Optional. About 20 seconds. Only shown after your assessment.
+            </div>
+            <BothSurveyCard hasAssessment={!!assessment} />
+          </SectionCard>
+        )}
 
         {/* ── FEEDBACK ───────────────────────────────────────────── */}
         <SectionCard title="Send feedback">
