@@ -4,7 +4,7 @@ export const STEPS_PART2: Step[] = [
 {
     id: 'cervical_flex_ext',
     title: 'Cervical Flexion + Extension',
-    why: 'Chin-to-chest and looking-up range both matter for posture and neck safety under load.',
+    why: 'Used in looking down and looking up.',
     tool: 'iPhone: Measure -> Level. Android: Simple Inclinometer. Seated in chair.',
     position: [
       'Sit upright in a chair. Feet flat. Back straight.',
