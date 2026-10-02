@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { Spinner } from '../components/Spinner'
+import { BothSurveyModal, BOTH_SURVEY_ENABLED } from '../components/BothSurveyCard'
 import { AlertTriangle, CheckCircle, Unlock, TrendingUp } from 'lucide-react'
 import { cn } from '../lib/cn'
 import {
@@ -76,6 +77,7 @@ export function ResultsPreview() {
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
+  const [bothOpen, setBothOpen] = useState(false)
 
   // Pending sport from signup metadata (raw_user_meta_data.add_sport) or URL ?add=
   // URL wins if both are present so a shared results link can override.
@@ -87,6 +89,19 @@ export function ResultsPreview() {
   }, [searchParams, user])
 
   const sportCopy = pendingSport ? SPORT_LABELS[pendingSport] : null
+
+  // Soft Both survey once after first results (DRAFT: BOTH_SURVEY_ENABLED is false until Jim GO).
+  useEffect(() => {
+    if (!BOTH_SURVEY_ENABLED || !assessment) return
+    try {
+      const key = 'romrx.hq.both_survey_prompted'
+      if (sessionStorage.getItem(key)) return
+      sessionStorage.setItem(key, '1')
+      setBothOpen(true)
+    } catch {
+      setBothOpen(true)
+    }
+  }, [assessment])
 
   useEffect(() => {
     // Once per browser tab session (survives React StrictMode remount).
@@ -338,6 +353,7 @@ export function ResultsPreview() {
           ROMRx Base is free through December 31, 2026. Billing starts January 1, 2027. Cancel anytime. Results saved permanently.
         </p>
       </div>
+      <BothSurveyModal hasAssessment={!!assessment} open={bothOpen} onClose={() => setBothOpen(false)} />
     </div>
   )
 }
