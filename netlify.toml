@@ -158,6 +158,19 @@
 # The public cohort/waitlist assessment page is retired. Send every direct or
 # historical request straight to the Base signup funnel. force = true so this
 # fires even if a stale /assessment.html is ever restored to the publish dir.
+# Marketing unsubscribe short path -> HQ SPA (preserves ?email= / ?token= query string)
+[[redirects]]
+  from = "/unsubscribe"
+  to = "/app/unsubscribe"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/unsubscribe/"
+  to = "/app/unsubscribe"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/assessment"
   to = "/app/signup"
