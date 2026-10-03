@@ -34,11 +34,11 @@ export const HIP_FLEX_STEP = {
   ],
   howTo: [
     'Keep your knee completely straight. Raise the test leg straight up as high as you can. The other leg stays flat on the floor.',
-    'Keep the phone aligned with your thigh as it rises. Stop at a firm stretch behind the thigh, or sooner if your low back lifts off your hand. Read the number.',
+    'Keep the phone aligned with your thigh as it rises. Stop at a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Read the number.',
     'Record it. Lower the leg slowly. Re-zero. Repeat on the other side.',
   ],
-  mistake: 'Bending the knee, or letting the other leg or your low back lift off the floor.',
-  mistakeFix: 'Your knee stays straight and your low back stays resting on your hand. Stop at a firm stretch, not at pain.',
+  mistake: 'Bending the knee, letting the other leg lift off the floor, or letting your low back press down onto your hand as you go higher.',
+  mistakeFix: 'Your knee stays straight and the other leg stays flat. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand.',
 } as const
 
 /** True when the two legs differ enough to say so. */

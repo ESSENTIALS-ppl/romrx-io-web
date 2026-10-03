@@ -63,6 +63,16 @@ describe('hip flexion copy (Stacy rules)', () => {
     expect(all).toMatch(/firm stretch/)
     expect(all).toMatch(/knee completely straight/)
   })
+  it('stop cues: firm stretch, or sooner when the low back presses down onto the hand; sharp pain; never "lifts off your hand"', () => {
+    const how = HIP_FLEX_STEP.howTo.join(' ')
+    expect(how).toContain('Stop at a firm stretch behind the thigh, or sooner when your low back presses down onto your hand.')
+    expect(how).toContain('Stop if you feel sharp pain.')
+    expect(HIP_FLEX_STEP.mistake).toContain('press down onto your hand')
+    expect(HIP_FLEX_STEP.mistakeFix).toContain('Stop at a firm stretch, not at pain.')
+    expect(HIP_FLEX_STEP.mistakeFix).toContain('when your low back presses down onto your hand')
+    const all = [...ALL_COPY].join(' ')
+    expect(all).not.toMatch(/lifts? off your hand/i)
+  })
   it('does not claim the active raise equals the passive published values', () => {
     for (const t of ALL_COPY) expect(t).not.toMatch(/equivalent|same as|matches the published/i)
   })
