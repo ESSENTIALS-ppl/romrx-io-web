@@ -1,4 +1,5 @@
 import type { Step } from './assessmentMeta'
+import { HIP_FLEX_STEP } from '../lib/hipFlexCopy'
 
 export const STEPS_PART2: Step[] = [
 {
@@ -25,25 +26,17 @@ export const STEPS_PART2: Step[] = [
 {
     id: 'hip_flex',
     title: 'Hip Flexion (Straight-Leg Raise)',
-    why: 'You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides. Your numbers are compared with published passive straight-leg-raise values for adults of your sex. Because you lift the leg yourself, your number may read a little lower than the published values. This is an educational comparison, not a diagnosis.',
-    tool: 'iPhone: Measure -> Level. Android: Simple Inclinometer. Lying on the floor. A partner is helpful.',
-    position: [
-      'Lie flat on your back on the floor with both legs straight.',
-      'Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.',
-      'Slide one hand under the small of your low back. Tap to zero with your leg flat on the ground.',
-    ],
-    howTo: [
-      'Keep the test knee completely straight. Raise that leg as high as you can without bending the knee, and keep your other leg flat on the floor.',
-      'Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or when you feel your low back press down onto your hand, whichever comes first. Read the number.',
-      'Record it for this leg. Lower the leg slowly. Re-zero. Repeat with the other leg. Each leg gets its own number.',
-    ],
-    mistake: 'Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher.',
-    mistakeFix: 'Keep the test leg straight and the other leg flat on the floor. Stop at the first firm stretch or when your low back presses onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again.',
+    why: HIP_FLEX_STEP.why,
+    tool: HIP_FLEX_STEP.tool,
+    position: [...HIP_FLEX_STEP.position],
+    howTo: [...HIP_FLEX_STEP.howTo],
+    mistake: HIP_FLEX_STEP.mistake,
+    mistakeFix: HIP_FLEX_STEP.mistakeFix,
+    // No normal/target range on purpose: see lib/hipFlexCopy.ts and HIP_FLEX_UNSCORED_FALLBACK. The input note and the
+    // sex-known "why" sentence are chosen by the measure screen from the user's sex (hipFlexInputNote / hipFlexWhy).
     fields: [
-      // normalLow/normalHigh/riskBelow are unused for this step (0): the 100-120 range was a bent-knee range and cannot be reached with
-      // a straight leg. Grading is by sex on the server. referenceNote replaces the old "Normal: a-b" label on the measure screen.
-      { key: 'hip_flex_l', label: 'Left leg', unit: '°', normalLow: 0, normalHigh: 0, riskBelow: 0, referenceNote: 'Compared by sex after you finish' },
-      { key: 'hip_flex_r', label: 'Right leg', unit: '°', normalLow: 0, normalHigh: 0, riskBelow: 0, referenceNote: 'Compared by sex after you finish' },
+      { key: 'hip_flex_l', label: 'Left leg', unit: '°', unscored: true },
+      { key: 'hip_flex_r', label: 'Right leg', unit: '°', unscored: true },
     ],
   },
 {

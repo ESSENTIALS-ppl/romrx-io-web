@@ -62,6 +62,29 @@ export const JOINT_SCORE_TARGETS: Record<string, number> = {
   cervical_ext: 60,
 }
 
+/**
+ * HIP FLEXION SAFE FALLBACK (hotfix, Oct 3, 2026). ONE switch.
+ *
+ * The Base hip flexion step is a straight-leg raise. The old 120 deg target
+ * (and the 100-120 range) cannot be reached by a straight-leg raise (published
+ * average for men is about 68 deg), so scoring it would give some users a false
+ * "Needs focus". While this is true, hip flexion is recorded and shown per leg
+ * but gets NO band, NO per-joint %, is left out of the /100 average, is never a
+ * weak spot (problem area), and persisted joint_scores / worst_joints values
+ * for it are ignored. Sex-specific per-leg grading (Quinn's table) is a
+ * follow-up that needs the user's sex plus backend changes.
+ */
+export const HIP_FLEX_UNSCORED_FALLBACK = true
+
+const UNSCORED_JOINT_KEYS: ReadonlySet<string> = HIP_FLEX_UNSCORED_FALLBACK
+  ? new Set(['hip_flex'])
+  : new Set<string>()
+
+/** True when a joint (hip_flex or hip_flex_l / hip_flex_r) is shown but never judged. */
+export function isUnscoredJoint(jointKey: string): boolean {
+  return UNSCORED_JOINT_KEYS.has(jointKey.replace(/_(l|r)$/, ''))
+}
+
 /** Map joint_scores score (1|2|3) or internal aliases to band score. */
 export function bandScoreFromJointScore(
   score: number | string | null | undefined,
@@ -119,7 +142,7 @@ export function bandMapFromJointScores(
   for (const row of rows) {
     const key = normalizeJointScoreKey(row)
     const band = bandScoreFromJointScore(row.score)
-    if (key && band != null) map.set(key, band)
+    if (key && band != null && !isUnscoredJoint(key)) map.set(key, band)
   }
   return map
 }
@@ -131,7 +154,8 @@ export function overallBandFromJointScores(
   const bands: BandScore[] = []
   for (const row of rows ?? []) {
     const b = bandScoreFromJointScore(row.score)
-    if (b != null) bands.push(b)
+    const k = normalizeJointScoreKey(row)
+    if (b != null && !(k && isUnscoredJoint(k))) bands.push(b)
   }
   return worstBandScore(bands)
 }
@@ -146,6 +170,7 @@ export function bandForJointKey(
   measured?: { left?: number | null; right?: number | null; midline?: number | null },
 ): BandScore | null {
   const base = jointKeyBase(jointKey)
+  if (isUnscoredJoint(base)) return null
   const fromDb = scoreMap.get(base)
   if (fromDb != null) return fromDb
 
@@ -292,6 +317,7 @@ export function topProblemAreas(
   for (const k of worstJoints ?? []) {
     if (!k) continue
     const base = jointKeyBase(k)
+    if (isUnscoredJoint(base)) continue
     if (seen.has(base)) continue
     seen.add(base)
     out.push(k)
@@ -364,6 +390,7 @@ export function jointPercent(
   band?: BandScore | null,
 ): number | null {
   const base = jointKeyBase(jointKey)
+  if (isUnscoredJoint(base)) return null
   const target = JOINT_SCORE_TARGETS[base]
   const worse = worseSideValue(measured)
   const raw = cappedRatioPct(worse, target)
@@ -411,6 +438,7 @@ export function mobilityScoreForAssessment(
   let sum = 0
   let n = 0
   for (const j of ASSESSMENT_JOINTS) {
+    if (isUnscoredJoint(j.key)) continue
     const p = cappedRatioPct(worseSideValue(measuredFor(rec, j)), JOINT_SCORE_TARGETS[j.key])
     if (p == null) continue
     sum += p
@@ -496,6 +524,8 @@ export interface JointDisplayRow {
   band: BandScore | null
   /** THE per-joint % (jointPercent). 0 when unmeasured (bar empty, radar at centre). */
   pct: number
+  /** true = shown per leg but never judged (no band, no %, not in /100). See HIP_FLEX_UNSCORED_FALLBACK. */
+  unscored: boolean
 }
 
 /** Rows for My Body Joint Breakdown AND radar (same values, same order). */
@@ -513,6 +543,7 @@ export function jointDisplayRowsForAssessment(
       left: m.left, right: m.right, midline: m.midline,
       band,
       pct: jointPercent(j.key, m, band) ?? 0,
+      unscored: isUnscoredJoint(j.key),
     }
   })
 }
@@ -536,6 +567,7 @@ export function sideBandsForJoint(
   sides: { left?: number | null; right?: number | null },
   jointBand?: BandScore | null,
 ): { left: BandScore | null; right: BandScore | null } {
+  if (isUnscoredJoint(jointKey)) return { left: null, right: null }
   const target = JOINT_SCORE_TARGETS[jointKeyBase(jointKey)]
   const one = (v: number | null | undefined): BandScore | null =>
     v == null || target == null || !Number.isFinite(Number(v)) ? null : bandScoreFromTargetRatio(Number(v), target)
@@ -565,6 +597,7 @@ export function valueToneClass(band: BandScore | null | undefined): string {
 
 /** % of Base target for ONE side, floored and clamped into that side's band. */
 export function sidePercent(jointKey: string, value: number | null | undefined, sideBand: BandScore | null): number | null {
+  if (isUnscoredJoint(jointKey)) return null
   const target = JOINT_SCORE_TARGETS[jointKeyBase(jointKey)]
   const v = value == null ? null : Number(value)
   const raw = cappedRatioPct(v, target)
@@ -592,6 +625,8 @@ export interface RadarSideRow {
   worse: number
   /** Joint band (card / chip / bar band). */
   band: BandScore | null
+  /** true = never judged (hip flexion fallback); the radar leaves this axis out. */
+  unscored: boolean
 }
 
 /** One row per BASE_DISPLAY_JOINTS entry, same order as the bars. */
@@ -607,7 +642,7 @@ export function radarSideRowsForAssessment(
         key: r.key, label: r.label, short: r.short, midline: true, measured,
         left: r.pct, right: r.pct,
         leftPct: measured ? r.pct : null, rightPct: measured ? r.pct : null,
-        leftBand: r.band, rightBand: r.band, worse: r.pct, band: r.band,
+        leftBand: r.band, rightBand: r.band, worse: r.pct, band: r.band, unscored: r.unscored,
       }
     }
     const sb = sideBandsForJoint(r.key, { left: r.left, right: r.right }, r.band)
@@ -618,7 +653,7 @@ export function radarSideRowsForAssessment(
       key: r.key, label: r.label, short: r.short, midline: false, measured,
       left: lp ?? rp ?? 0, right: rp ?? lp ?? 0,
       leftPct: lp, rightPct: rp, leftBand: sb.left, rightBand: sb.right,
-      worse: r.pct, band: r.band,
+      worse: r.pct, band: r.band, unscored: r.unscored,
     }
   })
 }

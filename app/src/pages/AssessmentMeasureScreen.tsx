@@ -2,6 +2,7 @@ import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, SkipFo
 import { cn } from '../lib/cn'
 import { STEPS } from './assessmentSteps'
 import { MeasureInput } from './AssessmentMeasure'
+import { HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexScreenCopy } from '../lib/hipFlexCopy'
 import type { Dispatch, SetStateAction } from 'react'
 
 export function AssessmentMeasureScreen(p: {
@@ -13,9 +14,13 @@ export function AssessmentMeasureScreen(p: {
   setStepIdx: Dispatch<SetStateAction<number>>
   handleChange: (key: string, val: string) => void
   handleNext: () => void
+  /** Profile gender, when signed in. Only male or female counts as sex known. */
+  gender?: string | null
 }) {
   const { stepIdx, values, loading, error } = p
   const step = STEPS[stepIdx]
+  const isHip = step.fields.some(f => f.unscored)
+  const hipCopy = hipFlexScreenCopy(p.gender, parseFloat(values.hip_flex_l ?? ''), parseFloat(values.hip_flex_r ?? ''))
   const totalMeasureSteps = STEPS.length
   const progress = Math.round((stepIdx / totalMeasureSteps) * 100)
   return (
@@ -35,7 +40,7 @@ export function AssessmentMeasureScreen(p: {
           {/* Header */}
           <div className="bg-cobalt px-5 py-4">
             <h2 className="font-display font-bold text-xl text-white">{step.title}</h2>
-            <p className="text-cobalt-light text-xs mt-0.5">{step.why}</p>
+            <p className="text-cobalt-light text-xs mt-0.5">{isHip ? hipCopy.why : step.why}</p>
           </div>
 
           <div className="p-5 space-y-5">
@@ -89,8 +94,15 @@ export function AssessmentMeasureScreen(p: {
             <div className="space-y-4 pt-2 border-t border-cobalt/10">
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide">Enter your measurements</p>
               {step.fields.map(f => (
-                <MeasureInput key={f.key} field={f} value={values[f.key] ?? ''} onChange={p.handleChange} />
+                <MeasureInput key={f.key} field={f.unscored ? { ...f, referenceNote: hipCopy.inputNote } : f} value={values[f.key] ?? ''} onChange={p.handleChange} />
               ))}
+              {isHip && (
+                <div className="text-xs text-slate-500 space-y-1" data-unscored-note>
+                  {hipCopy.lines.map(l => (
+                    <p key={l} className={l === HIP_FLEX_LEFT_RIGHT_DIFFERENT ? 'font-semibold text-slate-600' : undefined}>{l}</p>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Hands-free screenshot tip */}

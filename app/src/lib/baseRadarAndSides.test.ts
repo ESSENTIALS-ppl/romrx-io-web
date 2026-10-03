@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest'
 import { radarRadius, radarRadiusFloor40, BUILDING_RING_PCT } from './radarScale'
 import {
   ASSESSMENT_JOINTS,
+  isUnscoredJoint,
   BAND_HEX,
   BAND_TONE,
   BASE_DISPLAY_JOINTS,
@@ -212,7 +213,8 @@ describe('My Protocol Left/Right colours follow Base bands', () => {
   it('each side band = side / JOINT_SCORE_TARGETS (formula-true rows)', () => {
     const r = rng(7)
     for (let n = 0; n < 2000; n++) {
-      const j = ASSESSMENT_JOINTS.filter(x => x.l)[Math.floor(r() * 9)]
+      const scoredBilateral = ASSESSMENT_JOINTS.filter(x => x.l && !isUnscoredJoint(x.key))
+      const j = scoredBilateral[Math.floor(r() * scoredBilateral.length)]
       const t = JOINT_SCORE_TARGETS[j.key]
       const L = Math.round(t * (0.5 + r() * 0.7) * 10) / 10
       const R = Math.round(t * (0.5 + r() * 0.7) * 10) / 10

@@ -7,6 +7,7 @@ import { EmptyState } from '../components/EmptyState'
 import { Spinner } from '../components/Spinner'
 import { BaseRadar } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexLegsDiffer } from '../lib/hipFlexCopy'
 import {
   bandFull,
   bandChip,
@@ -84,7 +85,7 @@ function getBandTier(band: BandScore) {
 // No elite sport-pack targets on Base (Fix A, Jim LOCK 2026-09-24).
 
 function JointBar({ row }: { row: JointDisplayRow }) {
-  const { label, left, right, midline, band: jointBand, pct, unit } = row
+  const { label, left, right, midline, band: jointBand, pct, unit, unscored } = row
   const asym = left != null && right != null ? Math.abs(left - right) : 0
 
   // Single source of truth: band from joint_scores / compute_joint_scores formula.
@@ -101,7 +102,11 @@ function JointBar({ row }: { row: JointDisplayRow }) {
     >
       <div className="col-start-1 row-start-1 min-w-0 sm:w-32 sm:shrink-0">
         <p className={cn('text-xs font-medium', tone ? tone.label : 'text-slate-500')}>{label}</p>
-        {asym > 10 && (
+        {unscored ? (
+          hipFlexLegsDiffer(left, right) && (
+            <p className="text-xs text-slate-500 mt-0.5">{HIP_FLEX_LEFT_RIGHT_DIFFERENT}</p>
+          )
+        ) : asym > 10 && (
           <p className="text-xs text-yellow-600 flex items-center gap-0.5 mt-0.5">
             <AlertTriangle size={9} /> {formatMeasure(asym)}{unit} gap
           </p>
@@ -120,7 +125,7 @@ function JointBar({ row }: { row: JointDisplayRow }) {
       </div>
       <div className="col-start-3 row-start-2 justify-self-end w-8 text-right sm:shrink-0">
         <span className={cn('text-xs font-bold', tone ? tone.color : 'text-slate-500')}>
-          {pct}%
+          {unscored ? '-' : `${pct}%`}
         </span>
       </div>
       <div className="col-start-2 col-end-4 row-start-1 justify-self-end flex justify-end sm:w-20 sm:shrink-0">
@@ -130,6 +135,11 @@ function JointBar({ row }: { row: JointDisplayRow }) {
             tone.chip,
           )}>
             {bandChip(jointBand)}
+          </span>
+        )}
+        {unscored && (
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap bg-slate-50 text-slate-500 border-slate-200">
+            Not scored
           </span>
         )}
       </div>
@@ -152,7 +162,7 @@ export function MyBody() {
     />
   )
 
-  const radarRows = radarSideRowsForAssessment(assessment, jointScores)
+  const radarRows = radarSideRowsForAssessment(assessment, jointScores).filter(r => !r.unscored)
   const prs = mobilityScoreForAssessment(assessment, jointScores)
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
   const jointRows = jointDisplayRowsForAssessment(assessment, jointScores)
@@ -373,6 +383,9 @@ export function MyBody() {
         <div className="divide-y divide-cobalt/10">
           {jointRows.map(row => <JointBar key={row.key} row={row} />)}
         </div>
+        {jointRows.some(r => r.unscored && (r.left != null || r.right != null)) && (
+          <p className="text-xs text-slate-500 pt-2" data-unscored-note>Hip Flexion: {HIP_FLEX_FALLBACK_LINE}</p>
+        )}
       </SectionCard>
     </div>
   )

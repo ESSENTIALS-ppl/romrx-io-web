@@ -1,0 +1,97 @@
+/**
+ * Customer-facing hip flexion (straight-leg raise) copy. ONE place, so the step,
+ * the measure screen, My Body and My Protocol can never drift apart.
+ *
+ * Stacy's rule (Oct 3, 2026): no degree numbers shown as a normal or target, and
+ * none of the words normal, required, tight, injury, risk. American spelling,
+ * no em dashes. Guarded by hipFlexCopy.test.ts.
+ *
+ * Only the fallback is live (HIP_FLEX_UNSCORED_FALLBACK in mobilityBands.ts).
+ * The sex-specific lines are kept here, unused, for the follow-up that grades
+ * each leg against published averages once the user's sex is available.
+ */
+
+/** Result line per leg once sex is known (FOLLOW-UP, not shown yet). */
+export const HIP_FLEX_RESULT_LINE_SEX_KNOWN =
+  'Compared with published averages for healthy adults of your sex (Youdas et al., 2005)'
+
+/** Shown when the two legs differ (gap at least HIP_FLEX_LR_DIFFERENT_DEG). */
+export const HIP_FLEX_LEFT_RIGHT_DIFFERENT = 'Left and right are different'
+
+/** Degrees of left/right gap that counts as different (same 10 as the My Body gap flag). */
+export const HIP_FLEX_LR_DIFFERENT_DEG = 10
+
+/** LIVE: sex unknown or not given. No low/high judgment. */
+export const HIP_FLEX_FALLBACK_LINE =
+  'Saved for each leg, not scored. Published averages for this raise differ for men and women (Youdas et al., 2005).'
+
+export const HIP_FLEX_STEP = {
+  /** Always shown. Makes no comparison claim, so it is safe when sex is unknown. */
+  why: 'You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.',
+  tool: 'iPhone: Measure -> Level. Android: Simple Inclinometer. Lying on the floor. A partner is helpful.',
+  position: [
+    'Lie flat on your back on the floor with both legs straight.',
+    'Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.',
+    'Slide one hand under the small of your low back. Tap to zero with your leg flat on the ground.',
+  ],
+  howTo: [
+    'Keep the test knee completely straight. Raise that leg as high as you can without bending the knee, and keep your other leg flat on the floor.',
+    'Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Read the number.',
+    'Record it for this leg. Lower the leg slowly. Re-zero. Repeat with the other leg. Each leg gets its own number.',
+  ],
+  mistake: 'Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher.',
+  mistakeFix: 'Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again.',
+} as const
+
+/** Added to the "why" line ONLY when the user's sex is known (male or female). */
+export const HIP_FLEX_WHY_SEX_KNOWN =
+  'Your numbers are compared with published passive straight-leg-raise values for adults of your sex. Because you lift the leg yourself, your number may read a little lower than the published values. This is an educational comparison, not a diagnosis.'
+
+/** Input note under each leg box: ONLY when sex is known. */
+export const HIP_FLEX_INPUT_NOTE_SEX_KNOWN = 'Compared by sex after you finish'
+
+/** Input note when sex is blank, prefer_not_to_say or anything else. */
+export const HIP_FLEX_INPUT_NOTE_FALLBACK = 'Saved for each leg'
+
+/** Approved by Stacy for the sex-known comparison screen ONLY. Never on the fallback screen or in the hotfix. */
+export const HIP_FLEX_HONESTY_LINE =
+  'Your raise is active and the published values are passive, so treat this as a rough guide.'
+
+/** True only for male or female. Blank, prefer_not_to_say, other, null: false. */
+export function hipFlexSexKnown(gender: string | null | undefined): boolean {
+  const g = (gender ?? '').trim().toLowerCase()
+  return g === 'male' || g === 'female'
+}
+
+/** The "why" line for the hip step: the comparison claim only when sex is known. */
+export function hipFlexWhy(gender: string | null | undefined): string {
+  return hipFlexSexKnown(gender) ? `${HIP_FLEX_STEP.why} ${HIP_FLEX_WHY_SEX_KNOWN}` : HIP_FLEX_STEP.why
+}
+
+/** The note beside each leg input. */
+export function hipFlexInputNote(gender: string | null | undefined): string {
+  return hipFlexSexKnown(gender) ? HIP_FLEX_INPUT_NOTE_SEX_KNOWN : HIP_FLEX_INPUT_NOTE_FALLBACK
+}
+
+/** True when the two legs differ enough to say so. */
+export function hipFlexLegsDiffer(left: number | null | undefined, right: number | null | undefined): boolean {
+  if (left == null || right == null) return false
+  return Math.abs(Number(left) - Number(right)) >= HIP_FLEX_LR_DIFFERENT_DEG
+}
+
+/**
+ * Everything the measure screen shows for the hip step that depends on sex, in one pure function
+ * (so it can be tested without rendering). Sex known: why line with the comparison, "Compared by
+ * sex" note, honesty line. Sex blank / prefer_not_to_say / other: neutral why line, "Saved for each
+ * leg" note, fallback line, and none of the comparison text.
+ */
+export function hipFlexScreenCopy(
+  gender: string | null | undefined,
+  left: number | null | undefined,
+  right: number | null | undefined,
+): { why: string; inputNote: string; lines: string[] } {
+  const known = hipFlexSexKnown(gender)
+  const lines: string[] = known ? [HIP_FLEX_HONESTY_LINE] : [HIP_FLEX_FALLBACK_LINE]
+  if (hipFlexLegsDiffer(left, right)) lines.push(HIP_FLEX_LEFT_RIGHT_DIFFERENT)
+  return { why: hipFlexWhy(gender), inputNote: hipFlexInputNote(gender), lines }
+}
