@@ -126,7 +126,7 @@ export function Signup() {
           <h1 className="font-display font-bold text-cobalt-ink text-xl">Confirm your email</h1>
           <p className="text-sm text-slate-500">
             We sent a confirmation link to <strong>{email}</strong>. Open it to activate your
-            account and start your free ROM assessment.
+            account and start your assessment.
           </p>
           <div className="pt-4"><DoNotSellLink /></div>
           <p className="text-xs text-slate-500">
