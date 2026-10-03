@@ -20,6 +20,8 @@ import {
   sideBandsForJoint,
   sidePercent,
   topProblemAreas,
+  topProblemAreasForAssessment,
+  scoredJointKeysWorstFirst,
 } from './mobilityBands'
 import {
   HIP_FLEX_FALLBACK_LINE,
@@ -222,6 +224,67 @@ describe('safe fallback: hip flexion is never judged', () => {
 
   it('never a weak spot: dropped from worst_joints / top problem areas', () => {
     expect(topProblemAreas(['hip_flex_l', 'hip_flex_r', 'ankle_df_l', 'hip_ir_l', 'hip_abd_l'])).toEqual(['ankle_df_l', 'hip_ir_l', 'hip_abd_l'])
+  })
+
+  describe('top three problem areas come from SCORED joints only (hip removed BEFORE the cut)', () => {
+    const base = {
+      hip_er_l: 50, hip_er_r: 50, hip_ir_l: 50, hip_ir_r: 50, hip_abd_l: 95, hip_abd_r: 95,
+      shoulder_er_l: 95, shoulder_er_r: 95, shoulder_flex_l: 180, shoulder_flex_r: 180,
+      ankle_df_l: 21, ankle_df_r: 21, cervical_lat_l: 46, cervical_lat_r: 46,
+      lumbar_flex: 65, lumbar_ext: 28, cervical_flex: 52, cervical_ext: 65,
+    }
+    const hasHip = (keys: string[]) => keys.some(k => k.startsWith('hip_flex'))
+
+    it('hip flexion is the LOWEST score: top 3 are the next three scored joints, hip never appears', () => {
+      const a = {
+        ...base,
+        hip_flex_l: 10, hip_flex_r: 15,          // lowest of all (about 8%)
+        shoulder_er_l: 48,                        // 53%
+        shoulder_flex_l: 100,                     // 56%
+        hip_abd_l: 55,                            // 61%
+        worst_joints: ['hip_flex_l', 'hip_flex_r', 'shoulder_er_l', 'shoulder_flex_l', 'hip_abd_l'],
+      }
+      const top = topProblemAreasForAssessment(a)
+      expect(top).toEqual(['shoulder_er_l', 'shoulder_flex_l', 'hip_abd_l'])
+      expect(hasHip(top)).toBe(false)
+    })
+
+    it('persisted worst_joints that spent its 5 slots on hip: still a full top 3 (never 2)', () => {
+      const a = {
+        ...base,
+        hip_flex_l: 60, hip_flex_r: 62,
+        shoulder_flex_l: 80, shoulder_flex_r: 85,   // 44% / 47%
+        hip_abd_l: 45,                              // 50%
+        shoulder_er_l: 48,                          // 53%
+        worst_joints: ['shoulder_flex_l', 'shoulder_flex_r', 'hip_flex_l', 'hip_flex_r', 'hip_abd_l'],
+      }
+      // Old behavior: dedupe + drop hip AFTER the cut left only 2 items.
+      expect(topProblemAreas(a.worst_joints)).toHaveLength(2)
+      const top = topProblemAreasForAssessment(a)
+      expect(top).toEqual(['shoulder_flex_l', 'hip_abd_l', 'shoulder_er_l'])
+      expect(hasHip(top)).toBe(false)
+    })
+
+    it('no persisted worst_joints at all: ranked from the scored joints, hip excluded first', () => {
+      const a = { ...base, hip_flex_l: 0, hip_flex_r: 0, ankle_df_l: 10, shoulder_er_r: 40, hip_ir_r: 30 }
+      expect(scoredJointKeysWorstFirst(a).some(k => k.startsWith('hip_flex'))).toBe(false)
+      expect(topProblemAreasForAssessment({ ...a, worst_joints: null })).toEqual(['shoulder_er_r', 'ankle_df_l', 'hip_ir_r'])
+      expect(topProblemAreasForAssessment({ ...a, worst_joints: [] })).toEqual(['shoulder_er_r', 'ankle_df_l', 'hip_ir_r'])
+    })
+
+    it('fewer than 3 scored joints: returns only those, never hip', () => {
+      const a = { hip_flex_l: 5, hip_flex_r: 5, ankle_df_l: 10, ankle_df_r: 12, lumbar_ext: 20, worst_joints: ['hip_flex_l', 'hip_flex_r', 'ankle_df_l'] }
+      expect(topProblemAreasForAssessment(a)).toEqual(['ankle_df_l', 'lumbar_ext'])
+      expect(topProblemAreasForAssessment({ hip_flex_l: 5, hip_flex_r: 5, worst_joints: ['hip_flex_l'] })).toEqual([])
+      expect(topProblemAreasForAssessment({ hip_flex_l: 5, ankle_df_r: 9, worst_joints: ['hip_flex_l'] })).toEqual(['ankle_df_r'])
+      expect(topProblemAreasForAssessment(null)).toEqual([])
+    })
+
+    it('MyBody and MyProtocol both pick via the scored-only helper', () => {
+      for (const f of ['MyBody.tsx', 'MyProtocol.tsx']) {
+        expect(readFileSync(join(SRC, 'pages', f), 'utf8')).toMatch(/topProblemAreasForAssessment\(/)
+      }
+    })
   })
 
   it('My Body rows flag it unscored and the radar axis is left out by the page', () => {

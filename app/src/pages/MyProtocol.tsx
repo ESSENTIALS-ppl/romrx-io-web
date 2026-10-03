@@ -23,7 +23,7 @@ import {
   formatMeasure,
   jointUnit,
   JOINT_SCORE_TARGETS,
-  topProblemAreas,
+  topProblemAreasForAssessment,
   BAND_DESC,
   BAND_TONE,
   TOP_PROBLEM_AREAS_MAX,
@@ -805,7 +805,7 @@ export function MyProtocol() {
   // Same top problem areas as My Body (worst_joints, deduped, max 3) lead the list;
   // remaining slots fall back to asymmetry, then severity. Always capped at 3.
   const problemOrder = useMemo(
-    () => topProblemAreas(assessment?.worst_joints).map(jointKeyBase),
+    () => topProblemAreasForAssessment(assessment).map(jointKeyBase),
     [assessment],
   )
   const ranked = useMemo(() => {

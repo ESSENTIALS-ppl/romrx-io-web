@@ -177,7 +177,7 @@ describe('surface wiring (static): every band surface uses the single source', (
     expect(read(join(pages, f))).toMatch(/overallBandForAssessment\(/)
   })
   it('My Body + My Protocol cap problem areas via the shared helper', () => {
-    expect(read(join(pages, 'MyBody.tsx'))).toMatch(/topProblemAreas\(/)
+    expect(read(join(pages, 'MyBody.tsx'))).toMatch(/topProblemAreasForAssessment\(/)
     expect(read(join(pages, 'MyBody.tsx'))).not.toMatch(/worst_joints\.map\(/)
     expect(read(join(pages, 'MyProtocol.tsx'))).toMatch(/TOP_PROBLEM_AREAS_MAX/)
   })

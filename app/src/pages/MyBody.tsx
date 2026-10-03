@@ -19,7 +19,7 @@ import {
   formatScoreBand,
   mobilityScoreForAssessment,
   overallBandForAssessment,
-  topProblemAreas,
+  topProblemAreasForAssessment,
   BAND_DESC,
   BAND_TONE,
   BAND_LEGEND,
@@ -167,7 +167,7 @@ export function MyBody() {
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
   const jointRows = jointDisplayRowsForAssessment(assessment, jointScores)
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
-  const problemAreas = topProblemAreas(assessment.worst_joints)
+  const problemAreas = topProblemAreasForAssessment(assessment)
   const tier = getBandTier(overallBand)
 
   // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
