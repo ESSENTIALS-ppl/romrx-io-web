@@ -304,17 +304,56 @@ export function overallBandForAssessment(
 export const TOP_PROBLEM_AREAS_MAX = 3
 
 /**
- * Top problem areas from assessments.worst_joints (compute-tiers writes 5,
- * side-specific keys, worst first). Dedupe by joint (keep the worse side that
- * appears first) and cap at TOP_PROBLEM_AREAS_MAX.
+ * Every SCORED joint of an assessment as one side-specific key (worse side;
+ * midline joints use their own key), worst first (lowest worse/target ratio,
+ * capped at 1, same ordering rule as compute-tiers). Unscored joints (hip
+ * flexion while HIP_FLEX_UNSCORED_FALLBACK is on) and unmeasured joints are
+ * never included, so a top-N cut taken from this list can never contain them.
+ */
+export function scoredJointKeysWorstFirst(
+  assessment: object | null | undefined,
+): string[] {
+  if (!assessment) return []
+  const rec = assessment as Record<string, unknown>
+  const rows: { key: string; ratio: number; order: number }[] = []
+  ASSESSMENT_JOINTS.forEach((j, order) => {
+    if (isUnscoredJoint(j.key)) return
+    const m = measuredFor(rec, j)
+    const worse = worseSideValue(m)
+    const target = JOINT_SCORE_TARGETS[j.key]
+    if (worse == null || !(target > 0) || !Number.isFinite(worse)) return
+    let key = j.key
+    if (j.l && j.r) {
+      const useRight = m.left != null && m.right != null && m.right < m.left
+      const onlyRight = m.left == null && m.right != null
+      key = useRight || onlyRight ? j.r : j.l
+    }
+    rows.push({ key, ratio: Math.min(1, Math.max(0, worse / target)), order })
+  })
+  rows.sort((a, b) => a.ratio - b.ratio || a.order - b.order)
+  return rows.map(r => r.key)
+}
+
+/**
+ * Top problem areas, ALWAYS picked from scored joints only. Unscored joints
+ * (hip flexion, HIP_FLEX_UNSCORED_FALLBACK) are removed BEFORE ranking and
+ * slicing, never after, so the list is never short because one was dropped.
+ *
+ * Order: assessments.worst_joints first (compute-tiers writes 5 side-specific
+ * keys, worst first; deduped by joint, keeping the worse side that appears
+ * first), then `candidates` (all scored joints, worst first, see
+ * scoredJointKeysWorstFirst) fill any remaining slots. Capped at max.
+ * Pass `candidates` from the assessment so a persisted worst_joints that
+ * included an unscored joint still yields a full top 3.
  */
 export function topProblemAreas(
   worstJoints: ReadonlyArray<string> | null | undefined,
   max: number = TOP_PROBLEM_AREAS_MAX,
+  candidates: ReadonlyArray<string> = [],
 ): string[] {
   const out: string[] = []
   const seen = new Set<string>()
-  for (const k of worstJoints ?? []) {
+  for (const k of [...(worstJoints ?? []), ...candidates]) {
     if (!k) continue
     const base = jointKeyBase(k)
     if (isUnscoredJoint(base)) continue
@@ -324,6 +363,15 @@ export function topProblemAreas(
     if (out.length >= max) break
   }
   return out
+}
+
+/** Top problem areas for one assessment (worst_joints + scored-joint fill). */
+export function topProblemAreasForAssessment(
+  assessment: object | null | undefined,
+  max: number = TOP_PROBLEM_AREAS_MAX,
+): string[] {
+  const worst = (assessment as { worst_joints?: ReadonlyArray<string> | null } | null | undefined)?.worst_joints
+  return topProblemAreas(worst, max, scoredJointKeysWorstFirst(assessment))
 }
 
 // ---------------------------------------------------------------------------
