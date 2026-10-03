@@ -39,14 +39,14 @@ const RX_NAV = `
            redirects and app/vite.config.ts base + App.tsx basename="/app"), so its login route is /app/login. -->
       <a href="/app/login" class="nav-login mobile-hide-ok">Log in</a>
     </div>
-    <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start Free Assessment →</a>
+    <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start your assessment →</a>
   </div>
 </nav>
 `;
 
 /* Minimal chrome (Jim via Grant 2026-09-27): pages with
    <body data-rx-chrome="minimal"> (/legal) get the SAME header the homepage
-   renders (wordmark -> /, Log in, Start Free Assessment), no universe footer,
+   renders (wordmark -> /, Log in, Start your assessment), no universe footer,
    and the legal footer without the Articles link. Nothing else on the site is
    reachable from the privacy page. */
 const RX_NAV_MINIMAL = `
@@ -56,7 +56,7 @@ const RX_NAV_MINIMAL = `
     <div class="rx-nav-links">
       <a href="/app/login" class="nav-login mobile-hide-ok">Log in</a>
     </div>
-    <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start Free Assessment →</a>
+    <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start your assessment →</a>
   </div>
 </nav>
 `;
