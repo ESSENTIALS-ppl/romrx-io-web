@@ -29,7 +29,7 @@ describe('/legal chrome cosmetics', () => {
   it('legal.html text is unchanged apart from the body attribute (no copy edits here)', () => {
     const s = read('legal.html')
     expect(s).toMatch(/<h2 class="rx-h2" id="privacy">Privacy Policy<\/h2>/)
-    expect(s).toMatch(/Effective September 30, 2026/)
+    expect(s).toMatch(/Effective October 3, 2026/)
   })
   it('header keeps a gap between wordmark, Log in and CTA on phones', () => {
     const css = read('assets/design-tokens.css')
