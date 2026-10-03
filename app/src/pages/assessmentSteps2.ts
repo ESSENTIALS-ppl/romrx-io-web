@@ -24,24 +24,24 @@ export const STEPS_PART2: Step[] = [
   },
 {
     id: 'hip_flex',
-    title: 'Hip Flexion',
-    why: 'Deep hip flexion supports ground-based positions and squat depth alike.',
+    title: 'Hip Flexion (Straight-Leg Raise)',
+    why: 'You raise one straight leg and read the angle. Each leg is measured and scored on its own, so you can see both sides.',
     tool: 'iPhone: Measure -> Level. Android: Simple Inclinometer. Lying on the floor.',
     position: [
-      'Lie flat on your back on the floor. Both legs straight.',
+      'Lie flat on your back on the floor with both legs straight.',
       'Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.',
       'Tap to zero with your leg flat on the ground.',
     ],
     howTo: [
-      'Keep your knee completely straight. Raise your leg as high as you can without bending the knee.',
-      'Keep the phone aligned with your thigh as it rises. Stop just before your low back starts to lift off the floor. Read the number.',
-      'Record it. Lower the leg slowly. Re-zero. Repeat on the other side.',
+      'Keep the test knee completely straight. Raise that leg as high as you can without bending the knee, and keep your other leg flat on the floor.',
+      'Keep the phone aligned with your thigh as it rises. Stop just before your low back starts to lift off the floor or your other leg starts to lift. Read the number.',
+      'Record it for this leg. Lower the leg slowly. Re-zero. Repeat with the other leg. Each leg gets its own number.',
     ],
-    mistake: 'Bending the knee as the leg rises, or going so high that the low back arches off the floor.',
-    mistakeFix: 'Your leg stays completely straight the whole time. Stop before your low back lifts - once it arches, you have gone past your true range.',
+    mistake: 'Bending the knee as the leg rises, letting the other leg lift, or going so high that the low back arches off the floor.',
+    mistakeFix: 'Keep the test leg straight the whole time and the other leg flat on the floor. Stop before your low back lifts. Once it arches, that number does not count.',
     fields: [
-      { key: 'hip_flex_l', label: 'Left', unit: '°', normalLow: 100, normalHigh: 120, riskBelow: 100 },
-      { key: 'hip_flex_r', label: 'Right', unit: '°', normalLow: 100, normalHigh: 120, riskBelow: 100 },
+      { key: 'hip_flex_l', label: 'Left leg', unit: '°', normalLow: 100, normalHigh: 120, riskBelow: 100 },
+      { key: 'hip_flex_r', label: 'Right leg', unit: '°', normalLow: 100, normalHigh: 120, riskBelow: 100 },
     ],
   },
 {
@@ -89,9 +89,9 @@ export const STEPS_PART2: Step[] = [
   },
 {
     id: 'ankle_df',
-    title: 'Ankle Dorsiflexion',
-    why: 'Base and balance in every standing movement depend on ankle range.',
-    tool: 'Tape measure or ruler. Standing knee-to-wall test (measure in centimeters).',
+    title: 'Ankle Dorsiflexion (Knee-to-Wall, cm)',
+    why: 'This is one test, the standing knee-to-wall test, and you record it in centimeters (cm) for each foot.',
+    tool: 'Tape measure or ruler. Standing knee-to-wall test. Measure in centimeters (cm).',
     position: [
       'Remove your shoes. Stand barefoot facing a wall with a tape measure on the floor pointing straight out from the wall.',
       'Place the tip of your big toe at the 10 cm mark on the tape.',
@@ -99,8 +99,8 @@ export const STEPS_PART2: Step[] = [
     ],
     howTo: [
       'Drive your knee forward to touch the wall without lifting your heel. Move your foot closer or farther from the wall until you find the spot where your knee can just barely touch with the heel still flat.',
-      'Once you find that spot, measure the distance from the wall to the tip of your big toe. That is your score. Record it in cm.',
-      'Repeat on the other side.',
+      'Once you find that spot, measure the distance from the wall to the tip of your big toe. That is your score. Record it in centimeters (cm), not degrees.',
+      'Repeat with the other foot.',
     ],
     mistake: 'Your heel lifts off the floor as your knee drives forward.',
     mistakeFix: 'Keep your eye on your heel the whole time. If it lifts even slightly, that rep does not count. Adjust your foot closer to the wall and try again.',
