@@ -245,6 +245,10 @@ img, svg { max-width: 100%; display: block; }
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
 }
+/* Three fixed columns on desktop, one column on phones (was an inline style that forced 3 columns at 375px
+   and made /bjj and /bodybuilding scroll sideways). minmax(0,1fr) lets cards shrink. */
+.rx-card-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 768px) { .rx-card-grid-3 { grid-template-columns: minmax(0, 1fr); } }
 
 /* ===== Beta badge ===== */
 .rx-beta {
