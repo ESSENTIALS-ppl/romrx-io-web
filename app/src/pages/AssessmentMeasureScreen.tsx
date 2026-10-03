@@ -2,6 +2,7 @@ import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, SkipFo
 import { cn } from '../lib/cn'
 import { STEPS } from './assessmentSteps'
 import { MeasureInput } from './AssessmentMeasure'
+import { HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexLegsDiffer } from '../lib/hipFlexCopy'
 import type { Dispatch, SetStateAction } from 'react'
 
 export function AssessmentMeasureScreen(p: {
@@ -91,6 +92,14 @@ export function AssessmentMeasureScreen(p: {
               {step.fields.map(f => (
                 <MeasureInput key={f.key} field={f} value={values[f.key] ?? ''} onChange={p.handleChange} />
               ))}
+              {step.fields.some(f => f.unscored) && (
+                <div className="text-xs text-slate-500 space-y-1" data-unscored-note>
+                  <p>{HIP_FLEX_FALLBACK_LINE}</p>
+                  {hipFlexLegsDiffer(parseFloat(values.hip_flex_l ?? ''), parseFloat(values.hip_flex_r ?? '')) && (
+                    <p className="font-semibold text-slate-600">{HIP_FLEX_LEFT_RIGHT_DIFFERENT}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Hands-free screenshot tip */}

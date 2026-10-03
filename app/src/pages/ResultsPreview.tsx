@@ -12,6 +12,7 @@ import {
   mobilityScoreForAssessment,
   overallBandForAssessment,
   ASSESSMENT_JOINTS,
+  isUnscoredJoint,
   formatMeasure,
   jointUnit,
   BAND_DESC,
@@ -58,7 +59,7 @@ function getTopAsymmetries(assessment: Record<string, number | null>): Asymmetry
   // Gap rounded to 1 decimal like My Body / My Protocol (19 - 17.9 = 1.1, not 1.1000000000000014);
   // unit as measured (Ankle DF = knee-to-wall cm, everything else degrees).
   return ASSESSMENT_JOINTS
-    .filter(j => j.l && j.r && JOINT_LABELS[j.key])
+    .filter(j => j.l && j.r && JOINT_LABELS[j.key] && !isUnscoredJoint(j.key))
     .map(j => {
       const l = assessment[j.l!], r = assessment[j.r!]
       if (l == null || r == null) return null
