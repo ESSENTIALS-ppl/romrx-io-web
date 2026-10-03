@@ -7,6 +7,8 @@ export interface Field {
   normalLow: number
   normalHigh: number
   riskBelow: number
+  /** Short text shown instead of "Normal: a-b" when there is no single published range (hip straight-leg raise, ankle cm). */
+  referenceNote?: string
 }
 
 export interface Step {
