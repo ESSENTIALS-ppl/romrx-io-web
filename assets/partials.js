@@ -110,7 +110,7 @@ const RX_PACK_COPY = {
   betaStatus: 'Beta testing starting January 2027',
   priceLine: '$149 a year, stacks on Base',
   footnote: 'Pack prices are planned for 2027 and may change before launch. Packs need a Base account and a card on file, renew yearly until you cancel, and end if you cancel Base. For adults 18 and older. Full terms are shown at checkout.',
-  disclaimer: 'ROMRx shares educational information about range of motion. It is not medical advice and does not diagnose, treat or cure any condition. For adults 18 and older.',
+  disclaimer: 'ROMRx shares educational information about range of motion. It is not medical advice and does not diagnose, treat or cure any condition.',
   affil: [
     'ROMRx is not affiliated with or endorsed by the U.S. Department of Defense (also called the Department of War), any branch of the military or any government agency. No endorsement is intended or implied.',
     'ROMRx is not affiliated with or endorsed by any fire, police or EMS department, sports league or federation, or event organizer.',
