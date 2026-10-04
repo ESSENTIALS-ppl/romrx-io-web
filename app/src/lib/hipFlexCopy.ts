@@ -45,7 +45,7 @@ export const HIP_FLEX_STEP = {
 
 /** Added to the "why" line ONLY when the user's sex is known (male or female). */
 export const HIP_FLEX_WHY_SEX_KNOWN =
-  'Your numbers are compared with published passive straight-leg-raise values for adults of your sex. Because you lift the leg yourself, your number may read a little lower than the published values. This is an educational comparison, not a diagnosis.'
+  'Your numbers are compared with published passive straight-leg-raise values for adults of your sex. This is an educational comparison, not a diagnosis.'
 
 /** Input note under each leg box: ONLY when sex is known. */
 export const HIP_FLEX_INPUT_NOTE_SEX_KNOWN = 'Compared by sex after you finish'
