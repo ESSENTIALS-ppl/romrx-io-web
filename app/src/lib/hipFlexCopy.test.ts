@@ -35,6 +35,9 @@ import {
   hipFlexLegsDiffer,
   hipFlexSexKnown,
   hipFlexScreenCopy,
+  hipFlexWhy,
+  hipFlexInputNote,
+  hipFlexShowSexKnownCopy,
 } from './hipFlexCopy'
 import { STEPS } from '../pages/assessmentSteps'
 import { getScore } from '../pages/assessmentMeta'
@@ -107,42 +110,71 @@ describe('hip flexion copy (Stacy rules)', () => {
   })
 })
 
-describe('Stacy Fix B: sex-dependent hip text (male/female only)', () => {
-  const COMPARISON = /compared (with|by)|published passive|Compared by sex/i
-  const known = (g: string) => hipFlexScreenCopy(g, 60, 60)
+describe('Stacy edit (Oct 4): while HIP_FLEX_UNSCORED_FALLBACK is true, the sex-known copy renders for NO ONE', () => {
+  const FORBIDDEN = /your sex|compared by sex|compared with|passive|rough guide|youdas|published (averages|passive)|men and women/i
+  const GENDERS = ['male', 'female', 'Female', ' male ', 'MALE', '', 'prefer_not_to_say', 'other', null, undefined, '  ']
 
-  it('sex known (male, female): comparison why, "Compared by sex" note, honesty line; no fallback', () => {
-    for (const g of ['male', 'female', 'Female', ' male ']) {
-      expect(hipFlexSexKnown(g)).toBe(true)
-      const c = known(g)
-      expect(c.why).toContain('compared with published passive straight-leg-raise values for adults of your sex')
-      expect(c.inputNote).toBe('Compared by sex after you finish')
-      expect(c.lines).toContain('Your raise is active and the published values are passive, so treat this as a rough guide.')
-      expect(c.lines).not.toContain(HIP_FLEX_FALLBACK_LINE)
-    }
+  it('the flag is on', () => {
+    expect(HIP_FLEX_UNSCORED_FALLBACK).toBe(true)
   })
 
-  it('sex blank / prefer_not_to_say / other / null: fallback line and "Saved for each leg"; no comparison text, no honesty line', () => {
-    for (const g of ['', 'prefer_not_to_say', 'other', null, undefined, '  ']) {
-      expect(hipFlexSexKnown(g)).toBe(false)
-      const c = known(g as string)
-      expect(c.inputNote).toBe('Saved for each leg')
-      expect(c.lines).toContain('Saved for each leg, not scored. Published averages for this raise differ for men and women (Youdas et al., 2005).')
-      expect(c.lines).not.toContain(HIP_FLEX_HONESTY_LINE)
-      expect(c.why).not.toMatch(COMPARISON)
+  it('exact fallback line: "Saved for each leg, not scored." (no Youdas sentence)', () => {
+    expect(HIP_FLEX_FALLBACK_LINE).toBe('Saved for each leg, not scored.')
+  })
+
+  it('every gender gets the neutral why line, the "Saved for each leg" note and the fallback line', () => {
+    for (const g of GENDERS) {
+      const c = hipFlexScreenCopy(g as string, 60, 60)
       expect(c.why).toBe(HIP_FLEX_STEP.why)
-      expect(c.inputNote).not.toMatch(COMPARISON)
-      expect(c.lines.join(' ')).not.toMatch(/compared by sex|compared with published passive/i)
+      expect(c.inputNote).toBe('Saved for each leg')
+      expect(c.lines).toEqual(['Saved for each leg, not scored.'])
+      expect(hipFlexWhy(g as string)).toBe(HIP_FLEX_STEP.why)
+      expect(hipFlexInputNote(g as string)).toBe('Saved for each leg')
+      expect(hipFlexShowSexKnownCopy(g as string)).toBe(false)
     }
   })
 
-  it('the honesty line is only on the sex-known screen and not in the base step text', () => {
+  it('no "your sex", "Compared by sex", "passive", "rough guide", Youdas anywhere in returned copy, for any gender, with or without a left/right gap', () => {
+    for (const g of GENDERS) {
+      for (const [l, r] of [[60, 60], [70, 55], [null, null], [NaN, 40]] as const) {
+        const c = hipFlexScreenCopy(g as string, l, r)
+        const all = [c.why, c.inputNote, ...c.lines].join(' | ')
+        expect(all).not.toMatch(FORBIDDEN)
+      }
+    }
+  })
+
+  it('the base step text and the screens that render hip copy contain none of it', () => {
+    const step = STEPS.find(s => s.id === 'hip_flex')!
+    const text = [step.title, step.why, ...step.position, ...step.howTo, step.mistake, step.mistakeFix, HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT].join(' ')
+    expect(text).not.toMatch(FORBIDDEN)
+    for (const f of ['MyBody.tsx', 'MyProtocol.tsx', 'AssessmentMeasure.tsx', 'AssessmentMeasureScreen.tsx', 'assessmentMeta.ts', 'assessmentSteps2.ts']) {
+      const src = readFileSync(join(SRC, 'pages', f), 'utf8')
+      expect(src).not.toMatch(/youdas|compared by sex|rough guide|your sex/i)
+    }
+  })
+
+  it('the sex-known strings stay in the file (unused while the flag is on) for the follow-up', () => {
+    expect(HIP_FLEX_WHY_SEX_KNOWN).toContain('adults of your sex')
+    expect(HIP_FLEX_INPUT_NOTE_SEX_KNOWN).toBe('Compared by sex after you finish')
+    expect(HIP_FLEX_HONESTY_LINE).toContain('rough guide')
+    expect(HIP_FLEX_RESULT_LINE_SEX_KNOWN).toContain('Youdas')
+    const src = readFileSync(join(SRC, 'lib', 'hipFlexCopy.ts'), 'utf8')
+    expect(src).toMatch(/!HIP_FLEX_UNSCORED_FALLBACK && hipFlexSexKnown/)
+  })
+
+  it('hipFlexSexKnown itself is unchanged (male/female only)', () => {
+    expect(hipFlexSexKnown('male')).toBe(true)
+    expect(hipFlexSexKnown('Female')).toBe(true)
+    for (const g of ['', 'other', 'prefer_not_to_say', null, undefined]) expect(hipFlexSexKnown(g as string)).toBe(false)
+  })
+
+  it('the honesty line is not in the base step text', () => {
     const base = [HIP_FLEX_STEP.why, ...HIP_FLEX_STEP.position, ...HIP_FLEX_STEP.howTo, HIP_FLEX_STEP.mistake, HIP_FLEX_STEP.mistakeFix].join(' ')
     expect(base).not.toContain('rough guide')
-    expect(base).not.toMatch(COMPARISON)
   })
 
-  it('left and right are different shows for both cases when the legs are 10 degrees apart', () => {
+  it('left and right are different shows for everyone when the legs are 10 degrees apart', () => {
     for (const g of ['male', '']) {
       expect(hipFlexScreenCopy(g, 70, 55).lines).toContain('Left and right are different')
       expect(hipFlexScreenCopy(g, 70, 65).lines).not.toContain('Left and right are different')

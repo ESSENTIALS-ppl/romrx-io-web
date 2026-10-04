@@ -1,3 +1,5 @@
+import { HIP_FLEX_UNSCORED_FALLBACK } from './mobilityBands'
+
 /**
  * Customer-facing hip flexion (straight-leg raise) copy. ONE place, so the step,
  * the measure screen, My Body and My Protocol can never drift apart.
@@ -7,8 +9,11 @@
  * no em dashes. Guarded by hipFlexCopy.test.ts.
  *
  * Only the fallback is live (HIP_FLEX_UNSCORED_FALLBACK in mobilityBands.ts).
- * The sex-specific lines are kept here, unused, for the follow-up that grades
- * each leg against published averages once the user's sex is available.
+ * While that flag is true EVERYONE (male, female, blank, other) gets the neutral
+ * copy: no "your sex", no "Compared by sex", no "passive", no "rough guide".
+ * The sex-specific lines are kept here, unused, and are selected only when the
+ * flag flips to false (the follow-up that grades each leg against published
+ * averages once the user's sex is available). Stacy edit, Oct 4, 2026.
  */
 
 /** Result line per leg once sex is known (FOLLOW-UP, not shown yet). */
@@ -22,8 +27,7 @@ export const HIP_FLEX_LEFT_RIGHT_DIFFERENT = 'Left and right are different'
 export const HIP_FLEX_LR_DIFFERENT_DEG = 10
 
 /** LIVE: sex unknown or not given. No low/high judgment. */
-export const HIP_FLEX_FALLBACK_LINE =
-  'Saved for each leg, not scored. Published averages for this raise differ for men and women (Youdas et al., 2005).'
+export const HIP_FLEX_FALLBACK_LINE = 'Saved for each leg, not scored.'
 
 export const HIP_FLEX_STEP = {
   /** Always shown. Makes no comparison claim, so it is safe when sex is unknown. */
@@ -63,14 +67,22 @@ export function hipFlexSexKnown(gender: string | null | undefined): boolean {
   return g === 'male' || g === 'female'
 }
 
-/** The "why" line for the hip step: the comparison claim only when sex is known. */
+/**
+ * True only when the sex-known comparison copy may render: sex is male or female AND hip flexion is
+ * graded (HIP_FLEX_UNSCORED_FALLBACK false). While the fallback flag is true this is false for everyone.
+ */
+export function hipFlexShowSexKnownCopy(gender: string | null | undefined): boolean {
+  return !HIP_FLEX_UNSCORED_FALLBACK && hipFlexSexKnown(gender)
+}
+
+/** The "why" line for the hip step: the comparison claim only when the sex-known copy is allowed. */
 export function hipFlexWhy(gender: string | null | undefined): string {
-  return hipFlexSexKnown(gender) ? `${HIP_FLEX_STEP.why} ${HIP_FLEX_WHY_SEX_KNOWN}` : HIP_FLEX_STEP.why
+  return hipFlexShowSexKnownCopy(gender) ? `${HIP_FLEX_STEP.why} ${HIP_FLEX_WHY_SEX_KNOWN}` : HIP_FLEX_STEP.why
 }
 
 /** The note beside each leg input. */
 export function hipFlexInputNote(gender: string | null | undefined): string {
-  return hipFlexSexKnown(gender) ? HIP_FLEX_INPUT_NOTE_SEX_KNOWN : HIP_FLEX_INPUT_NOTE_FALLBACK
+  return hipFlexShowSexKnownCopy(gender) ? HIP_FLEX_INPUT_NOTE_SEX_KNOWN : HIP_FLEX_INPUT_NOTE_FALLBACK
 }
 
 /** True when the two legs differ enough to say so. */
@@ -81,16 +93,17 @@ export function hipFlexLegsDiffer(left: number | null | undefined, right: number
 
 /**
  * Everything the measure screen shows for the hip step that depends on sex, in one pure function
- * (so it can be tested without rendering). Sex known: why line with the comparison, "Compared by
- * sex" note, honesty line. Sex blank / prefer_not_to_say / other: neutral why line, "Saved for each
- * leg" note, fallback line, and none of the comparison text.
+ * (so it can be tested without rendering). While HIP_FLEX_UNSCORED_FALLBACK is true: neutral why
+ * line, "Saved for each leg" note and the fallback line for EVERYONE, none of the comparison text.
+ * Only when the flag is false and sex is known: why line with the comparison, "Compared by sex"
+ * note, honesty line.
  */
 export function hipFlexScreenCopy(
   gender: string | null | undefined,
   left: number | null | undefined,
   right: number | null | undefined,
 ): { why: string; inputNote: string; lines: string[] } {
-  const known = hipFlexSexKnown(gender)
+  const known = hipFlexShowSexKnownCopy(gender)
   const lines: string[] = known ? [HIP_FLEX_HONESTY_LINE] : [HIP_FLEX_FALLBACK_LINE]
   if (hipFlexLegsDiffer(left, right)) lines.push(HIP_FLEX_LEFT_RIGHT_DIFFERENT)
   return { why: hipFlexWhy(gender), inputNote: hipFlexInputNote(gender), lines }
