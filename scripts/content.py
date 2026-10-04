@@ -337,7 +337,7 @@ ARTICLES_LIST += [
 <p>Accumulating relaxed time in a supported deep squat teaches the position and builds tolerance.</p>
 """ % {"dose": L_DOSE, "rom": L_ROMADAPT}),
             ("Try a different stance width and foot angle", """
-<p>Hip socket shape varies a lot between people, so there is no single correct stance. Widening the feet and turning the toes out often unlocks depth immediately by routing the thigh bones around the pelvis. This is individualization, not cheating.</p>
+<p>Different stances feel best for different people, so there is no single correct stance. Widening the feet and turning the toes out often unlocks depth immediately by routing the thigh bones around the pelvis. Trying a few is individualization, not cheating.</p>
 """),
             ("Strengthen the new range so it sticks", """
 <p>Pause squats, tempo work, and full-range accessory lifts turn borrowed passive range into owned mobility. Without loading, gains fade.</p>
@@ -660,13 +660,13 @@ ARTICLES_LIST += [
         "h1": "Hip Pinch in a Deep Squat: Mobility or Hip Impingement?",
         "excerpt": "How to tell benign tightness from a structural cause, what often helps, and when a hip pinch needs a clinician.",
         "llm": "Explains hip impingement (FAI) versus tight hips in a deep squat, signs of a structural cause, simple adjustments that help, and escalation criteria.",
-        "answer": "<strong>A front-of-hip pinch at squat depth can be tightness, but it can also be hip impingement.</strong> Hip impingement (femoroacetabular impingement, or FAI) is a structural condition where extra bone changes joint shape and causes groin pain with squatting, twisting, and prolonged sitting. Simple changes like a wider stance, adjusted foot angle, and glute activation often help, but sharp, catching, or persistent pain should be assessed rather than forced through.",
+        "answer": "<strong>A front-of-hip pinch at squat depth can be tightness, but it can also be hip impingement.</strong> Hip impingement (femoroacetabular impingement, or FAI) is a structural condition of the hip joint that causes groin pain with squatting, twisting, and prolonged sitting. Simple changes like a wider stance, adjusted foot angle, and glute activation often help, but sharp, catching, or persistent pain should be assessed rather than forced through.",
         "sections": [
             ("What the pinch usually feels like", """
 <p>A mobility-type pinch is often a vague crowding at the front of the hip only at the very bottom of a squat, easing when you shift stance. A structural pinch tends to be sharper, more consistent, and can linger after training or with long sitting.</p>
 """),
             ("What hip impingement (FAI) is", """
-<p>According to <a href="%(fai)s">AAOS OrthoInfo</a>, FAI involves abnormal bone shape where the ball and socket rub, and groin pain with turning, twisting, and squatting is common; persistent symptoms need a doctor because delay can worsen joint damage. An <a href="%(aafp)s">AAFP review</a> notes anterolateral hip or groin pain aggravated by prolonged sitting, leaning forward, and pivoting.</p>
+<p>According to <a href="%(fai)s">AAOS OrthoInfo</a>, FAI is a structural condition of the hip joint where the ball and socket rub, and groin pain with turning, twisting, and squatting is common; persistent symptoms need a doctor because delay can worsen joint damage. An <a href="%(aafp)s">AAFP review</a> notes anterolateral hip or groin pain aggravated by prolonged sitting, leaning forward, and pivoting.</p>
 """ % {"fai": L_FAI, "aafp": L_AAFP}),
             ("Signs that suggest a structural cause", """
 <p><a href="%(sp)s">StatPearls</a> describes FAI classically presenting with gradual hip pain worsened by hip flexion and internal rotation, with non-operative measures tried first. Suggestive signs include:</p>
@@ -677,7 +677,7 @@ ARTICLES_LIST += [
 </ul>
 """ % {"sp": L_STATPEARLS}),
             ("Simple things that often help", """
-<p>Many people reduce a hip pinch by trying a different squat setup: widen the stance, turn the toes out, and focus on glute activation and knees tracking over the toes. Because hip socket shape varies, this individualization is legitimate, not cheating, and exercise does not cause FAI.</p>
+<p>Many people reduce a hip pinch by trying a different squat setup: widen the stance, turn the toes out, and focus on glute activation and knees tracking over the toes. Because comfort varies from person to person, this individualization is legitimate, not cheating, and exercise does not cause FAI.</p>
 """),
             ("What not to do", """
 <p>Do not aggressively force a painful end range or bounce in the bottom to "open" the hip. That tends to aggravate a structural pinch. Train the pain-free range you have while you sort out the cause.</p>
@@ -692,7 +692,7 @@ ARTICLES_LIST += [
         ],
         "faq": [
             ("Why does the front of my hip pinch when I squat?", "It can be soft-tissue tightness or activation issues, or a structural cause like hip impingement. A vague crowding that eases with stance changes is often benign; a sharp, catching, or lingering pinch may be structural."),
-            ("Is hip impingement the same as tight hips?", "No. Hip impingement (FAI) is a structural condition where bone shape changes the joint, whereas tight hips are a soft-tissue issue. They can feel similar, which is why persistent pain should be assessed."),
+            ("Is hip impingement the same as tight hips?", "No. Hip impingement (FAI) is a structural condition of the hip joint, whereas tight hips are a soft-tissue issue. They can feel similar, which is why persistent pain should be assessed."),
             ("Can I keep squatting with a hip pinch?", "Often you can train the pain-free range while you address it, using stance and foot-angle changes. Sharp, catching, or worsening pain is a reason to stop forcing depth and get evaluated."),
             ("Does changing my stance help hip impingement?", "Adjusting stance width and foot angle frequently reduces a pinch. It does not change the underlying cause, but it lets many people train comfortably."),
             ("When should I see a doctor for hip pain?", "See a clinician for sharp groin pain, catching, locking, giving way, or pain that persists despite activity changes. Early assessment of FAI helps protect the joint."),
@@ -1009,7 +1009,7 @@ ARTICLES_LIST += [
         "answer": "<strong>The Beighton score is a 9-point screen for joint hypermobility, not a diagnosis.</strong> Hypermobility means lax joints and is common, while flexibility refers to muscle length, and the two do not always coincide. A positive Beighton score is 5 or more in adults (4 or more over age 50, 6 or more in children), but hypermobility only becomes a spectrum disorder or hEDS when specific additional criteria are met, which requires clinician assessment.",
         "sections": [
             ("Hypermobility vs flexibility", """
-<p>These are different things. Hypermobility describes joints that move beyond the typical range because of ligament laxity; flexibility describes how far muscles lengthen. You can be hypermobile in some joints yet feel muscularly stiff, because muscles often tighten to stabilize lax joints.</p>
+<p>These are different things. Hypermobility describes joints that move beyond the typical range because of ligament laxity; flexibility describes how far muscles lengthen. A high Beighton score and feeling stiff in some stretches can happen together, because muscles often tighten to stabilize lax joints.</p>
 """),
             ("The Beighton score, a 9-point screen", """
 <p>The <a href="%(eds)s">Ehlers-Danlos Society</a> describes the 9-point Beighton system and its positive thresholds: 5 or more in adults, 4 or more over age 50, and 6 or more in children.</p>
@@ -1027,7 +1027,7 @@ ARTICLES_LIST += [
             ("Hypermobility vs HSD vs hEDS", """
 <p>Most hypermobility is harmless. <a href="%(mo)s">Missouri Medicine</a> notes about 10 to 30 percent of people have some joint hypermobility, but only about 1 in 500 meet criteria for hypermobility spectrum disorder or hypermobile Ehlers-Danlos syndrome. Per <a href="%(gr)s">GeneReviews</a>, hEDS requires generalized joint hypermobility plus systemic, family, and musculoskeletal criteria and exclusion of other conditions.</p>
 """ % {"mo": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11578560/", "gr": "https://www.ncbi.nlm.nih.gov/books/NBK1279/"}),
-            ("Why hypermobile does not always mean flexible", """
+            ("Why a high score does not always mean flexible", """
 <p>Muscles often tense around lax joints, so a high score can come with a smaller stretch range. This is why chasing more passive flexibility can backfire, and why strength and control usually matter more.</p>
 """),
             ("Training considerations", """
@@ -1040,9 +1040,9 @@ ARTICLES_LIST += [
         ],
         "faq": [
             ("What is a positive Beighton score?", "5 or more out of 9 in adults, 4 or more over age 50, and 6 or more in children. It is a screening threshold for generalized joint hypermobility, not a diagnosis on its own."),
-            ("Is hypermobility the same as being flexible?", "No. Hypermobility is joint laxity; flexibility is muscle length. You can be hypermobile yet feel muscularly stiff, because muscles often tighten to stabilize lax joints."),
+            ("Is hypermobility the same as being flexible?", "No. Hypermobility is joint laxity; flexibility is muscle length. A high Beighton score and feeling stiff in some stretches can happen together, because muscles often tighten to stabilize lax joints."),
             ("Does hypermobility mean I have EDS?", "Usually not. Some joint hypermobility is common, but only a small fraction of people meet criteria for hypermobility spectrum disorder or hEDS, which requires clinician assessment."),
-            ("Can you be hypermobile but not flexible?", "Yes. Muscles often tense to protect lax joints, so a high Beighton score can come with feeling tight in everyday stretching."),
+            ("Can you score high on the Beighton screen and still feel stiff?", "Yes. Muscles often tense to protect lax joints, so a high Beighton score can come with feeling tight in everyday stretching."),
             ("If my Beighton score is high, do I stretch or strengthen?", "Strength and control through range are usually the priority over pushing into more passive range. Building stability around the joints tends to help more than aggressive stretching."),
         ],
         "related": ["mobility-vs-flexibility", "one-side-more-flexible-asymmetry", "what-is-normal-range-of-motion", "does-flexibility-decline-with-age"],
