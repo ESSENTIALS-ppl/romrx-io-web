@@ -71,7 +71,7 @@ const RX_NAV_MINIMAL = `
    All seven are set to true in this PR because Jim wants the links on at launch. This
    PR must ship only after the pack sites are published and return HTTP 200 over HTTPS
    (Grant's go). If one site is not ready, set that pack's live to false before deploy.
-   Keys: pl, mma, mil, fr, cali, hyb, yoga. Text is Kai's
+   Keys: pl, mma, mil, fr, cali, hyb, yoga, bjj, bb (bjj and bb are the live-beta packs; same flag and button). Text is Kai's
    (pack-sites-20261004/UNIVERSE-CARDS-DROPIN.json): "sub" is the grid-row second
    line. The card one-liner lives in universe.html (same words as Kai's rows).
    +Yoga has a link only (no sign-up, no waitlist); its grid row keeps its Protocol line. */
@@ -83,6 +83,8 @@ const RX_PACK_SITES = {
   cali: { url: 'https://romrxcalisthenics.com',   sub: 'Handstand, squat and straddle',          live: true },
   hyb:  { url: 'https://romrxhybrid.com',         sub: 'Lift, carry, run and row',               live: true },
   yoga: { url: 'https://romrxyoga.com',                                                          live: true },
+  bjj:  { url: 'https://romrxbjj.com',            live: true },
+  bb:   { url: 'https://romrxbodybuilding.com',  live: true },
 };
 window.RX_PACK_SITES = RX_PACK_SITES;
 
@@ -94,6 +96,7 @@ window.RX_PACK_SITES = RX_PACK_SITES;
    footnote: the single footnote under the pack grid (also the home page grid).
    No dates, "billing begins" or "cancel anytime" on any pack card. Em dash free. */
 const RX_PACK_COPY = {
+  buttonLabel: 'Visit the website',   // every pack card button, all 9 packs
   betaStatus: 'Beta testing starting January 2027',
   priceLine: '$149 a year, stacks on Base',
   footnote: 'Pack prices are planned for 2027 and may change before launch. Packs need a Base account and a card on file, renew yearly until you cancel, and end if you cancel Base. For adults 18 and older. Full terms are shown at checkout.',
@@ -107,8 +110,8 @@ window.RX_PACK_COPY = RX_PACK_COPY;
    other page keeps the footer eyebrow. Rows are identical either way. */
 const RX_UNIVERSE = ({ here, headline = false }) => {
   const rows = [
-    { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   beta: true, href: 'https://romrxbjj.com' },
-    { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   beta: true, href: 'https://romrxbodybuilding.com' },
+    { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   beta: true, href: 'https://romrxbjj.com', site: 'bjj' },
+    { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   beta: true, href: 'https://romrxbodybuilding.com', site: 'bb' },
     { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: RX_PACK_SITES.pl.sub,   status: 'coming', href: null, site: 'pl' },
     { key: 'mma',        name: 'ROMRx<span class="rx-plus">+MMA</span>',              proto: RX_PACK_SITES.mma.sub,  status: 'coming', href: null, site: 'mma' },
     { key: 'mil',        name: 'ROMRx<span class="rx-plus">+Military</span>',         proto: RX_PACK_SITES.mil.sub,  status: 'coming', href: null, site: 'mil' },
