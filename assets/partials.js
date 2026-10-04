@@ -69,22 +69,23 @@ const RX_NAV_MINIMAL = `
      live:true   the card gets a "Visit the website" button to the pack domain and the
                  grid row links to the same domain. Still reads COMING SOON.
      live:false  card and row show COMING SOON with NO link.
-   All seven are set to true in this PR because Jim wants the links on at launch. This
+   FALLBACK BUILD (fallback/universe-nolinks-20261004): all nine are false, so no card or row links to a pack site. Use only if the pack sites are not live at launch.
+   (On the main PR branch all nine are true because Jim wants the links on at launch.) This
    PR must ship only after the pack sites are published and return HTTP 200 over HTTPS
    (Grant's go). If one site is not ready, set that pack's live to false before deploy.
    Keys: pl, mma, mil, fr, cali, hyb, yoga, bjj, bb (bjj and bb are the live-beta packs; same flag and button). All words (names,
    descriptions, grid sub lines) are in RX_PACK_COPY below, not here.
    +Yoga has a link only (no sign-up, no waitlist); its grid row keeps its Protocol line. */
 const RX_PACK_SITES = {
-  pl:   { url: 'https://romrxpowerlifting.com', live: true },
-  mma:  { url: 'https://romrxmma.com', live: true },
-  mil:  { url: 'https://romrxmilitary.com', live: true },
-  fr:   { url: 'https://romrxfirstresponder.com', live: true },
-  cali: { url: 'https://romrxcalisthenics.com', live: true },
-  hyb:  { url: 'https://romrxhybrid.com', live: true },
-  yoga: { url: 'https://romrxyoga.com', live: true },
-  bjj:  { url: 'https://romrxbjj.com', live: true },
-  bb:   { url: 'https://romrxbodybuilding.com', live: true },
+  pl:   { url: 'https://romrxpowerlifting.com', live: false },
+  mma:  { url: 'https://romrxmma.com', live: false },
+  mil:  { url: 'https://romrxmilitary.com', live: false },
+  fr:   { url: 'https://romrxfirstresponder.com', live: false },
+  cali: { url: 'https://romrxcalisthenics.com', live: false },
+  hyb:  { url: 'https://romrxhybrid.com', live: false },
+  yoga: { url: 'https://romrxyoga.com', live: false },
+  bjj:  { url: 'https://romrxbjj.com', live: false },
+  bb:   { url: 'https://romrxbodybuilding.com', live: false },
 };
 window.RX_PACK_SITES = RX_PACK_SITES;
 
