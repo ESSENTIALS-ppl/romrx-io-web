@@ -1,12 +1,15 @@
-import { JOINT_SCORE_TARGETS, bandScoreFromTargetRatio, jointKeyBase, type BandScore } from '../lib/mobilityBands'
+import { JOINT_SCORE_TARGETS, bandScoreFromTargetRatio, isUnscoredJoint, jointKeyBase, type BandScore } from '../lib/mobilityBands'
 
 export interface Field {
   key: string
   label: string
   unit?: string
-  normalLow: number
-  normalHigh: number
-  riskBelow: number
+  /** Measure-screen range label. Omitted for unscored fields (hip flexion). */
+  normalLow?: number
+  normalHigh?: number
+  riskBelow?: number
+  /** true = recorded per leg but never judged: no range label, no live band chip. */
+  unscored?: boolean
 }
 
 export interface Step {
@@ -39,6 +42,7 @@ export const SETUP_STEPS = [
 export function getScore(val: string, field: Field): BandScore | null {
   const n = parseFloat(val)
   if (isNaN(n) || val === '') return null
+  if (field.unscored || isUnscoredJoint(field.key)) return null
   const target = JOINT_SCORE_TARGETS[jointKeyBase(field.key)]
   if (target == null) return null
   return bandScoreFromTargetRatio(n, target)

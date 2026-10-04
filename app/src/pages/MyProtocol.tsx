@@ -12,6 +12,7 @@ import { cn } from '../lib/cn'
 import {
   bandFull,
   jointBandsForAssessment,
+  isUnscoredJoint,
   jointKeyBase,
   formatScoreBand,
   mobilityScoreForAssessment,
@@ -22,7 +23,7 @@ import {
   formatMeasure,
   jointUnit,
   JOINT_SCORE_TARGETS,
-  topProblemAreas,
+  topProblemAreasForAssessment,
   BAND_DESC,
   BAND_TONE,
   TOP_PROBLEM_AREAS_MAX,
@@ -804,7 +805,7 @@ export function MyProtocol() {
   // Same top problem areas as My Body (worst_joints, deduped, max 3) lead the list;
   // remaining slots fall back to asymmetry, then severity. Always capped at 3.
   const problemOrder = useMemo(
-    () => topProblemAreas(assessment?.worst_joints).map(jointKeyBase),
+    () => topProblemAreasForAssessment(assessment).map(jointKeyBase),
     [assessment],
   )
   const ranked = useMemo(() => {
@@ -814,6 +815,8 @@ export function MyProtocol() {
     }
     return scored
       .filter(s => s.left !== null || s.right !== null || s.single !== null)
+      // Hip flexion is never a problem area while it is unscored (HIP_FLEX_UNSCORED_FALLBACK).
+      .filter(s => !isUnscoredJoint(s.def.key))
       .sort((a, b) => {
         const ia = idx(a.def.key), ib = idx(b.def.key)
         if (ia !== ib) return ia - ib
@@ -856,7 +859,7 @@ export function MyProtocol() {
     />
   )
 
-  const hasData = scored.some(s => s.left !== null || s.right !== null || s.single !== null)
+  const hasData = scored.some(s => !isUnscoredJoint(s.def.key) && (s.left !== null || s.right !== null || s.single !== null))
   if (!hasData) return (
     <EmptyState
       icon={ClipboardList}

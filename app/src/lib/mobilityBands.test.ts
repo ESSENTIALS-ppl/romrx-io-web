@@ -16,6 +16,7 @@ import {
   BAND_PERCENT_RANGE,
   JOINT_SCORE_TARGETS,
   ASSESSMENT_JOINTS,
+  isUnscoredJoint,
   TOP_PROBLEM_AREAS_MAX,
   bandChip,
   bandFull,
@@ -81,6 +82,8 @@ describe('boundaries: same measurement → same band on every surface', () => {
   for (const [joint, target] of Object.entries(JOINT_SCORE_TARGETS)) {
     const def = ASSESSMENT_JOINTS.find(j => j.key === joint)
     if (!def) continue
+    // Hip flexion is never banded (HIP_FLEX_UNSCORED_FALLBACK); see hipFlexCopy.test.ts.
+    if (isUnscoredJoint(joint)) continue
     const cases: Array<[number, BandScore]> = [
       [0, 1], // low
       [0.9 * target - EPS, 1],
@@ -174,7 +177,7 @@ describe('surface wiring (static): every band surface uses the single source', (
     expect(read(join(pages, f))).toMatch(/overallBandForAssessment\(/)
   })
   it('My Body + My Protocol cap problem areas via the shared helper', () => {
-    expect(read(join(pages, 'MyBody.tsx'))).toMatch(/topProblemAreas\(/)
+    expect(read(join(pages, 'MyBody.tsx'))).toMatch(/topProblemAreasForAssessment\(/)
     expect(read(join(pages, 'MyBody.tsx'))).not.toMatch(/worst_joints\.map\(/)
     expect(read(join(pages, 'MyProtocol.tsx'))).toMatch(/TOP_PROBLEM_AREAS_MAX/)
   })
@@ -234,7 +237,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     name: '02 LOW', score: 71, band: 1, text: '71/100 \u00B7 Needs focus',
     worst: ['ankle_df_l', 'ankle_df_r', 'hip_ir_l', 'hip_ir_r', 'hip_abd_l'],
     pct: {
-      hip_er: 66, hip_ir: 48, hip_abd: 61, hip_flex: 79, shoulder_er: 72, shoulder_flex: 83,
+      hip_er: 66, hip_ir: 48, hip_abd: 61, shoulder_er: 72, shoulder_flex: 83,
       ankle_df: 35, lumbar_flex: 75, lumbar_ext: 64, cervical_lat: 84, cervical_flex: 92, cervical_ext: 100,
     },
     a: {
@@ -249,7 +252,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     name: '03 MID/BOUNDARY', score: 96, band: 2, text: '96/100 \u00B7 Building',
     worst: ['hip_abd_l', 'ankle_df_l', 'hip_abd_r', 'shoulder_er_l', 'shoulder_er_r'],
     pct: {
-      hip_er: 100, hip_ir: 98, hip_abd: 90, hip_flex: 100, shoulder_er: 90, shoulder_flex: 94,
+      hip_er: 100, hip_ir: 98, hip_abd: 90, shoulder_er: 90, shoulder_flex: 94,
       ankle_df: 90, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 95, cervical_flex: 99, cervical_ext: 100,
     },
     a: {
@@ -264,7 +267,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     name: '04 HIGH', score: 100, band: 3, text: '100/100 \u00B7 Steady',
     worst: ['hip_er_l', 'hip_er_r', 'hip_ir_l', 'hip_ir_r', 'hip_abd_l'],
     pct: {
-      hip_er: 100, hip_ir: 100, hip_abd: 100, hip_flex: 100, shoulder_er: 100, shoulder_flex: 100,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 100, shoulder_flex: 100,
       ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 100, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
@@ -280,7 +283,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     name: '05 BOUNDARY <0.90', score: 89, band: 1, text: '89/100 \u00B7 Needs focus',
     worst: ['ankle_df_l', 'hip_abd_l', 'ankle_df_r', 'hip_abd_r', 'shoulder_er_l'],
     pct: {
-      hip_er: 100, hip_ir: 98, hip_abd: 90, hip_flex: 100, shoulder_er: 90, shoulder_flex: 94,
+      hip_er: 100, hip_ir: 98, hip_abd: 90, shoulder_er: 90, shoulder_flex: 94,
       ankle_df: 89, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 95, cervical_flex: 99, cervical_ext: 100,
     },
     a: {
@@ -428,6 +431,7 @@ describe('Fix A: per-joint % = floor(100 * min(1, worse / target))', () => {
   })
   it('exact boundaries: 0.90 → 90, 1.00 → 100, just under 1.00 → 99', () => {
     for (const [joint, target] of Object.entries(JOINT_SCORE_TARGETS)) {
+      if (isUnscoredJoint(joint)) continue
       expect([joint, jointPercent(joint, { midline: 0.9 * target })]).toEqual([joint, 90])
       expect([joint, jointPercent(joint, { midline: target })]).toEqual([joint, 100])
       expect([joint, jointPercent(joint, { midline: target - 0.01 })]).toEqual([joint, 99])
