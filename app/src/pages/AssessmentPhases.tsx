@@ -21,6 +21,7 @@ export function AssessmentPhases(p: {
   handleChange: (key: string, val: string) => void
   handleNext: () => void
   handleLeadSubmit: (e: FormEvent) => void
+  gender?: string | null
 }) {
   const { phase, stepIdx, values, email, fullName, loading, error } = p
 
@@ -134,6 +135,7 @@ if (phase === 'setup') {
       setStepIdx={p.setStepIdx}
       handleChange={p.handleChange}
       handleNext={p.handleNext}
+      gender={p.gender}
     />
   )
 }

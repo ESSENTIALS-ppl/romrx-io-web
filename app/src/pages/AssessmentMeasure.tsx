@@ -13,9 +13,10 @@ export function MeasureInput({ field, value, onChange }: {
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <label className="text-sm font-semibold text-cobalt-ink">{field.label}</label>
-        {!field.unscored && field.normalLow != null && field.normalHigh != null && (
-          <span className="text-xs text-slate-500">Normal: {field.normalLow}-{field.normalHigh}{field.unit}</span>
-        )}
+        {(() => {
+          const note = field.referenceNote ?? (!field.unscored && field.normalLow != null && field.normalHigh != null ? `Normal: ${field.normalLow}-${field.normalHigh}${field.unit ?? ''}` : null)
+          return note ? <span className="text-xs text-slate-500">{note}</span> : null
+        })()}
       </div>
       <div className="flex items-center gap-3">
         <input

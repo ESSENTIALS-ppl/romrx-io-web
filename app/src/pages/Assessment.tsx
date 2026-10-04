@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useProfile } from '../hooks/useProfile'
 import { bandFull, mobilityScoreForAssessment, overallBandForAssessment } from '../lib/mobilityBands'
 import { STEPS } from './assessmentSteps'
 import { AssessmentPhases } from './AssessmentPhases'
@@ -12,6 +13,7 @@ const SUBMIT_LEAD_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submi
 
 export function Assessment() {
   const { session } = useAuth()
+  const { profile } = useProfile(session?.user?.id)
   const navigate = useNavigate()
   const [phase, setPhase] = useState<'setup' | 'measure' | 'lead' | 'done' | 'lead-done'>('setup')
   const [stepIdx, setStepIdx] = useState(0)
@@ -131,6 +133,7 @@ export function Assessment() {
       setEmail={setEmail}
       setFullName={setFullName}
       handleChange={handleChange}
+      gender={profile?.gender}
       handleNext={handleNext}
       handleLeadSubmit={handleLeadSubmit}
     />

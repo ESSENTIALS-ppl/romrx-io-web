@@ -4,10 +4,12 @@ export interface Field {
   key: string
   label: string
   unit?: string
-  /** Measure-screen range label. Omitted for unscored fields (hip flexion). */
+  /** Measure-screen range label. Omitted for fields with no published range (hip flexion, ankle cm). */
   normalLow?: number
   normalHigh?: number
   riskBelow?: number
+  /** Short text shown instead of "Normal: a-b" when there is no single published range (ankle cm; hip note is chosen by the screen from sex). */
+  referenceNote?: string
   /** true = recorded per leg but never judged: no range label, no live band chip. */
   unscored?: boolean
 }
