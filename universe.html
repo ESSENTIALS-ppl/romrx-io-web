@@ -125,7 +125,7 @@
         <div class="rx-uni-card coming" data-pack-site="mil">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Military</span></h2>
-          <p>Max your fitness test. Train for the next level.</p>
+          <p>Train for your fitness test. Train for the next level.</p>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="fr">
@@ -146,7 +146,7 @@
           <p>A hybrid training pack. The Base ROM, applied to lift, carry, run and row movements.</p>
         </div>
 
-        <div class="rx-uni-card coming">
+        <div class="rx-uni-card coming" data-pack-site="yoga">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Yoga</span></h2>
           <p class="rx-uni-proto">Pose Readiness Protocol&trade;</p>
@@ -160,40 +160,11 @@
     </div>
   </section>
 
-  <!-- WAITLIST -->
-  <section class="rx-section alt" id="waitlist">
-    <div class="rx-container narrow">
-      <p class="rx-eyebrow rx-center">Sport Pack Waitlist</p>
-      <h2 class="rx-h2 rx-center">Get first access when your sport goes live.</h2>
-      <form class="rx-form rx-mt-lg" id="waitlist-form" action="/.netlify/functions/waitlist" method="POST">
-        <div class="rx-field">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email">
-        </div>
-        <div class="rx-field">
-          <label for="sport">Which sport pack?</label>
-          <select id="sport" name="sport">
-            <option value="powerlifting">+Powerlifting</option>
-            <option value="mma">+MMA</option>
-            <option value="firstresponder">+FirstResponder</option>
-            <option value="other">Other (tell us below)</option>
-          </select>
-        </div>
-        <div class="rx-field">
-          <label for="notes">Anything we should know? (optional)</label>
-          <textarea id="notes" name="notes" rows="3"></textarea>
-        </div>
-        <button type="submit" class="rx-cta primary" style="width:100%;">Join Waitlist &rarr;</button>
-        <p class="rx-form-msg" id="waitlist-msg"></p>
-      </form>
-    </div>
-  </section>
-
   <div data-rx-slot="legal"></div>
 
   <script>
-    /* Pack-site links stay OFF until RX_PACK_SITES.<key>.live is true (assets/partials.js).
-       One flag per pack. Cards always render as COMING SOON; the link is added only when live. */
+    /* Pack-site buttons are driven by ONE flag per pack: RX_PACK_SITES.<key>.live (assets/partials.js).
+       live:true adds a "Visit the website" button to that pack's Coming soon card. */
     document.addEventListener('DOMContentLoaded', function () {
       var P = window.RX_PACK_SITES || {};
       document.querySelectorAll('[data-pack-site]').forEach(function (card) {
@@ -202,23 +173,9 @@
         var a = document.createElement('a');
         a.href = p.url;
         a.className = 'rx-cta ghost';
-        a.textContent = 'Visit ' + p.url.replace('https://', '') + ' \u2192';
+        a.textContent = 'Visit the website \u2192';
         card.appendChild(a);
       });
-    });
-  </script>
-  <script>
-    document.getElementById('waitlist-form')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const msg = document.getElementById('waitlist-msg');
-      msg.textContent = 'Adding you...';
-      const data = Object.fromEntries(new FormData(form));
-      try {
-        const res = await fetch(form.action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (res.ok) { msg.textContent = "You're on the list. Watch your inbox."; form.reset(); }
-        else { msg.textContent = 'Something went wrong. Please try again.'; }
-      } catch { msg.textContent = 'Network error. Please try again.'; }
     });
   </script>
 </body>
