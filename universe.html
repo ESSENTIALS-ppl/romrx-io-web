@@ -110,16 +110,16 @@
           <a href="https://romrxbodybuilding.com" class="rx-cta ghost">Visit romrxbodybuilding.com &rarr;</a>
         </div>
 
-        <div class="rx-uni-card coming">
-          <div class="rx-uni-status coming">COMING</div>
+        <div class="rx-uni-card coming" data-pack-site="pl">
+          <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Powerlifting</span></h2>
           <p class="rx-uni-proto">Lift Readiness Protocol&trade;</p>
           <p>Squat, bench, deadlift readiness by ROM. Programmed for meet prep and off-season blocks. For athletes, coaches, and gyms.</p>
           <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
         </div>
 
-        <div class="rx-uni-card coming">
-          <div class="rx-uni-status coming">COMING</div>
+        <div class="rx-uni-card coming" data-pack-site="mma">
+          <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+MMA</span></h2>
           <p class="rx-uni-proto">Training Readiness Profile&trade;</p>
           <p>Striking, grappling, and clinch readiness. Session-by-session profile for camp planning. For athletes, coaches, and academies.</p>
@@ -127,15 +127,14 @@
         </div>
 
         <div class="rx-uni-card coming">
-          <div class="rx-uni-status coming">COMING</div>
+          <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Yoga</span></h2>
           <p class="rx-uni-proto">Pose Readiness Protocol&trade;</p>
           <p>Asana readiness by ROM. Modify or advance poses based on your body's real data. For practitioners, instructors, and studios.</p>
-          <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
         </div>
 
-        <div class="rx-uni-card coming">
-          <div class="rx-uni-status coming">COMING</div>
+        <div class="rx-uni-card coming" data-pack-site="fr">
+          <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+FirstResponder</span></h2>
           <p class="rx-uni-proto">Task Readiness Protocol&trade;</p>
           <p>Job-task readiness for fire, PD, and tactical teams. Cohort dashboards for department chiefs. For officers, trainers, and departments.</p>
@@ -161,7 +160,6 @@
           <select id="sport" name="sport">
             <option value="powerlifting">+Powerlifting</option>
             <option value="mma">+MMA</option>
-            <option value="yoga">+Yoga</option>
             <option value="firstresponder">+FirstResponder</option>
             <option value="other">Other (tell us below)</option>
           </select>
@@ -178,6 +176,37 @@
 
   <div data-rx-slot="legal"></div>
 
+  <script>
+    /* Pack-site links stay OFF until RX_PACK_SITES.<key>.live is true (assets/partials.js).
+       Military and Calisthenics have no markup here at all until then. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var P = window.RX_PACK_SITES || {};
+      function link(card, p) {
+        var a = document.createElement('a');
+        a.href = p.url;
+        a.className = 'rx-cta ghost';
+        a.textContent = 'Visit ' + p.url.replace('https://', '') + ' \u2192';
+        card.appendChild(a);
+      }
+      document.querySelectorAll('[data-pack-site]').forEach(function (card) {
+        var p = P[card.getAttribute('data-pack-site')];
+        if (p && p.live) link(card, p);
+      });
+      var grid = document.querySelector('.rx-uni-card') && document.querySelector('.rx-uni-card').parentNode;
+      [['mil', 'Military'], ['cali', 'Calisthenics']].forEach(function (x) {
+        var p = P[x[0]];
+        if (!grid || !p || !p.live) return;
+        var card = document.createElement('div');
+        card.className = 'rx-uni-card coming';
+        card.innerHTML = '<div class="rx-uni-status coming">COMING SOON</div>' +
+          '<h2 class="rx-h3">ROMRx<span class="rx-plus">+' + x[1] + '</span></h2>' +
+          '<p></p>';
+        card.querySelector('p').textContent = p.label;
+        link(card, p);
+        grid.appendChild(card);
+      });
+    });
+  </script>
   <script>
     document.getElementById('waitlist-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
