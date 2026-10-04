@@ -61,6 +61,23 @@ const RX_NAV_MINIMAL = `
 </nav>
 `;
 
+/* Pack-site links (Jim, Oct 4 2026). Each new Coming-soon pack site is staged
+   here with live:false. A live:false pack shows NO link (the new Military and
+   Calisthenics rows are hidden entirely). Flip one pack's live to true ONLY after
+   its site returns HTTP 200 over HTTPS and Stacy has cleared its wording; then the
+   row becomes a link and still reads COMING SOON. Labels are drafts from
+   pack-sites-20261004 (needs-stacy-wording-check). +Yoga is deliberately NOT in
+   this map: romrx.io shows +Yoga as Coming soon with no sign-up path and no link
+   to romrxyoga.com (unlisted, hand-picked testers only). */
+const RX_PACK_SITES = {
+  pl:   { url: 'https://romrxpowerlifting.com',   label: 'The Base ROM, applied to the squat, bench press and deadlift.',               live: false },
+  mma:  { url: 'https://romrxmma.com',            label: 'The Base ROM, applied to striking, takedown and ground movements.',           live: false },
+  fr:   { url: 'https://romrxfirstresponder.com', label: 'The Base ROM, applied to lifts, carries, drags and climbs on the job.',        live: false },
+  mil:  { url: 'https://romrxmilitary.com',       label: 'The Base ROM, applied to ruck, carry, climb and drill movements.',            live: false },
+  cali: { url: 'https://romrxcalisthenics.com',   label: 'The Base ROM, applied to bodyweight skill movements.',                        live: false },
+};
+window.RX_PACK_SITES = RX_PACK_SITES;
+
 /* Universe headline (Jim via CoS 2026-09-29): pages with
    <body data-rx-universe="headline"> (/science only) swap the small
    "Part of the ROMRx Universe" eyebrow for a full headline, "All of this leads
@@ -70,15 +87,18 @@ const RX_UNIVERSE = ({ here, headline = false }) => {
   const rows = [
     { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   href: 'https://romrxbjj.com' },
     { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   href: 'https://romrxbodybuilding.com' },
-    { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: 'Lift Readiness Protocol™',                    status: 'coming', href: null },
-    { key: 'mma',        name: 'ROMRx<span class="rx-plus">+MMA</span>',              proto: 'Training Readiness Profile™',                 status: 'coming', href: null },
+    { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: 'Lift Readiness Protocol™',                    status: 'coming', href: null, site: 'pl' },
+    { key: 'mma',        name: 'ROMRx<span class="rx-plus">+MMA</span>',              proto: 'Training Readiness Profile™',                 status: 'coming', href: null, site: 'mma' },
     { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                    status: 'coming', href: null },
-    { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: 'Task Readiness Protocol™',                    status: 'coming', href: null },
-  ];
+    { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: 'Task Readiness Protocol™',                    status: 'coming', href: null, site: 'fr' },
+    { key: 'mil',        name: 'ROMRx<span class="rx-plus">+Military</span>',         proto: RX_PACK_SITES.mil.label,                       status: 'coming', href: null, site: 'mil',  hideUntilLive: true },
+    { key: 'cali',       name: 'ROMRx<span class="rx-plus">+Calisthenics</span>',     proto: RX_PACK_SITES.cali.label,                      status: 'coming', href: null, site: 'cali', hideUntilLive: true },
+  ].filter(r => !(r.hideUntilLive && !(RX_PACK_SITES[r.site] && RX_PACK_SITES[r.site].live)))
+   .map(r => (r.site && RX_PACK_SITES[r.site] && RX_PACK_SITES[r.site].live) ? Object.assign({}, r, { href: RX_PACK_SITES[r.site].url }) : r);
   const html = rows.map(r => {
     const isHere = here === r.key;
     const cls = isHere ? 'rx-uni-row here' : 'rx-uni-row';
-    const statusLabel = isHere ? 'YOU ARE HERE' : (r.status === 'live' ? 'LIVE' : 'COMING');
+    const statusLabel = isHere ? 'YOU ARE HERE' : (r.status === 'live' ? 'LIVE' : 'COMING SOON');
     const statusCls = isHere ? 'here' : r.status;
     const inner = `
       <div>

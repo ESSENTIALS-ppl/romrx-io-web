@@ -24,6 +24,6 @@ Note on titles: the HTML title tag (below) is intentionally kept under 60 charac
 | 15 | Stiff Neck and Limited Range: Causes, Red Flags | stiff-neck-limited-range-of-motion | https://romrx.io/articles/stiff-neck-limited-range-of-motion | stiff neck | Symptoms & Red Flags |
 | 16 | Knee Range of Motion: Bend and Straighten Guide | knee-range-of-motion | https://romrx.io/articles/knee-range-of-motion | knee range of motion | Symptoms & Red Flags |
 | 17 | Does Flexibility Decline With Age? What to Do | does-flexibility-decline-with-age | https://romrx.io/articles/does-flexibility-decline-with-age | flexibility decline with age | Mobility Across Life |
-| 18 | Am I Hypermobile? The Beighton Score Explained | am-i-hypermobile-beighton | https://romrx.io/articles/am-i-hypermobile-beighton | beighton score | Mobility Across Life |
+| 18 | The Beighton Score Explained | beighton-score-explained | https://romrx.io/articles/beighton-score-explained | beighton score | Mobility Across Life |
 | 19 | One Side More Flexible? Why, and What to Do | one-side-more-flexible-asymmetry | https://romrx.io/articles/one-side-more-flexible-asymmetry | one side more flexible | Mobility Across Life |
 | 20 | Hip Mobility for BJJ: Build a Better Guard | hip-mobility-for-bjj | https://romrx.io/articles/hip-mobility-for-bjj | hip mobility for bjj | Sport-Specific |
