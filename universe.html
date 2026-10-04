@@ -113,17 +113,37 @@
         <div class="rx-uni-card coming" data-pack-site="pl">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Powerlifting</span></h2>
-          <p class="rx-uni-proto">Lift Readiness Protocol&trade;</p>
-          <p>Squat, bench, deadlift readiness by ROM. Programmed for meet prep and off-season blocks. For athletes, coaches, and gyms.</p>
-          <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
+          <p>The Base ROM, applied to the squat, bench press and deadlift.</p>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="mma">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+MMA</span></h2>
-          <p class="rx-uni-proto">Training Readiness Profile&trade;</p>
-          <p>Striking, grappling, and clinch readiness. Session-by-session profile for camp planning. For athletes, coaches, and academies.</p>
-          <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
+          <p>The Base ROM, applied to takedown, ground and striking movements.</p>
+        </div>
+
+        <div class="rx-uni-card coming" data-pack-site="mil">
+          <div class="rx-uni-status coming">COMING SOON</div>
+          <h2 class="rx-h3">ROMRx<span class="rx-plus">+Military</span></h2>
+          <p>Max your fitness test. Train for the next level.</p>
+        </div>
+
+        <div class="rx-uni-card coming" data-pack-site="fr">
+          <div class="rx-uni-status coming">COMING SOON</div>
+          <h2 class="rx-h3">ROMRx<span class="rx-plus">+FirstResponder</span></h2>
+          <p>The Base ROM, applied to lifts, carries, drags and climbs on the job.</p>
+        </div>
+
+        <div class="rx-uni-card coming" data-pack-site="cali">
+          <div class="rx-uni-status coming">COMING SOON</div>
+          <h2 class="rx-h3">ROMRx<span class="rx-plus">+Calisthenics</span></h2>
+          <p>The Base ROM, applied to handstand, squat and straddle movements.</p>
+        </div>
+
+        <div class="rx-uni-card coming" data-pack-site="hyb">
+          <div class="rx-uni-status coming">COMING SOON</div>
+          <h2 class="rx-h3">ROMRx<span class="rx-plus">+Hybrid</span></h2>
+          <p>A hybrid training pack. The Base ROM, applied to lift, carry, run and row movements.</p>
         </div>
 
         <div class="rx-uni-card coming">
@@ -133,15 +153,9 @@
           <p>Asana readiness by ROM. Modify or advance poses based on your own Base numbers. For practitioners, instructors, and studios.</p>
         </div>
 
-        <div class="rx-uni-card coming" data-pack-site="fr">
-          <div class="rx-uni-status coming">COMING SOON</div>
-          <h2 class="rx-h3">ROMRx<span class="rx-plus">+FirstResponder</span></h2>
-          <p class="rx-uni-proto">Task Readiness Protocol&trade;</p>
-          <p>Job-task readiness for fire, PD, and tactical teams. Cohort dashboards for department chiefs. For officers, trainers, and departments.</p>
-          <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
-        </div>
-
       </div>
+      <p class="rx-fine rx-center rx-mt-lg">ROMRx shares educational information about range of motion. It is not medical advice and does not diagnose, treat or cure any condition. For adults 18 and older.</p>
+      <p class="rx-fine rx-center">ROMRx is not affiliated with or endorsed by the U.S. Department of Defense (also called the Department of War), any branch of the military or any government agency. No endorsement is intended or implied.</p>
     </div>
   </section>
 
@@ -178,32 +192,17 @@
 
   <script>
     /* Pack-site links stay OFF until RX_PACK_SITES.<key>.live is true (assets/partials.js).
-       Military and Calisthenics have no markup here at all until then. */
+       One flag per pack. Cards always render as COMING SOON; the link is added only when live. */
     document.addEventListener('DOMContentLoaded', function () {
       var P = window.RX_PACK_SITES || {};
-      function link(card, p) {
+      document.querySelectorAll('[data-pack-site]').forEach(function (card) {
+        var p = P[card.getAttribute('data-pack-site')];
+        if (!p || !p.live) return;
         var a = document.createElement('a');
         a.href = p.url;
         a.className = 'rx-cta ghost';
         a.textContent = 'Visit ' + p.url.replace('https://', '') + ' \u2192';
         card.appendChild(a);
-      }
-      document.querySelectorAll('[data-pack-site]').forEach(function (card) {
-        var p = P[card.getAttribute('data-pack-site')];
-        if (p && p.live) link(card, p);
-      });
-      var grid = document.querySelector('.rx-uni-card') && document.querySelector('.rx-uni-card').parentNode;
-      [['mil', 'Military'], ['cali', 'Calisthenics']].forEach(function (x) {
-        var p = P[x[0]];
-        if (!grid || !p || !p.live) return;
-        var card = document.createElement('div');
-        card.className = 'rx-uni-card coming';
-        card.innerHTML = '<div class="rx-uni-status coming">COMING SOON</div>' +
-          '<h2 class="rx-h3">ROMRx<span class="rx-plus">+' + x[1] + '</span></h2>' +
-          '<p></p>';
-        card.querySelector('p').textContent = p.label;
-        link(card, p);
-        grid.appendChild(card);
       });
     });
   </script>
