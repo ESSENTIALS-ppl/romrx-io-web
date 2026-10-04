@@ -92,22 +92,20 @@
           <a href="/app/signup" class="rx-cta primary">Start your assessment &rarr;</a>
         </div>
 
-        <div class="rx-uni-card live">
+        <div class="rx-uni-card live" data-pack-site="bjj">
           <div class="rx-uni-status live" data-rx-pack-copy="betaStatus"></div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+BJJ</span></h2>
           <p class="rx-uni-proto">Position Readiness Protocol&trade;</p>
           <p>See which BJJ positions and techniques your results line up with. Green (train), Yellow (modify), Red (skip today). Adapt your rolls to your current ROM. For athletes, coaches, and academies.</p>
           <p class="rx-price" data-rx-pack-copy="priceLine"></p>
-          <a href="https://romrxbjj.com" class="rx-cta ghost">Visit romrxbjj.com &rarr;</a>
         </div>
 
-        <div class="rx-uni-card live">
+        <div class="rx-uni-card live" data-pack-site="bb">
           <div class="rx-uni-status live" data-rx-pack-copy="betaStatus"></div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+BodyBuilding</span></h2>
           <p class="rx-uni-proto">Exercise Readiness Protocol&trade;</p>
           <p>See which lifts and accessory exercises your results line up with. Green (load it), Yellow (modify), Red (skip). Program your hypertrophy work around real ROM data. For athletes, trainers, and gyms.</p>
           <p class="rx-price" data-rx-pack-copy="priceLine"></p>
-          <a href="https://romrxbodybuilding.com" class="rx-cta ghost">Visit romrxbodybuilding.com &rarr;</a>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="pl">
@@ -173,7 +171,7 @@
   <script>
     /* Pack copy comes from ONE place: RX_PACK_COPY and RX_PACK_SITES in assets/partials.js.
        Status chip, price line and footnote are filled here; the flag RX_PACK_SITES.<key>.live
-       adds a "Visit the website" button to that pack's Coming soon card. */
+       adds the "Visit the website" button (RX_PACK_COPY.buttonLabel) to that pack's card, all 9 packs. */
     document.addEventListener('DOMContentLoaded', function () {
       var C = window.RX_PACK_COPY || {};
       var P = window.RX_PACK_SITES || {};
@@ -188,7 +186,7 @@
         var a = document.createElement('a');
         a.href = p.url;
         a.className = 'rx-cta ghost';
-        a.textContent = 'Visit the website \u2192';
+        a.textContent = (C.buttonLabel || 'Visit the website') + ' \u2192';
         card.appendChild(a);
       });
     });
