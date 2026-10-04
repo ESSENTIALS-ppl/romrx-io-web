@@ -86,6 +86,20 @@ const RX_PACK_SITES = {
 };
 window.RX_PACK_SITES = RX_PACK_SITES;
 
+/* Pack card copy, ONE place (Jim and Stacy final, Oct 4 2026). Used by the /universe
+   cards (universe.html fills them from here) and the footer grid below.
+   betaStatus: green chip on +BJJ, +BodyBuilding and +Yoga (shown in capitals).
+   Every other pack reads COMING SOON. Never use "launching" on a Coming soon card.
+   priceLine: the single price line on all 9 pack cards.
+   footnote: the single footnote under the pack grid (also the home page grid).
+   No dates, "billing begins" or "cancel anytime" on any pack card. Em dash free. */
+const RX_PACK_COPY = {
+  betaStatus: 'Beta testing starting January 2027',
+  priceLine: '$149 a year, stacks on Base',
+  footnote: 'Pack prices are planned for 2027 and may change before launch. Packs need a Base account and a card on file, renew yearly until you cancel, and end if you cancel Base. For adults 18 and older. Full terms are shown at checkout.',
+};
+window.RX_PACK_COPY = RX_PACK_COPY;
+
 /* Universe headline (Jim via CoS 2026-09-29): pages with
    <body data-rx-universe="headline"> (/science only) swap the small
    "Part of the ROMRx Universe" eyebrow for a full headline, "All of this leads
@@ -93,20 +107,20 @@ window.RX_PACK_SITES = RX_PACK_SITES;
    other page keeps the footer eyebrow. Rows are identical either way. */
 const RX_UNIVERSE = ({ here, headline = false }) => {
   const rows = [
-    { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   href: 'https://romrxbjj.com' },
-    { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   href: 'https://romrxbodybuilding.com' },
+    { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   beta: true, href: 'https://romrxbjj.com' },
+    { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   beta: true, href: 'https://romrxbodybuilding.com' },
     { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: RX_PACK_SITES.pl.sub,   status: 'coming', href: null, site: 'pl' },
     { key: 'mma',        name: 'ROMRx<span class="rx-plus">+MMA</span>',              proto: RX_PACK_SITES.mma.sub,  status: 'coming', href: null, site: 'mma' },
     { key: 'mil',        name: 'ROMRx<span class="rx-plus">+Military</span>',         proto: RX_PACK_SITES.mil.sub,  status: 'coming', href: null, site: 'mil' },
     { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: RX_PACK_SITES.fr.sub,   status: 'coming', href: null, site: 'fr' },
     { key: 'cali',       name: 'ROMRx<span class="rx-plus">+Calisthenics</span>',     proto: RX_PACK_SITES.cali.sub, status: 'coming', href: null, site: 'cali' },
     { key: 'hyb',        name: 'ROMRx<span class="rx-plus">+Hybrid</span>',           proto: RX_PACK_SITES.hyb.sub,  status: 'coming', href: null, site: 'hyb' },
-    { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                    status: 'coming', href: null, site: 'yoga' },
+    { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                    status: 'live',   beta: true, href: null, site: 'yoga' },
   ].map(r => (r.site && RX_PACK_SITES[r.site] && RX_PACK_SITES[r.site].live) ? Object.assign({}, r, { href: RX_PACK_SITES[r.site].url }) : r);
   const html = rows.map(r => {
     const isHere = here === r.key;
     const cls = isHere ? 'rx-uni-row here' : 'rx-uni-row';
-    const statusLabel = isHere ? 'YOU ARE HERE' : (r.status === 'live' ? 'LIVE' : 'COMING SOON');
+    const statusLabel = isHere ? 'YOU ARE HERE' : (r.beta ? RX_PACK_COPY.betaStatus.toUpperCase() : 'COMING SOON');
     const statusCls = isHere ? 'here' : r.status;
     const inner = `
       <div>
@@ -126,6 +140,7 @@ const RX_UNIVERSE = ({ here, headline = false }) => {
           ? '<h2 class="rx-h2 rx-uni-headline">All of this leads to the <span class="rx-grad">ROMRx Universe</span></h2>'
           : '<p class="rx-eyebrow">Part of the ROMRx Universe</p>'}
         <div class="rx-universe-grid">${html}</div>
+        <p class="rx-fine rx-center rx-uni-foot">${RX_PACK_COPY.footnote}</p>
         <p class="rx-uni-tag">One ROM assessment. Every sport your body plays.</p>
       </div>
     </section>

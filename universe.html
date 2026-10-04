@@ -93,20 +93,20 @@
         </div>
 
         <div class="rx-uni-card live">
-          <div class="rx-uni-status live">LIVE BETA TESTING</div>
+          <div class="rx-uni-status live" data-rx-pack-copy="betaStatus"></div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+BJJ</span></h2>
           <p class="rx-uni-proto">Position Readiness Protocol&trade;</p>
           <p>See which BJJ positions and techniques your results line up with. Green (train), Yellow (modify), Red (skip today). Adapt your rolls to your current ROM. For athletes, coaches, and academies.</p>
-          <p class="rx-price">$149/yr <span class="rx-fine">stacks on Base &middot; free through December 31, 2026 &middot; billing begins January 1, 2027</span></p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
           <a href="https://romrxbjj.com" class="rx-cta ghost">Visit romrxbjj.com &rarr;</a>
         </div>
 
         <div class="rx-uni-card live">
-          <div class="rx-uni-status live">LIVE BETA TESTING</div>
+          <div class="rx-uni-status live" data-rx-pack-copy="betaStatus"></div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+BodyBuilding</span></h2>
           <p class="rx-uni-proto">Exercise Readiness Protocol&trade;</p>
           <p>See which lifts and accessory exercises your results line up with. Green (load it), Yellow (modify), Red (skip). Program your hypertrophy work around real ROM data. For athletes, trainers, and gyms.</p>
-          <p class="rx-price">$149/yr <span class="rx-fine">stacks on Base &middot; free through December 31, 2026 &middot; billing begins January 1, 2027</span></p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
           <a href="https://romrxbodybuilding.com" class="rx-cta ghost">Visit romrxbodybuilding.com &rarr;</a>
         </div>
 
@@ -114,47 +114,55 @@
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Powerlifting</span></h2>
           <p>The Base ROM, applied to the squat, bench press and deadlift.</p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="mma">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+MMA</span></h2>
           <p>The Base ROM, applied to takedown, ground and striking movements.</p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="mil">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Military</span></h2>
           <p>Train for your fitness test. Train for the next level.</p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="fr">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+FirstResponder</span></h2>
           <p>The Base ROM, applied to lifts, carries, drags and climbs on the job.</p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="cali">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Calisthenics</span></h2>
           <p>The Base ROM, applied to handstand, squat and straddle movements.</p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="hyb">
           <div class="rx-uni-status coming">COMING SOON</div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Hybrid</span></h2>
           <p>A hybrid training pack. The Base ROM, applied to lift, carry, run and row movements.</p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
         </div>
 
         <div class="rx-uni-card coming" data-pack-site="yoga">
-          <div class="rx-uni-status coming">COMING SOON</div>
+          <div class="rx-uni-status live" data-rx-pack-copy="betaStatus"></div>
           <h2 class="rx-h3">ROMRx<span class="rx-plus">+Yoga</span></h2>
           <p class="rx-uni-proto">Pose Readiness Protocol&trade;</p>
           <p>Asana readiness by ROM. Modify or advance poses based on your own Base numbers. For practitioners, instructors, and studios.</p>
+          <p class="rx-price" data-rx-pack-copy="priceLine"></p>
         </div>
 
       </div>
-      <p class="rx-fine rx-center rx-mt-lg">ROMRx shares educational information about range of motion. It is not medical advice and does not diagnose, treat or cure any condition. For adults 18 and older.</p>
+      <p class="rx-fine rx-center rx-mt-lg" data-rx-pack-copy="footnote"></p>
+      <p class="rx-fine rx-center rx-mt-sm">ROMRx shares educational information about range of motion. It is not medical advice and does not diagnose, treat or cure any condition. For adults 18 and older.</p>
       <p class="rx-fine rx-center">ROMRx is not affiliated with or endorsed by the U.S. Department of Defense (also called the Department of War), any branch of the military or any government agency. No endorsement is intended or implied.</p>
       <p class="rx-fine rx-center">ROMRx is not affiliated with or endorsed by any fire, police or EMS department, sports league or federation, or event organizer.</p>
     </div>
@@ -163,10 +171,17 @@
   <div data-rx-slot="legal"></div>
 
   <script>
-    /* Pack-site buttons are driven by ONE flag per pack: RX_PACK_SITES.<key>.live (assets/partials.js).
-       live:true adds a "Visit the website" button to that pack's Coming soon card. */
+    /* Pack copy comes from ONE place: RX_PACK_COPY and RX_PACK_SITES in assets/partials.js.
+       Status chip, price line and footnote are filled here; the flag RX_PACK_SITES.<key>.live
+       adds a "Visit the website" button to that pack's Coming soon card. */
     document.addEventListener('DOMContentLoaded', function () {
+      var C = window.RX_PACK_COPY || {};
       var P = window.RX_PACK_SITES || {};
+      document.querySelectorAll('[data-rx-pack-copy]').forEach(function (el) {
+        var k = el.getAttribute('data-rx-pack-copy');
+        var t = C[k] || '';
+        el.textContent = (k === 'betaStatus') ? t.toUpperCase() : t;
+      });
       document.querySelectorAll('[data-pack-site]').forEach(function (card) {
         var p = P[card.getAttribute('data-pack-site')];
         if (!p || !p.live) return;
