@@ -61,26 +61,28 @@ const RX_NAV_MINIMAL = `
 </nav>
 `;
 
-/* Pack-site links (Jim, Oct 4 2026, 1:00 PM). All six coming packs (+Powerlifting,
-   +MMA, +Military, +FirstResponder, +Calisthenics, +Hybrid) ALWAYS show a card on
-   /universe and a row in the footer grid, both reading COMING SOON.
-   ONE flag per pack controls the link: RX_PACK_SITES.<key>.live.
-     live:false (default)  card and row show COMING SOON with NO link.
-     live:true             the card gets a "Visit romrx<name>.com" link and the row
-                           becomes a link to the same domain. Still reads COMING SOON.
-   Flip a pack to true ONLY after its site returns HTTP 200 over HTTPS and Stacy has
-   cleared its wording. Keys: pl, mma, mil, fr, cali, hyb. Text is Kai's
+/* Pack-site links (Jim, Oct 4 2026; override at 1:11 PM). All seven coming packs
+   (+Powerlifting, +MMA, +Military, +FirstResponder, +Calisthenics, +Hybrid, +Yoga)
+   show a Coming soon card on /universe and a row in the footer grid, both reading
+   COMING SOON. ONE flag per pack controls the link: RX_PACK_SITES.<key>.live.
+     live:true   the card gets a "Visit the website" button to the pack domain and the
+                 grid row links to the same domain. Still reads COMING SOON.
+     live:false  card and row show COMING SOON with NO link.
+   All seven are set to true in this PR because Jim wants the links on at launch. This
+   PR must ship only after the pack sites are published and return HTTP 200 over HTTPS
+   (Grant's go). If one site is not ready, set that pack's live to false before deploy.
+   Keys: pl, mma, mil, fr, cali, hyb, yoga. Text is Kai's
    (pack-sites-20261004/UNIVERSE-CARDS-DROPIN.json): "sub" is the grid-row second
    line. The card one-liner lives in universe.html (same words as Kai's rows).
-   +Yoga is deliberately NOT in this map: romrx.io shows +Yoga as Coming soon with
-   no sign-up path and no link to romrxyoga.com (unlisted, hand-picked testers only). */
+   +Yoga has a link only (no sign-up, no waitlist); its grid row keeps its Protocol line. */
 const RX_PACK_SITES = {
-  pl:   { url: 'https://romrxpowerlifting.com',   sub: 'Squat, bench press and deadlift',        live: false },
-  mma:  { url: 'https://romrxmma.com',            sub: 'Takedown, ground and striking',          live: false },
-  mil:  { url: 'https://romrxmilitary.com',       sub: 'Fitness test and advanced training',     live: false },
-  fr:   { url: 'https://romrxfirstresponder.com', sub: 'Lifts, carries, drags and climbs',       live: false },
-  cali: { url: 'https://romrxcalisthenics.com',   sub: 'Handstand, squat and straddle',          live: false },
-  hyb:  { url: 'https://romrxhybrid.com',         sub: 'Lift, carry, run and row',               live: false },
+  pl:   { url: 'https://romrxpowerlifting.com',   sub: 'Squat, bench press and deadlift',        live: true },
+  mma:  { url: 'https://romrxmma.com',            sub: 'Takedown, ground and striking',          live: true },
+  mil:  { url: 'https://romrxmilitary.com',       sub: 'Fitness test and advanced training',     live: true },
+  fr:   { url: 'https://romrxfirstresponder.com', sub: 'Lifts, carries, drags and climbs',       live: true },
+  cali: { url: 'https://romrxcalisthenics.com',   sub: 'Handstand, squat and straddle',          live: true },
+  hyb:  { url: 'https://romrxhybrid.com',         sub: 'Lift, carry, run and row',               live: true },
+  yoga: { url: 'https://romrxyoga.com',                                                          live: true },
 };
 window.RX_PACK_SITES = RX_PACK_SITES;
 
@@ -99,7 +101,7 @@ const RX_UNIVERSE = ({ here, headline = false }) => {
     { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: RX_PACK_SITES.fr.sub,   status: 'coming', href: null, site: 'fr' },
     { key: 'cali',       name: 'ROMRx<span class="rx-plus">+Calisthenics</span>',     proto: RX_PACK_SITES.cali.sub, status: 'coming', href: null, site: 'cali' },
     { key: 'hyb',        name: 'ROMRx<span class="rx-plus">+Hybrid</span>',           proto: RX_PACK_SITES.hyb.sub,  status: 'coming', href: null, site: 'hyb' },
-    { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                    status: 'coming', href: null },
+    { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                    status: 'coming', href: null, site: 'yoga' },
   ].map(r => (r.site && RX_PACK_SITES[r.site] && RX_PACK_SITES[r.site].live) ? Object.assign({}, r, { href: RX_PACK_SITES[r.site].url }) : r);
   const html = rows.map(r => {
     const isHere = here === r.key;

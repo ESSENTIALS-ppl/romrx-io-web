@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/assets/design-tokens.css">
   <script defer src="/assets/partials.js"></script>
   <style>
-    .rx-home-nav .rx-nav-links a:not(.nav-login) { display: none; }
+    .rx-home-nav .rx-nav-links a:not(.nav-login):not([data-nav="universe"]) { display: none; }
     /* homepage perf: no JetBrains Mono fetch */
     body { --rx-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .rx-feature-row {
@@ -94,6 +94,7 @@
     <div class="rx-nav-inner">
       <a href="/" class="rx-wordmark">ROMRx</a>
       <div class="rx-nav-links">
+        <a href="/universe" data-nav="universe">Universe</a>
         <a href="/app/login" class="nav-login mobile-hide-ok">Log in</a>
       </div>
       <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start your assessment →</a>
@@ -258,6 +259,7 @@
     </div>
   </section>
 
+  <div data-rx-slot="universe"></div>
   <div data-rx-slot="legal"></div>
 
   <div class="rx-sticky-cta" id="stickyCta" aria-hidden="true">
