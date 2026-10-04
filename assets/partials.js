@@ -61,20 +61,26 @@ const RX_NAV_MINIMAL = `
 </nav>
 `;
 
-/* Pack-site links (Jim, Oct 4 2026). Each new Coming-soon pack site is staged
-   here with live:false. A live:false pack shows NO link (the new Military and
-   Calisthenics rows are hidden entirely). Flip one pack's live to true ONLY after
-   its site returns HTTP 200 over HTTPS and Stacy has cleared its wording; then the
-   row becomes a link and still reads COMING SOON. Labels are drafts from
-   pack-sites-20261004 (needs-stacy-wording-check). +Yoga is deliberately NOT in
-   this map: romrx.io shows +Yoga as Coming soon with no sign-up path and no link
-   to romrxyoga.com (unlisted, hand-picked testers only). */
+/* Pack-site links (Jim, Oct 4 2026, 1:00 PM). All six coming packs (+Powerlifting,
+   +MMA, +Military, +FirstResponder, +Calisthenics, +Hybrid) ALWAYS show a card on
+   /universe and a row in the footer grid, both reading COMING SOON.
+   ONE flag per pack controls the link: RX_PACK_SITES.<key>.live.
+     live:false (default)  card and row show COMING SOON with NO link.
+     live:true             the card gets a "Visit romrx<name>.com" link and the row
+                           becomes a link to the same domain. Still reads COMING SOON.
+   Flip a pack to true ONLY after its site returns HTTP 200 over HTTPS and Stacy has
+   cleared its wording. Keys: pl, mma, mil, fr, cali, hyb. Text is Kai's
+   (pack-sites-20261004/UNIVERSE-CARDS-DROPIN.json): "sub" is the grid-row second
+   line. The card one-liner lives in universe.html (same words as Kai's rows).
+   +Yoga is deliberately NOT in this map: romrx.io shows +Yoga as Coming soon with
+   no sign-up path and no link to romrxyoga.com (unlisted, hand-picked testers only). */
 const RX_PACK_SITES = {
-  pl:   { url: 'https://romrxpowerlifting.com',   label: 'The Base ROM, applied to the squat, bench press and deadlift.',               live: false },
-  mma:  { url: 'https://romrxmma.com',            label: 'The Base ROM, applied to striking, takedown and ground movements.',           live: false },
-  fr:   { url: 'https://romrxfirstresponder.com', label: 'The Base ROM, applied to lifts, carries, drags and climbs on the job.',        live: false },
-  mil:  { url: 'https://romrxmilitary.com',       label: 'The Base ROM, applied to ruck, carry, climb and drill movements.',            live: false },
-  cali: { url: 'https://romrxcalisthenics.com',   label: 'The Base ROM, applied to bodyweight skill movements.',                        live: false },
+  pl:   { url: 'https://romrxpowerlifting.com',   sub: 'Squat, bench press and deadlift',        live: false },
+  mma:  { url: 'https://romrxmma.com',            sub: 'Takedown, ground and striking',          live: false },
+  mil:  { url: 'https://romrxmilitary.com',       sub: 'Fitness test and advanced training',     live: false },
+  fr:   { url: 'https://romrxfirstresponder.com', sub: 'Lifts, carries, drags and climbs',       live: false },
+  cali: { url: 'https://romrxcalisthenics.com',   sub: 'Handstand, squat and straddle',          live: false },
+  hyb:  { url: 'https://romrxhybrid.com',         sub: 'Lift, carry, run and row',               live: false },
 };
 window.RX_PACK_SITES = RX_PACK_SITES;
 
@@ -87,14 +93,14 @@ const RX_UNIVERSE = ({ here, headline = false }) => {
   const rows = [
     { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   href: 'https://romrxbjj.com' },
     { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   href: 'https://romrxbodybuilding.com' },
-    { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: 'Lift Readiness Protocol™',                    status: 'coming', href: null, site: 'pl' },
-    { key: 'mma',        name: 'ROMRx<span class="rx-plus">+MMA</span>',              proto: 'Training Readiness Profile™',                 status: 'coming', href: null, site: 'mma' },
+    { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: RX_PACK_SITES.pl.sub,   status: 'coming', href: null, site: 'pl' },
+    { key: 'mma',        name: 'ROMRx<span class="rx-plus">+MMA</span>',              proto: RX_PACK_SITES.mma.sub,  status: 'coming', href: null, site: 'mma' },
+    { key: 'mil',        name: 'ROMRx<span class="rx-plus">+Military</span>',         proto: RX_PACK_SITES.mil.sub,  status: 'coming', href: null, site: 'mil' },
+    { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: RX_PACK_SITES.fr.sub,   status: 'coming', href: null, site: 'fr' },
+    { key: 'cali',       name: 'ROMRx<span class="rx-plus">+Calisthenics</span>',     proto: RX_PACK_SITES.cali.sub, status: 'coming', href: null, site: 'cali' },
+    { key: 'hyb',        name: 'ROMRx<span class="rx-plus">+Hybrid</span>',           proto: RX_PACK_SITES.hyb.sub,  status: 'coming', href: null, site: 'hyb' },
     { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                    status: 'coming', href: null },
-    { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: 'Task Readiness Protocol™',                    status: 'coming', href: null, site: 'fr' },
-    { key: 'mil',        name: 'ROMRx<span class="rx-plus">+Military</span>',         proto: RX_PACK_SITES.mil.label,                       status: 'coming', href: null, site: 'mil',  hideUntilLive: true },
-    { key: 'cali',       name: 'ROMRx<span class="rx-plus">+Calisthenics</span>',     proto: RX_PACK_SITES.cali.label,                      status: 'coming', href: null, site: 'cali', hideUntilLive: true },
-  ].filter(r => !(r.hideUntilLive && !(RX_PACK_SITES[r.site] && RX_PACK_SITES[r.site].live)))
-   .map(r => (r.site && RX_PACK_SITES[r.site] && RX_PACK_SITES[r.site].live) ? Object.assign({}, r, { href: RX_PACK_SITES[r.site].url }) : r);
+  ].map(r => (r.site && RX_PACK_SITES[r.site] && RX_PACK_SITES[r.site].live) ? Object.assign({}, r, { href: RX_PACK_SITES[r.site].url }) : r);
   const html = rows.map(r => {
     const isHere = here === r.key;
     const cls = isHere ? 'rx-uni-row here' : 'rx-uni-row';
