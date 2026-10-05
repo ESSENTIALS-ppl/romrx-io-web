@@ -28,7 +28,7 @@ const RX_NAV = `
   <div class="rx-nav-inner">
     <a href="/" class="rx-wordmark">ROMRx</a>
     <div class="rx-nav-links">
-      <a href="/universe" data-nav="universe">Universe</a>
+      <a href="/universe" data-nav="universe" class="nav-universe mobile-hide-ok">Universe</a>
       <a href="/dashboard" data-nav="dashboard">Dashboard</a>
       <a href="/science" data-nav="science">Science</a>
       <a href="/articles" data-nav="articles">Articles</a>
@@ -54,6 +54,7 @@ const RX_NAV_MINIMAL = `
   <div class="rx-nav-inner">
     <a href="/" class="rx-wordmark">ROMRx</a>
     <div class="rx-nav-links">
+      <a href="/universe" data-nav="universe" class="nav-universe mobile-hide-ok">Universe</a>
       <a href="/app/login" class="nav-login mobile-hide-ok">Log in</a>
     </div>
     <a href="/app/signup" class="rx-cta primary mobile-hide-ok">Start your assessment →</a>
@@ -61,24 +62,98 @@ const RX_NAV_MINIMAL = `
 </nav>
 `;
 
+/* Pack-site links (Jim, Oct 4 2026; override at 1:11 PM). All seven coming packs
+   (+Powerlifting, +MMA, +Military, +FirstResponder, +Calisthenics, +Hybrid, +Yoga)
+   show a Coming soon card on /universe and a row in the footer grid, both reading
+   COMING SOON. ONE flag per pack controls the link: RX_PACK_SITES.<key>.live.
+     live:true   the card gets a "Visit the website" button to the pack domain and the
+                 grid row links to the same domain. Still reads COMING SOON.
+     live:false  card and row show COMING SOON with NO link.
+   All seven are set to true in this PR because Jim wants the links on at launch. This
+   PR must ship only after the pack sites are published and return HTTP 200 over HTTPS
+   (Grant's go). If one site is not ready, set that pack's live to false before deploy.
+   Keys: pl, mma, mil, fr, cali, hyb, yoga, bjj, bb (bjj and bb are the live-beta packs; same flag and button). All words (names,
+   descriptions, grid sub lines) are in RX_PACK_COPY below, not here.
+   +Yoga has a link only (no sign-up, no waitlist); its grid row keeps its Protocol line. */
+const RX_PACK_SITES = {
+  pl:   { url: 'https://romrxpowerlifting.com', live: true },
+  mma:  { url: 'https://romrxmma.com', live: true },
+  mil:  { url: 'https://romrxmilitary.com', live: true },
+  fr:   { url: 'https://romrxfirstresponder.com', live: true },
+  cali: { url: 'https://romrxcalisthenics.com', live: true },
+  hyb:  { url: 'https://romrxhybrid.com', live: true },
+  yoga: { url: 'https://romrxyoga.com', live: true },
+  bjj:  { url: 'https://romrxbjj.com', live: true },
+  // BB points at Base signup until bb-web #37 (pack holders get into the BB app) is live (Stacy, Oct 5 2026).
+  bb:   { url: 'https://romrx.io/app/signup', live: true },
+};
+window.RX_PACK_SITES = RX_PACK_SITES;
+
+/* ALL pack card copy lives here, ONE place (Jim, Stacy, Kai, Grant: Oct 4 2026).
+   To swap copy edit this object only. Card lines (desc): UNIVERSE-CARDS-FINAL-V3 recommended lines, Jim GO Oct 5 2026 (BB generator alt on HOLD).
+   Used by the /universe cards (universe.html builds them from here) and the shared
+   footer grid (RX_UNIVERSE below).
+     packs.<key>   name (the "+Pack" accent), beta (true = green beta chip, false = COMING SOON),
+                   proto (optional Protocol line on the card; the grid row shows it when there
+                   is no sub), sub (grid-row second line), desc (card description).
+     order         card and grid order (Kai's).
+     betaStatus    green chip text on beta packs (shown in capitals). Never "launching".
+     priceLine     the single price line on all 9 pack cards.
+     footnote      the single footnote under the pack grid.
+     disclaimer    educational / not medical advice line (/universe only).
+     affil         not-affiliated lines (Stacy's cleared wording, via Kai): shown once under
+                   the grid on /universe and once under the shared footer grid elsewhere.
+   No dates, "billing begins" or "cancel anytime" on any pack card. Em dash free.
+   The Base card on /universe stays in universe.html (it carries Base's own pricing text).
+   Link behavior is separate: RX_PACK_SITES.<key>.live above. */
+const RX_PACK_COPY = {
+  buttonLabel: 'Visit the website',   // every pack card button, all 9 packs
+  comingStatus: 'COMING SOON',
+  betaStatus: 'Beta testing starting January 2027',
+  priceLine: '$149 a year, stacks on Base',
+  footnote: 'Pack prices are planned for 2027 and may change before launch. Packs need a Base account and a card on file, renew yearly until you cancel, and end if you cancel Base. For adults 18 and older. Full terms are shown at checkout.',
+  disclaimer: 'ROMRx shares educational information about range of motion. It is not medical advice and does not diagnose, treat or cure any condition.',
+  affil: [
+    'ROMRx is not affiliated with or endorsed by the U.S. Department of Defense (also called the Department of War), any branch of the military or any government agency. No endorsement is intended or implied.',
+    'ROMRx is not affiliated with or endorsed by any fire, police or EMS department, sports league or federation, or event organizer.',
+  ],
+  order: ['bjj', 'bb', 'pl', 'mma', 'mil', 'fr', 'cali', 'hyb', 'yoga'],
+  packs: {
+    bjj: { name: 'BJJ', beta: true, proto: 'Position Readiness Protocol™', desc: 'Mat time is what you want. Your numbers, mapped to 130+ techniques across five position groups.' },
+    bb: { name: 'BodyBuilding', beta: true, proto: 'Exercise Readiness Protocol™', desc: 'Growing muscle is the goal. Start with a range-of-motion measurement you take yourself, at home.' },
+    pl: { name: 'Powerlifting', beta: false, sub: 'Squat, bench press and deadlift', desc: 'Lifters chase depth, lockouts and a bigger total. Where does your range sit on the squat, bench press and deadlift?' },
+    mma: { name: 'MMA', beta: false, sub: 'Takedown, ground and striking', desc: 'Want to get sharper standing and on the ground? What you measure on your phone gets set beside takedown, ground and striking movements.' },
+    mil: { name: 'Military', beta: false, sub: 'Fitness test and advanced training', desc: 'The run, the ruck, the lift: what you train for. Five movements, one mobility assessment: run, ruck, lift, carry and crawl.' },
+    fr: { name: 'FirstResponder', beta: false, sub: 'Lifts, carries, drags and climbs', desc: 'On the job, you want strong lifts, carries, drags and climbs. Measure at home so each of those has a number beside it.' },
+    cali: { name: 'Calisthenics', beta: false, sub: 'Handstand, squat and straddle', desc: 'Handstand, hang or squat, you are earning the next skill. Each one sits next to a measurement you took yourself.' },
+    hyb: { name: 'Hybrid', beta: false, sub: 'Lift, carry, run and row', desc: 'One week, run days and lift days. Run, row, lift, carry and squat all read from one mobility assessment.' },
+    yoga: { name: 'Yoga', beta: true, proto: 'Pose Readiness Protocol™', desc: 'To deepen your practice, find poses by focus. See how each one sits with what you measured.' },
+  },
+};
+window.RX_PACK_COPY = RX_PACK_COPY;
+
 /* Universe headline (Jim via CoS 2026-09-29): pages with
    <body data-rx-universe="headline"> (/science only) swap the small
    "Part of the ROMRx Universe" eyebrow for a full headline, "All of this leads
    to the ROMRx Universe", with the same grid shown prominently under it. Every
    other page keeps the footer eyebrow. Rows are identical either way. */
 const RX_UNIVERSE = ({ here, headline = false }) => {
-  const rows = [
-    { key: 'bjj',        name: 'ROMRx<span class="rx-plus">+BJJ</span>',              proto: 'Position Readiness Protocol™',                status: 'live',   href: 'https://romrxbjj.com' },
-    { key: 'bb',         name: 'ROMRx<span class="rx-plus">+BodyBuilding</span>',     proto: 'Exercise Readiness Protocol™',                status: 'live',   href: 'https://romrxbodybuilding.com' },
-    { key: 'pl',         name: 'ROMRx<span class="rx-plus">+Powerlifting</span>',     proto: 'Lift Readiness Protocol™',                    status: 'coming', href: null },
-    { key: 'mma',        name: 'ROMRx<span class="rx-plus">+MMA</span>',              proto: 'Training Readiness Profile™',                 status: 'coming', href: null },
-    { key: 'yoga',       name: 'ROMRx<span class="rx-plus">+Yoga</span>',             proto: 'Pose Readiness Protocol™',                    status: 'coming', href: null },
-    { key: 'fr',         name: 'ROMRx<span class="rx-plus">+FirstResponder</span>',   proto: 'Task Readiness Protocol™',                    status: 'coming', href: null },
-  ];
+  const rows = RX_PACK_COPY.order.map(k => {
+    const p = RX_PACK_COPY.packs[k];
+    const site = RX_PACK_SITES[k];
+    return {
+      key: k,
+      name: 'ROMRx<span class="rx-plus">+' + p.name + '</span>',
+      proto: p.sub || p.proto,
+      status: p.beta ? 'live' : 'coming',
+      beta: p.beta,
+      href: (site && site.live) ? site.url : null,
+    };
+  });
   const html = rows.map(r => {
     const isHere = here === r.key;
     const cls = isHere ? 'rx-uni-row here' : 'rx-uni-row';
-    const statusLabel = isHere ? 'YOU ARE HERE' : (r.status === 'live' ? 'LIVE' : 'COMING');
+    const statusLabel = isHere ? 'YOU ARE HERE' : (r.beta ? RX_PACK_COPY.betaStatus.toUpperCase() : RX_PACK_COPY.comingStatus);
     const statusCls = isHere ? 'here' : r.status;
     const inner = `
       <div>
@@ -98,6 +173,8 @@ const RX_UNIVERSE = ({ here, headline = false }) => {
           ? '<h2 class="rx-h2 rx-uni-headline">All of this leads to the <span class="rx-grad">ROMRx Universe</span></h2>'
           : '<p class="rx-eyebrow">Part of the ROMRx Universe</p>'}
         <div class="rx-universe-grid">${html}</div>
+        <p class="rx-fine rx-center rx-uni-foot">${RX_PACK_COPY.footnote}</p>
+        ${RX_PACK_COPY.affil.map(t => `<p class="rx-fine rx-center rx-uni-foot">${t}</p>`).join('')}
         <p class="rx-uni-tag">One ROM assessment. Every sport your body plays.</p>
       </div>
     </section>

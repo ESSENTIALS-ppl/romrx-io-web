@@ -88,108 +88,62 @@
           <h2 class="rx-h3">ROMRx</h2>
           <p class="rx-uni-proto">ROM Readiness Protocol&trade;</p>
           <p>15-minute assessment. 12 joints placed in bands: Needs focus / Building / Steady. Your top three problem areas identified. Daily protocol of 8 to 12 exercises: strength, stretching, foam rolling. ROMBot&trade; adapts as you improve. 6-Week Reassessment Cycle&trade; shifts priorities as your body changes.</p>
-          <p class="rx-price">Free assessment &middot; Personalized Readiness Profile <span class="rx-fine">(Free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime. Canceling ends your access right away.)</span></p>
+          <p class="rx-price">Free assessment &middot; Personalized Readiness Protocol <span class="rx-fine">(Free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime. Canceling ends your access right away.)</span></p>
           <a href="/app/signup" class="rx-cta primary">Start your assessment &rarr;</a>
         </div>
 
-        <div class="rx-uni-card live">
-          <div class="rx-uni-status live">LIVE BETA TESTING</div>
-          <h2 class="rx-h3">ROMRx<span class="rx-plus">+BJJ</span></h2>
-          <p class="rx-uni-proto">Position Readiness Protocol&trade;</p>
-          <p>See which BJJ positions and techniques your results line up with. Green (train), Yellow (modify), Red (skip today). Adapt your rolls to your current ROM. For athletes, coaches, and academies.</p>
-          <p class="rx-price">$149/yr <span class="rx-fine">stacks on Base &middot; free through December 31, 2026 &middot; billing begins January 1, 2027</span></p>
-          <a href="https://romrxbjj.com" class="rx-cta ghost">Visit romrxbjj.com &rarr;</a>
-        </div>
-
-        <div class="rx-uni-card live">
-          <div class="rx-uni-status live">LIVE BETA TESTING</div>
-          <h2 class="rx-h3">ROMRx<span class="rx-plus">+BodyBuilding</span></h2>
-          <p class="rx-uni-proto">Exercise Readiness Protocol&trade;</p>
-          <p>See which lifts and accessory exercises your results line up with. Green (load it), Yellow (modify), Red (skip). Program your hypertrophy work around real ROM data. For athletes, trainers, and gyms.</p>
-          <p class="rx-price">$149/yr <span class="rx-fine">stacks on Base &middot; free through December 31, 2026 &middot; billing begins January 1, 2027</span></p>
-          <a href="https://romrxbodybuilding.com" class="rx-cta ghost">Visit romrxbodybuilding.com &rarr;</a>
-        </div>
-
-        <div class="rx-uni-card coming">
-          <div class="rx-uni-status coming">COMING</div>
-          <h2 class="rx-h3">ROMRx<span class="rx-plus">+Powerlifting</span></h2>
-          <p class="rx-uni-proto">Lift Readiness Protocol&trade;</p>
-          <p>Squat, bench, deadlift readiness by ROM. Programmed for meet prep and off-season blocks. For athletes, coaches, and gyms.</p>
-          <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
-        </div>
-
-        <div class="rx-uni-card coming">
-          <div class="rx-uni-status coming">COMING</div>
-          <h2 class="rx-h3">ROMRx<span class="rx-plus">+MMA</span></h2>
-          <p class="rx-uni-proto">Training Readiness Profile&trade;</p>
-          <p>Striking, grappling, and clinch readiness. Session-by-session profile for camp planning. For athletes, coaches, and academies.</p>
-          <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
-        </div>
-
-        <div class="rx-uni-card coming">
-          <div class="rx-uni-status coming">COMING</div>
-          <h2 class="rx-h3">ROMRx<span class="rx-plus">+Yoga</span></h2>
-          <p class="rx-uni-proto">Pose Readiness Protocol&trade;</p>
-          <p>Asana readiness by ROM. Modify or advance poses based on your body's real data. For practitioners, instructors, and studios.</p>
-          <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
-        </div>
-
-        <div class="rx-uni-card coming">
-          <div class="rx-uni-status coming">COMING</div>
-          <h2 class="rx-h3">ROMRx<span class="rx-plus">+FirstResponder</span></h2>
-          <p class="rx-uni-proto">Task Readiness Protocol&trade;</p>
-          <p>Job-task readiness for fire, PD, and tactical teams. Cohort dashboards for department chiefs. For officers, trainers, and departments.</p>
-          <a href="#waitlist" class="rx-cta ghost">Join Waitlist</a>
-        </div>
+        <!-- Pack cards (9) are built from RX_PACK_COPY in assets/partials.js by the script below. -->
 
       </div>
-    </div>
-  </section>
-
-  <!-- WAITLIST -->
-  <section class="rx-section alt" id="waitlist">
-    <div class="rx-container narrow">
-      <p class="rx-eyebrow rx-center">Sport Pack Waitlist</p>
-      <h2 class="rx-h2 rx-center">Get first access when your sport goes live.</h2>
-      <form class="rx-form rx-mt-lg" id="waitlist-form" action="/.netlify/functions/waitlist" method="POST">
-        <div class="rx-field">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email">
-        </div>
-        <div class="rx-field">
-          <label for="sport">Which sport pack?</label>
-          <select id="sport" name="sport">
-            <option value="powerlifting">+Powerlifting</option>
-            <option value="mma">+MMA</option>
-            <option value="yoga">+Yoga</option>
-            <option value="firstresponder">+FirstResponder</option>
-            <option value="other">Other (tell us below)</option>
-          </select>
-        </div>
-        <div class="rx-field">
-          <label for="notes">Anything we should know? (optional)</label>
-          <textarea id="notes" name="notes" rows="3"></textarea>
-        </div>
-        <button type="submit" class="rx-cta primary" style="width:100%;">Join Waitlist &rarr;</button>
-        <p class="rx-form-msg" id="waitlist-msg"></p>
-      </form>
+      <p class="rx-fine rx-center rx-mt-lg" data-rx-pack-copy="footnote"></p>
+      <p class="rx-fine rx-center rx-mt-sm" data-rx-pack-copy="disclaimer"></p>
+      <div data-rx-pack-copy="affil"></div>
     </div>
   </section>
 
   <div data-rx-slot="legal"></div>
 
   <script>
-    document.getElementById('waitlist-form')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const msg = document.getElementById('waitlist-msg');
-      msg.textContent = 'Adding you...';
-      const data = Object.fromEntries(new FormData(form));
-      try {
-        const res = await fetch(form.action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (res.ok) { msg.textContent = "You're on the list. Watch your inbox."; form.reset(); }
-        else { msg.textContent = 'Something went wrong. Please try again.'; }
-      } catch { msg.textContent = 'Network error. Please try again.'; }
+    /* ALL pack copy comes from ONE place: RX_PACK_COPY in assets/partials.js (names, status,
+       descriptions, price line, footnote, disclaimer, not-affiliated lines). The cards are built
+       here from it. RX_PACK_SITES.<key>.live adds the "Visit the website" button to that card. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var C = window.RX_PACK_COPY || {};
+      var P = window.RX_PACK_SITES || {};
+      var grid = document.querySelector('.rx-universe-full');
+      function el(tag, cls, text) {
+        var e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        return e;
+      }
+      (C.order || []).forEach(function (k) {
+        var p = C.packs[k];
+        var card = el('div', 'rx-uni-card ' + (k === 'yoga' ? 'coming' : (p.beta ? 'live' : 'coming')));
+        card.setAttribute('data-pack-site', k);
+        card.appendChild(el('div', 'rx-uni-status ' + (p.beta ? 'live' : 'coming'), p.beta ? C.betaStatus.toUpperCase() : C.comingStatus));
+        var h = el('h2', 'rx-h3', 'ROMRx');
+        h.appendChild(el('span', 'rx-plus', '+' + p.name));
+        card.appendChild(h);
+        if (p.proto) card.appendChild(el('p', 'rx-uni-proto', p.proto));
+        card.appendChild(el('p', null, p.desc));
+        card.appendChild(el('p', 'rx-price', C.priceLine));
+        var s = P[k];
+        if (s && s.live) {
+          var a = el('a', 'rx-cta ghost', (C.buttonLabel || 'Visit the website') + ' \u2192');
+          a.href = s.url;
+          card.appendChild(a);
+        }
+        grid.appendChild(card);
+      });
+      document.querySelectorAll('[data-rx-pack-copy]').forEach(function (n) {
+        var k = n.getAttribute('data-rx-pack-copy');
+        if (k === 'affil') {
+          (C.affil || []).forEach(function (t) { n.appendChild(el('p', 'rx-fine rx-center', t)); });
+        } else {
+          n.textContent = C[k] || '';
+        }
+      });
     });
   </script>
 </body>

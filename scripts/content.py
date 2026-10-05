@@ -40,7 +40,7 @@ CLUSTERS = [
     ]),
     ("lifespan", "Mobility Across Life", [
         "does-flexibility-decline-with-age",
-        "am-i-hypermobile-beighton",
+        "beighton-score-explained",
         "one-side-more-flexible-asymmetry",
     ]),
     ("sport", "Sport-Specific", [
@@ -80,7 +80,7 @@ ARTICLES_LIST += [
         "sections": [
             ("What is range of motion, the measurable thing", """
 <p>Range of motion (ROM) is the arc a joint can move through, measured in degrees from an anatomical neutral position. It is the objective number underneath both flexibility and mobility. Clinicians measure it with a goniometer against published reference values, for example roughly 180 degrees of shoulder flexion or 135 degrees of knee flexion in the <a href="%(aaos)s">published normal range of motion reference chart</a>.</p>
-<p>ROM is not a single fixed property. Research on the stretch response shows a measured joint range reflects both tissue stiffness and your <a href="%(visco)s">tolerance to the stretch sensation</a>, which is why two people with identical anatomy can test differently on the same day.</p>
+<p>ROM is not a single fixed property. Research on the stretch response shows a measured joint range reflects both tissue stiffness and your <a href="%(visco)s">tolerance to the stretch sensation</a>, which is why your own number can change from one test to the next.</p>
 """ % {"aaos": L_AAOS, "visco": L_VISCO}),
             ("Passive vs active range of motion", """
 <p><strong>Passive range</strong> is how far a joint goes when something else moves it: gravity, a strap, a partner, or your other hand. <strong>Active range</strong> is how far you can move it using only the muscles around that joint. The gap between the two is the range you can reach but not yet control.</p>
@@ -138,8 +138,8 @@ ARTICLES_LIST += [
         "meta": "See a normal range of motion chart for the neck, shoulder, hip, knee, and ankle in degrees, why norms are guides not cutoffs, and how to check your own.",
         "h1": "What Is a Normal Range of Motion? A Joint-by-Joint Guide",
         "excerpt": "Typical degree values for the neck, shoulder, hip, knee, and ankle, plus why a personal baseline beats a textbook number.",
-        "llm": "Joint-by-joint normal range of motion reference values in degrees with the caveat that norms vary by age, sex, and anatomy.",
-        "answer": "<strong>A normal range of motion is a population guide, not a personal cutoff.</strong> Common orthopedic references list shoulder flexion near 180 degrees, hip flexion near 120 degrees, knee flexion near 135 degrees, ankle dorsiflexion near 20 degrees, and cervical rotation near 60 degrees each side. These values vary with age, sex, and anatomy, so your own baseline and side-to-side comparison matter more than hitting a textbook number.",
+        "llm": "Joint-by-joint reference values in degrees. Values are published averages.",
+        "answer": "<strong>A normal range of motion is a population guide, not a personal cutoff.</strong> Common orthopedic references list shoulder flexion near 180 degrees, hip flexion near 120 degrees, knee flexion near 135 degrees, ankle dorsiflexion near 20 degrees, and cervical rotation near 60 degrees each side. These values are published averages, so your own baseline and side-to-side comparison matter more than hitting a textbook number.",
         "sections": [
             ("How range of motion is measured", """
 <p>Range of motion is measured in degrees from a neutral zero position, usually with a goniometer. The same joint can produce a different number depending on whether the range is active or passive and which tool is used, so consistency matters more than the instrument.</p>
@@ -172,8 +172,8 @@ ARTICLES_LIST += [
 <h3>Ankle</h3>
 <p>Roughly 20 degrees of dorsiflexion and 50 degrees of plantarflexion.</p>
 """ % {"aaos": L_AAOS, "physio": L_PHYSIO}),
-            ("Why normal varies by age, sex, and body type", """
-<p>Reference values are averages. A large study of healthy adults found that <a href="%(age)s">average range of motion decreases with advancing age</a> for both sexes and often differs from commonly used normative charts. Bone shape and proportions also shift the numbers, so a normal range of motion for you may sit above or below the textbook figure.</p>
+            ("Why published values differ from study to study", """
+<p>Reference values are averages. A large study of healthy adults found that <a href="%(age)s">average range of motion decreases with advancing age</a> for both sexes and often differs from commonly used normative charts. Your own measurement can sit above or below the published figure, so your own baseline matters more than a chart.</p>
 """ % {"age": L_AGE}),
             ("Active vs passive range when you self-test", """
 <p>When you check yourself at home, decide whether you are measuring active range (moved by your own muscles) or passive range (moved by gravity, a strap, or your hand), and keep it consistent. Comparing active on one day to passive on another is not a fair comparison.</p>
@@ -186,13 +186,13 @@ ARTICLES_LIST += [
 """),
         ],
         "faq": [
-            ("What is a normal range of motion for the hip?", "Orthopedic references list about 120 degrees of hip flexion, 30 degrees of extension, and 45 degrees of abduction, but these are averages that vary with age and hip anatomy."),
+            ("What is a normal range of motion for the hip?", "Orthopedic references list about 120 degrees of hip flexion, 30 degrees of extension, and 45 degrees of abduction, but these are published averages and studies differ."),
             ("How many degrees should my knee bend?", "A typical knee bends to roughly 135 degrees of flexion and straightens to 0 degrees. Some people reach 140 to 150 degrees; the key is full, pain-free extension."),
             ("What is normal neck rotation?", "About 60 degrees of rotation to each side is a common reference value. Rotation tends to decrease with age, so compare left to right and track your own trend."),
-            ("Is it bad if I do not reach the textbook number?", "Not necessarily. Norms are population guides, not cutoffs, and anatomy varies. A stable, pain-free range that meets your daily and training needs matters more than a chart."),
+            ("Is it bad if I do not reach the textbook number?", "Not necessarily. Norms are population guides, not cutoffs. A stable, pain-free range that meets your daily and training needs matters more than a chart."),
             ("How do I measure my own range of motion at home?", "Use a consistent method such as a tape test, a phone goniometer app, or photos from the same angle, warm up the same way each time, and compare against your own baseline."),
         ],
-        "related": ["mobility-vs-flexibility", "how-to-measure-range-of-motion-progress", "am-i-hypermobile-beighton", "knee-range-of-motion"],
+        "related": ["mobility-vs-flexibility", "how-to-measure-range-of-motion-progress", "beighton-score-explained", "knee-range-of-motion"],
     },
     {
         "slug": "how-long-to-hold-a-stretch",
@@ -311,7 +311,7 @@ ARTICLES_LIST += [
         "h1": "How to Improve Hip Mobility for Squats",
         "excerpt": "Why depth usually comes from range plus strength plus stance, not stretching alone, and when a pinch means stop.",
         "llm": "How-to for hip mobility for squats: add range, individualize stance and foot angle, and strengthen end range; escalate a sharp groin pinch.",
-        "answer": "<strong>Better hip mobility for squats comes from adding range and then strengthening it, not stretching alone.</strong> Deeper squatting usually needs a mix of hip and often ankle range plus strength through that range. Adjusting stance width and foot angle to fit your hip anatomy often unlocks depth immediately, while a sharp pinch in the front of the hip means assess, not force.",
+        "answer": "<strong>Better hip mobility for squats comes from adding range and then strengthening it, not stretching alone.</strong> Deeper squatting usually needs a mix of hip and often ankle range plus strength through that range. Trying a wider stance or turned-out toes often changes how deep you can squat right away, while a sharp pinch in the front of the hip means assess, not force.",
         "howto": {
             "name": "Build hip mobility for a deeper squat",
             "steps": [
@@ -336,8 +336,8 @@ ARTICLES_LIST += [
 <h3>Time in the bottom position</h3>
 <p>Accumulating relaxed time in a supported deep squat teaches the position and builds tolerance.</p>
 """ % {"dose": L_DOSE, "rom": L_ROMADAPT}),
-            ("Adjust stance and foot angle for your anatomy", """
-<p>Hip socket shape varies a lot between people, so there is no single correct stance. Widening the feet and turning the toes out often unlocks depth immediately by routing the thigh bones around the pelvis. This is individualization, not cheating.</p>
+            ("Try a different stance width and foot angle", """
+<p>Different stances feel best for different people, so there is no single correct stance. Widening the feet and turning the toes out often unlocks depth immediately by routing the thigh bones around the pelvis. Trying a few is individualization, not cheating.</p>
 """),
             ("Strengthen the new range so it sticks", """
 <p>Pause squats, tempo work, and full-range accessory lifts turn borrowed passive range into owned mobility. Without loading, gains fade.</p>
@@ -353,7 +353,7 @@ ARTICLES_LIST += [
             ("Why can't I squat deep even though I stretch?", "Because depth needs strength and control through range, not just passive length. If your stance does not fit your hips, or your ankles are limited, stretching alone will not fix it."),
             ("Are tight hips or tight ankles limiting my squat?", "Either can. Test ankle dorsiflexion with a knee-to-wall test and check hip range separately, then target whichever is actually short."),
             ("How long does it take to improve hip mobility?", "It varies by person and starting point. Stance changes can help immediately, while range and strength gains build over weeks of consistent, loaded work."),
-            ("Should I change my squat stance?", "Often yes. Widening the stance and turning the toes out to fit your hip anatomy frequently unlocks depth without any extra mobility work."),
+            ("Should I change my squat stance?", "Often yes. Widening the stance and turning the toes out frequently changes squat depth without any extra mobility work."),
             ("Is a pinch in my hip normal when squatting?", "A sharp pinch in the front of the hip is not something to force through. It can be structural, so have persistent or catching pain assessed by a clinician."),
         ],
         "related": ["ankle-dorsiflexion-for-squats", "hip-impingement-deep-squat", "full-vs-partial-range-of-motion", "hip-mobility-for-bjj"],
@@ -579,7 +579,7 @@ ARTICLES_LIST += [
 <div class="rx-note flag"><strong>Red flag.</strong> Temporarily reducing range to avoid a painful arc is reasonable, but persistent pain in a specific range warrants assessment rather than pushing through.</div>
 """),
             ("Assess your training range with ROMRx", """
-<p>Knowing your pain-free range for each joint tells you how far to load. ROMRx Base measures that range so your full-range work is genuinely full for your anatomy.</p>
+<p>Knowing your pain-free range for each joint tells you how far to load. ROMRx Base measures that range so your full-range work is genuinely full for your own measurements.</p>
 """),
         ],
         "faq": [
@@ -660,13 +660,13 @@ ARTICLES_LIST += [
         "h1": "Hip Pinch in a Deep Squat: Mobility or Hip Impingement?",
         "excerpt": "How to tell benign tightness from a structural cause, what often helps, and when a hip pinch needs a clinician.",
         "llm": "Explains hip impingement (FAI) versus tight hips in a deep squat, signs of a structural cause, simple adjustments that help, and escalation criteria.",
-        "answer": "<strong>A front-of-hip pinch at squat depth can be tightness, but it can also be hip impingement.</strong> Hip impingement (femoroacetabular impingement, or FAI) is a structural condition where extra bone changes joint shape and causes groin pain with squatting, twisting, and prolonged sitting. Simple changes like a wider stance, adjusted foot angle, and glute activation often help, but sharp, catching, or persistent pain should be assessed rather than forced through.",
+        "answer": "<strong>A front-of-hip pinch at squat depth can be tightness, but it can also be hip impingement.</strong> Hip impingement (femoroacetabular impingement, or FAI) is a structural condition of the hip joint that causes groin pain with squatting, twisting, and prolonged sitting. Simple changes like a wider stance, adjusted foot angle, and glute activation often help, but sharp, catching, or persistent pain should be assessed rather than forced through.",
         "sections": [
             ("What the pinch usually feels like", """
 <p>A mobility-type pinch is often a vague crowding at the front of the hip only at the very bottom of a squat, easing when you shift stance. A structural pinch tends to be sharper, more consistent, and can linger after training or with long sitting.</p>
 """),
             ("What hip impingement (FAI) is", """
-<p>According to <a href="%(fai)s">AAOS OrthoInfo</a>, FAI involves abnormal bone shape where the ball and socket rub, and groin pain with turning, twisting, and squatting is common; persistent symptoms need a doctor because delay can worsen joint damage. An <a href="%(aafp)s">AAFP review</a> notes anterolateral hip or groin pain aggravated by prolonged sitting, leaning forward, and pivoting.</p>
+<p>According to <a href="%(fai)s">AAOS OrthoInfo</a>, FAI is a structural condition of the hip joint where the ball and socket rub, and groin pain with turning, twisting, and squatting is common; persistent symptoms need a doctor because delay can worsen joint damage. An <a href="%(aafp)s">AAFP review</a> notes anterolateral hip or groin pain aggravated by prolonged sitting, leaning forward, and pivoting.</p>
 """ % {"fai": L_FAI, "aafp": L_AAFP}),
             ("Signs that suggest a structural cause", """
 <p><a href="%(sp)s">StatPearls</a> describes FAI classically presenting with gradual hip pain worsened by hip flexion and internal rotation, with non-operative measures tried first. Suggestive signs include:</p>
@@ -677,7 +677,7 @@ ARTICLES_LIST += [
 </ul>
 """ % {"sp": L_STATPEARLS}),
             ("Simple things that often help", """
-<p>Many people reduce a hip pinch by fitting the squat to their anatomy: widen the stance, turn the toes out, and focus on glute activation and knees tracking over the toes. Because hip socket shape varies, this individualization is legitimate, not cheating, and exercise does not cause FAI.</p>
+<p>Many people reduce a hip pinch by trying a different squat setup: widen the stance, turn the toes out, and focus on glute activation and knees tracking over the toes. Because comfort varies from person to person, this individualization is legitimate, not cheating, and exercise does not cause FAI.</p>
 """),
             ("What not to do", """
 <p>Do not aggressively force a painful end range or bounce in the bottom to "open" the hip. That tends to aggravate a structural pinch. Train the pain-free range you have while you sort out the cause.</p>
@@ -692,9 +692,9 @@ ARTICLES_LIST += [
         ],
         "faq": [
             ("Why does the front of my hip pinch when I squat?", "It can be soft-tissue tightness or activation issues, or a structural cause like hip impingement. A vague crowding that eases with stance changes is often benign; a sharp, catching, or lingering pinch may be structural."),
-            ("Is hip impingement the same as tight hips?", "No. Hip impingement (FAI) is a structural condition where bone shape changes the joint, whereas tight hips are a soft-tissue issue. They can feel similar, which is why persistent pain should be assessed."),
+            ("Is hip impingement the same as tight hips?", "No. Hip impingement (FAI) is a structural condition of the hip joint, whereas tight hips are a soft-tissue issue. They can feel similar, which is why persistent pain should be assessed."),
             ("Can I keep squatting with a hip pinch?", "Often you can train the pain-free range while you address it, using stance and foot-angle changes. Sharp, catching, or worsening pain is a reason to stop forcing depth and get evaluated."),
-            ("Does changing my stance help hip impingement?", "Adjusting stance width and foot angle to fit your hip anatomy frequently reduces a pinch. It does not cure a structural cause, but it lets many people train comfortably."),
+            ("Does changing my stance help hip impingement?", "Adjusting stance width and foot angle frequently reduces a pinch. It does not change the underlying cause, but it lets many people train comfortably."),
             ("When should I see a doctor for hip pain?", "See a clinician for sharp groin pain, catching, locking, giving way, or pain that persists despite activity changes. Early assessment of FAI helps protect the joint."),
         ],
         "related": ["hip-mobility-for-squats", "ankle-dorsiflexion-for-squats", "what-is-normal-range-of-motion", "hip-mobility-for-bjj"],
@@ -749,7 +749,7 @@ ARTICLES_LIST += [
         "faq": [
             ("Why can't I get my arms fully overhead?", "Usually a mix of tight lats and pecs, a stiff upper back, and limited end-range control. Because the thoracic spine contributes to overhead reach, shoulder work often stalls until the t-spine moves better."),
             ("Is it my shoulders or my upper back?", "Often both. Overhead reach needs shoulder flexion plus thoracic extension, so test each. If your arms cannot reach a wall overhead without arching the low back, address the upper back too."),
-            ("What is normal shoulder flexion?", "About 180 degrees on standard orthopedic charts, which is the overhead target. Norms are guides that vary with anatomy, so compare against your own baseline and side to side."),
+            ("What is normal shoulder flexion?", "About 180 degrees on standard orthopedic charts, which is the overhead target. Norms are population guides, so compare against your own baseline and side to side."),
             ("How long to improve overhead mobility?", "It varies. Consistent hangs, band work, and t-spine drills plus strengthening usually show change over several weeks, with control improving alongside range."),
             ("Could this be frozen shoulder?", "Possibly, if you have painful, progressive loss of both active and passive motion, night pain, or shrinking range in all directions. That pattern should be evaluated by a clinician rather than forced."),
         ],
@@ -850,7 +850,7 @@ ARTICLES_LIST += [
 """),
             ("When it might be nerve tension", """
 <div class="rx-note flag"><strong>Red flag.</strong> Pain that shoots down the leg, numbness, or tingling during a forward fold suggests possible nerve involvement rather than simple tightness, and warrants clinician evaluation.</div>
-<div class="rx-note"><strong>Nuance.</strong> Bony and proportional differences exist, but most healthy people improve with consistent training, so "some people just can't" is rarely the whole story.</div>
+<div class="rx-note"><strong>Nuance.</strong> Most healthy people see their number change with consistent training.</div>
 """),
             ("Track your forward fold with ROMRx", """
 <p>ROMRx Base gives you a repeatable baseline so you can see your forward fold improve over weeks instead of guessing from how the stretch feels on a given day.</p>
@@ -994,22 +994,22 @@ ARTICLES_LIST += [
             ("Is my stiffness from age or sitting?", "Often more from sitting and low movement variety than age itself. Increasing daily movement and full-range training usually reveals how much was reversible."),
             ("When is stiffness a medical issue?", "See a clinician for joint pain, swelling, morning stiffness lasting more than about 30 minutes, or asymmetric loss of range, which can indicate arthritis or other conditions."),
         ],
-        "related": ["how-long-to-hold-a-stretch", "full-vs-partial-range-of-motion", "am-i-hypermobile-beighton", "knee-range-of-motion"],
+        "related": ["how-long-to-hold-a-stretch", "full-vs-partial-range-of-motion", "beighton-score-explained", "knee-range-of-motion"],
     },
     {
-        "slug": "am-i-hypermobile-beighton",
+        "slug": "beighton-score-explained",
         "cluster": "Mobility Across Life",
         "kw": "beighton score",
-        "title": "Am I Hypermobile? The Beighton Score Explained",
-        "card": "Am I Hypermobile (Beighton)",
+        "title": "The Beighton Score Explained",
+        "card": "Beighton Score Explained",
         "meta": "Learn what joint hypermobility is, how the Beighton score works, how it differs from EDS, and when to see a clinician. This is screening, not diagnosis.",
-        "h1": "Am I Hypermobile? Understanding the Beighton Score",
-        "excerpt": "What hypermobility is, how the 9-point Beighton screen works, and why bendy does not always mean flexible.",
+        "h1": "The Beighton Score Explained: A 9-Point Joint Screen",
+        "excerpt": "How the 9-point Beighton screen works and what a score means.",
         "llm": "Explains joint hypermobility versus flexibility, the 9-point Beighton score and thresholds, the difference from HSD and hEDS, and when to seek assessment.",
         "answer": "<strong>The Beighton score is a 9-point screen for joint hypermobility, not a diagnosis.</strong> Hypermobility means lax joints and is common, while flexibility refers to muscle length, and the two do not always coincide. A positive Beighton score is 5 or more in adults (4 or more over age 50, 6 or more in children), but hypermobility only becomes a spectrum disorder or hEDS when specific additional criteria are met, which requires clinician assessment.",
         "sections": [
             ("Hypermobility vs flexibility", """
-<p>These are different things. Hypermobility describes joints that move beyond the typical range because of ligament laxity; flexibility describes how far muscles lengthen. You can be hypermobile in some joints yet feel muscularly stiff, because muscles often tighten to stabilize lax joints.</p>
+<p>These are different things. Hypermobility describes joints that move beyond the typical range because of ligament laxity; flexibility describes how far muscles lengthen. A high Beighton score and feeling stiff in some stretches can happen together, because muscles often tighten to stabilize lax joints.</p>
 """),
             ("The Beighton score, a 9-point screen", """
 <p>The <a href="%(eds)s">Ehlers-Danlos Society</a> describes the 9-point Beighton system and its positive thresholds: 5 or more in adults, 4 or more over age 50, and 6 or more in children.</p>
@@ -1027,23 +1027,23 @@ ARTICLES_LIST += [
             ("Hypermobility vs HSD vs hEDS", """
 <p>Most hypermobility is harmless. <a href="%(mo)s">Missouri Medicine</a> notes about 10 to 30 percent of people have some joint hypermobility, but only about 1 in 500 meet criteria for hypermobility spectrum disorder or hypermobile Ehlers-Danlos syndrome. Per <a href="%(gr)s">GeneReviews</a>, hEDS requires generalized joint hypermobility plus systemic, family, and musculoskeletal criteria and exclusion of other conditions.</p>
 """ % {"mo": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11578560/", "gr": "https://www.ncbi.nlm.nih.gov/books/NBK1279/"}),
-            ("Why hypermobile does not always mean flexible", """
-<p>Because muscles often tense to protect lax joints, some hypermobile people feel tight. This is why chasing more passive flexibility can backfire, and why strength and control usually matter more.</p>
+            ("Why a high score does not always mean flexible", """
+<p>Muscles often tense around lax joints, so a high score can come with a smaller stretch range. This is why chasing more passive flexibility can backfire, and why strength and control usually matter more.</p>
 """),
             ("Training considerations", """
-<p>For hypermobile people, the priority is strength and control through range rather than pushing into ever-greater passive range. Building stability around the joints tends to reduce the achy, unstable feeling.</p>
+<p>If your Beighton score reads high, strength and control through range are a common focus rather than pushing into ever-greater passive range. Ask a clinician about your result. Building stability around the joints tends to reduce the achy, unstable feeling.</p>
 <div class="rx-note flag"><strong>Red flags.</strong> Recurrent dislocations or subluxations, chronic widespread pain, easy bruising, or skin or vascular signs warrant medical evaluation. This article screens and educates, it does not diagnose.</div>
 """),
             ("Build stability around your range with ROMRx", """
-<p>ROMRx Base focuses on usable, controlled range, which is exactly what hypermobile people benefit from, so your plan builds stability rather than chasing more laxity.</p>
+<p>ROMRx Base focuses on usable, controlled range, so your plan builds stability rather than chasing more laxity.</p>
 """),
         ],
         "faq": [
             ("What is a positive Beighton score?", "5 or more out of 9 in adults, 4 or more over age 50, and 6 or more in children. It is a screening threshold for generalized joint hypermobility, not a diagnosis on its own."),
-            ("Is hypermobility the same as being flexible?", "No. Hypermobility is joint laxity; flexibility is muscle length. You can be hypermobile yet feel muscularly stiff, because muscles often tighten to stabilize lax joints."),
+            ("Is hypermobility the same as being flexible?", "No. Hypermobility is joint laxity; flexibility is muscle length. A high Beighton score and feeling stiff in some stretches can happen together, because muscles often tighten to stabilize lax joints."),
             ("Does hypermobility mean I have EDS?", "Usually not. Some joint hypermobility is common, but only a small fraction of people meet criteria for hypermobility spectrum disorder or hEDS, which requires clinician assessment."),
-            ("Can you be hypermobile but not flexible?", "Yes. Muscles often tense to protect lax joints, so a hypermobile person can score high on the Beighton screen yet feel tight in everyday stretching."),
-            ("Should hypermobile people stretch or strengthen?", "Strength and control through range are usually the priority over pushing into more passive range. Building stability around the joints tends to help more than aggressive stretching."),
+            ("Can you score high on the Beighton screen and still feel stiff?", "Yes. Muscles often tense to protect lax joints, so a high Beighton score can come with feeling tight in everyday stretching."),
+            ("If my Beighton score is high, do I stretch or strengthen?", "Strength and control through range are usually the priority over pushing into more passive range. Building stability around the joints tends to help more than aggressive stretching."),
         ],
         "related": ["mobility-vs-flexibility", "one-side-more-flexible-asymmetry", "what-is-normal-range-of-motion", "does-flexibility-decline-with-age"],
     },
@@ -1091,7 +1091,7 @@ ARTICLES_LIST += [
             ("How big a difference is a problem?", "Small differences are normal. A large, painful, or newly appeared asymmetry, or one with weakness, numbness, or swelling, is worth having assessed."),
             ("Can lifting cause asymmetry?", "A dominant side or uneven technique can create modest differences over time. Unilateral work and starting sets with the weaker side help keep the gap small."),
         ],
-        "related": ["am-i-hypermobile-beighton", "hip-mobility-for-squats", "how-to-measure-range-of-motion-progress", "overhead-shoulder-mobility"],
+        "related": ["beighton-score-explained", "hip-mobility-for-squats", "how-to-measure-range-of-motion-progress", "overhead-shoulder-mobility"],
     },
     {
         "slug": "hip-mobility-for-bjj",
@@ -1248,7 +1248,7 @@ XREF = {
         ("full pain-free range", "full-vs-partial-range-of-motion"),
         ("asymmetric loss of range", "one-side-more-flexible-asymmetry"),
     ],
-    "am-i-hypermobile-beighton": [
+    "beighton-score-explained": [
         ("how far muscles lengthen", "mobility-vs-flexibility"),
         ("strength and control through range", "full-vs-partial-range-of-motion"),
         ("laxity decreases with age", "does-flexibility-decline-with-age"),
