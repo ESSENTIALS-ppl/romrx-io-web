@@ -4,6 +4,7 @@
   "scripts": {
     "test:gpc": "node scripts/gpc-consent-unit.mjs",
     "test:header": "node scripts/header-universe-unit.mjs",
-    "test": "npm run test:header && npm run test:gpc"
+    "test": "npm run test:header && npm run test:cards && npm run test:gpc",
+    "test:cards": "node scripts/universe-cards-unit.mjs"
   }
 }

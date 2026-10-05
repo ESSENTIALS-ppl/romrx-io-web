@@ -84,12 +84,13 @@ const RX_PACK_SITES = {
   hyb:  { url: 'https://romrxhybrid.com', live: true },
   yoga: { url: 'https://romrxyoga.com', live: true },
   bjj:  { url: 'https://romrxbjj.com', live: true },
-  bb:   { url: 'https://romrxbodybuilding.com', live: true },
+  // BB points at Base signup until bb-web #37 (pack holders get into the BB app) is live (Stacy, Oct 5 2026).
+  bb:   { url: 'https://romrx.io/app/signup', live: true },
 };
 window.RX_PACK_SITES = RX_PACK_SITES;
 
 /* ALL pack card copy lives here, ONE place (Jim, Stacy, Kai, Grant: Oct 4 2026).
-   To swap copy (for example Kai's audience-voice descriptions) edit this object only.
+   To swap copy edit this object only. Card lines (desc): UNIVERSE-CARDS-FINAL-V3 recommended lines, Jim GO Oct 5 2026 (BB generator alt on HOLD).
    Used by the /universe cards (universe.html builds them from here) and the shared
    footer grid (RX_UNIVERSE below).
      packs.<key>   name (the "+Pack" accent), beta (true = green beta chip, false = COMING SOON),
@@ -118,15 +119,15 @@ const RX_PACK_COPY = {
   ],
   order: ['bjj', 'bb', 'pl', 'mma', 'mil', 'fr', 'cali', 'hyb', 'yoga'],
   packs: {
-    bjj: { name: 'BJJ', beta: true, proto: 'Position Readiness Protocol™', desc: 'See which BJJ positions and techniques your results line up with. Green (train), Yellow (modify), Red (skip today). Adapt your rolls to your current ROM. For athletes, coaches, and academies.' },
-    bb: { name: 'BodyBuilding', beta: true, proto: 'Exercise Readiness Protocol™', desc: 'See which lifts and accessory exercises your results line up with. Green (load it), Yellow (modify), Red (skip). Program your hypertrophy work around real ROM data. For athletes, trainers, and gyms.' },
-    pl: { name: 'Powerlifting', beta: false, sub: 'Squat, bench press and deadlift', desc: 'The Base ROM, applied to the squat, bench press and deadlift.' },
-    mma: { name: 'MMA', beta: false, sub: 'Takedown, ground and striking', desc: 'The Base ROM, applied to takedown, ground and striking movements.' },
-    mil: { name: 'Military', beta: false, sub: 'Fitness test and advanced training', desc: 'Train for your fitness test. Train for the next level.' },
-    fr: { name: 'FirstResponder', beta: false, sub: 'Lifts, carries, drags and climbs', desc: 'The Base ROM, applied to lifts, carries, drags and climbs on the job.' },
-    cali: { name: 'Calisthenics', beta: false, sub: 'Handstand, squat and straddle', desc: 'The Base ROM, applied to handstand, squat and straddle movements.' },
-    hyb: { name: 'Hybrid', beta: false, sub: 'Lift, carry, run and row', desc: 'A hybrid training pack. The Base ROM, applied to lift, carry, run and row movements.' },
-    yoga: { name: 'Yoga', beta: true, proto: 'Pose Readiness Protocol™', desc: 'Asana readiness by ROM. Modify or advance poses based on your own Base numbers. For practitioners, instructors, and studios.' },
+    bjj: { name: 'BJJ', beta: true, proto: 'Position Readiness Protocol™', desc: 'Mat time is what you want. Your numbers, mapped to 130+ techniques across five position groups.' },
+    bb: { name: 'BodyBuilding', beta: true, proto: 'Exercise Readiness Protocol™', desc: 'Growing muscle is the goal. Start with a range-of-motion measurement you take yourself, at home.' },
+    pl: { name: 'Powerlifting', beta: false, sub: 'Squat, bench press and deadlift', desc: 'Lifters chase depth, lockouts and a bigger total. Where does your range sit on the squat, bench press and deadlift?' },
+    mma: { name: 'MMA', beta: false, sub: 'Takedown, ground and striking', desc: 'Want to get sharper standing and on the ground? What you measure on your phone gets set beside takedown, ground and striking movements.' },
+    mil: { name: 'Military', beta: false, sub: 'Fitness test and advanced training', desc: 'The run, the ruck, the lift: what you train for. Five movements, one mobility assessment: run, ruck, lift, carry and crawl.' },
+    fr: { name: 'FirstResponder', beta: false, sub: 'Lifts, carries, drags and climbs', desc: 'On the job, you want strong lifts, carries, drags and climbs. Measure at home so each of those has a number beside it.' },
+    cali: { name: 'Calisthenics', beta: false, sub: 'Handstand, squat and straddle', desc: 'Handstand, hang or squat, you are earning the next skill. Each one sits next to a measurement you took yourself.' },
+    hyb: { name: 'Hybrid', beta: false, sub: 'Lift, carry, run and row', desc: 'One week, run days and lift days. Run, row, lift, carry and squat all read from one mobility assessment.' },
+    yoga: { name: 'Yoga', beta: true, proto: 'Pose Readiness Protocol™', desc: 'To deepen your practice, find poses by focus. See how each one sits with what you measured.' },
   },
 };
 window.RX_PACK_COPY = RX_PACK_COPY;
