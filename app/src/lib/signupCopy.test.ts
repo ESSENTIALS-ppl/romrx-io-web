@@ -28,7 +28,11 @@ describe('signup copy (Stacy, Oct 5)', () => {
   it('checkbox starts unchecked and blocks Create account until checked; age still required', () => {
     expect(s).toMatch(/useState\(false\)/)
     expect(s).toMatch(/const \[agreedToTerms, setAgreedToTerms\] = useState\(false\)/)
-    expect(s).toMatch(/disabled=\{loading \|\| !agreedToTerms \|\| !ageBucket\}/)
+    // Oct 5 fix: the button stays tappable (disabled only while loading) and looks inactive until
+    // both are done; a tap scrolls to the missing field and the submit handler still refuses.
+    expect(s).toMatch(/disabled=\{loading\}/)
+    expect(s).toMatch(/aria-disabled=\{missing\.length > 0 \? true : undefined\}/)
+    expect(s).toContain("if (!agreedToTerms) { setError('You must agree to the Terms of Service to continue.'); return }")
     expect(s).toContain("if (!ageBucket) { setError('Age group is required.'); return }")
   })
 
