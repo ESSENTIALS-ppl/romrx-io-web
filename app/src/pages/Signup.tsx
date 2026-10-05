@@ -235,7 +235,7 @@ export function Signup() {
               ref={ageRef}
               value={ageBucket}
               onChange={e => { setAgeBucket(e.target.value); if (e.target.value && highlight === 'age') setHighlight(null) }}
-              className={cn('input', highlight === 'age' && !ageBucket && 'ring-2 ring-red-500 border-red-500')}
+              className={cn('input', highlight === 'age' && !ageBucket && 'ring-2 ring-red-500 border-red-500 focus:ring-red-500 focus:border-red-500')}
               aria-invalid={highlight === 'age' && !ageBucket ? true : undefined}
               data-testid="signup-age"
               required
