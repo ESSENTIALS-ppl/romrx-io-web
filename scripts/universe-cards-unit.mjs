@@ -12,6 +12,7 @@ const sites = vm.runInNewContext('(' + src.match(/const RX_PACK_SITES = (\{[\s\S
 let fails = 0;
 const ok = (c, msg) => { if (c) console.log('ok   ' + msg); else { fails++; console.error('FAIL ' + msg); } };
 
+// BB button back on romrxbodybuilding.com once bb-web #37 is live (Grant, Oct 5 2026).
 const FINAL = {
   yoga: 'To deepen your practice, find poses by focus. See how each one sits with what you measured.',
   bjj: 'Mat time is what you want. Your numbers, mapped to 130+ techniques across five position groups.',
@@ -29,9 +30,9 @@ for (const [k, line] of Object.entries(FINAL)) {
   ok(!/\bbase\b/i.test(d || ''), k + ': no word "base"');
   ok(!/[\u2013\u2014]/.test(d || ''), k + ': no em or en dash');
   ok(!/generator|mesocycle/i.test(d || ''), k + ': no generator or mesocycle (BB alt on HOLD)');
-  if (k === 'bb') ok(sites.bb && sites.bb.url === 'https://romrx.io/app/signup' && sites.bb.live, 'bb: button goes to Base signup until bb-web #37 is live (Stacy)');
-  else ok(sites[k] && /^https:\/\/romrx[a-z]+\.com$/.test(sites[k].url) && sites[k].live, k + ': pack site url is https apex, live');
+  ok(sites[k] && /^https:\/\/romrx[a-z]+\.com$/.test(sites[k].url) && sites[k].live, k + ': pack site url is https apex, live');
 }
+ok(sites.bb.url === 'https://romrxbodybuilding.com' && sites.bb.live, 'bb: button goes to romrxbodybuilding.com');
 ok(Object.keys(C.packs).length === 9 && C.order.length === 9, '9 packs, 9 in order');
 ok(new Set(Object.values(FINAL).map((l) => l.split(' ')[0])).size === 9, 'all 9 lines open differently');
 ok((C.footnote.match(/18 and older/g) || []).length === 1, 'one "18 and older" in the footnote');

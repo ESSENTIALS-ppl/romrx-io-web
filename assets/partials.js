@@ -84,8 +84,7 @@ const RX_PACK_SITES = {
   hyb:  { url: 'https://romrxhybrid.com', live: true },
   yoga: { url: 'https://romrxyoga.com', live: true },
   bjj:  { url: 'https://romrxbjj.com', live: true },
-  // BB points at Base signup until bb-web #37 (pack holders get into the BB app) is live (Stacy, Oct 5 2026).
-  bb:   { url: 'https://romrx.io/app/signup', live: true },
+  bb:   { url: 'https://romrxbodybuilding.com', live: true },
 };
 window.RX_PACK_SITES = RX_PACK_SITES;
 
