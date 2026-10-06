@@ -95,11 +95,11 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - **Partner (optional)**: A partner can help. They hold the phone and tap the buttons while you move.
 
 #### Hip External Rotation (`hip_er`)
-- Meter grip: Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf. **[pending Stacy]**
+- Meter grip: Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf. **[Stacy PASS Oct 6 11:45]**
 - Setup:
   1. Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.
-  2. Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf. **[pending Stacy]**
-  3. Tap Start, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end. **[pending Stacy]**
+  2. Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf. **[Stacy PASS Oct 6 11:45]**
+  3. Tap Start, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end. **[Stacy PASS Oct 6 11:45]**
 - How to Measure:
   1. Keep your knee bent and both hips down. Slowly swing your foot INWARD, toward your other leg. Your foot moves only sideways.
   2. Stop at a firm stretch or when your thigh starts to lift off the chair. Hold still: after 2.5 seconds the number locks and chimes.
@@ -213,7 +213,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 
 | # | Movement | Fields (L/R or parts) | Old input | New input | Grip in the meter |
 |---|---|---|---|---|---|
-| 1 | Hip External Rotation | Left (hip_er_l, °), Right (hip_er_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf. **[pending Stacy]** |
+| 1 | Hip External Rotation | Left (hip_er_l, °), Right (hip_er_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf. **[Stacy PASS Oct 6 11:45]** |
 | 2 | Hip Internal Rotation | Left (hip_ir_l, °), Right (hip_ir_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin. |
 | 3 | Shoulder External Rotation | Left (shoulder_er_l, °), Right (shoulder_er_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone in your hand, lined up with your forearm, on its edge with the screen facing your head. |
 | 4 | Shoulder Flexion | Left (shoulder_flex_l, °), Right (shoulder_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone in your hand, long edge along your arm, screen facing out to the side. |
@@ -228,7 +228,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 
 ## Hip External Rotation (`hip_er`)
 
-Meter: YES, grip line: Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf. **[pending Stacy]**
+Meter: YES, grip line: Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf. **[Stacy PASS Oct 6 11:45]**
 
 ### Tool line
 - **Old:** iPhone: Measure app -> Level. Android: Simple Inclinometer. Firm chair.
@@ -244,8 +244,8 @@ Meter: YES, grip line: Phone flat on your inner calf, just below the knee. Scree
 **New:**
 
 1. Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.
-2. Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf. **[pending Stacy]**
-3. Tap Zero, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end. **[pending Stacy]**
+2. Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf. **[Stacy PASS Oct 6 11:45]**
+3. Tap Zero, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end. **[Stacy PASS Oct 6 11:45]**
 
 ### How to Measure
 **Old:**
@@ -274,7 +274,7 @@ Meter: YES, grip line: Phone flat on the front of your shin, just below the knee
 
 ### Tool line
 - **Old:** Same chair, same phone placement - only the foot direction changes.
-- **New:** Same chair. Phone on the front of your shin. Only the foot direction changes. **[pending Stacy]** (was: Same chair, same phone spot. Only the foot direction changes.)
+- **New:** Same chair. This time, hold the phone flat on the front of your shin. **[Stacy PASS Oct 6 11:45]** (was: Same chair, same phone spot. Only the foot direction changes.)
 
 ### Setup
 **Old:**
@@ -726,20 +726,21 @@ Zero now starts a 5-4-3-2-1 countdown on every meter step, shown big in place of
 
 ---
 
-## Update: Hip ER phone on the inner calf (Jim, Oct 6, 11:36 AM) [pending Stacy]
+## Update: Hip ER phone on the inner calf (Jim, Oct 6, 11:36 AM) [Stacy PASS Oct 6 11:45]
 
 Jim: move the Hip External Rotation phone spot from the front of the shin to flat on the inner calf, and zero it there. The phone can slip on the front of the shin as the foot moves inward; it stays put flat on the inner calf. Hip Internal Rotation is NOT changed (still on the front of the shin) until Jim decides. Only the words that name the phone spot changed. Meter math is unchanged: it reads the gravity angle since zero, which gives the same number for this movement with the screen facing forward (shin) or sideways (inner calf).
 
-- **Hip External Rotation** (meter grip) **[pending Stacy]**
+- **Hip External Rotation** (meter grip) **[Stacy PASS Oct 6 11:45]**
   - Was: Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.
   - Now: Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf.
-- **Hip External Rotation** (position, line 2) **[pending Stacy]**
+- **Hip External Rotation** (position, line 2) **[Stacy PASS Oct 6 11:45]**
   - Was: Hold your phone flat on the FRONT of your shin, just below the knee. The screen faces forward and the long edge runs along your shinbone.
   - Now: Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf.
-- **Hip External Rotation** (position, line 3, the zero cue) **[pending Stacy]**
+- **Hip External Rotation** (position, line 3, the zero cue) **[Stacy PASS Oct 6 11:45]**
   - Was: Tap Start, then hold your shin straight up and down and stay still while it counts down from 5. It zeroes at the end.
   - Now: Tap Start, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end.
 - Not changed: Hip ER common mistake ("Your thigh rotates instead of just your shin.") is about the leg, not the phone spot.
-- **Hip Internal Rotation** (tool line) **[pending Stacy]**: the old line said the phone spot was the same as Hip ER, which is no longer true. The Hip IR phone spot itself is not moved.
+- **Hip Internal Rotation** (tool line) **[Stacy PASS Oct 6 11:45]**: the old line said the phone spot was the same as Hip ER, which is no longer true. The Hip IR phone spot itself is not moved.
   - Was: Same chair, same phone spot. Only the foot direction changes.
-  - Now: Same chair. Phone on the front of your shin. Only the foot direction changes.
+  - Interim draft (not shipped, replaced Oct 6 11:45): Same chair. Phone on the front of your shin. Only the foot direction changes.
+  - Now: Same chair. This time, hold the phone flat on the front of your shin. (Stacy's edit)

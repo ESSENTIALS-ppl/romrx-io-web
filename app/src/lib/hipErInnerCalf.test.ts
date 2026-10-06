@@ -150,7 +150,7 @@ describe('hip_ir: phone still on the front of the shin (unchanged)', () => {
   it('hip_ir phone spot is unchanged: still the front of the shin; tool line no longer says same spot as hip ER', () => {
     const ir = STEPS.find(s => s.id === 'hip_ir')!
     expect(ir.meter?.grip).toBe('Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.')
-    expect(ir.tool).toBe('Same chair. Phone on the front of your shin. Only the foot direction changes.')   // pending Stacy
+    expect(ir.tool).toBe('Same chair. This time, hold the phone flat on the front of your shin.')   // Stacy PASS Oct 6 11:45
     expect(ir.tool).not.toMatch(/same phone spot/i)
     expect(ir.position).toEqual([
       'Stay in the same chair and the same position.',
@@ -160,7 +160,7 @@ describe('hip_ir: phone still on the front of the shin (unchanged)', () => {
   })
 })
 
-describe('hip_er copy (Jim, Oct 6, 11:36 AM; pending Stacy)', () => {
+describe('hip_er copy (Jim, Oct 6, 11:36 AM; Stacy PASS Oct 6 11:45)', () => {
   const er = STEPS.find(s => s.id === 'hip_er')!
   it('grip and setup say the phone goes flat on the inner calf, zeroed there', () => {
     expect(er.meter?.grip).toBe('Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf.')

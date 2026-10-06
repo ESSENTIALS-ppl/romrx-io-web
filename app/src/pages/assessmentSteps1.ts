@@ -18,7 +18,7 @@ export const STEPS_PART1: Step[] = [
     ],
     mistake: 'Your thigh rotates instead of just your shin.',
     mistakeFix: 'Press one hand gently on your thigh to hold it still. Only the lower leg moves.',
-    // Jim, Oct 6 11:36 AM: phone on the inner calf (it can slip on the shin as the foot moves inward). Copy pending Stacy.
+    // Jim, Oct 6 11:36 AM: phone on the inner calf (it can slip on the shin as the foot moves inward). Stacy PASS Oct 6 11:45.
     meter: { grip: 'Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf.' },
     fields: [
       { key: 'hip_er_l', label: 'Left', unit: '°', normalLow: 29, normalHigh: 43, riskBelow: 40, rangeSource: 'Simoneau et al., 1998' },
@@ -29,8 +29,8 @@ export const STEPS_PART1: Step[] = [
     id: 'hip_ir',
     title: 'Hip Internal Rotation',
     why: 'Supports hip escapes and rotational movement.',
-    // Was 'Same chair, same phone spot.' Hip ER moved to the inner calf (Jim, Oct 6), so the spot differs now. Pending Stacy.
-    tool: 'Same chair. Phone on the front of your shin. Only the foot direction changes.',
+    // Was 'Same chair, same phone spot.' Hip ER moved to the inner calf (Jim, Oct 6), so the spot differs now. Stacy PASS Oct 6 11:45.
+    tool: 'Same chair. This time, hold the phone flat on the front of your shin.',
     position: [
       'Stay in the same chair and the same position.',
       'Keep your phone flat on the front of your shin, just below the knee, screen facing forward.',
