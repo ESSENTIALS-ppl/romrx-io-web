@@ -90,7 +90,7 @@ describe('hip flexion copy (Stacy rules)', () => {
     expect(HIP_FLEX_STEP.meterGrip).toBe('Phone on your mid-thigh.')
     // Kept unchanged
     expect(HIP_FLEX_STEP.why).toBe('You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.')
-    expect(HIP_FLEX_STEP.tool).toBe('Your phone. Lying on the floor. A partner is helpful.')
+    expect(HIP_FLEX_STEP.tool).toBe('Your phone. Lying on the floor.')
     expect(HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 60-80°')
     expect(HIP_FLEX_RANGE_SOURCE).toBe('Source: Youdas et al., 2005')
     const step = STEPS.find(s => s.id === 'hip_flex')!

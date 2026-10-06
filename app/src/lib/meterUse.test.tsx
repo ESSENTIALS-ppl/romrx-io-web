@@ -282,7 +282,7 @@ describe('phone meter in the Base measure screen', () => {
     ;(window as unknown as { DeviceOrientationEvent: { requestPermission?: unknown } }).DeviceOrientationEvent.requestPermission = () => Promise.resolve('denied')
     mount(SER)
     click(btn('Turn on the meter')); await flush()
-    expect(host.textContent).toContain('Motion access is off. Type your number in the box. To use the meter, close and reopen your browser, then tap Allow when asked.')
+    expect(host.textContent).toContain('Motion access is off. To use the meter, close and reopen your browser, then tap Allow when asked.')
     expect($('#m-shoulder_er_l')).toBeTruthy()
   })
 
@@ -291,7 +291,7 @@ describe('phone meter in the Base measure screen', () => {
     Object.defineProperty(navigator, 'userAgent', { value: 'Mozilla/5.0 (iPhone) Instagram 300.0', configurable: true })
     ;(window as unknown as { DeviceOrientationEvent: { requestPermission?: unknown } }).DeviceOrientationEvent.requestPermission = () => Promise.resolve('denied')
     mount(SER)
-    const line = 'The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box.'
+    const line = 'The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome.'
     expect($('[data-inapp-note]')!.textContent).toBe(line)
     click(btn('Turn on the meter')); await flush()
     expect(host.textContent).toContain(line)
@@ -302,7 +302,7 @@ describe('phone meter in the Base measure screen', () => {
     mount(SER)
     click(btn('Turn on the meter')); await flush()
     act(() => { vi.advanceTimersByTime(2600) })
-    expect(host.textContent).toContain('This device is not sending motion readings, so type your number in the box.')
+    expect(host.textContent).toContain('This device is not sending motion readings.')
   })
 
   it('no touch screen (desktop): no meter, a short typing note, inputs present', () => {

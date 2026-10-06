@@ -39,13 +39,13 @@ describe('phone meter copy', () => {
     expect(METER_COPY.nextReady('Right')).toBe('Right side ready. Get in position and tap Start.')
     expect(METER_COPY.nextReady('Left')).toBe('Left side ready. Get in position and tap Start.')
     expect(METER_COPY.allSaved(['Left', 'Right'])).toBe('Both sides saved.')
-    expect(METER_COPY.denied).toBe('Motion access is off. Type your number in the box. To use the meter, close and reopen your browser, then tap Allow when asked.')
-    expect(METER_COPY.inApp).toBe('The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box.')
+    expect(METER_COPY.denied).toBe('Motion access is off. To use the meter, close and reopen your browser, then tap Allow when asked.')
+    expect(METER_COPY.inApp).toBe('The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome.')
     expect(METER_COPY.typicalRange(40, 60)).toBe('Typical range: 40-60°')
     expect(METHOD_LINE).toBe('Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.')   // Grant Option A
     const setup = SETUP_STEPS.map(s => s.detail)
-    expect(setup).toContain("Can't use the meter? Type your number in the box.")
-    expect(setup).toContain('A partner can help. They hold the phone and tap the buttons while you move.')
+    expect(setup.join(' ')).not.toMatch(/type your number|typing is always/i)   // Jim, Oct 6 12:12 PM
+    expect(setup.join(' ')).not.toMatch(/partner/i)                              // Jim, Oct 6 12:13 PM
   })
   it('no meter step or setup line says "Zero" any more', () => {
     const meterSteps = STEPS.filter(s => s.meter).flatMap(s => [s.tool, ...s.position, ...s.howTo, s.meter?.grip ?? ''])

@@ -72,7 +72,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - Setup tip "Your phone is the meter" (Reid, Oct 5): countdown sentence removed so it no longer repeats the Option A method line. Now: "On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps." (removal only, no new wording)
 - Behavior (no copy change): "Use this number" is disabled from the Start tap, through the countdown and GO, until the number locks; Reset unlocks and disables it again. Typing stays available.
 - "Personal Readiness Profile" on done screens + lead email: NOT changed (Sunday Protocol pass).
-- Setup box label "Typing is always OK" kept; its text is Stacy's line. Label "Partner (recommended)" -> "Partner (optional)" [NEW].
+- Setup box label "Typing is always OK" kept; its text is Stacy's line. (Both this box and the second-person box were removed Oct 6, see the 12:12 / 12:13 update at the end.)
 - Low-back step (only visible when the low-back flag is OFF, i.e. production at the 6 AM ship; with the flag ON it is gone). Grant call: names no app. Stacy PASS, Oct 5 11:32 PM:
   | Line | Old | New |
   |---|---|---|
@@ -92,7 +92,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 #### Setup boxes (changed ones)
 - **Your phone is the meter**: On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.
 - **Typing is always OK**: Can't use the meter? Type your number in the box.
-- **Partner (optional)**: A partner can help. They hold the phone and tap the buttons while you move.
+- (Second-person setup box: removed, Jim Oct 6 12:13 PM.)
 
 #### Hip External Rotation (`hip_er`)
 - Meter grip: Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf. **[Stacy PASS Oct 6 11:45]**
@@ -206,7 +206,7 @@ Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this
   3. Place the tip of your big toe at the 10 cm mark on the tape to start. Your hands may rest on the wall.
 - How to Measure:
   1. Bend the knee over the test foot and drive it forward toward the wall, over your second and third toes. Do not let the knee cave inward. Keep your heel flat on the floor.
-  2. Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched, or ask a friend to watch.
+  2. Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched.
   3. Move your foot closer or farther from the wall until you find the farthest spot where your knee still just touches the wall with the heel down. Measure from the wall to the tip of your big toe. Record it in centimeters (cm), not degrees.
   4. Do 3 tries on this foot and record the best one (the farthest distance that still counts). Repeat with the other foot.
 - Range label: none (screen shows "Best of 3, in cm")
@@ -348,7 +348,7 @@ Meter: YES, grip line: Phone in your hand, lined up with your forearm, on its ed
 **Old:**
 
 1. Keep your elbow in the same spot. Rotate your forearm upward, allowing your shoulder to turn until you feel a strong stretch.
-2. Read the number or have a partner read it.
+2. Read the number. (old line; second-person clause removed from this history Oct 6)
 3. Record the number. Re-zero and repeat with the opposite arm.
 
 **New:**
@@ -494,8 +494,8 @@ Meter: YES, grip line: Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** (wa
 Current copy below is Jim's Oct 6 12:07 PM decision (no hand, no low back). The Old lines are history.
 
 ### Tool line
-- **Old:** iPhone: Measure -> Level. Android: Simple Inclinometer. Lying on the floor. A partner is helpful.
-- **New:** Your phone. Lying on the floor. A partner is helpful.
+- **Old:** iPhone: Measure -> Level. Android: Simple Inclinometer. Lying on the floor. (plus a second-person sentence, removed Oct 6)
+- **New:** Your phone. Lying on the floor. (Jim, Oct 6 12:13 PM: second-person sentence removed)
 
 ### Setup
 **Old:**
@@ -619,7 +619,7 @@ Meter: NO (typed entry only)
 ### How to Measure
 (unchanged)
 1. Bend the knee over the test foot and drive it forward toward the wall, over your second and third toes. Do not let the knee cave inward. Keep your heel flat on the floor.
-2. Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched, or ask a friend to watch.
+2. Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched.
 3. Move your foot closer or farther from the wall until you find the farthest spot where your knee still just touches the wall with the heel down. Measure from the wall to the tip of your big toe. Record it in centimeters (cm), not degrees.
 4. Do 3 tries on this foot and record the best one (the farthest distance that still counts). Repeat with the other foot.
 
@@ -646,19 +646,19 @@ Meter: NO (typed entry only)
 
 - **iPhone:** Open the Measure app (pre-installed on all iPhones). Tap Level at the bottom. You will see a number in degrees that changes as you tilt the phone - that is your angle.
 - **Android:** Download "Simple Inclinometer" by Syleos Apps, free on Google Play. Open it and you will see your angle in degrees, just like a digital level.
-- **Partner (recommended):** A partner makes this much easier - they hold the phone and read the angle while you focus on moving. You can do it solo using the screenshot tip on each step.
+- (Second-person setup box, removed Oct 6.)
 - **Warm up first - 5 minutes:** 1) Walk or march in place for 2 minutes. 2) Arm circles - 10 forward, 10 backward. 3) Hip circles - big loops with your hips like a hula hoop, 10 each way. 4) Leg swings - hold a wall, swing each leg front-to-back 10 times then side-to-side 10 times. 5) Slow neck turns - look left and right, 5 times each way. Wear shorts and a t-shirt.
 - **Solo tip:** When you cannot tap the screen: say "Hey Siri, take a screenshot" (iPhone) or "Hey Google, take a screenshot" (Android). Read the number right after.
-- **Skip is always OK:** If a position is too difficult or you need a partner for a step and do not have one, tap Skip. Your score is based on what you completed. You can always come back and fill in any skipped measurements later.
+- **Skip is always OK:** If a position is too difficult, tap Skip. Your score is based on what you completed. You can always come back and fill in any skipped measurements later.
 
 **New:**
 
 - **Your phone is the meter:** On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Zero, and hold still for the 5-second countdown. Then move and hold still. The number locks with a soft chime. Tap Use this number to fill it in. Turn your ringer on to hear the chime.
 - **Typing is always OK:** You can type any number yourself. If the phone meter is not available, use the Measure app (tap Level) on iPhone or the free "Simple Inclinometer" app by Syleos Apps on Android, then type the number. The low back step uses one of these apps.
-- **Partner (recommended):** A partner makes this much easier - they hold the phone and tap the buttons while you focus on moving.
+- (Second-person setup box, removed Oct 6.)
 - **Warm up first - 5 minutes:** 1) Walk or march in place for 2 minutes. 2) Arm circles - 10 forward, 10 backward. 3) Hip circles - big loops with your hips like a hula hoop, 10 each way. 4) Leg swings - hold a wall, swing each leg front-to-back 10 times then side-to-side 10 times. 5) Slow neck turns - look left and right, 5 times each way. Wear shorts and a t-shirt.
 - **Solo tip:** Cannot see the screen at the end of a move? Just hold still. The number locks and chimes, so you can read it after you return.
-- **Skip is always OK:** If a position is too difficult or you need a partner for a step and do not have one, tap Skip. Your score is based on what you completed. You can always come back and fill in any skipped measurements later.
+- **Skip is always OK:** If a position is too difficult, tap Skip. Your score is based on what you completed. You can always come back and fill in any skipped measurements later.
 
 ### Bottom tip on each step
 - **Old (all steps):** 📸 Can't tap the screen? Say "Hey Siri, take a screenshot" (iPhone) or "Hey Google, take a screenshot" (Android).
@@ -862,7 +862,7 @@ Jim asked for these cues after his phone hit the floor, so they must not sit und
 
 ## Update: Hip Flexion (SLR), every hand reference removed (Jim, Oct 6, 12:07 PM, decided) [Stacy PASS Oct 6 12:07, all 9 lines]
 
-All in `app/src/lib/hipFlexCopy.ts`, HIP_FLEX_STEP (the step in assessmentSteps2.ts reads from it). Unchanged: title, why, tool ("Your phone. Lying on the floor. A partner is helpful."), per-leg fields (Left leg / Right leg), "Typical range: 60-80°" with "Source: Youdas et al., 2005".
+All in `app/src/lib/hipFlexCopy.ts`, HIP_FLEX_STEP (the step in assessmentSteps2.ts reads from it). Unchanged: title, why, tool ("Your phone. Lying on the floor.", second-person sentence removed by Jim at 12:13 PM), per-leg fields (Left leg / Right leg), "Typical range: 60-80°" with "Source: Youdas et al., 2005".
 
 | Field | Was | Now |
 |---|---|---|
@@ -876,7 +876,7 @@ All in `app/src/lib/hipFlexCopy.ts`, HIP_FLEX_STEP (the step in assessmentSteps2
 | Fix (mistakeFix) | Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again. | Keep your hips down and your body still. If you shift, redo the lift. **[Stacy PASS Oct 6 12:07]** |
 | Meter grip (meterGrip) | Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out. | Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** |
 
-Removed with these fields: both SLR safety lines ("Stop if you feel sharp pain." in How to Measure 2, "Stop at a firm stretch, not at pain." in the Fix). No other SLR helper, overlay or tooltip in app/src mentions a hand, the low back or "presses down". Test: hipFlexCopy.test.ts fails if "hand", "low back" or "press down" appears in any HIP_FLEX_STEP string.
+Removed with these fields: both SLR safety lines ("Stop if you feel sharp pain." in How to Measure 2, "Stop at a firm stretch, not at pain." in the Fix). No other SLR copy, overlay or tooltip in app/src mentions a hand, the low back or "presses down". Test: hipFlexCopy.test.ts fails if "hand", "low back" or "press down" appears in any HIP_FLEX_STEP string.
 
 ---
 
@@ -887,6 +887,26 @@ Removed with these fields: both SLR safety lines ("Stop if you feel sharp pain."
   - Now: **Approximately 15 minutes using the ROMeter. Equipment needed: your phone.** [Jim wording 12:10, Stacy check pending]
 - Older rows in this doc that say "No equipment needed" are history. Grep of app/src, app/index.html and index.html for no equipment, equipment-free / equipment free, just / only / nothing but your phone, all you need is your phone, no gear, no tools: no other app UI hits. Test: app/src/lib/noEquipmentClaim.test.ts (zero hits in app/src + exact intro line).
 - Note for Jim: the ankle (knee-to-wall) step still needs a wall, a tape measure or ruler, and a slip of paper (tool line in assessmentSteps2.ts), so "Equipment needed: your phone." is not complete for that step.
+
+---
+
+## Update: typed-fallback copy removed (Jim, Oct 6, 12:12 PM) and second-person copy removed (Jim, Oct 6, 12:13 PM) [Jim wording, Stacy check pending]
+
+Copy only: the number boxes and Use this number work exactly as before. Users hold the phone themselves. "Before you start" wording is otherwise ON HOLD (Jim dictating); only the two boxes and one clause below were removed from it.
+
+| Where | Was | Now |
+|---|---|---|
+| meterCopy.ts `denied` | Motion access is off. Type your number in the box. To use the meter, close and reopen your browser, then tap Allow when asked. | Motion access is off. To use the meter, close and reopen your browser, then tap Allow when asked. (ROMeter stack: "To use the ROMeter") |
+| meterCopy.ts `inApp` | The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box. | The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome. (ROMeter stack: "The ROMeter may not work") |
+| meterCopy.ts `error` | The phone meter did not start. Tap Turn on the meter again, or type your number in the box. | The phone meter did not start. Tap Turn on the meter again. (ROMeter stack: "The ROMeter did not start. Tap the button again.") |
+| meterCopy.ts `noData` | This device is not sending motion readings, so type your number in the box. | This device is not sending motion readings. |
+| Before you start box "Typing is always OK" | Can't use the meter? Type your number in the box. | (box removed) |
+| Before you start, second-person box | (the "optional" box about a second person holding the phone and tapping the buttons) | (box removed) |
+| Before you start "Skip is always OK" | If a position is too difficult or you need [a second person] for a step and do not have one, tap Skip. ... | If a position is too difficult, tap Skip. Your score is based on what you completed. You can always come back and fill in any skipped measurements later. |
+| SLR tool (hipFlexCopy.ts) | Your phone. Lying on the floor. [second-person sentence] | Your phone. Lying on the floor. |
+| Ankle How to Measure 2 | Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched, or [have someone] watch. | Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched. |
+
+Kept on purpose: `desktopNote` "Type your numbers here. On a phone, you can also measure with the phone itself." (ROMeter stack: "...you can also use the ROMeter.") needs Jim's words; `manualAria` (screen-reader label for the box) and `manualPlaceholder` "Type" unchanged. Test: app/src/lib/jimCopyRemovals.test.ts.
 
 ---
 
