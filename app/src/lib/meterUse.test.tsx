@@ -337,12 +337,13 @@ describe('phone meter in the Base measure screen', () => {
     expect(host.textContent).not.toMatch(/Normal/)
   })
 
-  it('Quinn ranges: hip ER 29-43, hip IR 26-40, shoulder flexion 140-180 with sources; neck, hip abduction and SLR show no number', () => {
+  it('Quinn ranges: hip ER 29-43, hip IR 26-40, shoulder flexion 140-180, SLR 60-80 with sources; neck and hip abduction show no number', () => {
     const want: Record<string, [string, string] | null> = {
       hip_er: ['Typical range: 29-43°', 'Source: Simoneau et al., 1998'],
       hip_ir: ['Typical range: 26-40°', 'Source: Simoneau et al., 1998'],
       shoulder_flex: ['Typical range: 140-180°', 'Source: Gill et al., 2020'],
-      cervical_lat: null, cervical_flex_ext: null, hip_abd: null, hip_flex: null,
+      hip_flex: ['Typical range: 60-80°', 'Source: Youdas et al., 2005'],
+      cervical_lat: null, cervical_flex_ext: null, hip_abd: null,
     }
     for (const [id, exp] of Object.entries(want)) {
       act(() => root?.unmount()); host?.remove()
