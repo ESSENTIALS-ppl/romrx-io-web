@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 @layer base {
+  /* ROMeter / phone meter accent: SURF (Jim, Oct 6 2026, 11:51 AM). RGB triplets for Tailwind alpha.
+     #0A1020 on #38E8FF = 12.78:1; #007C8D on white = 4.92:1; #007C8D on #E6FCFF = 4.62:1.
+     Kept apart from the strong-tier teal (tier.strong #14B8A6). Used by the meter only. */
+  :root {
+    --meter-fill: 56 232 255;       /* #38E8FF */
+    --meter-fill-hover: 50 202 224; /* #32CAE0 */
+    --meter-on-fill: 10 16 32;      /* #0A1020 */
+    --meter-text: 0 124 141;        /* #007C8D */
+    --meter-tint: 230 252 255;      /* #E6FCFF */
+  }
   html { -webkit-font-smoothing: antialiased; }
   body { font-family: 'Inter Tight', Inter, system-ui, sans-serif; }
   h1, h2, h3, h4 { letter-spacing: -0.01em; }
@@ -14,6 +24,10 @@
   }
   .btn-primary {
     @apply btn bg-cobalt text-white hover:bg-cobalt-dark;
+  }
+  /* Phone meter / ROMeter main button: Surf fill, dark text (never white on Surf). */
+  .btn-meter {
+    @apply btn bg-meter text-meter-ink hover:bg-meter-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-meter-text focus-visible:ring-offset-2;
   }
   .btn-ghost {
     @apply btn bg-white text-cobalt-ink border border-slate-200 hover:bg-slate-50;

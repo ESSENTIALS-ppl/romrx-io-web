@@ -22,9 +22,9 @@ export function ROMeter() {
     <div className="max-w-lg mx-auto space-y-4" data-rometer-page>
       <PageHeader title={R.title} subtitle={R.subtitle} />
       <p className="text-sm text-slate-600 leading-snug">{R.intro}</p>
-      <div className="flex gap-2 items-start bg-cobalt-light rounded-card px-3 py-2">
-        <Info size={16} className="text-cobalt mt-0.5 shrink-0" />
-        <p className="text-sm font-semibold text-cobalt" data-method-line>{METHOD_LINE}</p>
+      <div className="flex gap-2 items-start bg-meter-tint rounded-card px-3 py-2">
+        <Info size={16} className="text-meter-text mt-0.5 shrink-0" />
+        <p className="text-sm font-semibold text-meter-text" data-method-line>{METHOD_LINE}</p>
       </div>
 
       {avail ? (

@@ -53,7 +53,7 @@ export function MeasureInput({ field, value, onChange, onMeasure, measuring, upN
         {onMeasure && !measuring && (
           <button type="button" onClick={onMeasure} data-measure-btn={field.key}
             className={cn('ml-auto inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-card text-sm font-semibold transition-colors',
-              upNext ? 'text-cobalt hover:bg-cobalt-light' : 'border border-cobalt/20 bg-cobalt-light text-cobalt hover:bg-cobalt hover:text-white')}>
+              upNext ? 'text-meter-text hover:bg-meter-tint' : 'border border-meter-text/30 bg-meter-tint text-meter-text hover:bg-meter hover:text-meter-ink')}>
             <Crosshair size={15} /> {METER_COPY.measureButton}
           </button>
         )}

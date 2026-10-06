@@ -54,7 +54,7 @@ function expectLockedAt(deg: number) {
   expect($('[data-meter-number]')!.textContent).toBe(`${deg}°`)
 }
 /** The filled (primary) buttons inside the meter card. */
-const primaries = () => [...$('[data-phone-meter]')!.querySelectorAll('button.btn-primary')].map(b => b.textContent!.trim())
+const primaries = () => [...$('[data-phone-meter]')!.querySelectorAll('button.btn-meter')].map(b => b.textContent!.trim())
 async function turnOn() { click(btn('Turn on the ROMeter')); await flush(); for (let i = 0; i < 12; i++) feed(0) }
 
 beforeEach(() => {

@@ -149,11 +149,11 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
     : view.locked ? (lockedLine ?? C.locked) : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
 
   return (
-    <div data-phone-meter role="group" aria-label={movement} className={cn('rounded-card border bg-white p-4 space-y-3 transition-colors', view.locked ? 'border-2 border-cobalt shadow-md' : 'border-cobalt/15')}>
+    <div data-phone-meter role="group" aria-label={movement} className={cn('rounded-card border bg-white p-4 space-y-3 transition-colors', view.locked ? 'border-2 border-meter-text shadow-md' : 'border-meter-text/20')}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           {/* Layout item 6: no movement name here; the step header above already shows it. */}
-          <p className="text-[11px] font-bold uppercase tracking-wide text-cobalt">{headerLabel ?? `${C.measuringPrefix}: ${sideLabel}`}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-meter-text">{headerLabel ?? `${C.measuringPrefix}: ${sideLabel}`}</p>
         </div>
         {onClose && <button type="button" onClick={() => { cancelCountdown(); onClose() }} aria-label={C.closeButton}
           className="-mr-2 -my-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-slate-400 hover:text-cobalt-ink hover:bg-surface">
@@ -163,7 +163,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
       {/* Layout item 8: plain grip line with a small phone icon, no box. Same words. */}
       <p className="flex gap-2 text-sm text-slate-600 leading-snug" data-meter-grip><Smartphone size={16} className="text-slate-400 shrink-0 mt-0.5" aria-hidden />{grip}</p>
       {gripNote && <p className="pl-6 text-xs text-slate-500 leading-snug" data-grip-note>{gripNote}</p>}
-      {notice && <p className="text-xs font-semibold text-cobalt" role="status">{notice}</p>}
+      {notice && <p className="text-xs font-semibold text-meter-text" role="status">{notice}</p>}
 
       {fallback ? (
         <div className="space-y-2" role="alert">
@@ -175,7 +175,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
       ) : !live_ ? (
         <div className="space-y-2">
           <button type="button" onClick={() => { void startSensor() }} disabled={sensor.status === 'starting'}
-            className="btn-primary w-full min-h-[44px] py-2 gap-2">
+            className="btn-meter w-full min-h-[44px] py-2 gap-2">
             <Crosshair size={18} /> {sensor.status === 'starting' ? C.starting : C.startButton}
           </button>
           <p className="text-xs text-slate-500 text-center">{C.startNote}</p>
@@ -186,19 +186,19 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
         <>
           <div className="text-center" aria-live="polite">
             <div className={cn('mx-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-opacity',
-              view.locked ? 'bg-cobalt text-white opacity-100' : 'opacity-0 pointer-events-none')} data-locked-badge aria-hidden={!view.locked}>
+              view.locked ? 'bg-meter text-meter-ink opacity-100' : 'opacity-0 pointer-events-none')} data-locked-badge aria-hidden={!view.locked}>
               {/* Layout item 1: the badge says just "Locked"; the big number below shows the value. */}
               {view.locked ? <><Lock size={14} /> {C.lockedPrefix}</> : <span className="inline-block h-[14px]">{'\u00a0'}</span>}
             </div>
             <div className={cn('font-display font-extrabold tabular-nums leading-none tracking-tight mt-1',
-              view.locked ? 'text-cobalt' : 'text-cobalt-ink')} style={{ fontSize: 'clamp(72px, 24vw, 104px)' }} data-meter-number>
+              view.locked ? 'text-meter-text' : 'text-cobalt-ink')} style={{ fontSize: 'clamp(72px, 24vw, 104px)' }} data-meter-number>
               {countdown != null
-                ? <span className="text-cobalt" data-countdown>{countdown === 'GO' ? C.go : countdown}</span>
+                ? <span className="text-meter-text" data-countdown>{countdown === 'GO' ? C.go : countdown}</span>
                 : shown == null ? <span className="text-slate-300">--</span>
-                : <>{shown}<span className="text-cobalt align-top" style={{ fontSize: '0.5em' }}>°</span></>}
+                : <>{shown}<span className="text-meter-text align-top" style={{ fontSize: '0.5em' }}>°</span></>}
             </div>
-            <div className="h-1.5 bg-cobalt-light rounded-full overflow-hidden mt-3" aria-hidden>
-              <div className="h-full bg-cobalt rounded-full" style={{ width: `${Math.round((view.locked ? 1 : view.holdFrac ?? 0) * 100)}%`, transition: 'width 50ms linear' }} />
+            <div className="h-1.5 bg-meter-tint rounded-full overflow-hidden mt-3" aria-hidden>
+              <div className="h-full bg-meter-text rounded-full" style={{ width: `${Math.round((view.locked ? 1 : view.holdFrac ?? 0) * 100)}%`, transition: 'width 50ms linear' }} />
             </div>
             <p className="text-xs text-slate-500 mt-2 min-h-[16px]" data-meter-status>{status}</p>
           </div>
@@ -207,8 +207,8 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
               and Reset shows only when there is something to reset (a countdown or a zeroed reading). */}
           <div className="space-y-1">
             {showUse
-              ? <button type="button" onClick={onUseClick} data-use-btn data-meter-primary className="btn-primary w-full min-h-[44px] py-2">{C.useButton}</button>
-              : <button type="button" onClick={onZero} data-zero-btn data-meter-primary className="btn-primary w-full min-h-[44px] py-2">{C.zeroButton}</button>}
+              ? <button type="button" onClick={onUseClick} data-use-btn data-meter-primary className="btn-meter w-full min-h-[44px] py-2">{C.useButton}</button>
+              : <button type="button" onClick={onZero} data-zero-btn data-meter-primary className="btn-meter w-full min-h-[44px] py-2">{C.zeroButton}</button>}
             {(showUse || showReset) && (
               <div className="flex justify-center gap-2" data-meter-small>
                 {showUse && <button type="button" onClick={onZero} data-zero-btn className="min-h-[44px] px-4 text-sm font-semibold text-slate-600 hover:text-cobalt-ink">{C.zeroButton}</button>}
@@ -218,7 +218,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
           </div>
           {/* Layout item 2: Peak hidden (the locked number is the one that is saved); ?debug=1 still shows it. */}
           {debug && (
-            <div className="flex items-center justify-between border-t border-cobalt/10 pt-2">
+            <div className="flex items-center justify-between border-t border-meter-text/10 pt-2">
               <span className="text-sm text-slate-500">{C.peakLabel}</span>
               <span className="font-display font-bold text-xl text-cobalt-ink tabular-nums" data-meter-peak>{view.peak == null ? '--' : `${view.peak}°`}</span>
             </div>

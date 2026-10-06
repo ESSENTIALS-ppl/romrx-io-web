@@ -67,7 +67,7 @@ function expectLockedAt(deg: number) {
   expect($('[data-meter-status]')!.textContent).toBe('Locked. Tap Use this number, or Reset to measure again.')
 }
 /** Layout item 4: the filled (primary) buttons inside the meter card. */
-const primaries = () => [...$('[data-phone-meter]')!.querySelectorAll('button.btn-primary')].map(b => b.textContent!.trim())
+const primaries = () => [...$('[data-phone-meter]')!.querySelectorAll('button.btn-meter')].map(b => b.textContent!.trim())
 /** Tap Start and let the countdown reach GO (4 s) at the start position, then let GO clear. */
 const startNow = () => { click(btn('Start')); advance(5900, 0) }
 

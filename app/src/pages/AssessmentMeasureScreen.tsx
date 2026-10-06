@@ -160,11 +160,11 @@ export function AssessmentMeasureScreen(p: {
                 if (canMeter(f) && !isActive && v !== '' && savedByMeter[f.key]) {
                   return (
                     <div key={f.key} data-saved-row={f.key}
-                      className="flex items-center gap-2 rounded-card border border-cobalt/15 bg-cobalt-light pl-3 pr-1 min-h-[44px]">
-                      <CheckCircle2 size={16} className="text-cobalt shrink-0" />
+                      className="flex items-center gap-2 rounded-card border border-meter-text/20 bg-meter-tint pl-3 pr-1 min-h-[44px]">
+                      <CheckCircle2 size={16} className="text-meter-text shrink-0" />
                       <span className="text-sm font-bold text-cobalt-ink">{METER_COPY.saved(f.label, v)}</span>
                       <button type="button" onClick={() => setActive({ step: stepIdx, key: f.key })}
-                        className="ml-auto min-h-[44px] px-2 text-sm font-semibold text-cobalt hover:underline">{METER_COPY.measureAgain}</button>
+                        className="ml-auto min-h-[44px] px-2 text-sm font-semibold text-meter-text hover:underline">{METER_COPY.measureAgain}</button>
                     </div>
                   )
                 }
@@ -183,7 +183,7 @@ export function AssessmentMeasureScreen(p: {
                 )
               })}
               {allMeterSaved && activeKey == null && (
-                <p className="flex items-center gap-1.5 text-sm font-semibold text-cobalt" role="status" data-all-saved>
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-meter-text" role="status" data-all-saved>
                   <CheckCircle2 size={16} /> {METER_COPY.allSaved(meterFields.map(f => f.label))}
                 </p>
               )}

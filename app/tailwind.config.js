@@ -28,6 +28,15 @@ export default {
           restricted: '#EA580C',
           risk:       '#B91C1C',
         },
+        // ROMeter / phone meter accent: SURF (Jim, Oct 6 11:51 AM via Grant). Values live in CSS
+        // variables (src/index.css :root --meter-*), so the meter never carries raw hex. Meter only.
+        meter: {
+          DEFAULT: 'rgb(var(--meter-fill) / <alpha-value>)',       // Surf fill #38E8FF
+          hover:   'rgb(var(--meter-fill-hover) / <alpha-value>)', // #32CAE0
+          ink:     'rgb(var(--meter-on-fill) / <alpha-value>)',    // text on Surf fills #0A1020 (never white)
+          text:    'rgb(var(--meter-text) / <alpha-value>)',       // text + borders on white #007C8D
+          tint:    'rgb(var(--meter-tint) / <alpha-value>)',       // light Surf wash behind meter-text #E6FCFF
+        },
         surface:  '#F8FAFC',
         neutral9: '#0F172A',
       },
