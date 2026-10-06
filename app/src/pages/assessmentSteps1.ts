@@ -106,8 +106,8 @@ export const STEPS_PART1: Step[] = [
     mistake: 'Shrugging your shoulder up to meet your ear.',
     mistakeFix: 'Keep both shoulders pressed down the whole time. Only your head moves. If your shoulder rises, that reading does not count.',
     fields: [
-      { key: 'cervical_lat_l', label: 'Left', unit: '°', normalLow: 40, normalHigh: 45, riskBelow: 30 },
-      { key: 'cervical_lat_r', label: 'Right', unit: '°', normalLow: 40, normalHigh: 45, riskBelow: 30 },
+      { key: 'cervical_lat_l', label: 'Left', unit: '°', riskBelow: 30 },
+      { key: 'cervical_lat_r', label: 'Right', unit: '°', riskBelow: 30 },
     ],
   }
 ]

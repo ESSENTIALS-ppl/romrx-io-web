@@ -116,30 +116,32 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
   })
 
   it('asymmetry separates the lines; worse side, not best side or average', () => {
-    const a = { id: 'a', hip_abd_l: 45, hip_abd_r: 90 }
+    const a = { id: 'a', hip_abd_l: 20, hip_abd_r: 40 } // hip_abd target 40 (Oct 6)
     const row = radarSideRowsForAssessment(a).find(r => r.key === 'hip_abd')!
     expect([row.left, row.right, row.worse, row.band]).toEqual([50, 100, 50, 1])
     expect([row.leftBand, row.rightBand]).toEqual([1, 3])
   })
 
   it('fixture values (EXPECTED-BANDS.md)', () => {
-    const f05 = { id: '05', ankle_df_l: 17.9, ankle_df_r: 19, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
-    const rows = radarSideRowsForAssessment(f05, [{ joint_key: 'ankle_df', score: 1 }, { joint_key: 'hip_abd', score: 2 }])
+    // Oct 6 targets: Hip Abd 81 / 81.5 is Steady against 40 (was Building against 90); the ankle
+    // values are fixture 05's 17.9 / 19 cm scaled to the 6 cm target (5.37 / 5.7 cm, same ratios).
+    const f05 = { id: '05', ankle_df_l: 5.37, ankle_df_r: 5.7, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
+    const rows = radarSideRowsForAssessment(f05, [{ joint_key: 'ankle_df', score: 1 }, { joint_key: 'hip_abd', score: 3 }])
     const ank = rows.find(r => r.key === 'ankle_df')!
     expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([89, 95, 89])
     const abd = rows.find(r => r.key === 'hip_abd')!
-    expect([abd.leftPct, abd.rightPct, abd.worse]).toEqual([90, 90, 90])
+    expect([abd.leftPct, abd.rightPct, abd.worse]).toEqual([100, 100, 100])
     const lf = rows.find(r => r.key === 'lumbar_flex')!
     expect([lf.midline, lf.left, lf.right]).toEqual([true, 100, 100])
-    // fixture 02 Ankle DF 7 / 8.5 cm → L 35 / R 42
-    const f02 = radarSideRowsForAssessment({ ankle_df_l: 7, ankle_df_r: 8.5 }).find(r => r.key === 'ankle_df')!
+    // fixture 02 Ankle DF 7 / 8.5 cm against 20 scaled to the 6 cm target (2.1 / 2.55 cm) → L 35 / R 42
+    const f02 = radarSideRowsForAssessment({ ankle_df_l: 2.1, ankle_df_r: 2.55 }).find(r => r.key === 'ankle_df')!
     expect([f02.leftPct, f02.rightPct, f02.worse]).toEqual([35, 42, 35])
   })
 
   it('sidePercent: floor, capped at 100, clamped into the side band', () => {
-    expect(sidePercent('hip_abd', 81, 2)).toBe(90)
+    expect(sidePercent('hip_abd', 36, 2)).toBe(90) // 36 / 40 = 0.90
     expect(sidePercent('hip_abd', 95, 3)).toBe(100)
-    expect(sidePercent('ankle_df', 17.9, 1)).toBe(89)
+    expect(sidePercent('ankle_df', 5.37, 1)).toBe(89) // 5.37 / 6 cm
     expect(sidePercent('ankle_df', null, 1)).toBeNull()
   })
 
@@ -239,15 +241,15 @@ describe('My Protocol Left/Right colours follow Base bands', () => {
     }
   })
 
-  it('fixture 03 Hip Abd L 81 on a Building card is yellow, not cobalt', () => {
-    const s = sideBandsForJoint('hip_abd', { left: 81, right: 81.5 }, 2)
+  it('Hip Abd L 36 on a Building card is yellow, not cobalt (fixture 03 scaled to the Oct 6 target of 40)', () => {
+    const s = sideBandsForJoint('hip_abd', { left: 36, right: 36.2 }, 2)
     expect(s).toEqual({ left: 2, right: 2 })
     expect(valueToneClass(s.left)).toBe(BAND_TONE[2].color)
     expect(valueToneClass(s.left)).not.toMatch(/cobalt/)
   })
 
-  it('fixture 05 Ankle DF: L 17.9 red (Needs focus = card), R 19 yellow (Building)', () => {
-    expect(sideBandsForJoint('ankle_df', { left: 17.9, right: 19 }, 1)).toEqual({ left: 1, right: 2 })
+  it('fixture 05 Ankle DF scaled to the 6 cm target: L 5.37 red (Needs focus = card), R 5.7 yellow (Building)', () => {
+    expect(sideBandsForJoint('ankle_df', { left: 5.37, right: 5.7 }, 1)).toEqual({ left: 1, right: 2 })
   })
 
   it('MyProtocol.tsx: no riskBelow/normalMin/normalMax left; sides use the shared helper; target from JOINT_SCORE_TARGETS', () => {
@@ -263,7 +265,7 @@ describe('My Protocol Left/Right colours follow Base bands', () => {
 })
 
 describe('units + number formatting (Reid Field cosmetics)', () => {
-  it('Ankle DF is cm (knee-to-wall input + JOINT_SCORE_TARGETS 20cm); others degrees', () => {
+  it('Ankle DF is cm (knee-to-wall input + JOINT_SCORE_TARGETS 6 cm since Oct 6); others degrees', () => {
     expect(jointUnit('ankle_df')).toBe('cm')
     expect(jointUnit('ankle_df_l')).toBe('cm')
     expect(jointUnit('hip_abd')).toBe('°')
