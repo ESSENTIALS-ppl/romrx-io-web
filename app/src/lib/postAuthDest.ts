@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { track } from './track'
+import { takePostAuthNext } from './packReturn'
 
 /** Default post-login home when the user already has an assessment. */
 export const DEFAULT_HOME = '/dashboard/my-body'
@@ -17,7 +18,11 @@ export async function resolvePostAuthDest(
   userId: string | null | undefined,
   explicitNext?: string | null,
 ): Promise<string> {
+  // A `next` kept by Login for a magic-link sign-in (e.g. a pack member sent here to
+  // take the Base assessment). Always read so it is cleared; an explicit next wins.
+  const stashedNext = takePostAuthNext()
   if (explicitNext && explicitNext.startsWith('/')) return explicitNext
+  if (stashedNext) return stashedNext
   if (!userId) return DEFAULT_HOME
   try {
     const { count, error } = await supabase
