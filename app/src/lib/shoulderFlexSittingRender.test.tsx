@@ -47,8 +47,7 @@ afterEach(() => { act(() => root.unmount()); host.remove() })
 describe('shoulder flexion sitting: what the screen shows', () => {
   it('Setup (open list) says sitting, shows the grip and the countdown line; cues and mistake render; no standing or lying', () => {
     mount()
-    const t = host.textContent!
-    expect(t).toContain('Your phone. Sitting in a chair with a back.')
+    expect(host.textContent).toContain('Your phone. Sitting in a chair with a back.')
     const setup = [...host.querySelectorAll('li')].map(li => li.textContent ?? '')
     for (const line of STEPS[SFLEX].position) {
       const li = [...host.querySelectorAll('li')].find(el => el.textContent?.includes(line))
@@ -56,6 +55,11 @@ describe('shoulder flexion sitting: what the screen shows', () => {
       expect(li!.closest('[data-help-body]'), line).toBeNull()
     }
     expect(setup.some(l => l.includes('Sit tall with your back against the chair'))).toBe(true)
+    // Cues and the common mistake are in the Fix / Common mistake box. On the simpler layout that box folds under a closed
+    // "More help" toggle (Setup stays open); open it if it is there, so this checks they render either way.
+    const more = host.querySelector('[data-more-help]') as HTMLButtonElement | null
+    if (more && more.getAttribute('aria-expanded') !== 'true') act(() => { more.click() })
+    const t = host.textContent!
     for (const cue of ["Keep your back against the chair. Don't arch your back or lean back.", 'Keep your wrist straight.', "Don't bend your elbow or turn your arm out.", "Don't shrug your shoulder up to your ear.", 'Arching your back or leaning back to get the arm higher.']) expect(t).toContain(cue)
     expect(t).toContain('Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body.')
     expect(t).not.toMatch(/Your phone\. Standing|Stand tall|lie on your back|lying/i)
