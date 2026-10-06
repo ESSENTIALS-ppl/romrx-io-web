@@ -189,7 +189,7 @@ export function AssessmentMeasureScreen(p: {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => { p.handleChange(step.fields[0].key, ''); p.handleNext() }}
+                  onClick={() => { for (const f of step.fields) p.handleChange(f.key, ''); p.handleNext() }}
                   className="flex items-center gap-1 text-xs text-slate-500 hover:text-cobalt-ink px-3 py-2 rounded-card hover:bg-surface transition-colors"
                 >
                   <SkipForward size={13} /> Skip

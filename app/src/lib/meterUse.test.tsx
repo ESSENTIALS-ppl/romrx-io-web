@@ -330,6 +330,13 @@ describe('phone meter in the Base measure screen', () => {
     }
   })
 
+  it('Skip clears BOTH sides of the step, so nothing half-typed is saved', () => {
+    const calls = mount(SER, [], { shoulder_er_l: '90', shoulder_er_r: '95' })
+    click(btn('Skip'))
+    expect(calls).toContainEqual(['shoulder_er_l', ''])
+    expect(calls).toContainEqual(['shoulder_er_r', ''])
+  })
+
   it('Typical range label on every scored angle step, never "Normal"', () => {
     mount(SER)
     expect(host.textContent).toContain('Typical range: 85-110°')
