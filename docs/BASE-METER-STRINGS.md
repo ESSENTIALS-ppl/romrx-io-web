@@ -98,8 +98,10 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - Meter grip: Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf. **[Stacy PASS Oct 6 11:45]**
 - Setup:
   1. Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.
-  2. Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf. **[Stacy PASS Oct 6 11:45]**
-  3. Tap Start, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end. **[Stacy PASS Oct 6 11:45]**
+  2. Move your other knee out to the side and tuck that foot back, out of the way. **[Stacy PASS Oct 6, word for word]**
+  3. Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf. **[Stacy PASS Oct 6 11:45]**
+  4. Press the phone flat against your leg with your hand the whole time. **[Stacy PASS Oct 6, word for word]**
+  5. Tap Start, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end. **[Stacy PASS Oct 6 11:45]**
 - How to Measure:
   1. Keep your knee bent and both hips down. Slowly swing your foot INWARD, toward your other leg. Your foot moves only sideways.
   2. Stop at a firm stretch or when your thigh starts to lift off the chair. Hold still: after 2.5 seconds the number locks and chimes.
@@ -244,8 +246,10 @@ Meter: YES, grip line: Phone flat on your inner calf, just below the knee. Scree
 **New:**
 
 1. Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.
-2. Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf. **[Stacy PASS Oct 6 11:45]**
-3. Tap Zero, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end. **[Stacy PASS Oct 6 11:45]**
+2. Move your other knee out to the side and tuck that foot back, out of the way. **[Stacy PASS Oct 6, word for word]**
+3. Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf. **[Stacy PASS Oct 6 11:45]**
+4. Press the phone flat against your leg with your hand the whole time. **[Stacy PASS Oct 6, word for word]**
+5. Tap Zero, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end. **[Stacy PASS Oct 6 11:45]**
 
 ### How to Measure
 **Old:**
@@ -744,3 +748,8 @@ Jim: move the Hip External Rotation phone spot from the front of the shin to fla
   - Was: Same chair, same phone spot. Only the foot direction changes.
   - Interim draft (not shipped, replaced Oct 6 11:45): Same chair. Phone on the front of your shin. Only the foot direction changes.
   - Now: Same chair. This time, hold the phone flat on the front of your shin. (Stacy's edit)
+
+### Added Oct 6 (after 11:45): two Hip ER setup cues **[Stacy PASS Oct 6, word for word]**
+Shown in the open Setup list on the Hip ER step (never under More help). New Setup order: sit tall; move the other knee; phone on the inner calf; press the phone flat; tap Start.
+- **Hip External Rotation** (Setup, new line 2): Move your other knee out to the side and tuck that foot back, out of the way. **[Stacy PASS Oct 6, word for word]**
+- **Hip External Rotation** (Setup, new line 4): Press the phone flat against your leg with your hand the whole time. **[Stacy PASS Oct 6, word for word]**

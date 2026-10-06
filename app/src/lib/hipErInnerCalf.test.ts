@@ -166,7 +166,9 @@ describe('hip_er copy (Jim, Oct 6, 11:36 AM; Stacy PASS Oct 6 11:45)', () => {
     expect(er.meter?.grip).toBe('Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf.')
     expect(er.position).toEqual([
       'Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.',
+      'Move your other knee out to the side and tuck that foot back, out of the way.',
       'Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf.',
+      'Press the phone flat against your leg with your hand the whole time.',
       'Tap Start, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end.',
     ])
   })

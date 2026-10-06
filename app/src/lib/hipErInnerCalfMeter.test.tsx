@@ -79,6 +79,21 @@ beforeEach(() => {
 afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers() })
 
 describe('hip_er meter with the phone flat on the inner calf', () => {
+  it('Setup shows both Stacy PASS hip ER cues word for word, in the open Setup list (not under More help)', () => {
+    mount()
+    const cues = ['Press the phone flat against your leg with your hand the whole time.', 'Move your other knee out to the side and tuck that foot back, out of the way.']
+    const items = [...host.querySelectorAll('li')].map(li => li.textContent ?? '')
+    for (const c of cues) {
+      expect(host.textContent).toContain(c)
+      const li = [...host.querySelectorAll('li')].find(el => el.textContent?.includes(c))!
+      expect(li, c).toBeTruthy()
+      expect(li.closest('[data-help-body]'), c).toBeNull()             // not in the More help body (layout branch)
+      expect(li.closest('details:not([open])'), c).toBeNull()
+    }
+    expect(items.findIndex(t => t.includes(cues[1]))).toBeLessThan(items.findIndex(t => t.includes('INNER calf')))
+    expect(items.findIndex(t => t.includes(cues[0]))).toBeGreaterThan(items.findIndex(t => t.includes('INNER calf')))
+  })
+
   it('shows the inner calf grip', () => {
     mount()
     expect(host.textContent).toContain('Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf.')
