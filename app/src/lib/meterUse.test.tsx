@@ -339,8 +339,8 @@ describe('phone meter in the Base measure screen', () => {
 
   it('Typical range label on every scored angle step, never "Normal"', () => {
     mount(SER)
-    expect(host.textContent).toContain('Typical range: 85-110°')
-    expect($('[data-range-source]')!.textContent).toBe('Source: Vairo et al., 2012')
+    expect(host.textContent).toContain('Typical range: 40-75°')                  // tucked-elbow shoulder ER (Jim, Oct 6 11:45 AM)
+    expect($('[data-range-source]')!.textContent).toBe('Source: Gill et al., 2020')
     expect(host.textContent).not.toMatch(/Normal/)
   })
 
@@ -348,6 +348,7 @@ describe('phone meter in the Base measure screen', () => {
     const want: Record<string, [string, string] | null> = {
       hip_er: ['Typical range: 29-43°', 'Source: Simoneau et al., 1998'],
       hip_ir: ['Typical range: 26-40°', 'Source: Simoneau et al., 1998'],
+      shoulder_er: ['Typical range: 40-75°', 'Source: Gill et al., 2020'],
       shoulder_flex: ['Typical range: 140-180°', 'Source: Gill et al., 2020'],
       hip_flex: ['Typical range: 60-80°', 'Source: Youdas et al., 2005'],
       cervical_lat: null, cervical_flex_ext: null, hip_abd: null,

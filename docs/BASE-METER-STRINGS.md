@@ -120,17 +120,17 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
 - Range label: Typical range: 26-40° | Source line: Source: Simoneau et al., 1998
 
-#### Shoulder External Rotation (`shoulder_er`)
-- Meter grip: Phone along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff.
+#### Shoulder External Rotation (`shoulder_er`) (tucked elbow, lying on your back; Jim, Oct 6 11:45 AM)
+- Meter grip: Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff. **[pending Stacy]**
 - Setup:
-  1. Sit tall. Raise one arm out to the side at shoulder height, like a T. Bend the elbow to 90° so your forearm points straight ahead.
-  2. Hold the phone along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time.
+  1. Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling. **[pending Stacy]**
+  2. Hold the phone in that hand along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time. **[pending Stacy]**
   3. Tap Start with your other hand, then hold this start position while it counts down from 5.
 - How to Measure:
-  1. Keep your elbow at shoulder height. Rotate up and back until you feel a strong stretch or your back starts to arch. Going past straight up is fine.
-  2. Hold still: after 2.5 seconds the number locks and chimes. Tap Use this number.
+  1. Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side. **[pending Stacy]**
+  2. Hold still at your limit: after 2.5 seconds the number locks and chimes. Tap Use this number. **[pending Stacy]**
   3. Switch arms, tap Start in the start position, and repeat.
-- Range label: Typical range: 85-110° | Source line: Source: Vairo et al., 2012
+- Range label: Typical range: 40-75° | Source line: Source: Gill et al., 2020 **[pending Stacy]**
 
 #### Shoulder Flexion (`shoulder_flex`)
 - Meter grip: Phone in your hand, long edge along your arm, screen facing out to the side. Thumb up, wrist straight.
@@ -162,8 +162,8 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   2. Tap Start, then press your phone flat against the SIDE of your head at the temple, screen facing the wall beside you.
   3. Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
 - How to Measure:
-  1. Back stays against the chair. Only your head nods. Flexion: Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number.
-  2. Extension: Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number.
+  1. Back stays against the chair. Only your head nods. Chin down (Flexion): Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number. **[pending Stacy]**
+  2. Chin up (Extension): Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number. **[pending Stacy]**
 - Range label: none (no number shown)
 
 #### Hip Flexion (Straight-Leg Raise) (`hip_flex`)
@@ -186,7 +186,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   3. Stand straight with your weight even on both feet. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
 - How to Measure:
   1. Toes forward. Lift your test leg straight out to the side. No lean, no forward drift, no turning out.
-  2. Stop just before your upper body starts to lean to the opposite side or your hip hinges backward. Hold still until the number locks and chimes.
+  2. Stop just before your upper body starts to lean to the other side or your hips push back. Hold still until the number locks and chimes. **[pending Stacy]**
   3. Tap Use this number. Lower the leg, tap Start again, and repeat on the other side.
 - Range label: none (no number shown)
 
@@ -753,3 +753,49 @@ Jim: move the Hip External Rotation phone spot from the front of the shin to fla
 Shown in the open Setup list on the Hip ER step (never under More help). New Setup order: sit tall; move the other knee; phone on the inner calf; press the phone flat; tap Start.
 - **Hip External Rotation** (Setup, new line 2): Move your other knee out to the side and tuck that foot back, out of the way. **[Stacy PASS Oct 6, word for word]**
 - **Hip External Rotation** (Setup, new line 4): Press the phone flat against your leg with your hand the whole time. **[Stacy PASS Oct 6, word for word]**
+
+---
+
+## Update: Shoulder ER tucked elbow + plain wording on all steps (Jim, Oct 6, 11:45 AM) [pending Stacy]
+
+Jim: Base step 3, Shoulder ER, is now the tucked-elbow version lying on your back: elbow on the floor at your side (never "upper arm on the floor"), forearm pointing at the ceiling, zero there, then the hand falls outward toward the floor and you hold at your limit. Same phone grip (in that hand, along the forearm, wrist straight and stiff). Typical range 40-75° (Gill et al., 2020). Scoring targets (JOINT_SCORE_TARGETS) are not changed here; the scoring branch sets shoulder ER to 40. Shoulder flexion stays standing. Hip IR stays on the shin.
+
+Jim also asked for plain, body-landmark wording on every step (no anatomy terms such as abduction, flexion, supine, lateral, medial, torso, hinge, cobra). Only position and movement wording changed; method, phone spots, stored keys and step titles did not. Field labels Flexion / Extension stay as the input box names, so lines name them in brackets after the plain words, for example "Chin down (Flexion)". Stacy-pinned lines (lumbar "Set your level to 0 ...", "Note the angle at your end range.", hip flexion step, meter panel copy) are word for word.
+
+Hip ER phone spot: both strings now live in one constant, `HIP_ER_PHONE_SPOT` (app/src/pages/assessmentSteps1.ts), so a spot change (for example Quinn's "inner side of the shin, just below the knee, on the flat bone", now with Jim) is one line per string.
+
+The per-movement sections earlier in this file are history; the "Full step text as built" section and this table are current.
+
+Every changed string, all **[pending Stacy]**:
+
+| Step | Line | Where (new) | Old | New |
+|---|---|---|---|---|
+| hip_er | mistake | app/src/pages/assessmentSteps1.ts:31 | Your thigh rotates instead of just your shin. | Your thigh turns instead of just your lower leg. |
+| shoulder_er | tool | app/src/pages/assessmentSteps1.ts:70 | Your phone. Seated in a chair. | Your phone. Lying on your back on the floor. |
+| shoulder_er | mistake | app/src/pages/assessmentSteps1.ts:81 | Your shoulder shrugs up or your elbow drops below shoulder height. | Your elbow slides away from your side or your shoulder lifts off the floor. |
+| shoulder_er | mistakeFix | app/src/pages/assessmentSteps1.ts:82 | Keep your shoulder pressed down and your elbow at the same height the whole time. From the elbow to the shoulder, the arm only rotates - it does not lift up or drop down. | Keep your elbow on the floor, tucked in at your side, the whole time. Only your forearm moves, like a door swinging open. |
+| shoulder_er | grip | app/src/pages/assessmentSteps1.ts:83 | Phone along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff. | Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff. |
+| shoulder_er | setup 1 | app/src/pages/assessmentSteps1.ts:72 | Sit tall. Raise one arm out to the side at shoulder height, like a T. Bend the elbow to 90° so your forearm points straight ahead. | Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling. |
+| shoulder_er | setup 2 | app/src/pages/assessmentSteps1.ts:73 | Hold the phone along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time. | Hold the phone in that hand along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time. |
+| shoulder_er | how-to 1 | app/src/pages/assessmentSteps1.ts:77 | Keep your elbow at shoulder height. Rotate up and back until you feel a strong stretch or your back starts to arch. Going past straight up is fine. | Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side. |
+| shoulder_er | how-to 2 | app/src/pages/assessmentSteps1.ts:78 | Hold still: after 2.5 seconds the number locks and chimes. Tap Use this number. | Hold still at your limit: after 2.5 seconds the number locks and chimes. Tap Use this number. |
+| shoulder_er | fields | | shoulder_er_l 85-110 rb 60 Vairo et al., 2012; shoulder_er_r 85-110 rb 60 Vairo et al., 2012 | shoulder_er_l 40-75 rb 40 Gill et al., 2020; shoulder_er_r 40-75 rb 40 Gill et al., 2020 |
+| shoulder_flex | mistakeFix | app/src/pages/assessmentSteps1.ts:107 | Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your true end range. Record it there. | Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your limit. Record it there. |
+| cervical_flex_ext | mistakeFix | app/src/pages/assessmentSteps2.ts:20 | Your shoulders and torso stay still. Only your head moves. If your back starts to round or arch, stop there. | Your shoulders and upper body stay still. Only your head moves. If your back starts to round or arch, stop there. |
+| cervical_flex_ext | how-to 1 | app/src/pages/assessmentSteps2.ts:16 | Back stays against the chair. Only your head nods. Flexion: Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number. | Back stays against the chair. Only your head nods. Chin down (Flexion): Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number. |
+| cervical_flex_ext | how-to 2 | app/src/pages/assessmentSteps2.ts:17 | Extension: Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number. | Chin up (Extension): Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number. |
+| hip_abd | mistake | app/src/pages/assessmentSteps2.ts:59 | Leaning your torso away or letting the hip hinge backward to get the leg higher. | Leaning your upper body away or letting your hips push back to get the leg higher. |
+| hip_abd | mistakeFix | app/src/pages/assessmentSteps2.ts:60 | Your torso stays upright and your hip stays directly under you. The moment either shifts, you have hit your true end range. | Your upper body stays upright and your hips stay right under you. The moment either shifts, you have hit your limit. |
+| hip_abd | how-to 2 | app/src/pages/assessmentSteps2.ts:56 | Stop just before your upper body starts to lean to the opposite side or your hip hinges backward. Hold still until the number locks and chimes. | Stop just before your upper body starts to lean to the other side or your hips push back. Hold still until the number locks and chimes. |
+| lumbar | mistake | app/src/pages/assessmentSteps2.ts:81 | Rounding the back to get lower on flexion, or letting your hips lift off the floor during the cobra. | Rounding your back to get lower when bending forward, or letting your hips lift off the floor during the press-up. |
+| lumbar | mistakeFix | app/src/pages/assessmentSteps2.ts:82 | For flexion, the stretch in the back of your legs is your true stopping point. For extension, your hips stay flat on the floor the entire time - only your chest rises. | When bending forward, the stretch in the back of your legs is your true stopping point. When bending back, your hips stay flat on the floor the entire time - only your chest rises. |
+| lumbar | setup 1 | app/src/pages/assessmentSteps2.ts:73 | Flexion is standing. Extension is on the floor face down. | Bending forward (Flexion) is standing. Bending back (Extension) is on the floor face down. |
+| lumbar | setup 2 | app/src/pages/assessmentSteps2.ts:74 | Flexion setup: Stand straight, feet shoulder-width apart. Hold your phone at your side, screen facing away. Set your level to 0 while you stand straight. | Bend forward (Flexion) setup: Stand straight, feet shoulder-width apart. Hold your phone at your side, screen facing away. Set your level to 0 while you stand straight. |
+| lumbar | setup 3 | app/src/pages/assessmentSteps2.ts:75 | Extension setup: Lie face down on the floor. Place one hand under your shoulder for the press-up. Hold your phone at your side with your other hand, screen facing away. Set your level to 0 while you lie flat. | Bend back (Extension) setup: Lie face down on the floor. Place one hand under your shoulder for the press-up. Hold your phone at your side with your other hand, screen facing away. Set your level to 0 while you lie flat. |
+| lumbar | how-to 1 | app/src/pages/assessmentSteps2.ts:78 | Flexion: Keep your legs straight. Slowly bend forward with your back flat. Stop when you feel a strong stretch in the back of your legs. Note the angle at that point. | Bend forward (Flexion): Keep your legs straight. Slowly bend forward with your back flat. Stop when you feel a strong stretch in the back of your legs. Note the angle at that point. |
+| lumbar | how-to 2 | app/src/pages/assessmentSteps2.ts:79 | Extension: Press up on one arm into a cobra, keeping your hips flat on the floor. Note the angle at your end range. | Bend back (Extension): Press up on one arm to lift your chest, keeping your hips flat on the floor. Note the angle at your end range. |
+
+Measure-screen fields for shoulder ER: normalLow 40, normalHigh 75, rangeSource "Gill et al., 2020" (shows "Typical range: 40-75°" and "Source: Gill et al., 2020"). riskBelow 40, equal to the Steady target of 40 on the scoring branch; riskBelow is no longer read by scoring or display, so it is kept in line with the target.
+
+Step titles still use anatomy terms (not renamed; listed for Jim): Hip External Rotation, Hip Internal Rotation, Shoulder External Rotation, Shoulder Flexion, Cervical Lateral Flexion, Cervical Flexion + Extension, Hip Flexion (Straight-Leg Raise), Hip Abduction, Lumbar Flexion + Extension, Ankle Dorsiflexion (Knee-to-Wall, cm). "Why" lines with jargon (not position wording, not changed): Hip IR "rotational movement", Cervical Lateral "Lateral neck strength", Hip Abduction "hip abduction range".
+
