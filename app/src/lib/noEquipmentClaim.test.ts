@@ -1,6 +1,6 @@
 /**
  * Jim, Oct 6 2026, 12:10 PM: the phone IS equipment. The self-assessment intro says exactly
- * "Approximately 15 minutes using the ROMeter. Equipment needed: your phone." App copy must never
+ * "Approximately 15 minutes using the ROMeter. Equipment needed: ..." (12:29: your phone, a chair, a wall, and a tape measure or ruler). App copy must never
  * say the test is equipment-less. Phrases are built from pieces so this file never matches itself.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest'
 
 const SRC = resolve(__dirname, '..')
 const APP = resolve(SRC, '..')
-const INTRO = 'Approximately 15 minutes using the ROMeter. Equipment needed: your phone.'
+const INTRO = 'Approximately 15 minutes using the ROMeter. Equipment needed: your phone, a chair, a wall, and a tape measure or ruler.'   // Jim, Oct 6 12:29 PM
 
 const p = (...w: string[]) => new RegExp(w.join(' '), 'i')
 const BANNED: RegExp[] = [
