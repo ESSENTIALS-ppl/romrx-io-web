@@ -46,7 +46,7 @@ describe('phone meter copy', () => {
     const setup = SETUP_STEPS.map(s => s.detail)
     expect(setup.join(' ')).not.toMatch(/type your number|typing is always/i)   // Jim, Oct 6 12:12 PM
     expect(METER_COPY.error).toBe('The ROMeter did not start. Tap the button again.')   // Stacy, Oct 6
-    expect(METER_COPY.desktopNote).toBe('Type your numbers here. On a phone, you can also use the ROMeter.')            // Stacy, Oct 6
+    expect(METER_COPY.desktopNote).toBe('Open this page on your phone to measure.')                                    // Jim, Oct 6 12:29 PM
     expect(METER_COPY.measureButton).toBe('Measure')                                                                     // Jim, Oct 6 12:26 PM
     expect(SETUP_STEPS[1].label).toBe('Your phone is the meter, and we call it ROMeter.')                                                               // Stacy, Oct 6
     expect(setup.join(' ')).not.toMatch(/partner/i)                              // Jim, Oct 6 12:13 PM

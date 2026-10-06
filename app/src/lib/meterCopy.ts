@@ -35,7 +35,7 @@ export const METER_COPY = {
   inApp: 'The ROMeter may not work inside Instagram or Facebook. Open this page in Safari or Chrome.',   // STACY (ROMeter rename cleared Oct 6)
   error: 'The ROMeter did not start. Tap the button again.',          // STACY (Oct 6)
   noData: 'This device is not sending motion readings.',
-  desktopNote: 'Type your numbers here. On a phone, you can also use the ROMeter.',                  // STACY (Oct 6)
+  desktopNote: 'Open this page on your phone to measure.',                     // Jim, Oct 6 12:29 PM
   manualPlaceholder: 'Type',
   manualAria: (label: string) => `${label}, type your number`,
   typicalRange: (lo: number, hi: number, unit = '°') => `Typical range: ${lo}-${hi}${unit}`, // STACY
