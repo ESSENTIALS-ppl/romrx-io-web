@@ -312,9 +312,9 @@ describe('safe fallback: hip flexion is never judged', () => {
       const a = {
         ...base,
         hip_flex_l: 10, hip_flex_r: 15,          // lowest of all (about 8%)
-        shoulder_er_l: 48,                        // 53%
-        shoulder_flex_l: 100,                     // 56%
-        hip_abd_l: 55,                            // 61%
+        shoulder_er_l: 21.2,                      // 53% (target 40)
+        shoulder_flex_l: 78,                      // 56% (target 140)
+        hip_abd_l: 24.5,                          // 61% (target 40)
         worst_joints: ['hip_flex_l', 'hip_flex_r', 'shoulder_er_l', 'shoulder_flex_l', 'hip_abd_l'],
       }
       const top = topProblemAreasForAssessment(a)
@@ -326,9 +326,9 @@ describe('safe fallback: hip flexion is never judged', () => {
       const a = {
         ...base,
         hip_flex_l: 60, hip_flex_r: 62,
-        shoulder_flex_l: 80, shoulder_flex_r: 85,   // 44% / 47%
-        hip_abd_l: 45,                              // 50%
-        shoulder_er_l: 48,                          // 53%
+        shoulder_flex_l: 62, shoulder_flex_r: 66,   // 44% / 47% (target 140)
+        hip_abd_l: 20,                              // 50% (target 40)
+        shoulder_er_l: 21.2,                        // 53% (target 40)
         worst_joints: ['shoulder_flex_l', 'shoulder_flex_r', 'hip_flex_l', 'hip_flex_r', 'hip_abd_l'],
       }
       // Old behavior: dedupe + drop hip AFTER the cut left only 2 items.
@@ -339,7 +339,7 @@ describe('safe fallback: hip flexion is never judged', () => {
     })
 
     it('no persisted worst_joints at all: ranked from the scored joints, hip excluded first', () => {
-      const a = { ...base, hip_flex_l: 0, hip_flex_r: 0, ankle_df_l: 10, shoulder_er_r: 40, hip_ir_r: 30 }
+      const a = { ...base, hip_flex_l: 0, hip_flex_r: 0, ankle_df_l: 3, shoulder_er_r: 17.8, hip_ir_r: 17 } // shoulder ER 17.8 / 40 = 44.5%, ankle 3 / 6 cm = 50%, hip IR 17 / 26 = 65%
       expect(scoredJointKeysWorstFirst(a).some(k => k.startsWith('hip_flex'))).toBe(false)
       expect(topProblemAreasForAssessment({ ...a, worst_joints: null })).toEqual(['shoulder_er_r', 'ankle_df_l', 'hip_ir_r'])
       expect(topProblemAreasForAssessment({ ...a, worst_joints: [] })).toEqual(['shoulder_er_r', 'ankle_df_l', 'hip_ir_r'])
@@ -382,6 +382,6 @@ describe('safe fallback: hip flexion is never judged', () => {
   it('live measure-screen chip is off for hip flexion', () => {
     expect(getScore('68', { key: 'hip_flex_l', label: 'Left', unscored: true })).toBeNull()
     expect(getScore('68', { key: 'hip_flex_r', label: 'Right' })).toBeNull()
-    expect(getScore('68', { key: 'hip_abd_l', label: 'Left' })).toBe(1)
+    expect(getScore('35', { key: 'hip_abd_l', label: 'Left' })).toBe(1) // 35 / 40 = 0.875
   })
 })
