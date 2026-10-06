@@ -234,7 +234,10 @@ describe('assessment meter unchanged by the new optional props', () => {
     }))
     const card = $('[data-phone-meter]')!
     expect(card.textContent).toContain('Measuring: Left')
-    expect(card.getAttribute('aria-label')).toBe('Shoulder External Rotation')   // layout: name is the screen-reader label, the step header shows it
+    // layout: name is the screen-reader label, the step header shows it. Read from the step data so this passes before
+    // and after #148 relabels the shoulder_er title ('Shoulder External Rotation' -> 'Shoulder Extension').
+    expect(card.getAttribute('aria-label')).toBe(STEPS[SER].title)
+    expect(['Shoulder External Rotation', 'Shoulder Extension']).toContain(STEPS[SER].title)
     expect(card.querySelector('[aria-label="Close"]')).toBeTruthy()
     expect(card.querySelector('[data-grip-note]')).toBeNull()
     expect(card.querySelector('[data-meter-grip]')).toBeTruthy()
