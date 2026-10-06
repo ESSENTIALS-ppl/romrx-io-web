@@ -1,6 +1,6 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import { Loader2, ChevronRight, CheckCircle2, Info } from 'lucide-react'
-import { SETUP_STEPS } from './assessmentMeta'
+import { METHOD_LINE, SETUP_STEPS } from './assessmentMeta'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
 import { track } from '../lib/track'
 
@@ -51,9 +51,9 @@ if (phase === 'setup') {
             <div className="flex gap-2 items-start">
               <Info size={16} className="text-cobalt mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-cobalt">The method in 4 words: Place. Zero. Move. Hold.</p>
+                <p className="text-sm font-semibold text-cobalt" data-method-line>{METHOD_LINE}</p>
                 <p className="text-xs text-cobalt/80 mt-1 leading-relaxed">
-                  Hold the phone against the body part as shown. Tap Zero and hold the start position for the 5-second countdown. Move slowly to your end range, then hold still until the number locks. Each step tells you exactly where to hold the phone and which direction to move.
+                  Each step shows where to hold the phone and which way to move.
                 </p>
               </div>
             </div>

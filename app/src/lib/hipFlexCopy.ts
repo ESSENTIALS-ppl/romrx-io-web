@@ -26,6 +26,18 @@ export const HIP_FLEX_LEFT_RIGHT_DIFFERENT = 'Left and right are different'
 /** Degrees of left/right gap that counts as different (same 10 as the My Body gap flag). */
 export const HIP_FLEX_LR_DIFFERENT_DEG = 10
 
+/**
+ * Stacy pre-clear (Oct 5, 2026): straight-leg raise shows "Typical range: 60-85°" ONLY with Quinn's
+ * peer-reviewed source visible on the same screen. Still unscored: no band, no %, not in the /100.
+ */
+export const HIP_FLEX_TYPICAL_RANGE = 'Typical range: 60-85°'
+export const HIP_FLEX_RANGE_SOURCE = 'Source: Youdas et al., 2005'
+/**
+ * ONE switch. Grant (Oct 5, 11:14 PM): OFF. Quinn rates the 60-85° source PARTIAL (paywalled table,
+ * helper-lifted leg), so the straight-leg raise shows NO number and NO source line while this is false.
+ */
+export const SHOW_SLR_TYPICAL_RANGE = false
+
 /** LIVE: sex unknown or not given. No low/high judgment. */
 export const HIP_FLEX_FALLBACK_LINE = 'Saved for each leg, not scored.'
 
@@ -38,12 +50,12 @@ export const HIP_FLEX_STEP = {
   position: [
     'Lie flat on your back on the floor with both legs straight.',
     'Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.',
-    'Tap Zero, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
+    'Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
   ],
   howTo: [
-    'Keep the test knee completely straight. Raise that leg as high as you can without bending the knee, and keep your other leg flat on the floor.',
+    'Keep the test knee completely straight, kneecap pointing at the ceiling. Raise that leg straight up, not out, as high as you can without bending the knee, and keep your other leg flat on the floor.',
     'Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Hold still until the number locks and chimes.',
-    'Tap Use this number for this leg. Lower the leg slowly. Tap Zero again and repeat with the other leg. Each leg gets its own number.',
+    'Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.',
   ],
   mistake: 'Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher.',
   mistakeFix: 'Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again.',

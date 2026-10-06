@@ -2,7 +2,7 @@ import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, SkipFo
 import { cn } from '../lib/cn'
 import { STEPS } from './assessmentSteps'
 import { MeasureInput } from './AssessmentMeasure'
-import { HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexScreenCopy } from '../lib/hipFlexCopy'
+import { HIP_FLEX_LEFT_RIGHT_DIFFERENT, HIP_FLEX_RANGE_SOURCE, HIP_FLEX_TYPICAL_RANGE, SHOW_SLR_TYPICAL_RANGE, hipFlexScreenCopy } from '../lib/hipFlexCopy'
 import { useState, type Dispatch, type SetStateAction } from 'react'
 import { PhoneMeter } from '../components/PhoneMeter'
 import { meterLikelyAvailable } from '../lib/meterSensor'
@@ -27,17 +27,27 @@ export function AssessmentMeasureScreen(p: {
   const hipCopy = hipFlexScreenCopy(p.gender, parseFloat(values.hip_flex_l ?? ''), parseFloat(values.hip_flex_r ?? ''))
   const totalMeasureSteps = STEPS.length
   const progress = Math.round((stepIdx / totalMeasureSteps) * 100)
-  // Phone meter: one open at a time, tied to this step (switching steps closes it).
+  // Phone meter: one side at a time on this screen. Entering a meter step opens it on the first empty
+  // side; Use this number fills THAT side (same path as typing), collapses it to "Saved: Left 48°",
+  // and moves the meter to the next empty side. Switching steps resets this.
   const [meterAvail] = useState(meterLikelyAvailable)
-  const [active, setActive] = useState<{ step: number; key: string; notice?: string } | null>(null)
-  const activeKey = active?.step === stepIdx ? active.key : null
   const meterFields = step.meter ? step.fields.filter(f => f.unit === '°') : []
-  const canMeter = (f: Field) => meterAvail && meterFields.includes(f)
+  const meterOn = meterAvail && meterFields.length > 0
+  const [active, setActive] = useState<{ step: number; key: string | null; notice?: string } | null>(null)
+  const [savedByMeter, setSavedByMeter] = useState<Record<string, true>>({})
+  if (meterOn && active?.step !== stepIdx) {
+    const first = meterFields.find(f => (values[f.key] ?? '') === '')
+    setActive({ step: stepIdx, key: first?.key ?? null })
+  }
+  const activeKey = active?.step === stepIdx ? active.key : null
+  const canMeter = (f: Field) => meterOn && meterFields.includes(f)
   const useFromMeter = (f: Field, deg: number) => {
     p.handleChange(f.key, String(deg))                    // exactly the typed-entry path
+    setSavedByMeter(s => ({ ...s, [f.key]: true }))
     const next = meterFields.find(o => o !== f && (values[o.key] ?? '') === '')
-    setActive(next ? { step: stepIdx, key: next.key, notice: METER_COPY.savedThenNext(f.label, deg, next.label) } : null)
+    setActive({ step: stepIdx, key: next?.key ?? null, notice: next ? METER_COPY.nextReady(next.label) : undefined })
   }
+  const allMeterSaved = meterOn && meterFields.every(f => (values[f.key] ?? '') !== '') && meterFields.some(f => savedByMeter[f.key])
   return (
     <div className="min-h-screen bg-surface py-6 px-4">
       <div className="max-w-lg mx-auto space-y-4">
@@ -109,19 +119,45 @@ export function AssessmentMeasureScreen(p: {
             <div className="space-y-4 pt-2 border-t border-cobalt/10">
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide">Enter your measurements</p>
               {step.meter && !meterAvail && <p className="text-xs text-slate-500" data-desktop-note>{METER_COPY.desktopNote}</p>}
-              {step.fields.map(f => (
-                <div key={f.key} className="space-y-3">
-                  <MeasureInput field={f.unscored ? { ...f, referenceNote: hipCopy.inputNote } : f} value={values[f.key] ?? ''} onChange={p.handleChange}
-                    onMeasure={canMeter(f) ? () => setActive({ step: stepIdx, key: f.key }) : undefined} measuring={activeKey === f.key} />
-                  {activeKey === f.key && step.meter && (
-                    <PhoneMeter key={`${stepIdx}-${f.key}`} movement={step.title} sideLabel={f.label} grip={step.meter.grip}
-                      notice={active?.notice}
-                      onUse={deg => useFromMeter(f, deg)} onClose={() => setActive(null)} />
-                  )}
-                </div>
-              ))}
+              {step.fields.map(f => {
+                const v = values[f.key] ?? ''
+                const isActive = activeKey === f.key && !!step.meter
+                if (canMeter(f) && !isActive && v !== '' && savedByMeter[f.key]) {
+                  return (
+                    <div key={f.key} data-saved-row={f.key}
+                      className="flex items-center gap-2 rounded-card border border-cobalt/15 bg-cobalt-light px-3 min-h-[52px]">
+                      <CheckCircle2 size={18} className="text-cobalt shrink-0" />
+                      <span className="text-sm font-bold text-cobalt-ink">{METER_COPY.saved(f.label, v)}</span>
+                      <button type="button" onClick={() => setActive({ step: stepIdx, key: f.key })}
+                        className="ml-auto min-h-[44px] px-2 text-sm font-semibold text-cobalt hover:underline">{METER_COPY.measureAgain}</button>
+                    </div>
+                  )
+                }
+                return (
+                  <div key={f.key} className="space-y-3">
+                    <MeasureInput field={f.unscored ? { ...f, referenceNote: SHOW_SLR_TYPICAL_RANGE ? HIP_FLEX_TYPICAL_RANGE : hipCopy.inputNote } : f} value={v} onChange={p.handleChange}
+                      onMeasure={canMeter(f) ? () => setActive({ step: stepIdx, key: f.key }) : undefined} measuring={isActive}
+                      upNext={canMeter(f) && !isActive && activeKey != null && v === ''} />
+                    {isActive && step.meter && (
+                      <PhoneMeter key={`${stepIdx}-${f.key}`} movement={step.title} sideLabel={f.label} grip={step.meter.grip}
+                        notice={active?.notice}
+                        onUse={deg => useFromMeter(f, deg)} onClose={() => setActive({ step: stepIdx, key: null })} />
+                    )}
+                  </div>
+                )
+              })}
+              {allMeterSaved && activeKey == null && (
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-cobalt" role="status" data-all-saved>
+                  <CheckCircle2 size={16} /> {METER_COPY.allSaved(meterFields.map(f => f.label))}
+                </p>
+              )}
+              {(() => {
+                const src = [...new Set(step.fields.filter(f => f.rangeSource && f.normalLow != null).map(f => f.rangeSource!))]
+                return src.length ? <p className="text-[11px] text-slate-400" data-range-source>Source: {src.join('; ')}</p> : null
+              })()}
               {isHip && (
                 <div className="text-xs text-slate-500 space-y-1" data-unscored-note>
+                  {SHOW_SLR_TYPICAL_RANGE && <p data-range-source>{HIP_FLEX_RANGE_SOURCE}</p>}
                   {hipCopy.lines.map(l => (
                     <p key={l} className={l === HIP_FLEX_LEFT_RIGHT_DIFFERENT ? 'font-semibold text-slate-600' : undefined}>{l}</p>
                   ))}

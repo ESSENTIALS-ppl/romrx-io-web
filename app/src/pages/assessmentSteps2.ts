@@ -9,19 +9,19 @@ export const STEPS_PART2: Step[] = [
     tool: 'Your phone. Seated in a chair.',
     position: [
       'Sit upright in a chair. Feet flat. Back straight.',
-      'Tap Zero, then press your phone flat against the SIDE of your head at the temple, screen facing the wall beside you.',
+      'Tap Start, then press your phone flat against the SIDE of your head at the temple, screen facing the wall beside you.',
       'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
-      'Flexion: Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number.',
-      'Extension: Look straight ahead, tap Zero the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number.',
+      'Back stays against the chair. Only your head nods. Flexion: Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number.',
+      'Extension: Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number.',
     ],
     mistake: 'Moving your whole upper body forward or backward instead of just your head and neck.',
     mistakeFix: 'Your shoulders and torso stay still. Only your head moves. If your back starts to round or arch, stop there.',
     meter: { grip: 'Phone flat against the side of your head at the temple, screen facing the wall beside you.' },
     fields: [
-      { key: 'cervical_flex', label: 'Flexion', unit: '°', normalLow: 45, normalHigh: 60, riskBelow: 35 },
-      { key: 'cervical_ext', label: 'Extension', unit: '°', normalLow: 55, normalHigh: 70, riskBelow: 40 },
+      { key: 'cervical_flex', label: 'Flexion', unit: '°', riskBelow: 35 },
+      { key: 'cervical_ext', label: 'Extension', unit: '°', riskBelow: 40 },
     ],
   },
 {
@@ -48,20 +48,20 @@ export const STEPS_PART2: Step[] = [
     tool: 'Your phone. Standing.',
     position: [
       'Stand upright with something nearby you can grab for balance if needed.',
-      'Tap Zero, then hold your phone flat against the front of your thigh with your same-side hand. The screen faces forward, away from you, and the long edge runs along your thigh.',
+      'Tap Start, then hold your phone flat against the OUTER side of your thigh, midway between your hip and your knee, with your same-side hand. The screen faces out to the side and the long edge runs along your thigh.',
       'Stand straight with your weight even on both feet. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
-      'Lift your test leg sideways, out away from your body. Keep your toes pointing forward the whole time.',
+      'Toes forward. Lift your test leg straight out to the side. No lean, no forward drift, no turning out.',
       'Stop just before your upper body starts to lean to the opposite side or your hip hinges backward. Hold still until the number locks and chimes.',
-      'Tap Use this number. Lower the leg, tap Zero again, and repeat on the other side.',
+      'Tap Use this number. Lower the leg, tap Start again, and repeat on the other side.',
     ],
     mistake: 'Leaning your torso away or letting the hip hinge backward to get the leg higher.',
     mistakeFix: 'Your torso stays upright and your hip stays directly under you. The moment either shifts, you have hit your true end range.',
-    meter: { grip: 'Phone flat on the front of your thigh, screen facing forward, long edge along the thigh.' },
+    meter: { grip: 'Standing. Phone flat on the outer side of your thigh, screen facing out, long edge along the thigh.' },
     fields: [
-      { key: 'hip_abd_l', label: 'Left', unit: '°', normalLow: 35, normalHigh: 45, riskBelow: 25 },
-      { key: 'hip_abd_r', label: 'Right', unit: '°', normalLow: 35, normalHigh: 45, riskBelow: 25 },
+      { key: 'hip_abd_l', label: 'Left', unit: '°', riskBelow: 25 },
+      { key: 'hip_abd_r', label: 'Right', unit: '°', riskBelow: 25 },
     ],
   },
 {

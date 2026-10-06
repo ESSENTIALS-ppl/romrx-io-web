@@ -7,20 +7,22 @@ import { METER_COPY } from '../lib/meterCopy'
 // -- Single field input ----------------------------------------------------------
 // Typed entry is always available. When the step has a phone meter, "Measure with phone" opens it;
 // "Use this number" calls the same onChange(key, value) as typing, so scoring and saving are identical.
-export function MeasureInput({ field, value, onChange, onMeasure, measuring }: {
+export function MeasureInput({ field, value, onChange, onMeasure, measuring, upNext }: {
   field: Field; value: string; onChange: (k: string, v: string) => void
   /** Present only when the phone meter can be used for this field. */
   onMeasure?: () => void
   measuring?: boolean
+  /** This side is next in line for the meter (shown small next to the label). */
+  upNext?: boolean
 }) {
   const score = getScore(value, field)
   const tone = score != null ? BAND_TONE[score] : null
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label htmlFor={`m-${field.key}`} className="text-sm font-semibold text-cobalt-ink">{field.label}</label>
+        <label htmlFor={`m-${field.key}`} className="text-sm font-semibold text-cobalt-ink">{field.label}{upNext && <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400" data-up-next>{METER_COPY.upNext}</span>}</label>
         {(() => {
-          const note = field.referenceNote ?? (!field.unscored && field.normalLow != null && field.normalHigh != null ? `Normal: ${field.normalLow}-${field.normalHigh}${field.unit ?? ''}` : null)
+          const note = field.referenceNote ?? (!field.unscored && field.normalLow != null && field.normalHigh != null ? METER_COPY.typicalRange(field.normalLow, field.normalHigh, field.unit ?? '') : null)
           return note ? <span className="text-xs text-slate-500">{note}</span> : null
         })()}
       </div>
@@ -47,7 +49,8 @@ export function MeasureInput({ field, value, onChange, onMeasure, measuring }: {
         )}
         {onMeasure && !measuring && (
           <button type="button" onClick={onMeasure} data-measure-btn={field.key}
-            className="ml-auto inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-card border border-cobalt/20 bg-cobalt-light text-cobalt text-sm font-semibold hover:bg-cobalt hover:text-white transition-colors">
+            className={cn('ml-auto inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-card text-sm font-semibold transition-colors',
+              upNext ? 'text-cobalt hover:bg-cobalt-light' : 'border border-cobalt/20 bg-cobalt-light text-cobalt hover:bg-cobalt hover:text-white')}>
             <Crosshair size={15} /> {METER_COPY.measureButton}
           </button>
         )}

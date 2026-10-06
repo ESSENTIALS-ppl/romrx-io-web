@@ -1,58 +1,120 @@
 /**
- * Soft chime for the phone meter. Web Audio only, no vibration, same on iPhone and Android.
- * iOS needs the AudioContext created/resumed inside a tap: call unlockMeterAudio() from the
- * Start sensor tap handler (it also plays a silent buffer). On iPhone the ringer switch must be on.
+ * Meter sounds. Web Audio only, no vibration, same on iPhone and Android.
+ *
+ * iOS Safari reliability (Jim, Oct 5: beeps played on one side and not the other, no lock ding):
+ * - ONE shared AudioContext for the whole assessment.
+ * - unlockMeterAudio() runs inside EVERY meter tap (Turn on the meter, Start, Reset, Use this number):
+ *   it creates the context if needed, resumes it if it is not running (the iOS motion prompt and
+ *   backgrounding leave it 'suspended' or 'interrupted'), and plays a silent 1-sample buffer.
+ * - The whole countdown (ticks on 5, 4, 3, 2, then GO) is scheduled on the audio clock in the Start
+ *   tap, so timer jitter cannot drop or reorder a beep.
+ * - Before the lock ding the state is checked again; if not running we resume first, then play.
+ * - When the page comes back to the foreground we try to resume (the next tap always does).
+ * On iPhone, Web Audio follows the silent switch, hence the "Turn off silent mode" line.
  */
+import { ZERO_COUNTDOWN_SEC } from './meterLock'
+
 type AC = AudioContext
 let ctx: AC | null = null
 
+export interface ToneSpec {
+  freq: number
+  peak: number
+  attack: number
+  /** Seconds at full level before the decay (0 = straight into decay). */
+  hold: number
+  decay: number
+  type: OscillatorType
+}
+
+/** Small soft tick on 5, 4, 3, 2. Short, low, quiet. */
+export const COUNTDOWN_TICK: ToneSpec = { freq: 480, peak: 0.05, attack: 0.004, hold: 0, decay: 0.066, type: 'sine' }
+/** GO at zero: louder and higher than the ticks (game-start style), still short. */
+export const GO_TONE: ToneSpec[] = [
+  { freq: 988, peak: 0.14, attack: 0.006, hold: 0.18, decay: 0.16, type: 'triangle' },
+  { freq: 1976, peak: 0.03, attack: 0.006, hold: 0.12, decay: 0.12, type: 'sine' },
+]
+/** Lock ding: bright microwave-style bell with a longer ring. Partials at 2.0x and 2.76x decay faster. */
+export const LOCK_DING: ToneSpec[] = [
+  { freq: 1319, peak: 0.12, attack: 0.004, hold: 0, decay: 1.3, type: 'sine' },
+  { freq: 2638, peak: 0.035, attack: 0.003, hold: 0, decay: 0.7, type: 'sine' },
+  { freq: 1319 * 2.76, peak: 0.02, attack: 0.003, hold: 0, decay: 0.35, type: 'sine' },
+]
+
+/** Countdown shown and heard after Start: 5, 4, 3, 2 (tick each), then GO (zero is set). */
+export const COUNTDOWN_FROM = ZERO_COUNTDOWN_SEC
+export type CountdownEvent = { at: number; show: number | 'GO'; sound: 'tick' | 'go' }
+export function countdownPlan(from: number = COUNTDOWN_FROM): CountdownEvent[] {
+  const ev: CountdownEvent[] = []
+  for (let n = from, i = 0; n >= 2; n--, i++) ev.push({ at: i, show: n, sound: 'tick' })
+  ev.push({ at: from - 1, show: 'GO', sound: 'go' })
+  return ev
+}
+/** Seconds from the Start tap to GO, when the start position is captured. */
+export const ZERO_AT_SEC = COUNTDOWN_FROM - 1
+
+function getCtx(): AC | null {
+  if (ctx) return ctx
+  if (typeof window === 'undefined') return null
+  const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  if (!Ctor) return null
+  ctx = new Ctor()
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && ctx && ctx.state !== 'running') void ctx.resume().catch(() => {})
+  })
+  return ctx
+}
+
+/** Call directly inside a tap. Safe to call on every tap. */
 export function unlockMeterAudio(): void {
   try {
-    const Ctor = (window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)
-    if (!Ctor) return
-    if (!ctx) ctx = new Ctor()
-    if (ctx.state !== 'running') void ctx.resume()
-    const buf = ctx.createBuffer(1, 1, 22050)
-    const src = ctx.createBufferSource()
-    src.buffer = buf; src.connect(ctx.destination); src.start(0)
+    const c = getCtx()
+    if (!c) return
+    if (c.state !== 'running') void c.resume().catch(() => {})
+    const src = c.createBufferSource()
+    src.buffer = c.createBuffer(1, 1, 22050)
+    src.connect(c.destination); src.start(0)
   } catch { /* no audio: the meter still works */ }
 }
 
-function tone(c: AC, freq: number, peak: number, attack: number, decay: number, t: number) {
+function tone(c: AC, s: ToneSpec, t: number): OscillatorNode {
   const o = c.createOscillator(), g = c.createGain()
-  o.type = 'sine'; o.frequency.value = freq
+  o.type = s.type; o.frequency.value = s.freq
   g.gain.setValueAtTime(0.0001, t)
-  g.gain.linearRampToValueAtTime(peak, t + attack)
-  g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay)
+  g.gain.linearRampToValueAtTime(s.peak, t + s.attack)
+  if (s.hold > 0) g.gain.setValueAtTime(s.peak, t + s.attack + s.hold)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + s.attack + s.hold + s.decay)
   o.connect(g); g.connect(c.destination)
-  o.start(t); o.stop(t + attack + decay + 0.05)
-}
-
-/** Lock chime: 880 Hz sine, ~8 ms attack, ~500 ms decay, plus a quiet 2.76x partial (~250 ms). Peak ~0.1. */
-export function playLockDing(): void {
-  if (!ctx) return
-  try {
-    if (ctx.state !== 'running') void ctx.resume()
-    const t = ctx.currentTime + 0.02
-    tone(ctx, 880, 0.08, 0.008, 0.5, t)
-    tone(ctx, 880 * 2.76, 0.022, 0.005, 0.25, t)
-  } catch { /* ignore */ }
+  o.start(t); o.stop(t + s.attack + s.hold + s.decay + 0.05)
+  return o
 }
 
 /**
- * Zero countdown tick (5-4-3-2-1): short, soft, lower than the lock ding so the two never sound alike.
- * 480 Hz sine, ~4 ms attack, fades out over ~65 ms (about 70 ms total), peak 0.06. No pip at zero.
+ * Schedule the whole countdown on the audio clock. Call right after unlockMeterAudio() in the Start
+ * tap. Returns a cancel function (Reset / Close during the countdown stops every pending beep).
  */
-export const COUNTDOWN_TICK = { freq: 480, peak: 0.06, attack: 0.004, decay: 0.065 } as const
-export function playCountdownTick(): void {
-  if (!ctx) return
+export function scheduleCountdownSounds(from: number = COUNTDOWN_FROM): () => void {
+  const c = ctx
+  if (!c) return () => {}
+  const nodes: OscillatorNode[] = []
   try {
-    if (ctx.state !== 'running') void ctx.resume()
-    tone(ctx, COUNTDOWN_TICK.freq, COUNTDOWN_TICK.peak, COUNTDOWN_TICK.attack, COUNTDOWN_TICK.decay, ctx.currentTime + 0.02)
+    const base = c.currentTime + 0.03
+    for (const e of countdownPlan(from)) {
+      const specs = e.sound === 'tick' ? [COUNTDOWN_TICK] : GO_TONE
+      for (const s of specs) nodes.push(tone(c, s, base + e.at))
+    }
   } catch { /* ignore */ }
+  return () => { for (const n of nodes) { try { n.stop(); n.disconnect() } catch { /* already done */ } } }
 }
 
-/** Resume after iOS interruptions; safe to call from any tap. */
-export function resumeMeterAudio(): void {
-  if (ctx && ctx.state !== 'running') void ctx.resume().catch(() => {})
+/** Lock ding. Re-checks the context first; resumes, then plays. */
+export function playLockDing(): void {
+  const c = ctx
+  if (!c) return
+  const play = () => { try { const t = c.currentTime + 0.02; for (const s of LOCK_DING) tone(c, s, t) } catch { /* ignore */ } }
+  if (c.state === 'running') play()
+  else void c.resume().then(play, () => {})
 }
+
+/** Tests only. */
+export function __setAudioContextForTests(c: AudioContext | null): void { ctx = c }

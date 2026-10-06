@@ -184,11 +184,22 @@ describe('Stacy edit (Oct 4): while HIP_FLEX_UNSCORED_FALLBACK is true, the sex-
   it('the measure screen is wired to the pure function and the profile gender', () => {
     const screen = readFileSync(join(SRC, 'pages', 'AssessmentMeasureScreen.tsx'), 'utf8')
     expect(screen).toMatch(/hipFlexScreenCopy\(p\.gender/)
-    expect(screen).toMatch(/referenceNote: hipCopy\.inputNote/)
+    expect(screen).toMatch(/referenceNote: SHOW_SLR_TYPICAL_RANGE \? HIP_FLEX_TYPICAL_RANGE : hipCopy\.inputNote/)
+    expect(screen).toMatch(/SHOW_SLR_TYPICAL_RANGE && <p data-range-source>\{HIP_FLEX_RANGE_SOURCE\}/)
     const a = readFileSync(join(SRC, 'pages', 'Assessment.tsx'), 'utf8')
     expect(a).toMatch(/gender=\{profile\?\.gender\}/)
     const steps = STEPS.find(s => s.id === 'hip_flex')!
     for (const f of steps.fields) expect(f.referenceNote).toBeUndefined()
+  })
+})
+
+describe('straight-leg raise typical range (Grant, Oct 5 11:14 PM: OFF)', () => {
+  it('toggle is OFF: no number and no source line for SLR', async () => {
+    const m = await import('./hipFlexCopy')
+    expect(m.SHOW_SLR_TYPICAL_RANGE).toBe(false)
+    expect(m.HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 60-85°')
+    const step = STEPS.find(s => s.id === 'hip_flex')!
+    for (const f of step.fields) { expect(f.rangeSource).toBeUndefined(); expect(f.normalLow).toBeUndefined() }
   })
 })
 

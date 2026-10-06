@@ -12,7 +12,7 @@
 export const LOCK_BAND_DEG = 2
 export const LOCK_HOLD_MS = 2500
 export const ZERO_GUARD_DEG = 2
-/** Zero = a 5-4-3-2-1 countdown with a soft tick on each number, then it zeroes (Jim, Oct 5 10:26 PM). */
+/** Start = counts down from 5: soft ticks on 5, 4, 3, 2, then GO, when the start position is set (Jim, Oct 5 10:45 PM). */
 export const ZERO_COUNTDOWN_SEC = 5
 
 export interface LockConfig { band: number; holdMs: number; zeroGuard: number }

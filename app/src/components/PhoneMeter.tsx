@@ -2,12 +2,14 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Lock, Crosshair, X } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { averageQuats, tiltDeltaDeg, type Quat } from '../lib/orientation'
-import { ZERO_COUNTDOWN_SEC, initialLock, meterValueToUse, nextPeak, stepLock, type LockState } from '../lib/meterLock'
+import { initialLock, meterValueToUse, nextPeak, stepLock, type LockState } from '../lib/meterLock'
 import { getSensorSnapshot, latestQuat, latestRaw, recentQuats, startSensor, subscribeSensor } from '../lib/meterSensor'
-import { playCountdownTick, playLockDing, resumeMeterAudio } from '../lib/meterAudio'
-import { METER_COPY as C } from '../lib/meterCopy'
+import { COUNTDOWN_FROM, countdownPlan, playLockDing, scheduleCountdownSounds, unlockMeterAudio } from '../lib/meterAudio'
+import { METER_COPY as C, isInAppBrowser } from '../lib/meterCopy'
 
 const TICK_MS = 50
+/** How long the big GO stays up after zero is set before the live number shows. */
+const GO_SHOW_MS = 800
 const showDebug = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1'
 
 interface View { angle: number | null; peak: number | null; locked: boolean; lockVal: number | null; holdFrac: number | null }
@@ -15,7 +17,7 @@ interface View { angle: number | null; peak: number | null; locked: boolean; loc
 /**
  * Inline phone meter for one angle field. Same math as the sandbox Jim tested (lib/orientation.ts
  * tiltDeltaDeg: gravity angle since Zero, smooth past 90, no heading drift) and the same lock rule
- * (lib/meterLock.ts). Shows only: movement, grip line, big number / Locked, hold bar, Zero, Reset,
+ * (lib/meterLock.ts). Shows only: movement, grip line, big number / Locked, hold bar, Start, Reset,
  * Use this number, Peak. Debug readout only with ?debug=1.
  */
 export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }: {
@@ -32,7 +34,8 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
   const peak = useRef<number | null>(null)
   const live = useRef<number | null>(null)
   const [view, setView] = useState<View>({ angle: null, peak: null, locked: false, lockVal: null, holdFrac: null })
-  const [countdown, setCountdown] = useState<number | null>(null)
+  const [countdown, setCountdown] = useState<number | 'GO' | null>(null)
+  const [inApp] = useState(() => isInAppBrowser())
   const [zeroed, setZeroed] = useState(false)
   const [debug] = useState(showDebug)
   const [dbg, setDbg] = useState('')
@@ -77,42 +80,51 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
   }
 
   const timers = useRef<number[]>([])
-  useEffect(() => () => { timers.current.forEach(t => window.clearTimeout(t)) }, [])
-  const cancelCountdown = () => { timers.current.forEach(t => window.clearTimeout(t)); timers.current = []; setCountdown(null) }
-  // Zero = 5-4-3-2-1 shown big with a soft tick on each number, then it zeroes at the start position.
+  const stopSounds = useRef<() => void>(() => {})
+  const clearTimers = () => { timers.current.forEach(t => window.clearTimeout(t)); timers.current = [] }
+  useEffect(() => () => { clearTimers(); stopSounds.current() }, [])
+  const cancelCountdown = () => { clearTimers(); stopSounds.current(); stopSounds.current = () => {}; setCountdown(null) }
+  // Start = counts down from 5: 5, 4, 3, 2 shown big with a small tick each, then GO (louder, higher)
+  // when it zeroes at the start position. All beeps are scheduled on the audio clock inside this tap.
   // While counting there is no zero (q0 null), so nothing can lock.
   const onZero = () => {
-    resumeMeterAudio()
+    unlockMeterAudio()
     cancelCountdown()
     q0.current = null; setZeroed(false)
     lock.current = initialLock(); peak.current = null; live.current = null
     setView({ angle: null, peak: null, locked: false, lockVal: null, holdFrac: null })
-    setCountdown(ZERO_COUNTDOWN_SEC); playCountdownTick()
-    for (let i = 1; i <= ZERO_COUNTDOWN_SEC; i++) {
+    stopSounds.current = scheduleCountdownSounds()
+    setCountdown(COUNTDOWN_FROM)
+    for (const e of countdownPlan()) {
+      if (e.at === 0) continue
       timers.current.push(window.setTimeout(() => {
-        const left = ZERO_COUNTDOWN_SEC - i
-        if (left > 0) { setCountdown(left); playCountdownTick() }
-        else { timers.current = []; setCountdown(null); captureZero() }
-      }, i * 1000))
+        if (e.show === 'GO') {
+          captureZero(); setCountdown('GO')
+          timers.current.push(window.setTimeout(() => setCountdown(c => (c === 'GO' ? null : c)), GO_SHOW_MS))
+        } else setCountdown(e.show)
+      }, e.at * 1000))
     }
   }
   const onReset = () => {
-    resumeMeterAudio()
-    if (countdown != null) { cancelCountdown(); return }   // Reset during the countdown cancels it
+    unlockMeterAudio()
+    if (typeof countdown === 'number') { cancelCountdown(); return }   // Reset during the countdown cancels it
+    if (countdown === 'GO') setCountdown(null)
     lock.current = initialLock()
     peak.current = live.current
     setView(v => ({ ...v, locked: false, lockVal: null, holdFrac: null, peak: live.current == null ? null : Math.round(live.current), angle: live.current == null ? v.angle : Math.round(live.current) }))
   }
   const onUseClick = () => {
+    unlockMeterAudio()
     const v = meterValueToUse(lock.current, zeroed ? live.current : null)
     if (v != null) onUse(v)
   }
 
   const live_ = sensor.status === 'live'
-  const fallback = sensor.status === 'denied' ? C.denied : sensor.status === 'error' ? C.error
-    : (sensor.status === 'nodata' || sensor.status === 'unsupported') ? C.noData : null
+  const fallback = sensor.status === 'denied' ? (inApp ? C.inApp : C.denied) : sensor.status === 'error' ? C.error
+    : (sensor.status === 'nodata' || sensor.status === 'unsupported') ? (inApp ? C.inApp : C.noData) : null
+  const counting = typeof countdown === 'number'
   const shown = view.locked ? view.lockVal : view.angle
-  const status = countdown != null ? C.zeroCountdown
+  const status = counting ? C.zeroCountdown
     : !zeroed ? C.needZero
     : view.locked ? C.locked : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
 
@@ -145,6 +157,8 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
             <Crosshair size={18} /> {sensor.status === 'starting' ? C.starting : C.startButton}
           </button>
           <p className="text-xs text-slate-500 text-center">{C.startNote}</p>
+          <p className="text-xs text-slate-500 text-center" data-sound-line>{C.soundLine}</p>
+          {inApp && <p className="text-xs text-slate-700 bg-surface border border-slate-200 rounded-card px-3 py-2" data-inapp-note>{C.inApp}</p>}
         </div>
       ) : (
         <>
@@ -156,7 +170,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
             <div className={cn('font-display font-extrabold tabular-nums leading-none tracking-tight mt-1',
               view.locked ? 'text-cobalt' : 'text-cobalt-ink')} style={{ fontSize: 'clamp(72px, 24vw, 104px)' }} data-meter-number>
               {countdown != null
-                ? <span className="text-cobalt" data-countdown>{countdown}</span>
+                ? <span className="text-cobalt" data-countdown>{countdown === 'GO' ? C.go : countdown}</span>
                 : shown == null ? <span className="text-slate-300">--</span>
                 : <>{shown}<span className="text-cobalt align-top" style={{ fontSize: '0.5em' }}>°</span></>}
             </div>
@@ -167,7 +181,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
           </div>
           <div className="grid grid-cols-3 gap-2">
             <button type="button" onClick={onZero} className="btn-ghost min-h-[48px] text-base">{C.zeroButton}</button>
-            <button type="button" onClick={onReset} disabled={!zeroed && countdown == null} className="btn-ghost min-h-[48px] text-base disabled:opacity-40">{C.resetButton}</button>
+            <button type="button" onClick={onReset} disabled={!zeroed && !counting} className="btn-ghost min-h-[48px] text-base disabled:opacity-40">{C.resetButton}</button>
             <button type="button" onClick={onUseClick} disabled={!zeroed || view.angle == null} className="btn-primary min-h-[48px] px-2 leading-tight disabled:opacity-40">{C.useButton}</button>
           </div>
           <div className="flex items-center justify-between border-t border-cobalt/10 pt-2">

@@ -7,6 +7,9 @@ import { unlockMeterAudio } from './meterAudio'
  *   called directly from a tap handler (no await before it). Never on load.
  * - Android Chrome: no permission prompt (newer Chromium has requestPermission and may answer
  *   'prompt'); only a hard 'denied' stops us, otherwise we attach and wait for readings.
+ * - Android Chrome may fire 'deviceorientationabsolute' (compass alpha) as well as, or instead of,
+ *   'deviceorientation'. We listen to both: the tilt math uses gravity only (beta/gamma), so absolute
+ *   vs relative alpha does not change the number. Events with null beta/gamma are ignored.
  * - No readings within NO_DATA_MS (desktop, blocked sensors): status 'nodata' and the UI falls back
  *   to typing the number.
  */
@@ -44,7 +47,11 @@ export function feedOrientation(alpha: number | null, beta: number | null, gamma
 const onEvent = (e: DeviceOrientationEvent) => feedOrientation(e.alpha, e.beta, e.gamma)
 
 function attach() {
-  if (!attached) { window.addEventListener('deviceorientation', onEvent); attached = true }
+  if (!attached) {
+    window.addEventListener('deviceorientation', onEvent)
+    window.addEventListener('deviceorientationabsolute' as 'deviceorientation', onEvent)
+    attached = true
+  }
   if (snap.samples === 0) {
     window.setTimeout(() => { if (snap.samples === 0) set('nodata') }, NO_DATA_MS)
   }
@@ -89,7 +96,10 @@ export const latestRaw = () => raw
 
 /** Tests only. */
 export function __resetSensorForTests(): void {
-  if (attached && typeof window !== 'undefined') window.removeEventListener('deviceorientation', onEvent)
+  if (attached && typeof window !== 'undefined') {
+    window.removeEventListener('deviceorientation', onEvent)
+    window.removeEventListener('deviceorientationabsolute' as 'deviceorientation', onEvent)
+  }
   attached = false; latest = null; raw = null; recent.length = 0; snap = { status: 'idle', samples: 0 }
   subs.forEach(f => f())
 }
