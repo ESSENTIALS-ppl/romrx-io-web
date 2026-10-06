@@ -85,15 +85,16 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
         const j = BASE_DISPLAY_JOINTS[i]
         const rr = radar[i]
         const num = (k?: string) => (k == null || a[k] == null ? null : Number(a[k]))
-        const expected = jointPercent(j.key, { left: num(j.l), right: num(j.r), midline: num(j.single) }, bands.get(j.key) ?? null) ?? 0
+        const expected = jointPercent(j.key, { left: num(j.l), right: num(j.r), midline: num(j.single) }, bands.get(j.key) ?? null)
+        // pct is null when unmeasured/unscored (lumbar removal, Oct 5: never a fake 0)
         expect([j.key, bar.pct]).toEqual([j.key, expected])
         // worse side (tooltip + dots) === bar %
-        expect([j.key, rr.worse]).toEqual([j.key, bar.pct])
+        expect([j.key, rr.worse]).toEqual([j.key, bar.pct ?? 0])
         expect([j.key, rr.band]).toEqual([j.key, bar.band])
         if (!rr.measured) { checked++; return }
         if (rr.midline) {
           // one value on both lines
-          expect([rr.left, rr.right]).toEqual([bar.pct, bar.pct])
+          expect([rr.left, rr.right]).toEqual([bar.pct ?? 0, bar.pct ?? 0])
         } else {
           const sb = sideBandsForJoint(j.key, { left: num(j.l), right: num(j.r) }, bar.band)
           expect([rr.leftBand, rr.rightBand]).toEqual([sb.left, sb.right])

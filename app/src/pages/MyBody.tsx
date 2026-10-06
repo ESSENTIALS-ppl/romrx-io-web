@@ -1,3 +1,4 @@
+import { LOW_BACK_NOT_MEASURED, baseLumbarRemoved, isLumbarKey, lumbarNotMeasured } from '../lib/lumbarFlag'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -85,7 +86,8 @@ function getBandTier(band: BandScore) {
 // No elite sport-pack targets on Base (Fix A, Jim LOCK 2026-09-24).
 
 function JointBar({ row }: { row: JointDisplayRow }) {
-  const { label, left, right, midline, band: jointBand, pct, unit, unscored } = row
+  const { label, left, right, midline, band: jointBand, unit, unscored } = row
+  const pct = row.pct ?? 0
   const asym = left != null && right != null ? Math.abs(left - right) : 0
 
   // Single source of truth: band from joint_scores / compute_joint_scores formula.
@@ -162,10 +164,15 @@ export function MyBody() {
     />
   )
 
+  // Low-back flag ON (lib/lumbarFlag.ts): an unmeasured lumbar axis is left out (never drawn at 0).
+  const lumbarOff = baseLumbarRemoved()
   const radarRows = radarSideRowsForAssessment(assessment, jointScores).filter(r => !r.unscored)
+    .filter(r => !(lumbarOff && isLumbarKey(r.key) && !r.measured))
   const prs = mobilityScoreForAssessment(assessment, jointScores)
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
-  const jointRows = jointDisplayRowsForAssessment(assessment, jointScores)
+  const allJointRows = jointDisplayRowsForAssessment(assessment, jointScores)
+  const hideLumbar = lumbarOff && lumbarNotMeasured(assessment)
+  const jointRows = hideLumbar ? allJointRows.filter(r => !isLumbarKey(r.key)) : allJointRows
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreasForAssessment(assessment)
   const tier = getBandTier(overallBand)
@@ -382,6 +389,7 @@ export function MyBody() {
       <SectionCard title="Joint Breakdown" subtitle="Worse side shown - % of your Base target">
         <div className="divide-y divide-cobalt/10">
           {jointRows.map(row => <JointBar key={row.key} row={row} />)}
+          {hideLumbar && <p className="py-2 text-xs text-slate-500" data-low-back-not-measured>{LOW_BACK_NOT_MEASURED}</p>}
         </div>
         {jointRows.some(r => r.unscored && (r.left != null || r.right != null)) && (
           <p className="text-xs text-slate-500 pt-2" data-unscored-note>Hip Flexion: {HIP_FLEX_FALLBACK_LINE}</p>
