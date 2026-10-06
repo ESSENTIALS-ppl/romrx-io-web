@@ -22,13 +22,21 @@ interface View { angle: number | null; peak: number | null; locked: boolean; loc
  * The movement name is the screen-reader label only (the step header shows it). Peak and the debug
  * readout show only with ?debug=1 (layout review, Oct 6).
  */
-export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }: {
+export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, headerLabel, gripNote, lockedLine }: {
   movement: string
   sideLabel: string
   grip: string
   notice?: string | null
-  onUse: (deg: number) => void
-  onClose: () => void
+  /** Omitted (standalone ROMeter) = no Use this number button; the locked number just stays on screen. */
+  onUse?: (deg: number) => void
+  /** Omitted (standalone ROMeter) = no close X. */
+  onClose?: () => void
+  /** Standalone ROMeter: replaces "Measuring: <side>". */
+  headerLabel?: string
+  /** Standalone ROMeter: one line under the grip, always visible. */
+  gripNote?: string
+  /** Standalone ROMeter: replaces the locked status line (which mentions Use this number). */
+  lockedLine?: string
 }) {
   const sensor = useSyncExternalStore(subscribeSensor, getSensorSnapshot, getSensorSnapshot)
   const q0 = useRef<Quat | null>(null)
@@ -126,34 +134,35 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
     unlockMeterAudio()
     if (!lock.current.locked) return
     const v = meterValueToUse(lock.current, null)
-    if (v != null) onUse(v)
+    if (v != null) onUse?.(v)
   }
 
   const live_ = sensor.status === 'live'
   const fallback = sensor.status === 'denied' ? (inApp ? C.inApp : C.denied) : sensor.status === 'error' ? C.error
     : (sensor.status === 'nodata' || sensor.status === 'unsupported') ? (inApp ? C.inApp : C.noData) : null
   const counting = typeof countdown === 'number'
-  const showUse = view.locked && !counting
+  const showUse = !!onUse && view.locked && !counting   // standalone ROMeter (no onUse): never shown
   const showReset = zeroed || counting
   const shown = view.locked ? view.lockVal : view.angle
   const status = counting ? C.zeroCountdown
     : !zeroed ? C.needZero
-    : view.locked ? C.locked : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
+    : view.locked ? (lockedLine ?? C.locked) : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
 
   return (
     <div data-phone-meter role="group" aria-label={movement} className={cn('rounded-card border bg-white p-4 space-y-3 transition-colors', view.locked ? 'border-2 border-cobalt shadow-md' : 'border-cobalt/15')}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           {/* Layout item 6: no movement name here; the step header above already shows it. */}
-          <p className="text-[11px] font-bold uppercase tracking-wide text-cobalt">{C.measuringPrefix}: {sideLabel}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-cobalt">{headerLabel ?? `${C.measuringPrefix}: ${sideLabel}`}</p>
         </div>
-        <button type="button" onClick={() => { cancelCountdown(); onClose() }} aria-label={C.closeButton}
+        {onClose && <button type="button" onClick={() => { cancelCountdown(); onClose() }} aria-label={C.closeButton}
           className="-mr-2 -my-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-slate-400 hover:text-cobalt-ink hover:bg-surface">
           <X size={18} />
-        </button>
+        </button>}
       </div>
       {/* Layout item 8: plain grip line with a small phone icon, no box. Same words. */}
       <p className="flex gap-2 text-sm text-slate-600 leading-snug" data-meter-grip><Smartphone size={16} className="text-slate-400 shrink-0 mt-0.5" aria-hidden />{grip}</p>
+      {gripNote && <p className="pl-6 text-xs text-slate-500 leading-snug" data-grip-note>{gripNote}</p>}
       {notice && <p className="text-xs font-semibold text-cobalt" role="status">{notice}</p>}
 
       {fallback ? (

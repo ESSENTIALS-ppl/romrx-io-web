@@ -4,7 +4,8 @@ import { useProfile } from '../hooks/useProfile'
 import { cn } from '../lib/cn'
 import { FuelCalculateTracker } from './FuelCalculateTracker'
 import { DoNotSellLink } from './ConsentBanner'
-import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Settings, LogOut } from 'lucide-react'
+import { ROMETER_COPY } from '../lib/rometerCopy'
+import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Gauge, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 interface NavItem {
@@ -19,6 +20,7 @@ const NAV: NavItem[] = [
   { to: '/dashboard/my-fuel', icon: Apple, label: 'My Fuel' },
   { to: '/dashboard/my-sport', icon: Trophy, label: 'My Sport' },
   { to: '/dashboard/rombot', icon: MessageSquare, label: 'ROMBot' },
+  { to: '/dashboard/rometer', icon: Gauge, label: ROMETER_COPY.navLabel },
   { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ]
 
