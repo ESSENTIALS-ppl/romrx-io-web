@@ -104,20 +104,28 @@ describe('More help never hides Setup, warm-up or not-medical-advice text (Stacy
 })
 
 describe('the SLR safety lines stay on screen (Stacy guardrail)', () => {
-  // Jim, Oct 6 12:07 PM: his SLR copy replaced both fields that held "Stop if you feel sharp pain." and
-  // "Stop at a firm stretch, not at pain.", so the step has no stop line today. SHIP BLOCKER (Stacy): add the
-  // cleared "Stop if anything hurts." as an always-visible line once Jim says yes. Until then this checks that
-  // any safety wording the step does have is on screen without tapping anything.
-  it('hip_flex shows any safety wording without tapping anything', () => {
+  // Jim, Oct 6 12:26 PM: every step (SLR included) shows "We don't want you hurt, so stop if anything hurts."
+  // under Setup with More help closed. Any other safety wording on the SLR step must also be on screen.
+  it('hip_flex shows the stop line (and any safety wording) without tapping anything', () => {
     const idx = STEPS.findIndex(s => s.id === 'hip_flex')
     mount(createElement(AssessmentMeasureScreen, {
       stepIdx: idx, values: {}, loading: false, error: '', gender: null,
       setPhase: noop, setStepIdx: noop, handleNext: noop, handleChange: noop,
     }))
+    expect(host.textContent).toContain("We don't want you hurt, so stop if anything hurts.")
+    expect($('[data-stop-line]')!.closest('details, [data-help-body]')).toBeNull()
     const step = STEPS[idx]
     for (const l of [...step.position, ...step.howTo, step.mistake, step.mistakeFix].filter(l => MUST_STAY_VISIBLE.test(l))) {
       expect(host.textContent).toContain(l)
     }
-    for (const l of step.position) expect(host.textContent).toContain(l)
+  })
+  it('every step shows the stop line with More help closed', () => {
+    for (const [idx] of STEPS.entries()) {
+      mount(createElement(AssessmentMeasureScreen, {
+        stepIdx: idx, values: {}, loading: false, error: '', gender: null,
+        setPhase: noop, setStepIdx: noop, handleNext: noop, handleChange: noop,
+      }))
+      expect(host.textContent, STEPS[idx].id).toContain("We don't want you hurt, so stop if anything hurts.")
+    }
   })
 })
