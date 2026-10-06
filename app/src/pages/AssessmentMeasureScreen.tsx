@@ -8,6 +8,7 @@ import { PhoneMeter } from '../components/PhoneMeter'
 import { meterLikelyAvailable } from '../lib/meterSensor'
 import { METER_COPY, MEASUREMENTS_HEADER, MORE_HELP_LABEL } from '../lib/meterCopy'
 import type { Field } from './assessmentMeta'
+import { STOP_LINE } from '../lib/stopLine'
 
 /** Safety, not-medical-advice or warm-up wording that must never fold under More help (Stacy, Oct 6). */
 export const SAFETY_TEXT = /pain|stop if|hurt|medical|advice|warm[ -]?up|injur|doctor/i
@@ -108,6 +109,8 @@ export function AssessmentMeasureScreen(p: {
                   </li>
                 ))}
               </ol>
+              {/* Jim, Oct 6 12:26 PM: always visible on every step, never under More help */}
+              <p className="mt-2 text-sm font-semibold text-cobalt-ink leading-snug" data-stop-line>{STOP_LINE}</p>
             </div>
 
             {moreHelp && (
