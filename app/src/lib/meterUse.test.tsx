@@ -162,7 +162,7 @@ describe('phone meter in the Base measure screen', () => {
     for (let i = 0; i < 4; i++) { advance(1000, 0); seen.push($('[data-countdown]')?.textContent ?? 'none') }
     expect(seen).toEqual(['5', '4', '3', '2', 'GO'])
     expect($('[data-meter-status]')!.textContent).toBe('GO. Move slowly to your end range, then hold still.')
-    expect(btn('Use this number')!.disabled).toBe(false)
+    expect(btn('Use this number')!.disabled).toBe(true)                // not until a lock
     advance(900, 0)
     expect($('[data-countdown]')).toBeNull()
     expect($('[data-meter-number]')!.textContent).toBe('0°')
@@ -172,6 +172,40 @@ describe('phone meter in the Base measure screen', () => {
     expect(host.textContent).toContain('Locked: 40°')
     expect(audio.lock).toBe(1)
     expect(audio.countdowns).toBe(1)
+  })
+
+  it('Use this number: disabled from the Start tap through the countdown and GO until a lock; enabled after lock; Reset disables it again', async () => {
+    const calls = mount(SER)
+    await turnOn()
+    expect(btn('Use this number')!.disabled).toBe(true)
+    click(btn('Start'))
+    for (let i = 0; i < 4; i++) { expect(btn('Use this number')!.disabled).toBe(true); advance(1000, 0) }
+    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect(btn('Use this number')!.disabled).toBe(true)
+    advance(1000, 0); advance(1000, 40)                              // live and moving, not locked yet
+    expect(host.textContent).not.toContain('Locked:')
+    expect(btn('Use this number')!.disabled).toBe(true)
+    advance(3000, 40)
+    expect(host.textContent).toContain('Locked: 40°')
+    expect(btn('Use this number')!.disabled).toBe(false)
+    click(btn('Reset')); advance(100, 40)
+    expect(btn('Use this number')!.disabled).toBe(true)
+    expect(calls).toEqual([])
+    // typing stays available the whole time
+    expect(($('#m-shoulder_er_l') as HTMLInputElement).disabled).toBe(false)
+  })
+
+  it('cannot save 0 from an unlocked meter: a forced click at GO does nothing', async () => {
+    const calls = mount(SER)
+    await turnOn()
+    click(btn('Start')); advance(4000, 0)
+    expect($('[data-countdown]')!.textContent).toBe('GO')
+    const use = btn('Use this number')!
+    act(() => { use.disabled = false; use.click() })                 // even if the disabled state were bypassed
+    advance(1000, 0)
+    act(() => { const u = btn('Use this number')!; u.disabled = false; u.click() })
+    expect(calls).toEqual([])
+    expect($('[data-saved-row]')).toBeNull()
   })
 
   it('no lock during the countdown, even if held still away from the start', async () => {

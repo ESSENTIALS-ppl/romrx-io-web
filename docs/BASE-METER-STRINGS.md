@@ -66,7 +66,9 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - Old: The method in 4 words: Place. Zero. Move. Hold. (+ paragraph). Now one sub-line: "Each step shows where to hold the phone and which way to move." [NEW]
 
 ### Kept on purpose tonight (Stacy: PASS if kept, or Sunday)
-- "Enter your measurements" header and "Record it" in tips: kept (PASS).
+- Step header "Enter your measurements" -> **"Your measurements"** on every step (Stacy pre-clear optional, line 30; Grant: use it). "Record it" x3 in tips: kept (Stacy PASS). Typed-fallback line "Can't use the meter? Type your number in the box." kept (Stacy's line).
+- Setup tip "Your phone is the meter" (Reid, Oct 5): countdown sentence removed so it no longer repeats the Option A method line. Now: "On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps." (removal only, no new wording)
+- Behavior (no copy change): "Use this number" is disabled from the Start tap, through the countdown and GO, until the number locks; Reset unlocks and disables it again. Typing stays available.
 - "Personal Readiness Profile" on done screens + lead email: NOT changed (Sunday Protocol pass).
 - Setup box label "Typing is always OK" kept; its text is Stacy's line. Label "Partner (recommended)" -> "Partner (optional)" [NEW].
 - Low-back step (only visible when the low-back flag is OFF, i.e. production at the 6 AM ship; with the flag ON it is gone). Grant call: names no app. Stacy PASS, Oct 5 11:32 PM:
@@ -86,7 +88,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - (sub-line) Each step shows where to hold the phone and which way to move.
 
 #### Setup boxes (changed ones)
-- **Your phone is the meter**: On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Start, and hold still for the countdown. Move on GO and hold still. The number locks with a ding. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.
+- **Your phone is the meter**: On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.
 - **Typing is always OK**: Can't use the meter? Type your number in the box.
 - **Partner (optional)**: A partner can help. They hold the phone and tap the buttons while you move.
 

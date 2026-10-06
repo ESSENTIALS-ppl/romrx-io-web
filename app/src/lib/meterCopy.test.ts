@@ -1,6 +1,6 @@
 /** Phone meter copy rules: no em/en dashes, no accuracy/medical claims, "Protocol" never "Profile", US spelling. */
 import { describe, expect, it } from 'vitest'
-import { METER_COPY } from './meterCopy'
+import { METER_COPY, MEASUREMENTS_HEADER } from './meterCopy'
 import { STEPS } from '../pages/assessmentSteps'
 import { STEPS_PART2 } from '../pages/assessmentSteps2'
 import { METHOD_LINE, SETUP_STEPS } from '../pages/assessmentMeta'
@@ -60,6 +60,12 @@ describe('phone meter copy', () => {
     const text = [...all.position, ...all.howTo].join(' ')
     for (const t of ['Set your level to 0 while you stand straight.', 'Set your level to 0 while you lie flat.', 'Note the angle at that point.', 'Note the angle at your end range.']) expect(text).toContain(t)
     expect(text).not.toMatch(/\bzero\b|Read the number/i)
+  })
+  it('step header is Stacy\'s pre-cleared "Your measurements"; setup tip no longer repeats the countdown (Option A covers it)', () => {
+    expect(MEASUREMENTS_HEADER).toBe('Your measurements')
+    const tip = SETUP_STEPS.find(s => s.label === 'Your phone is the meter')!.detail
+    expect(tip).not.toMatch(/countdown|Move on GO|Hold until the ding|Get in position/)
+    expect(tip).toContain('Sound on, volume up. Turn off silent mode to hear the beeps.')
   })
   it('American spelling', () => { for (const t of ALL) expect(t).not.toMatch(/centre|colour|metre\b|calibrat(e|ion) your/i) })
   it('every degree step except lumbar has a meter grip; ankle (cm) and lumbar are typed only', () => {

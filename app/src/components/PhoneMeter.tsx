@@ -113,9 +113,12 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
     peak.current = live.current
     setView(v => ({ ...v, locked: false, lockVal: null, holdFrac: null, peak: live.current == null ? null : Math.round(live.current), angle: live.current == null ? v.angle : Math.round(live.current) }))
   }
+  // Use this number only fills a LOCKED reading (Reid, Oct 5: tapping it at GO saved 0°). Disabled from
+  // the Start tap, through the countdown, until a lock; Reset unlocks and disables it again.
   const onUseClick = () => {
     unlockMeterAudio()
-    const v = meterValueToUse(lock.current, zeroed ? live.current : null)
+    if (!lock.current.locked) return
+    const v = meterValueToUse(lock.current, null)
     if (v != null) onUse(v)
   }
 
@@ -153,7 +156,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
       ) : !live_ ? (
         <div className="space-y-2">
           <button type="button" onClick={() => { void startSensor() }} disabled={sensor.status === 'starting'}
-            className="btn-primary w-full min-h-[48px] text-base gap-2">
+            className="btn-primary w-full min-h-[44px] py-2 gap-2">
             <Crosshair size={18} /> {sensor.status === 'starting' ? C.starting : C.startButton}
           </button>
           <p className="text-xs text-slate-500 text-center">{C.startNote}</p>
@@ -179,10 +182,10 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
             </div>
             <p className="text-xs text-slate-500 mt-2 min-h-[16px]" data-meter-status>{status}</p>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <button type="button" onClick={onZero} className="btn-ghost min-h-[48px] text-base">{C.zeroButton}</button>
-            <button type="button" onClick={onReset} disabled={!zeroed && !counting} className="btn-ghost min-h-[48px] text-base disabled:opacity-40">{C.resetButton}</button>
-            <button type="button" onClick={onUseClick} disabled={!zeroed || view.angle == null} className="btn-primary min-h-[48px] px-2 leading-tight disabled:opacity-40">{C.useButton}</button>
+          <div className="grid grid-cols-[1fr_1fr_1.6fr] gap-2">
+            <button type="button" onClick={onZero} className="btn-ghost min-h-[44px] py-1.5 px-2">{C.zeroButton}</button>
+            <button type="button" onClick={onReset} disabled={!zeroed && !counting} className="btn-ghost min-h-[44px] py-1.5 px-2 disabled:opacity-40">{C.resetButton}</button>
+            <button type="button" onClick={onUseClick} disabled={!view.locked || counting} data-use-btn className="btn-primary min-h-[44px] py-1.5 px-1.5 text-[13px] whitespace-nowrap disabled:opacity-40">{C.useButton}</button>
           </div>
           <div className="flex items-center justify-between border-t border-cobalt/10 pt-2">
             <span className="text-sm text-slate-500">{C.peakLabel}</span>

@@ -41,7 +41,7 @@ export interface Step {
 export const METHOD_LINE = 'Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.'
 
 export const SETUP_STEPS = [
-  { icon: '📱', label: 'Your phone is the meter', detail: 'On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Start, and hold still for the countdown. Move on GO and hold still. The number locks with a ding. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.' },
+  { icon: '📱', label: 'Your phone is the meter', detail: 'On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.' },  // countdown sentence removed: Option A method line covers it (Reid, Oct 5)
   { icon: '⌨️', label: 'Typing is always OK', detail: "Can't use the meter? Type your number in the box." },
   { icon: '🤝', label: 'Partner (optional)', detail: 'A partner can help. They hold the phone and tap the buttons while you move.' },
   { icon: '🔄', label: 'Warm up first - 5 minutes', detail: '1) Walk or march in place for 2 minutes. 2) Arm circles - 10 forward, 10 backward. 3) Hip circles - big loops with your hips like a hula hoop, 10 each way. 4) Leg swings - hold a wall, swing each leg front-to-back 10 times then side-to-side 10 times. 5) Slow neck turns - look left and right, 5 times each way. Wear shorts and a t-shirt.' },

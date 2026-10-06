@@ -6,7 +6,7 @@ import { HIP_FLEX_LEFT_RIGHT_DIFFERENT, HIP_FLEX_RANGE_SOURCE, HIP_FLEX_TYPICAL_
 import { useState, type Dispatch, type SetStateAction } from 'react'
 import { PhoneMeter } from '../components/PhoneMeter'
 import { meterLikelyAvailable } from '../lib/meterSensor'
-import { METER_COPY } from '../lib/meterCopy'
+import { METER_COPY, MEASUREMENTS_HEADER } from '../lib/meterCopy'
 import type { Field } from './assessmentMeta'
 
 export function AssessmentMeasureScreen(p: {
@@ -117,7 +117,7 @@ export function AssessmentMeasureScreen(p: {
 
             {/* Input fields */}
             <div className="space-y-4 pt-2 border-t border-cobalt/10">
-              <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide">Enter your measurements</p>
+              <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide" data-measurements-header>{MEASUREMENTS_HEADER}</p>
               {step.meter && !meterAvail && <p className="text-xs text-slate-500" data-desktop-note>{METER_COPY.desktopNote}</p>}
               {step.fields.map(f => {
                 const v = values[f.key] ?? ''
@@ -125,8 +125,8 @@ export function AssessmentMeasureScreen(p: {
                 if (canMeter(f) && !isActive && v !== '' && savedByMeter[f.key]) {
                   return (
                     <div key={f.key} data-saved-row={f.key}
-                      className="flex items-center gap-2 rounded-card border border-cobalt/15 bg-cobalt-light px-3 min-h-[52px]">
-                      <CheckCircle2 size={18} className="text-cobalt shrink-0" />
+                      className="flex items-center gap-2 rounded-card border border-cobalt/15 bg-cobalt-light pl-3 pr-1 min-h-[44px]">
+                      <CheckCircle2 size={16} className="text-cobalt shrink-0" />
                       <span className="text-sm font-bold text-cobalt-ink">{METER_COPY.saved(f.label, v)}</span>
                       <button type="button" onClick={() => setActive({ step: stepIdx, key: f.key })}
                         className="ml-auto min-h-[44px] px-2 text-sm font-semibold text-cobalt hover:underline">{METER_COPY.measureAgain}</button>

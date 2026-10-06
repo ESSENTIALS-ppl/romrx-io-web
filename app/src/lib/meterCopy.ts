@@ -41,6 +41,9 @@ export const METER_COPY = {
   typicalRange: (lo: number, hi: number, unit = '°') => `Typical range: ${lo}-${hi}${unit}`, // STACY
 } as const
 
+/** Section header above the boxes on every step. STACY pre-clear optional (line 30), Grant: use it. Was "Enter your measurements". */
+export const MEASUREMENTS_HEADER = 'Your measurements'
+
 /** Instagram / Facebook in-app browsers (motion is often blocked there). */
 export function isInAppBrowser(ua: string = typeof navigator !== 'undefined' ? navigator.userAgent : ''): boolean {
   return /Instagram|FBAN|FBAV|FB_IAB|FBIOS|FB4A/i.test(ua)
