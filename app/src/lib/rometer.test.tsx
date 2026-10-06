@@ -211,6 +211,16 @@ describe('ROMeter copy rules', () => {
     expect(ROMETER_COPY.privacy).toBe('Your readings stay on this phone. They are not saved or sent.')
     expect(ROMETER_COPY.tiltOnly).toBe("Works for moves that tilt the phone up, down or to the side. Turning moves, like looking over your shoulder, won't read.")
     expect(ROMETER_COPY.navLabel).toBe('ROMeter')
+    // Stacy PASS, Oct 6 11:43: all eight plan lines exactly as written
+    expect(ROMETER_COPY.title).toBe('ROMeter')
+    expect(ROMETER_COPY.subtitle).toBe('A quick angle check with your phone.')
+    expect(ROMETER_COPY.intro).toBe('Hold your phone against the part that moves, then measure how far it goes.')
+    expect(ROMETER_COPY.meterHeader).toBe('ROMeter')
+    expect(ROMETER_COPY.grip).toBe('Hold the phone flat against the part that moves.')
+    expect(ROMETER_COPY.locked).toBe('Locked. Tap Reset or Start to measure again.')
+    expect(ROMETER_COPY.notAssessment).toBe('This does not change your assessment or your score.')
+    expect(ROMETER_COPY.desktop).toBe('Open this page on your phone to use the ROMeter.')
+    expect(readFileSync(join(SRC, 'lib', 'rometerCopy.ts'), 'utf8')).not.toMatch(/PENDING STACY\s*\(|\/\/ PENDING STACY/)
   })
 })
 

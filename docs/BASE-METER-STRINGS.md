@@ -19,6 +19,12 @@ Sources: step copy in `app/src/pages/assessmentSteps1.ts`, `assessmentSteps2.ts`
 - Desktop note: -> **Type your numbers here. On a phone, you can also use the ROMeter.** PASS
 - Kept: **Measure with phone** (Stacy: clearest action, no script change). Older entries below this point that still say "meter" are history.
 
+## Simple layout + ROMeter page (Stacy PASS, Oct 6 2026, 11:43 AM)
+- More help toggle (meter steps; holds How to Measure, Common mistake and the lock tip): **More help** PASS
+- Locked badge, no number (the big number below shows the value): **Locked** PASS
+- ROMeter page (`app/src/lib/rometerCopy.ts`), all eight plan lines PASS exactly as written: tab/title **ROMeter**; subtitle **A quick angle check with your phone.**; intro **Hold your phone against the part that moves, then measure how far it goes.**; meter header **ROMeter**; grip **Hold the phone flat against the part that moves.**; locked line **Locked. Tap Reset or Start to measure again.**; **This does not change your assessment or your score.**; desktop **Open this page on your phone to use the ROMeter.** (Tilt line, privacy and disclaimer were already PASS.)
+- Guardrail (Stacy): Setup and any not-medical-advice or warm-up text stay visible, never under More help. A meter step whose How to Measure or Common mistake has safety wording (Hip Flexion: "Stop if you feel sharp pain.", "Stop at a firm stretch, not at pain.") keeps those open with no More help. Test: `app/src/lib/moreHelpGuard.test.tsx`.
+
 ## OVERNIGHT BUILD, Oct 5-6 2026 (3 AM preview): exact strings for Stacy's final pass
 
 Update Oct 6 (Jim, real iPhone test): the countdown now shows and ticks 5, 4, 3, 2, 1, then GO at 5 s. Sounds: tick 940 Hz, about 0.11 s; GO 1320 Hz, higher, louder and longer; lock ding 1760 Hz. Older sections below that mention 480 Hz or 880 Hz are history. No other strings changed.

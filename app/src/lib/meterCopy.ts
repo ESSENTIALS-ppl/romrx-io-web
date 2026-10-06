@@ -46,7 +46,7 @@ export const MEASUREMENTS_HEADER = 'Your measurements'
 
 /**
  * Layout review (METER-UI-REVIEW-20261006.md, item 9): the toggle that holds How to Measure, Common
- * mistake and the lock tip on meter steps. Wording from the review. NEEDS STACY (new string).
+ * mistake and the lock tip on meter steps. Wording from the review. STACY PASS (Oct 6 11:43).
  */
 export const MORE_HELP_LABEL = 'More help'
 

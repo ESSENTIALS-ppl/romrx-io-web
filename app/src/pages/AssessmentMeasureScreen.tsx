@@ -9,6 +9,9 @@ import { meterLikelyAvailable } from '../lib/meterSensor'
 import { METER_COPY, MEASUREMENTS_HEADER, MORE_HELP_LABEL } from '../lib/meterCopy'
 import type { Field } from './assessmentMeta'
 
+/** Safety, not-medical-advice or warm-up wording that must never fold under More help (Stacy, Oct 6). */
+export const SAFETY_TEXT = /pain|stop if|hurt|medical|advice|warm[ -]?up|injur|doctor/i
+
 export function AssessmentMeasureScreen(p: {
   stepIdx: number
   values: Record<string, string>
@@ -57,7 +60,11 @@ export function AssessmentMeasureScreen(p: {
   const rangeKey = (rangeOpen.find(f => f.key === activeKey) ?? rangeOpen[0])?.key
   // Layout item 9: on meter steps, How to Measure + Common mistake + the lock tip fold under one
   // "More help" toggle (closed when a step opens). Setup stays open. Typed-only steps are unchanged.
-  const moreHelp = !!step.meter && meterAvail
+  // Stacy guardrail (Oct 6, 11:43): Setup and any safety, not-medical-advice or warm-up text stay visible,
+  // never under More help. A step whose How to Measure / Common mistake carries such a line (the SLR's
+  // "Stop if you feel sharp pain.") keeps them open, like typed-only steps. Words unchanged.
+  const safetyInHelp = [...step.howTo, step.mistake, step.mistakeFix].some(l => SAFETY_TEXT.test(l))
+  const moreHelp = !!step.meter && meterAvail && !safetyInHelp
   const [help, setHelp] = useState<{ step: number; open: boolean }>({ step: stepIdx, open: false })
   const helpOpen = help.step === stepIdx && help.open
   const allMeterSaved = meterOn && meterFields.every(f => (values[f.key] ?? '') !== '') && meterFields.some(f => savedByMeter[f.key])
