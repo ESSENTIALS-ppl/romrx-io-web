@@ -10,6 +10,184 @@ Sources: step copy in `app/src/pages/assessmentSteps1.ts`, `assessmentSteps2.ts`
 
 
 
+
+## OVERNIGHT BUILD, Oct 5-6 2026 (3 AM preview): exact strings for Stacy's final pass
+
+Legend: **[STACY]** = verbatim from METER-STRINGS-STACY-PRECLEAR-20261005.md (already passes). **[NEW]** = new or changed wording outside her list (check one by one). **[QUINN]** = Quinn's grip/range sign-off wording.
+
+### Meter panel (lib/meterCopy.ts)
+| Where | String | Status |
+|---|---|---|
+| Button that asks for motion | Turn on the meter | [STACY] |
+| While asking | Turning on the meter... | [STACY] |
+| Under that button | Your phone may ask to use motion. Tap Allow. | [STACY] |
+| Under that button | Sound on, volume up. Turn off silent mode to hear the beeps. | [STACY] (keep only "Sound on, volume up." if Reid shows iPhone beeps play in silent mode) |
+| Countdown button (was Zero) | Start | [STACY] |
+| Other buttons | Reset / Use this number / Close / Peak / Locked: X° / Measure with phone | [STACY] PASS |
+| Before Start | Tap Start, then hold the start position while it counts down from 5. | [STACY] rule ("tap Zero" -> "tap Start"; "counts down from 5" PASS) |
+| Big number during countdown | 5, 4, 3, 2, then GO | [NEW] (GO shown big at zero) |
+| Under the big number while counting | Hold still... | [STACY] |
+| At zero / live | GO. Move slowly to your end range, then hold still. | [STACY] |
+| Holding (bar filling) | Hold still... | as drafted |
+| Locked | Locked. Tap Use this number, or Reset to measure again. | as drafted |
+| After Use, collapsed card | Saved: Left 48° (Saved: Right 55°, Saved: Left leg 70°, Saved: Flexion 50°) | [STACY] (+ mirrored labels) |
+| Meter moves to next side | Right side ready. Get in position and tap Start. / Left side ready. Get in position and tap Start. | [STACY] |
+| Next side on SLR / neck flex-ext | Right leg ready. Get in position and tap Start. / Extension ready. Get in position and tap Start. | [NEW] (mirror of her line for non Left/Right labels) |
+| Both done | Both sides saved. | [STACY] |
+| Both done, neck flexion + extension | Both saved. | [NEW] |
+| Link on a saved card | Measure again | [NEW] |
+| Tag on the side that is next | Up next | [NEW] |
+| Motion denied | Motion access is off. Type your number in the box. To use the meter, close and reopen your browser, then tap Allow when asked. | [STACY] (Reid/Avery to confirm on a real iPhone) |
+| Instagram / Facebook browser (shown up front in the meter, and instead of the denied/no-data line) | The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box. | [STACY] |
+| Meter error | The phone meter did not start. Tap Turn on the meter again, or type your number in the box. | [STACY] rule (as drafted, button renamed) |
+| No readings | This device is not sending motion readings, so type your number in the box. | as drafted |
+| Desktop | Type your numbers here. On a phone, you can also measure with the phone itself. | as drafted |
+| Range label (every step that shows one) | Typical range: X-Y° | [STACY] (Quinn suggested "29 to 43°"; Stacy's dash form used) |
+| Range source line under the inputs | Source: Simoneau et al., 1998 / Source: Vairo et al., 2012 / Source: Gill et al., 2020 | [QUINN] format, [NEW] for Stacy |
+| My Body, flag ON, no lumbar value | Low back: not measured | [STACY] |
+
+### Ranges shown (Quinn verified; Grant: SLR no number)
+| Step | Shown | Source line |
+|---|---|---|
+| Hip ER | Typical range: 29-43° | Source: Simoneau et al., 1998 |
+| Hip IR | Typical range: 26-40° | Source: Simoneau et al., 1998 |
+| Shoulder ER | Typical range: 85-110° | Source: Vairo et al., 2012 |
+| Shoulder flexion | Typical range: 140-180° | Source: Gill et al., 2020 |
+| Neck side bend, neck flexion, neck extension, hip abduction | no number, no source | - |
+| Straight-leg raise | no number, no source (SHOW_SLR_TYPICAL_RANGE = false; label "Saved for each leg" + "Saved for each leg, not scored." as before) | - |
+| Ankle (cm) | Best of 3, in cm (unchanged) | - |
+Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged).
+
+### Method line options (setup screen)
+- **Live on the preview (Grant's plan, Stacy PASS 11:30 PM): Option A:** Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.
+- Alternate for Jim, Option B (Grant, Stacy PASS): Start. Beeps. Go. Hold for the ding.
+- Alternate for Jim, Stacy's pre-clear line: Get in position. Tap Start. Hold still for the countdown. Move on GO. Hold until the ding.
+- (Earlier Avery draft, not cleared, not used: Place the phone. Tap Start. Hold still for the beeps. Move on GO. Hold at your limit until the ding.)
+- Old: The method in 4 words: Place. Zero. Move. Hold. (+ paragraph). Now one sub-line: "Each step shows where to hold the phone and which way to move." [NEW]
+
+### Kept on purpose tonight (Stacy: PASS if kept, or Sunday)
+- "Enter your measurements" header and "Record it" in tips: kept (PASS).
+- "Personal Readiness Profile" on done screens + lead email: NOT changed (Sunday Protocol pass).
+- Setup box label "Typing is always OK" kept; its text is Stacy's line. Label "Partner (recommended)" -> "Partner (optional)" [NEW].
+- Lumbar step text (only visible when the low-back flag is OFF, i.e. production at the 6 AM ship) still names the Measure/Level and Simple Inclinometer apps. With the flag ON (draft) the step is gone.
+
+### Full step text as built (draft, low-back flag ON)
+#### Method line (setup screen)
+- Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.
+- (sub-line) Each step shows where to hold the phone and which way to move.
+
+#### Setup boxes (changed ones)
+- **Your phone is the meter**: On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Start, and hold still for the countdown. Move on GO and hold still. The number locks with a ding. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.
+- **Typing is always OK**: Can't use the meter? Type your number in the box.
+- **Partner (optional)**: A partner can help. They hold the phone and tap the buttons while you move.
+
+#### Hip External Rotation (`hip_er`)
+- Meter grip: Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.
+- Setup:
+  1. Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.
+  2. Hold your phone flat on the FRONT of your shin, just below the knee. The screen faces forward and the long edge runs along your shinbone.
+  3. Tap Start, then hold your shin straight up and down and stay still while it counts down from 5. It zeroes at the end.
+- How to Measure:
+  1. Keep your knee bent and both hips down. Slowly swing your foot INWARD, toward your other leg. Your foot moves only sideways.
+  2. Stop at a firm stretch or when your thigh starts to lift off the chair. Hold still: after 2.5 seconds the number locks and chimes.
+  3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
+- Range label: Typical range: 29-43° | Source line: Source: Simoneau et al., 1998
+
+#### Hip Internal Rotation (`hip_ir`)
+- Meter grip: Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.
+- Setup:
+  1. Stay in the same chair and the same position.
+  2. Keep your phone flat on the front of your shin, just below the knee, screen facing forward.
+  3. Before each leg, tap Start and hold your shin straight up and down while it counts down from 5.
+- How to Measure:
+  1. Keep your knee bent and both hips down. Slowly swing your foot OUTWARD, away from your other leg. Your foot moves only sideways.
+  2. Stop at a firm stretch or when your other hip starts to lift. Hold still until the number locks and chimes.
+  3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
+- Range label: Typical range: 26-40° | Source line: Source: Simoneau et al., 1998
+
+#### Shoulder External Rotation (`shoulder_er`)
+- Meter grip: Phone along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff.
+- Setup:
+  1. Sit tall. Raise one arm out to the side at shoulder height, like a T. Bend the elbow to 90° so your forearm points straight ahead.
+  2. Hold the phone along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time.
+  3. Tap Start with your other hand, then hold this start position while it counts down from 5.
+- How to Measure:
+  1. Keep your elbow at shoulder height. Rotate up and back until you feel a strong stretch or your back starts to arch. Going past straight up is fine.
+  2. Hold still: after 2.5 seconds the number locks and chimes. Tap Use this number.
+  3. Switch arms, tap Start in the start position, and repeat.
+- Range label: Typical range: 85-110° | Source line: Source: Vairo et al., 2012
+
+#### Shoulder Flexion (`shoulder_flex`)
+- Meter grip: Phone in your hand, long edge along your arm, screen facing out to the side. Thumb up, wrist straight.
+- Setup:
+  1. Stand tall with room overhead and your arm hanging relaxed at your side.
+  2. Hold the phone in that hand, long edge pointing down along your arm, screen facing out to the side, away from your body.
+  3. Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5.
+- How to Measure:
+  1. Thumb up, wrist straight, ribs down. Keep your elbow straight and raise your arm in front of you and UP as high as you can go.
+  2. Stop before your back arches or your shoulder shrugs. Hold still until the number locks and chimes.
+  3. Tap Use this number. Lower your arm, tap Start, and repeat on the other side.
+- Range label: Typical range: 140-180° | Source line: Source: Gill et al., 2020
+
+#### Cervical Lateral Flexion (`cervical_lat`)
+- Meter grip: Phone flat on your forehead, screen facing forward.
+- Setup:
+  1. Sit upright in a chair. Feet flat. Back straight.
+  2. Tap Start, then press your phone flat against your FOREHEAD, screen facing forward, away from your face.
+  3. Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- How to Measure:
+  1. Nose points forward and chin stays level. Tilt your ear toward your left shoulder as far as it will go. Shoulders down, body still. Hold still until the number locks and chimes.
+  2. Tap Use this number. Then tap Start the same way and tilt toward your right shoulder.
+- Range label: none (no number shown)
+
+#### Cervical Flexion + Extension (`cervical_flex_ext`)
+- Meter grip: Phone flat against the side of your head at the temple, screen facing the wall beside you.
+- Setup:
+  1. Sit upright in a chair. Feet flat. Back straight.
+  2. Tap Start, then press your phone flat against the SIDE of your head at the temple, screen facing the wall beside you.
+  3. Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- How to Measure:
+  1. Back stays against the chair. Only your head nods. Flexion: Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number.
+  2. Extension: Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number.
+- Range label: none (no number shown)
+
+#### Hip Flexion (Straight-Leg Raise) (`hip_flex`)
+- Meter grip: Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.
+- Setup:
+  1. Lie flat on your back on the floor with both legs straight.
+  2. Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.
+  3. Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- How to Measure:
+  1. Keep the test knee completely straight, kneecap pointing at the ceiling. Raise that leg straight up, not out, as high as you can without bending the knee, and keep your other leg flat on the floor.
+  2. Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Hold still until the number locks and chimes.
+  3. Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.
+- Range label: none (no number shown)
+
+#### Hip Abduction (`hip_abd`)
+- Meter grip: Standing. Phone flat on the outer side of your thigh, screen facing out, long edge along the thigh.
+- Setup:
+  1. Stand upright with something nearby you can grab for balance if needed.
+  2. Tap Start, then hold your phone flat against the OUTER side of your thigh, midway between your hip and your knee, with your same-side hand. The screen faces out to the side and the long edge runs along your thigh.
+  3. Stand straight with your weight even on both feet. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- How to Measure:
+  1. Toes forward. Lift your test leg straight out to the side. No lean, no forward drift, no turning out.
+  2. Stop just before your upper body starts to lean to the opposite side or your hip hinges backward. Hold still until the number locks and chimes.
+  3. Tap Use this number. Lower the leg, tap Start again, and repeat on the other side.
+- Range label: none (no number shown)
+
+#### Ankle Dorsiflexion (Knee-to-Wall, cm) (`ankle_df`) (typed only)
+- Setup:
+  1. Remove your shoes. Stand barefoot facing a wall with a tape measure on the floor pointing straight out from the wall.
+  2. Line up the middle of your heel and your second toe along the tape, so your foot points straight at the wall.
+  3. Place the tip of your big toe at the 10 cm mark on the tape to start. Your hands may rest on the wall.
+- How to Measure:
+  1. Bend the knee over the test foot and drive it forward toward the wall, over your second and third toes. Do not let the knee cave inward. Keep your heel flat on the floor.
+  2. Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched, or ask a friend to watch.
+  3. Move your foot closer or farther from the wall until you find the farthest spot where your knee still just touches the wall with the heel down. Measure from the wall to the tip of your big toe. Record it in centimeters (cm), not degrees.
+  4. Do 3 tries on this foot and record the best one (the farthest distance that still counts). Repeat with the other foot.
+- Range label: Typical range: 0-0cm | Source line: Source: undefined
+
+
 ## Questions for Quinn
 1. **Lumbar flexion and extension: left as typed entry only (no phone meter).** One phone measures whole-trunk tilt, which mixes hip and low-back motion, and the current setup ('hold your phone at your side') is ambiguous. Recommend keeping it typed only until there is a placement you approve (for example sacrum plus T12 with two readings).
 2. **Ankle dorsiflexion** stays knee-to-wall in cm (typed only). Not an angle.
