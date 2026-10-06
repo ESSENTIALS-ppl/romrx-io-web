@@ -5,6 +5,9 @@
  *  - Standing hip abduction is scored against 40, replacing 90, and shows NO typical range on screen.
  *  - Shoulder flexion 140, replacing 180 (Gill et al. 2020, mean minus 1 SD).
  *  - Ankle knee-to-wall 6 cm, replacing 20 (mean minus 1 SD, Konor 2012 / McBride 2026), no range shown.
+ *  - Neck rotation 70 (was 80) and neck side bend 38 (was 45): Swinkels & Swinkels-Meewisse 2014, Spine, PMID 24573069
+ *    (rotation mean minus 1 SD for ages 20-49; side bend 20-29 mean minus 1 SD). Neck flexion 50 / extension 60 unchanged.
+ *    No typical range on screen for the neck.
  * Mirrored in public.compute_joint_scores() and romrxbjj-v2 compute-tiers JOINT_TARGETS / submit-lead-assessment email.ts.
  */
 import { readFileSync } from 'node:fs'
@@ -22,7 +25,7 @@ import { STEPS } from '../pages/assessmentSteps'
 
 const SRC = resolve(__dirname, '..')
 
-describe('Steady targets (Oct 6): hips, shoulder flexion, ankle', () => {
+describe('Steady targets (Oct 6): hips, shoulder flexion, ankle, neck', () => {
   it('hip ER 29, hip IR 26, hip abduction 40, shoulder flexion 140, ankle 6 cm', () => {
     expect(JOINT_SCORE_TARGETS.hip_er).toBe(29)
     expect(JOINT_SCORE_TARGETS.hip_ir).toBe(26)
@@ -31,12 +34,18 @@ describe('Steady targets (Oct 6): hips, shoulder flexion, ankle', () => {
     expect(JOINT_SCORE_TARGETS.ankle_df).toBe(6)
   })
 
+  it('neck rotation 70, neck side bend 38; neck flexion 50 and extension 60 unchanged', () => {
+    expect(JOINT_SCORE_TARGETS.cervical_rot).toBe(70)
+    expect(JOINT_SCORE_TARGETS.cervical_lat).toBe(38)
+    expect(JOINT_SCORE_TARGETS.cervical_flex).toBe(50)
+    expect(JOINT_SCORE_TARGETS.cervical_ext).toBe(60)
+  })
+
   it('every other target is unchanged', () => {
-    const { hip_er, hip_ir, hip_abd, shoulder_flex, ankle_df, ...rest } = JOINT_SCORE_TARGETS
-    void hip_er; void hip_ir; void hip_abd; void shoulder_flex; void ankle_df
+    const { hip_er, hip_ir, hip_abd, shoulder_flex, ankle_df, cervical_rot, cervical_lat, ...rest } = JOINT_SCORE_TARGETS
+    void hip_er; void hip_ir; void hip_abd; void shoulder_flex; void ankle_df; void cervical_rot; void cervical_lat
     expect(rest).toEqual({
-      hip_flex: 120, shoulder_er: 90, cervical_rot: 80,
-      cervical_lat: 45, lumbar_flex: 60, lumbar_ext: 25, cervical_flex: 50, cervical_ext: 60,
+      hip_flex: 120, shoulder_er: 90, lumbar_flex: 60, lumbar_ext: 25, cervical_flex: 50, cervical_ext: 60,
     })
   })
 
@@ -48,6 +57,8 @@ describe('Steady targets (Oct 6): hips, shoulder flexion, ankle', () => {
     ['hip_abd', 40, 39, 36, 35.5],
     ['shoulder_flex', 140, 139, 126, 125.5],
     ['ankle_df', 6, 5.5, 5.4, 5], // cm
+    ['cervical_rot', 70, 69, 63, 62.5],
+    ['cervical_lat', 38, 37.5, 34.5, 34], // 0.90 x 38 = 34.2, off the 0.5 grid
   ]
   for (const [joint, steady, under, buildingFloor, needsFocus] of CASES) {
     const t = JOINT_SCORE_TARGETS[joint]
@@ -82,6 +93,8 @@ describe('Steady targets (Oct 6): hips, shoulder flexion, ankle', () => {
     expect(bandScoreFromTargetRatio(45, JOINT_SCORE_TARGETS.hip_abd)).toBe(3)
     expect(bandScoreFromTargetRatio(160, JOINT_SCORE_TARGETS.shoulder_flex)).toBe(3) // Gill 2020 average adult
     expect(bandScoreFromTargetRatio(9.5, JOINT_SCORE_TARGETS.ankle_df)).toBe(3)       // Konor 2012 average adult
+    expect(bandScoreFromTargetRatio(71, JOINT_SCORE_TARGETS.cervical_rot)).toBe(3)    // Swinkels 2014 50-59 mean rotation
+    expect(bandScoreFromTargetRatio(38, JOINT_SCORE_TARGETS.cervical_lat)).toBe(3)    // Swinkels 2014 50-59 mean side bend
   })
 
   it('ankle step shows no typical range (only the "Best of 3, in cm" note)', () => {
@@ -116,5 +129,29 @@ describe('hip abduction: NO typical range on screen (Jim, Oct 6)', () => {
   it('hip abduction is still scored live (band chip shows, no range text)', () => {
     expect(getScore('40', step.fields[0])).toBe(3)
     expect(getScore('39', step.fields[1])).toBe(2)
+  })
+})
+
+describe('neck: NO typical range on screen (Jim, Oct 6)', () => {
+  const neckSteps = STEPS.filter(s => s.fields.some(f => f.key.startsWith('cervical_')))
+
+  it('side bend and flexion/extension steps exist; no Base step collects neck rotation', () => {
+    const keys = neckSteps.flatMap(s => s.fields.map(f => f.key))
+    expect(keys).toEqual(expect.arrayContaining(['cervical_lat_l', 'cervical_lat_r', 'cervical_flex', 'cervical_ext']))
+    expect(keys.some(k => k.startsWith('cervical_rot'))).toBe(false)
+  })
+
+  it('no range numbers and no range source on the side-bend fields', () => {
+    const lat = STEPS.find(s => s.id === 'cervical_lat')!
+    for (const f of lat.fields) {
+      const field = f as typeof f & { rangeSource?: string }
+      expect([f.key, f.normalLow, f.normalHigh, field.rangeSource]).toEqual([f.key, undefined, undefined, undefined])
+    }
+  })
+
+  it('side bend is still scored live against 38', () => {
+    const lat = STEPS.find(s => s.id === 'cervical_lat')!
+    expect(getScore('38', lat.fields[0])).toBe(3)
+    expect(getScore('37', lat.fields[1])).toBe(2)
   })
 })
