@@ -6,7 +6,7 @@
  * /workspace/er-sensor-20261005/BASE-METER-STRINGS.md.
  */
 export const METER_COPY = {
-  measureButton: 'Measure with phone',                                   // STACY PASS
+  measureButton: 'Measure',                                             // Jim, Oct 6 12:26 PM (was Measure)
   closeButton: 'Close',                                                  // STACY PASS
   measuringPrefix: 'Measuring',
   startButton: 'Turn on the meter',                                      // STACY

@@ -130,7 +130,7 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-all-saved]')!.textContent).toContain('Both sides saved.')
   })
 
-  it('right first: Measure with phone on Right, then the meter moves to Left', async () => {
+  it('right first: Measure on Right, then the meter moves to Left', async () => {
     const calls = mount(SER)
     expect($('[data-up-next]')).toBeTruthy()                      // Right is marked Up next, no blank meter box
     click($('[data-measure-btn="shoulder_er_r"]'))

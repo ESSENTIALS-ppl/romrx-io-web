@@ -5,7 +5,7 @@ import { bandFull, BAND_TONE } from '../lib/mobilityBands'
 import { METER_COPY } from '../lib/meterCopy'
 
 // -- Single field input ----------------------------------------------------------
-// Typed entry is always available. When the step has a phone meter, "Measure with phone" opens it;
+// Typed entry is always available. When the step has a phone meter, "Measure" opens it;
 // "Use this number" calls the same onChange(key, value) as typing, so scoring and saving are identical.
 export function MeasureInput({ field, value, onChange, onMeasure, measuring, upNext }: {
   field: Field; value: string; onChange: (k: string, v: string) => void

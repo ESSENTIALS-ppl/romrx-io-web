@@ -8,6 +8,7 @@ import { PhoneMeter } from '../components/PhoneMeter'
 import { meterLikelyAvailable } from '../lib/meterSensor'
 import { METER_COPY, MEASUREMENTS_HEADER } from '../lib/meterCopy'
 import type { Field } from './assessmentMeta'
+import { STOP_LINE } from '../lib/stopLine'
 
 export function AssessmentMeasureScreen(p: {
   stepIdx: number
@@ -88,6 +89,8 @@ export function AssessmentMeasureScreen(p: {
                   </li>
                 ))}
               </ol>
+              {/* Jim, Oct 6 12:26 PM: always visible on every step, never under More help */}
+              <p className="mt-2 text-sm font-semibold text-cobalt-ink leading-snug" data-stop-line>{STOP_LINE}</p>
             </div>
 
             {/* How to */}

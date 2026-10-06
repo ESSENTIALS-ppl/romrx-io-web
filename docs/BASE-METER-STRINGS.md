@@ -935,7 +935,15 @@ Timing check (no change): countdown is 5 beeps (5, 4, 3, 2, 1, one second apart)
 
 ---
 
+## Update: stop line on every step + Measure button (Jim, Oct 6, 12:26 PM) [Jim wording 12:26, Stacy check pending]
+
+- **Every Base step** (all 9 measure steps, plus the typed low-back step when shown): one always-visible line right under the Setup list, rendered once by AssessmentMeasureScreen.tsx from `app/src/lib/stopLine.ts`, never under More help: **We don't want you hurt, so stop if anything hurts.** [Jim wording 12:26, Stacy check pending]
+- **Angle-step button** (meterCopy.ts `measureButton`): Measure with phone -> **Measure** [Jim wording 12:26, Stacy check pending]. Jim's card line "Tap Measure." now matches the button.
+- Test: app/src/lib/stopLine.test.tsx renders every step with More help closed and checks the line is shown once, after the last Setup line, outside any collapsible.
+
+---
+
 ## SHIP BLOCKERS (Oct 6)
-- **SLR step:** no stop or safety line remains (Jim's copy removed both). Stacy recommends adding the cleared line "Stop if anything hurts." as an always-visible line on the step; waiting for Jim's yes via Sable.
+- **SLR step:** no stop or safety line remains (Jim's copy removed both). Stacy recommends adding the cleared line "Stop if anything hurts." as an always-visible line on the step; waiting for Jim's yes via Sable. UPDATE Jim 12:26 PM: every step now shows "We don't want you hurt, so stop if anything hurts." (Stacy check pending).
 - **Shoulder Extension title**: needs one name everywhere before ship (step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.
 - **Shoulder ER range label** "Typical range: 40-75° / Source: Gill et al., 2020": NOT Stacy-cleared (Quinn: Gill measured standing; 40-75 is a derived mean ± SD). Kept as is, Jim's call.
