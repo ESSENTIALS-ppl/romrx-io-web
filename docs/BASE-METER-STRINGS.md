@@ -880,6 +880,16 @@ Removed with these fields: both SLR safety lines ("Stop if you feel sharp pain."
 
 ---
 
+## Update: Self-assessment intro line, the phone is equipment (Jim, Oct 6, 12:10 PM) [Jim wording 12:10, Stacy check pending]
+
+- **Setup screen subtitle** (app/src/pages/AssessmentPhases.tsx:34)
+  - Was: 15 minutes - Your phone is the meter - No equipment needed (ROMeter stack: "15 minutes - Uses the ROMeter on your phone - No equipment needed"; scoring branch: "15 minutes - Smartphone inclinometer - No equipment needed")
+  - Now: **Approximately 15 minutes using the ROMeter. Equipment needed: your phone.** [Jim wording 12:10, Stacy check pending]
+- Older rows in this doc that say "No equipment needed" are history. Grep of app/src, app/index.html and index.html for no equipment, equipment-free / equipment free, just / only / nothing but your phone, all you need is your phone, no gear, no tools: no other app UI hits. Test: app/src/lib/noEquipmentClaim.test.ts (zero hits in app/src + exact intro line).
+- Note for Jim: the ankle (knee-to-wall) step still needs a wall, a tape measure or ruler, and a slip of paper (tool line in assessmentSteps2.ts), so "Equipment needed: your phone." is not complete for that step.
+
+---
+
 ## SHIP BLOCKERS (Oct 6)
 - **SLR step:** no stop or safety line remains (Jim's copy removed both). Stacy recommends adding the cleared line "Stop if anything hurts." as an always-visible line on the step; waiting for Jim's yes via Sable.
 - **Shoulder Extension title**: needs one name everywhere before ship (step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.
