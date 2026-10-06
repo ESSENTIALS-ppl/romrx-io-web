@@ -148,7 +148,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
           <p className="text-[11px] font-bold uppercase tracking-wide text-cobalt">{C.measuringPrefix}: {sideLabel}</p>
         </div>
         <button type="button" onClick={() => { cancelCountdown(); onClose() }} aria-label={C.closeButton}
-          className="-mr-2 -mt-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-slate-400 hover:text-cobalt-ink hover:bg-surface">
+          className="-mr-2 -my-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-slate-400 hover:text-cobalt-ink hover:bg-surface">
           <X size={18} />
         </button>
       </div>
