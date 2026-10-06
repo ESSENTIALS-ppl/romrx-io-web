@@ -1,5 +1,5 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
-import { Loader2, ChevronRight, CheckCircle2, Info } from 'lucide-react'
+import { Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { SETUP_STEPS } from './assessmentMeta'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
 import { track } from '../lib/track'
@@ -31,7 +31,7 @@ if (phase === 'setup') {
         <div className="max-w-lg mx-auto space-y-5">
           <div className="text-center">
             <h1 className="font-display font-bold text-cobalt text-2xl">ROM Self-Assessment</h1>
-            <p className="text-sm text-slate-500 mt-1">Approximately 15 minutes using the ROMeter. Equipment needed: your phone.</p>
+            <p className="text-sm text-slate-500 mt-1">Approximately 15 minutes using the ROMeter. Equipment needed: your phone, a chair, a wall, and a tape measure or ruler.</p>
           </div>
 
           <div className="card p-6 space-y-4">
@@ -42,21 +42,10 @@ if (phase === 'setup') {
                 <div>
                   <p className="text-sm font-semibold text-cobalt-ink">{s.label}</p>
                   <p className="text-xs text-slate-500 leading-relaxed">{s.detail}</p>
+                  {s.more && <p className="text-xs text-slate-500 leading-relaxed mt-2" data-method-line>{s.more}</p>}
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="bg-cobalt-light rounded-card p-4">
-            <div className="flex gap-2 items-start">
-              <Info size={16} className="text-cobalt mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-cobalt">The method in 4 words: Place. Zero. Move. Read.</p>
-                <p className="text-xs text-cobalt/80 mt-1 leading-relaxed">
-                  Hold phone flat against the body part. Tap screen to zero it. Move slowly to your end range. Read the number - ignore any minus sign. Each step tells you exactly where to hold the phone and which direction to move.
-                </p>
-              </div>
-            </div>
           </div>
 
           <button onClick={() => { track('assessment_started'); p.setPhase('measure') }} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">

@@ -583,8 +583,8 @@ export interface JointDisplayRow {
   midline: number | null
   /** Band shown for this joint (persisted joint_scores first). null = unmeasured. */
   band: BandScore | null
-  /** THE per-joint % (jointPercent). 0 when unmeasured (bar empty, radar at centre). */
-  pct: number
+  /** THE per-joint % (jointPercent). null when unmeasured or unscored (never a fake 0). */
+  pct: number | null
   /** true = shown per leg but never judged (no band, no %, not in /100). See HIP_FLEX_UNSCORED_FALLBACK. */
   unscored: boolean
 }
@@ -603,7 +603,7 @@ export function jointDisplayRowsForAssessment(
       key: j.key, label: j.label, short: j.short, unit: jointUnit(j.key),
       left: m.left, right: m.right, midline: m.midline,
       band,
-      pct: jointPercent(j.key, m, band) ?? 0,
+      pct: jointPercent(j.key, m, band),
       unscored: isUnscoredJoint(j.key),
     }
   })
@@ -701,9 +701,9 @@ export function radarSideRowsForAssessment(
       const measured = r.midline != null
       return {
         key: r.key, label: r.label, short: r.short, midline: true, measured,
-        left: r.pct, right: r.pct,
+        left: r.pct ?? 0, right: r.pct ?? 0,
         leftPct: measured ? r.pct : null, rightPct: measured ? r.pct : null,
-        leftBand: r.band, rightBand: r.band, worse: r.pct, band: r.band, unscored: r.unscored,
+        leftBand: r.band, rightBand: r.band, worse: r.pct ?? 0, band: r.band, unscored: r.unscored,
       }
     }
     const sb = sideBandsForJoint(r.key, { left: r.left, right: r.right }, r.band)
@@ -714,7 +714,7 @@ export function radarSideRowsForAssessment(
       key: r.key, label: r.label, short: r.short, midline: false, measured,
       left: lp ?? rp ?? 0, right: rp ?? lp ?? 0,
       leftPct: lp, rightPct: rp, leftBand: sb.left, rightBand: sb.right,
-      worse: r.pct, band: r.band, unscored: r.unscored,
+      worse: r.pct ?? 0, band: r.band, unscored: r.unscored,
     }
   })
 }

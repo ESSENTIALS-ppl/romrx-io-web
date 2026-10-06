@@ -26,25 +26,42 @@ export const HIP_FLEX_LEFT_RIGHT_DIFFERENT = 'Left and right are different'
 /** Degrees of left/right gap that counts as different (same 10 as the My Body gap flag). */
 export const HIP_FLEX_LR_DIFFERENT_DEG = 10
 
+/**
+ * Stacy pre-clear (Oct 5, 2026): straight-leg raise shows "Typical range: 60-85°" ONLY with Quinn's
+ * peer-reviewed source visible on the same screen. Still unscored: no band, no %, not in the /100.
+ * Jim (Oct 6, 2026, 11:19 AM, CLOSED) the SLR shows a range. Stacy cleared "Typical range: 60-80°"
+ * with "Source: Youdas et al., 2005", same format as hip ER/IR and shoulder ER/flexion.
+ */
+export const HIP_FLEX_TYPICAL_RANGE = 'Typical range: 60-80°'
+export const HIP_FLEX_RANGE_SOURCE = 'Source: Youdas et al., 2005'
+/**
+ * ONE switch. Grant (Oct 5, 11:14 PM): OFF. Quinn rates the 60-85° source PARTIAL (paywalled table,
+ * helper-lifted leg), so the straight-leg raise shows NO number and NO source line while this is false.
+ */
+export const SHOW_SLR_TYPICAL_RANGE = true
+
 /** LIVE: sex unknown or not given. No low/high judgment. */
 export const HIP_FLEX_FALLBACK_LINE = 'Saved for each leg, not scored.'
 
 export const HIP_FLEX_STEP = {
   /** Always shown. Makes no comparison claim, so it is safe when sex is unknown. */
   why: 'You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.',
-  tool: 'iPhone: Measure -> Level. Android: Simple Inclinometer. Lying on the floor. A partner is helpful.',
+  tool: 'Your phone. Lying on the floor.',
+  /** One-line grip shown in the in-app phone meter. */
+  // Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this step. Stacy PASS Oct 6 12:07 (all 9 lines).
+  meterGrip: 'Phone on your mid-thigh.',
   position: [
-    'Lie flat on your back on the floor with both legs straight.',
-    'Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.',
-    'Slide one hand under the small of your low back. Tap to zero with your leg flat on the ground.',
+    'Lie flat on your back, legs straight out, knees touching the floor.',
+    'Place your phone on your mid-thigh.',
+    'Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
   ],
   howTo: [
-    'Keep the test knee completely straight. Raise that leg as high as you can without bending the knee, and keep your other leg flat on the floor.',
-    'Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Read the number.',
-    'Record it for this leg. Lower the leg slowly. Re-zero. Repeat with the other leg. Each leg gets its own number.',
+    "Lift one leg and keep it straight until you can't anymore.",
+    'Pause for 2.5 seconds so the meter can lock in the range.',
+    'Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.',
   ],
-  mistake: 'Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher.',
-  mistakeFix: 'Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again.',
+  mistake: 'Your hips start coming up, or you shift in any other way.',
+  mistakeFix: 'Keep your hips down and your body still. If you shift, redo the lift.',
 } as const
 
 /** Added to the "why" line ONLY when the user's sex is known (male or female). */

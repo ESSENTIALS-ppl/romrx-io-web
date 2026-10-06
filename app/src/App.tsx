@@ -16,6 +16,7 @@ import { MyProtocol } from './pages/MyProtocol'
 import { MyFuel } from './pages/MyFuel'
 import { MySport } from './pages/MySport'
 import { ROMBot } from './pages/ROMBot'
+import { ROMeter } from './pages/ROMeter'
 import { Settings } from './pages/Settings'
 import { CompleteProfile } from './pages/CompleteProfile'
 
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="/dashboard/my-fuel" element={<MyFuel />} />
             <Route path="/dashboard/my-sport" element={<MySport />} />
             <Route path="/dashboard/rombot" element={<ROMBot />} />
+            <Route path="/dashboard/rometer" element={<ROMeter />} />
             <Route path="/dashboard/settings" element={<Settings />} />
             <Route path="/dashboard/complete-profile" element={<CompleteProfile />} />
           </Route>
