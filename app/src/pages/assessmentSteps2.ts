@@ -57,8 +57,8 @@ export const STEPS_PART2: Step[] = [
     mistake: 'Leaning your torso away or letting the hip hinge backward to get the leg higher.',
     mistakeFix: 'Your torso stays upright and your hip stays directly under you. The moment either shifts, you have hit your true end range.',
     fields: [
-      { key: 'hip_abd_l', label: 'Left', unit: '°', normalLow: 35, normalHigh: 45, riskBelow: 25 },
-      { key: 'hip_abd_r', label: 'Right', unit: '°', normalLow: 35, normalHigh: 45, riskBelow: 25 },
+      { key: 'hip_abd_l', label: 'Left', unit: '°', riskBelow: 25 },
+      { key: 'hip_abd_r', label: 'Right', unit: '°', riskBelow: 25 },
     ],
   },
 {

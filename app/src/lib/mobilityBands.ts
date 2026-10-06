@@ -47,9 +47,13 @@ export interface JointScoreRow {
  *   else → 1 Needs focus
  */
 export const JOINT_SCORE_TARGETS: Record<string, number> = {
-  hip_er: 45,
-  hip_ir: 45,
-  hip_abd: 90,
+  // Hip Steady targets (Jim decisions, Oct 6 2026): seated hip rotation reads Steady once inside the
+  // typical range (Simoneau et al. 1998, Quinn option B1): ER 29 and IR 26, replacing 45. Standing hip
+  // abduction is scored against 40, replacing 90 (no typical range is shown on screen for it).
+  // Mirrored in public.compute_joint_scores() and romrxbjj-v2 compute-tiers / submit-lead-assessment JOINT_TARGETS.
+  hip_er: 29,
+  hip_ir: 26,
+  hip_abd: 40,
   hip_flex: 120,
   shoulder_er: 90,
   shoulder_flex: 180,

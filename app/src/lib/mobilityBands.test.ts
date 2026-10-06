@@ -127,8 +127,9 @@ describe('fixture 01 regression (cloned from real Sep 8 app result)', () => {
     cervical_flex: 50, cervical_ext: 60,
   }
   const rows: JointScoreRow[] = [
-    ['ankle_df', 1], ['cervical_ext', 3], ['cervical_flex', 3], ['cervical_lat', 1], ['hip_abd', 1],
-    ['hip_er', 3], ['hip_flex', 2], ['hip_ir', 1], ['lumbar_ext', 3], ['lumbar_flex', 3],
+    // hip rows re-scored with the Oct 6 hip targets (ER 29, IR 26, abduction 40): hip_abd 38/40 → 2, hip_ir 36/26 → 3
+    ['ankle_df', 1], ['cervical_ext', 3], ['cervical_flex', 3], ['cervical_lat', 1], ['hip_abd', 2],
+    ['hip_er', 3], ['hip_flex', 2], ['hip_ir', 3], ['lumbar_ext', 3], ['lumbar_flex', 3],
     ['shoulder_er', 1], ['shoulder_flex', 2],
   ].map(([joint_key, score]) => ({ joint_key: joint_key as string, score: score as number }))
 
@@ -231,13 +232,15 @@ describe('email templates in this repo', () => {
  * (2026-09-24) values: /100 = floor(mean min(1, worse/target) * 100) clamped
  * into the overall band; top3 = % of the first three problem areas.
  * The lead email (romrxbjj-v2 submit-lead-assessment) prints the SAME /100.
+ * Re-pinned Oct 6 2026 for the hip Steady targets (ER 29, IR 26, abduction 40):
+ * same measured inputs, new expected %, /100 and compute-tiers worst_joints.
  */
 const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; score: number; band: BandScore; text: string; pct: Record<string, number>; worst: string[] }> = [
   {
-    name: '02 LOW', score: 71, band: 1, text: '71/100 \u00B7 Needs focus',
-    worst: ['ankle_df_l', 'ankle_df_r', 'hip_ir_l', 'hip_ir_r', 'hip_abd_l'],
+    name: '02 LOW', score: 80, band: 1, text: '80/100 \u00B7 Needs focus',
+    worst: ['ankle_df_l', 'ankle_df_r', 'lumbar_ext', 'shoulder_er_l', 'lumbar_flex'],
     pct: {
-      hip_er: 66, hip_ir: 48, hip_abd: 61, shoulder_er: 72, shoulder_flex: 83,
+      hip_er: 100, hip_ir: 84, hip_abd: 100, shoulder_er: 72, shoulder_flex: 83,
       ankle_df: 35, lumbar_flex: 75, lumbar_ext: 64, cervical_lat: 84, cervical_flex: 92, cervical_ext: 100,
     },
     a: {
@@ -249,10 +252,10 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     },
   },
   {
-    name: '03 MID/BOUNDARY', score: 96, band: 2, text: '96/100 \u00B7 Building',
-    worst: ['hip_abd_l', 'ankle_df_l', 'hip_abd_r', 'shoulder_er_l', 'shoulder_er_r'],
+    name: '03 MID/BOUNDARY', score: 97, band: 2, text: '97/100 \u00B7 Building',
+    worst: ['ankle_df_l', 'shoulder_er_l', 'shoulder_er_r', 'shoulder_flex_l', 'ankle_df_r'],
     pct: {
-      hip_er: 100, hip_ir: 98, hip_abd: 90, shoulder_er: 90, shoulder_flex: 94,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 90, shoulder_flex: 94,
       ankle_df: 90, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 95, cervical_flex: 99, cervical_ext: 100,
     },
     a: {
@@ -279,11 +282,11 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     },
   },  {
     // Boundary: 03 with Ankle DF L 17.9 / 20 = 0.895 → that joint 89% Needs focus; the
-    // raw mean is 95 but the overall band is Needs focus, so /100 clamps to 89.
+    // raw mean is 97 but the overall band is Needs focus, so /100 clamps to 89.
     name: '05 BOUNDARY <0.90', score: 89, band: 1, text: '89/100 \u00B7 Needs focus',
-    worst: ['ankle_df_l', 'hip_abd_l', 'ankle_df_r', 'hip_abd_r', 'shoulder_er_l'],
+    worst: ['ankle_df_l', 'shoulder_er_l', 'shoulder_er_r', 'shoulder_flex_l', 'ankle_df_r'],
     pct: {
-      hip_er: 100, hip_ir: 98, hip_abd: 90, shoulder_er: 90, shoulder_flex: 94,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 90, shoulder_flex: 94,
       ankle_df: 89, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 95, cervical_flex: 99, cervical_ext: 100,
     },
     a: {
@@ -417,15 +420,15 @@ describe('Fix A: band ranges', () => {
 
 describe('Fix A: per-joint % = floor(100 * min(1, worse / target))', () => {
   it('floor, not round (89.6 never shows as 90)', () => {
-    // hip_abd target 90: 80.64 / 90 = 0.896 → 89.6 → 89
-    expect(jointPercent('hip_abd', { left: 80.64, right: 90 })).toBe(89)
+    // hip_abd target 40: 35.84 / 40 = 0.896 → 89.6 → 89
+    expect(jointPercent('hip_abd', { left: 35.84, right: 40 })).toBe(89)
     expect(jointPercent('ankle_df', { left: 17.9, right: 19 })).toBe(89)
     expect(jointPercent('ankle_df', { left: 18, right: 19 })).toBe(90)
-    expect(jointPercent('hip_ir', { left: 44.5, right: 46 })).toBe(98)
+    expect(jointPercent('hip_ir', { left: 25.6, right: 27 })).toBe(98) // 25.6 / 26 = 0.985
   })
   it('uses the worse side (lower of L/R) or midline, capped at 100', () => {
-    expect(jointPercent('hip_er_l', { left: 30, right: 45 })).toBe(66)
-    expect(jointPercent('hip_er', { right: 30 })).toBe(66)
+    expect(jointPercent('hip_er_l', { left: 19.2, right: 29 })).toBe(66) // 19.2 / 29 = 0.662
+    expect(jointPercent('hip_er', { right: 19.2 })).toBe(66)
     expect(jointPercent('lumbar_ext', { midline: 50 })).toBe(100)
     expect(jointPercent('lumbar_ext', {})).toBeNull()
   })

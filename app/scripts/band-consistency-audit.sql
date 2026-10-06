@@ -12,8 +12,9 @@ WITH a AS (
   FROM public.assessments a LEFT JOIN auth.users u ON u.id = a.user_id
 ),
 bi(k, l, r, rb, nm, tgt) AS (VALUES
-  ('hip_er','hip_er_l','hip_er_r',40,40,45),('hip_ir','hip_ir_l','hip_ir_r',30,30,45),
-  ('hip_abd','hip_abd_l','hip_abd_r',30,40,90),('hip_flex','hip_flex_l','hip_flex_r',100,100,120),
+  -- tgt = compute_joint_scores() target; hip ER 29 / IR 26 / abduction 40 since Oct 6 2026 (were 45 / 45 / 90)
+  ('hip_er','hip_er_l','hip_er_r',40,40,29),('hip_ir','hip_ir_l','hip_ir_r',30,30,26),
+  ('hip_abd','hip_abd_l','hip_abd_r',30,40,40),('hip_flex','hip_flex_l','hip_flex_r',100,100,120),
   ('shoulder_er','shoulder_er_l','shoulder_er_r',60,60,90),('shoulder_flex','shoulder_flex_l','shoulder_flex_r',120,140,180),
   ('ankle_df','ankle_df_l','ankle_df_r',10,10,20),('cervical_lat','cervical_lat_l','cervical_lat_r',30,40,45)),
 si(k, c, rb, nm, tgt) AS (VALUES
