@@ -186,10 +186,10 @@ describe('phone meter in the Base measure screen', () => {
     expect(ticks).toEqual([1, 2, 3, 4, 5])                          // one tick per number, when it changes
     expect(audio.go).toBe(0)
     advance(1000, 0)
-    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect($('[data-countdown]')!.textContent).toBe('Move')
     expect(audio.go).toBe(1)
     expect(audio.log.map(l => +l.split('@')[1] - t0).map(ms => Math.round(ms / 1000))).toEqual([0, 1, 2, 3, 4, 5])
-    expect($('[data-meter-status]')!.textContent).toBe('GO. Move slowly to your end range, then hold still.')
+    expect($('[data-meter-status]')!.textContent).toBe('Move slowly to your end range, then hold still.')
     expect(btn('Use this number')).toBeUndefined()                     // not until a lock (item 3: not shown)
     advance(900, 0)
     expect($('[data-countdown]')).toBeNull()
@@ -208,7 +208,7 @@ describe('phone meter in the Base measure screen', () => {
     expect(btn('Use this number')).toBeUndefined()
     click(btn('Start'))
     for (let i = 0; i < 5; i++) { expect(btn('Use this number')).toBeUndefined(); advance(1000, 0) }
-    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect($('[data-countdown]')!.textContent).toBe('Move')
     expect(btn('Use this number')).toBeUndefined()
     advance(1000, 0); advance(1000, 40)                              // live and moving, not locked yet
     expect(isLocked()).toBe(false)
@@ -227,7 +227,7 @@ describe('phone meter in the Base measure screen', () => {
     const calls = mount(SER)
     await turnOn()
     click(btn('Start')); advance(5000, 0)
-    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect($('[data-countdown]')!.textContent).toBe('Move')
     expect(btn('Use this number')).toBeUndefined()
     expect($('[data-use-btn]')).toBeNull()                           // not in the page at all, so it cannot be tapped
     advance(1000, 0)
@@ -484,7 +484,7 @@ describe('phone meter in the Base measure screen', () => {
     for (const line of step.howTo) expect(host.textContent).toContain(line)
     expect(host.textContent).toContain('Common mistake')
     expect(host.textContent).toContain(`Fix: ${step.mistakeFix}`)
-    expect($('[data-lock-tip]')!.textContent).toBe("🔒 Can't see the screen at the end? Hold still. The number locks and chimes, so you can read it after.")
+    expect($('[data-lock-tip]')!.textContent).toBe("🔒 Can't see the screen at the end? Hold still. The number locks and dings, so you can read it after.")
     expect(host.textContent!.indexOf('More help')).toBeLessThan(host.textContent!.indexOf('Your measurements'))
     click(toggle)
     expect(toggle.getAttribute('aria-expanded')).toBe('false')

@@ -146,7 +146,7 @@ export function AssessmentMeasureScreen(p: {
 
             {/* Hands-free tip on meter steps: the meter locks on hold (moved under More help, item 9) */}
             {moreHelp && (
-              <p className="text-xs text-slate-500" data-lock-tip>🔒 Can't see the screen at the end? Hold still. The number locks and chimes, so you can read it after.</p>
+              <p className="text-xs text-slate-500" data-lock-tip>🔒 Can't see the screen at the end? Hold still. The number locks and dings, so you can read it after.</p>
             )}
             </div>)}
 

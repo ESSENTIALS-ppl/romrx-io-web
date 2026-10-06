@@ -115,7 +115,7 @@ describe('ROMeter page', () => {
     expect($('[data-countdown]')!.textContent).toBe('5')
     expect(btn('Reset')).toBeTruthy()   // small Reset during the countdown
     advance(5000, 0)
-    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect($('[data-countdown]')!.textContent).toBe('Move')   // Jim 12:16: start signal is a beep; the big label says Move, never GO
     advance(900, 0)
     expect($('[data-meter-number]')!.textContent).toBe('0°')
     advance(600, 35)

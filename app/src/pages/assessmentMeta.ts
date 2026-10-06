@@ -35,16 +35,17 @@ export interface Step {
 }
 
 /**
- * Method line on the setup screen: Grant's Option A (Stacy PASS, Oct 5 11:30 PM). Alternates for Jim in
- * BASE-METER-STRINGS.md: Option B "Start. Beeps. Go. Hold for the ding." and Stacy's pre-clear line.
+ * Method line (Jim, Oct 6 2026, 12:16 PM, his exact words; replaces Grant's Option A because "GO" is no longer
+ * used). Shown as the second paragraph of the ROMeter card on the setup screen (the card component needs a label,
+ * and Jim gave this sentence no title), and on the ROMeter page.
  */
-export const METHOD_LINE = 'Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.'
+export const METHOD_LINE = "Tap Start and move into position during the five-second countdown beeps. After the final beep, begin your move. Then hold for 2.5 seconds, and you'll hear a finishing ding."
 
-export const SETUP_STEPS = [
-  { icon: '📱', label: 'Meet the ROMeter', detail: 'On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.' },  // countdown sentence removed: Option A method line covers it (Reid, Oct 5); label 'Meet the ROMeter' (Stacy, Oct 6)
+/** Before you start (Jim, Oct 6 2026, 12:16 PM, his exact words and order). `more` is a second paragraph under the detail. */
+export const SETUP_STEPS: { icon: string; label: string; detail: string; more?: string }[] = [
   { icon: '🔄', label: 'Warm up first - 5 minutes', detail: '1) Walk or march in place for 2 minutes. 2) Arm circles - 10 forward, 10 backward. 3) Hip circles - big loops with your hips like a hula hoop, 10 each way. 4) Leg swings - hold a wall, swing each leg front-to-back 10 times then side-to-side 10 times. 5) Slow neck turns - look left and right, 5 times each way. Wear shorts and a t-shirt.' },
-  { icon: '🔒', label: 'Solo tip', detail: 'Cannot see the screen at the end of a move? Just hold still. The number locks and chimes, so you can read it after you return.' },
-  { icon: '⏭️', label: 'Skip is always OK', detail: 'If a position is too difficult, tap Skip. Your score is based on what you completed. You can always come back and fill in any skipped measurements later.' },
+  { icon: '📱', label: 'Your phone is the meter, and we call it ROMeter.', detail: 'Tap Measure. Your phone may ask for access. If it does, accept it. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up, and turn off silent mode so you can hear the beeps.', more: METHOD_LINE },
+  { icon: '⏭️', label: 'Skip is always OK', detail: "If a position is too difficult or you feel any pain, tap Skip. Your score is based on what you complete. You can always try to redo this position during a reassessment if you're able." },
 ]
 
 

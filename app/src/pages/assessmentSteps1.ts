@@ -13,7 +13,7 @@ export const STEPS_PART1: Step[] = [
     ],
     howTo: [
       'Keep your knee bent and both hips down. Slowly swing your foot INWARD, toward your other leg. Your foot moves only sideways.',
-      'Stop at a firm stretch or when your thigh starts to lift off the chair. Hold still: after 2.5 seconds the number locks and chimes.',
+      'Stop at a firm stretch or when your thigh starts to lift off the chair. Hold still: after 2.5 seconds the number locks and dings.',
       'Tap Use this number. Return to center, tap Start, and repeat with the other leg.',
     ],
     mistake: 'Your thigh rotates instead of just your shin.',
@@ -36,7 +36,7 @@ export const STEPS_PART1: Step[] = [
     ],
     howTo: [
       'Keep your knee bent and both hips down. Slowly swing your foot OUTWARD, away from your other leg. Your foot moves only sideways.',
-      'Stop at a firm stretch or when your other hip starts to lift. Hold still until the number locks and chimes.',
+      'Stop at a firm stretch or when your other hip starts to lift. Hold still until the number locks and dings.',
       'Tap Use this number. Return to center, tap Start, and repeat with the other leg.',
     ],
     mistake: 'One hip lifts off the chair.',
@@ -59,7 +59,7 @@ export const STEPS_PART1: Step[] = [
     ],
     howTo: [
       'Keep your elbow at shoulder height. Rotate up and back until you feel a strong stretch or your back starts to arch. Going past straight up is fine.',
-      'Hold still: after 2.5 seconds the number locks and chimes. Tap Use this number.',
+      'Hold still: after 2.5 seconds the number locks and dings. Tap Use this number.',
       'Switch arms, tap Start in the start position, and repeat.',
     ],
     mistake: 'Your shoulder shrugs up or your elbow drops below shoulder height.',
@@ -82,7 +82,7 @@ export const STEPS_PART1: Step[] = [
     ],
     howTo: [
       'Thumb up, wrist straight, ribs down. Keep your elbow straight and raise your arm in front of you and UP as high as you can go.',
-      'Stop before your back arches or your shoulder shrugs. Hold still until the number locks and chimes.',
+      'Stop before your back arches or your shoulder shrugs. Hold still until the number locks and dings.',
       'Tap Use this number. Lower your arm, tap Start, and repeat on the other side.',
     ],
     mistake: 'Leaning your upper body backward or shrugging your shoulder to get the arm higher.',
@@ -104,7 +104,7 @@ export const STEPS_PART1: Step[] = [
       'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
-      'Nose points forward and chin stays level. Tilt your ear toward your left shoulder as far as it will go. Shoulders down, body still. Hold still until the number locks and chimes.',
+      'Nose points forward and chin stays level. Tilt your ear toward your left shoulder as far as it will go. Shoulders down, body still. Hold still until the number locks and dings.',
       'Tap Use this number. Then tap Start the same way and tilt toward your right shoulder.',
     ],
     mistake: 'Shrugging your shoulder up to meet your ear.',

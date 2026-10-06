@@ -18,10 +18,10 @@ export const METER_COPY = {
   useButton: 'Use this number',                                          // STACY PASS
   peakLabel: 'Peak',                                                     // STACY PASS
   lockedPrefix: 'Locked',                                                // STACY PASS
-  go: 'GO',
+  go: 'Move',                                                           // Jim 12:16: the start signal is a beep, never GO
   needZero: 'Tap Start, then hold the start position while it counts down from 5.',
   zeroCountdown: 'Hold still...',                                        // STACY (under the big number)
-  live: 'GO. Move slowly to your end range, then hold still.',           // STACY (at zero)
+  live: 'Move slowly to your end range, then hold still.',           // STACY (at zero)
   holding: 'Hold still...',
   locked: 'Locked. Tap Use this number, or Reset to measure again.',
   saved: (label: string, val: string | number) => `Saved: ${label} ${val}°`,   // STACY "Saved: Left 48°"

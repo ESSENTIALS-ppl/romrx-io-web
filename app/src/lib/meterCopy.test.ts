@@ -34,7 +34,7 @@ describe('phone meter copy', () => {
     expect(METER_COPY.zeroButton).toBe('Start')
     expect(METER_COPY.soundLine).toBe('Sound on, volume up. Turn off silent mode to hear the beeps.')
     expect(METER_COPY.zeroCountdown).toBe('Hold still...')
-    expect(METER_COPY.live).toBe('GO. Move slowly to your end range, then hold still.')
+    expect(METER_COPY.live).toBe('Move slowly to your end range, then hold still.')   // Jim 12:16: no GO
     expect(METER_COPY.saved('Left', 48)).toBe('Saved: Left 48°')
     expect(METER_COPY.nextReady('Right')).toBe('Right side ready. Get in position and tap Start.')
     expect(METER_COPY.nextReady('Left')).toBe('Left side ready. Get in position and tap Start.')
@@ -42,13 +42,13 @@ describe('phone meter copy', () => {
     expect(METER_COPY.denied).toBe('Motion access is off. To use the ROMeter, close and reopen your browser, then tap Allow when asked.')
     expect(METER_COPY.inApp).toBe('The ROMeter may not work inside Instagram or Facebook. Open this page in Safari or Chrome.')
     expect(METER_COPY.typicalRange(40, 60)).toBe('Typical range: 40-60°')
-    expect(METHOD_LINE).toBe('Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.')   // Grant Option A
+    expect(METHOD_LINE).toBe("Tap Start and move into position during the five-second countdown beeps. After the final beep, begin your move. Then hold for 2.5 seconds, and you'll hear a finishing ding.")   // Jim 12:16
     const setup = SETUP_STEPS.map(s => s.detail)
     expect(setup.join(' ')).not.toMatch(/type your number|typing is always/i)   // Jim, Oct 6 12:12 PM
     expect(METER_COPY.error).toBe('The ROMeter did not start. Tap the button again.')   // Stacy, Oct 6
     expect(METER_COPY.desktopNote).toBe('Type your numbers here. On a phone, you can also use the ROMeter.')            // Stacy, Oct 6
     expect(METER_COPY.measureButton).toBe('Measure with phone')                                                          // Stacy, Oct 6: kept
-    expect(SETUP_STEPS[0].label).toBe('Meet the ROMeter')                                                               // Stacy, Oct 6
+    expect(SETUP_STEPS[1].label).toBe('Your phone is the meter, and we call it ROMeter.')                                                               // Stacy, Oct 6
     expect(setup.join(' ')).not.toMatch(/partner/i)                              // Jim, Oct 6 12:13 PM
   })
   it('no meter step or setup line says "Zero" any more', () => {
@@ -67,9 +67,9 @@ describe('phone meter copy', () => {
   })
   it('step header is Stacy\'s pre-cleared "Your measurements"; setup tip no longer repeats the countdown (Option A covers it)', () => {
     expect(MEASUREMENTS_HEADER).toBe('Your measurements')
-    const tip = SETUP_STEPS.find(s => s.label === 'Meet the ROMeter')!.detail
+    const tip = SETUP_STEPS.find(s => s.label === 'Your phone is the meter, and we call it ROMeter.')!.detail
     expect(tip).not.toMatch(/countdown|Move on GO|Hold until the ding|Get in position/)
-    expect(tip).toContain('Sound on, volume up. Turn off silent mode to hear the beeps.')
+    expect(tip).toContain('Sound on, volume up, and turn off silent mode so you can hear the beeps.')   // Jim 12:16
   })
   it('American spelling', () => { for (const t of ALL) expect(t).not.toMatch(/centre|colour|metre\b|calibrat(e|ion) your/i) })
   it('every degree step except lumbar has a meter grip; ankle (cm) and lumbar are typed only', () => {
