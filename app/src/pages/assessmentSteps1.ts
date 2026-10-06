@@ -92,20 +92,22 @@ export const STEPS_PART1: Step[] = [
     id: 'shoulder_flex',
     title: 'Shoulder Flexion',
     why: 'Overhead reach and pressing movements both require full shoulder lift.',
-    tool: 'Your phone. Standing.',
+    // Jim, Oct 6 11:54 AM: done SITTING in a chair with a back (not standing, not lying). Target, range and order unchanged.
+    // New lines pending Stacy. Meter math unchanged (see shoulderFlexSitting.test.ts).
+    tool: 'Your phone. Sitting in a chair with a back.',
     position: [
-      'Stand tall with room overhead and your arm hanging relaxed at your side.',
-      'Hold the phone in that hand, long edge pointing down along your arm, screen facing out to the side, away from your body.',
-      'Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5.',
+      'Sit tall with your back against the chair and your feet flat. Let your arm hang straight down by your side, palm facing your body, thumb forward.',
+      'Hold the phone in that hand, standing on its long side, in line with your arm. The screen faces out, away from your body.',
+      'Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. It zeroes at the end.',
     ],
     howTo: [
-      'Thumb up, wrist straight, ribs down. Keep your elbow straight and raise your arm in front of you and UP as high as you can go.',
+      'Keep your arm straight and your elbow locked. Lift your arm forward and straight up over your head, not out to the side. Keep your palm facing in.',
       'Stop before your back arches or your shoulder shrugs. Hold still until the number locks and chimes.',
       'Tap Use this number. Lower your arm, tap Start, and repeat on the other side.',
     ],
-    mistake: 'Leaning your upper body backward or shrugging your shoulder to get the arm higher.',
-    mistakeFix: 'Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your limit. Record it there.',
-    meter: { grip: 'Phone in your hand, long edge along your arm, screen facing out to the side. Thumb up, wrist straight.' },
+    mistake: 'Arching your back or leaning back to get the arm higher.',
+    mistakeFix: "Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear.",
+    meter: { grip: 'Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body.' },
     fields: [
       { key: 'shoulder_flex_l', label: 'Left', unit: '°', normalLow: 140, normalHigh: 180, riskBelow: 120, rangeSource: 'Gill et al., 2020' },
       { key: 'shoulder_flex_r', label: 'Right', unit: '°', normalLow: 140, normalHigh: 180, riskBelow: 120, rangeSource: 'Gill et al., 2020' },

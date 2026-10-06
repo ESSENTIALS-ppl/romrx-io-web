@@ -138,10 +138,9 @@ describe('shoulder_er copy and fields (Jim, Oct 6 11:45 AM; copy pending Stacy)'
       expect(METER_COPY.typicalRange(f.normalLow!, f.normalHigh!)).toBe('Typical range: 40-75°')
     }
   })
-  it('shoulder flexion is unchanged: still standing', () => {
+  it('shoulder flexion is a separate step: sitting in a chair (Jim, Oct 6 11:54 AM), range unchanged', () => {
     const f = STEPS.find(x => x.id === 'shoulder_flex')!
-    expect(f.tool).toBe('Your phone. Standing.')
-    expect(f.position[0]).toBe('Stand tall with room overhead and your arm hanging relaxed at your side.')
+    expect(f.tool).toBe('Your phone. Sitting in a chair with a back.')
     expect(f.fields.map(x => [x.normalLow, x.normalHigh])).toEqual([[140, 180], [140, 180]])
   })
 })
