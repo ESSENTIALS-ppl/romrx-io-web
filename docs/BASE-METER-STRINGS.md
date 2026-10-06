@@ -121,7 +121,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - Range label: Typical range: 26-40° | Source line: Source: Simoneau et al., 1998
 
 #### Shoulder Extension (`shoulder_er`) (tucked elbow, lying on your back; Jim, Oct 6 11:45 AM)
-- Title shown to users: Shoulder Extension **[pending Stacy]** (was: Shoulder External Rotation; Jim, Oct 6 11:56 AM). Key `shoulder_er` unchanged.
+- Title shown to users: Shoulder Extension **[Stacy: not a claims issue; before ship it needs one name everywhere (header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.]** (was: Shoulder External Rotation; Jim, Oct 6 11:56 AM). Key `shoulder_er` unchanged.
 - Meter grip: Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff. **[Stacy PASS Oct 6 11:55]**
 - Setup:
   1. Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling. **[Stacy PASS Oct 6 11:55]**
@@ -134,18 +134,19 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - Range label: Typical range: 40-75° | Source line: Source: Gill et al., 2020 **[NOT Stacy-cleared: Quinn says Gill measured standing and 40-75 is a derived mean ± SD]** (label kept as is, Jim's call)
 
 #### Shoulder Flexion (`shoulder_flex`) (sitting in a chair with a back; Jim, Oct 6 11:54 AM)
-- Tool: Your phone. Sitting in a chair with a back. **[pending Stacy]**
-- Meter grip: Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body. **[pending Stacy]**
+- Tool: Your phone. Sitting in a chair with a back. **[Stacy PASS Oct 6 12:02]**
+- Meter grip: Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body. **[Stacy PASS Oct 6 12:02]**
 - Setup:
-  1. Sit tall with your back against the chair and your feet flat. Let your arm hang straight down by your side, palm facing your body, thumb forward. **[pending Stacy]**
-  2. Hold the phone in that hand, standing on its long side, in line with your arm. The screen faces out, away from your body. **[pending Stacy]**
-  3. Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. It zeroes at the end. **[pending Stacy]**
+  1. Sit tall with your back against the chair and your feet flat. Let your arm hang straight down by your side, palm facing your body, thumb forward. **[Stacy PASS Oct 6 12:02]**
+  2. Hold the phone in that hand, standing on its long side, in line with your arm. The screen faces out, away from your body. **[Stacy PASS Oct 6 12:02]**
+  3. Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. It zeroes at the end. **[Stacy PASS Oct 6 12:02]**
+  4. Keep your arm straight, your elbow locked and your back against the chair the whole time. **[Stacy PASS Oct 6 12:02]** (Jim, Oct 6: always visible in Setup)
 - How to Measure:
-  1. Keep your arm straight and your elbow locked. Lift your arm forward and straight up over your head, not out to the side. Keep your palm facing in. **[pending Stacy]**
+  1. Keep your arm straight and your elbow locked. Lift your arm forward and straight up over your head, not out to the side. Keep your palm facing in. **[Stacy PASS Oct 6 12:02]**
   2. Stop before your back arches or your shoulder shrugs. Hold still until the number locks and chimes.
   3. Tap Use this number. Lower your arm, tap Start, and repeat on the other side.
-- Common mistake: Arching your back or leaning back to get the arm higher. **[pending Stacy]**
-- Fix: Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear. **[pending Stacy]**
+- Common mistake: Arching your back or leaning back to get the arm higher. **[Stacy PASS Oct 6 12:02]**
+- Fix: Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear. **[Stacy PASS Oct 6 12:02]**
 - Range label: Typical range: 140-180° | Source line: Source: Gill et al., 2020
 
 #### Cervical Lateral Flexion (`cervical_lat`)
@@ -805,7 +806,7 @@ Step titles still use anatomy terms (not renamed; listed for Jim): Hip External 
 
 ---
 
-## Update: Shoulder flexion SITTING in a chair (Jim, Oct 6, 11:54 AM) [pending Stacy]
+## Update: Shoulder flexion SITTING in a chair (Jim, Oct 6, 11:54 AM) [Stacy PASS Oct 6 12:02, all lines as written]
 
 Jim: Base shoulder flexion is done sitting in a chair with a back, not standing and not lying down. Target 140, scoring, the range text (Typical range: 140-180°, Gill et al., 2020) and the step order are unchanged. Meter math unchanged: with the phone on its long side and the screen facing out, the lift turns inside the screen plane, and the meter reads the gravity angle since zero smoothly from 0 to 180 (tests: shoulderFlexSitting.test.ts). Setup stays in the open Setup list.
 
@@ -813,24 +814,28 @@ Flag: the 1e5f02b shoulder flexion Fix row ("...that is your limit. Record it th
 
 | Line | Where (new) | Old | New | Status |
 |---|---|---|---|---|
-| tool | app/src/pages/assessmentSteps1.ts:97 | Your phone. Standing. | Your phone. Sitting in a chair with a back. | pending Stacy |
-| setup 1 | app/src/pages/assessmentSteps1.ts:99 | Stand tall with room overhead and your arm hanging relaxed at your side. | Sit tall with your back against the chair and your feet flat. Let your arm hang straight down by your side, palm facing your body, thumb forward. | pending Stacy |
-| setup 2 | app/src/pages/assessmentSteps1.ts:100 | Hold the phone in that hand, long edge pointing down along your arm, screen facing out to the side, away from your body. | Hold the phone in that hand, standing on its long side, in line with your arm. The screen faces out, away from your body. | pending Stacy |
-| setup 3 | app/src/pages/assessmentSteps1.ts:101 | Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. | Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. It zeroes at the end. | pending Stacy |
-| how-to 1 | app/src/pages/assessmentSteps1.ts:104 | Thumb up, wrist straight, ribs down. Keep your elbow straight and raise your arm in front of you and UP as high as you can go. | Keep your arm straight and your elbow locked. Lift your arm forward and straight up over your head, not out to the side. Keep your palm facing in. | pending Stacy |
-| mistake | app/src/pages/assessmentSteps1.ts:108 | Leaning your upper body backward or shrugging your shoulder to get the arm higher. | Arching your back or leaning back to get the arm higher. | pending Stacy |
-| mistakeFix | app/src/pages/assessmentSteps1.ts:109 | Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your limit. Record it there. | Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear. | pending Stacy |
-| grip | app/src/pages/assessmentSteps1.ts:110 | Phone in your hand, long edge along your arm, screen facing out to the side. Thumb up, wrist straight. | Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body. | pending Stacy |
+| tool | app/src/pages/assessmentSteps1.ts:97 | Your phone. Standing. | Your phone. Sitting in a chair with a back. | Stacy PASS Oct 6 12:02 |
+| setup 1 | app/src/pages/assessmentSteps1.ts:99 | Stand tall with room overhead and your arm hanging relaxed at your side. | Sit tall with your back against the chair and your feet flat. Let your arm hang straight down by your side, palm facing your body, thumb forward. | Stacy PASS Oct 6 12:02 |
+| setup 2 | app/src/pages/assessmentSteps1.ts:100 | Hold the phone in that hand, long edge pointing down along your arm, screen facing out to the side, away from your body. | Hold the phone in that hand, standing on its long side, in line with your arm. The screen faces out, away from your body. | Stacy PASS Oct 6 12:02 |
+| setup 3 | app/src/pages/assessmentSteps1.ts:101 | Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. | Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. It zeroes at the end. | Stacy PASS Oct 6 12:02 |
+| how-to 1 | app/src/pages/assessmentSteps1.ts:104 | Thumb up, wrist straight, ribs down. Keep your elbow straight and raise your arm in front of you and UP as high as you can go. | Keep your arm straight and your elbow locked. Lift your arm forward and straight up over your head, not out to the side. Keep your palm facing in. | Stacy PASS Oct 6 12:02 |
+| mistake | app/src/pages/assessmentSteps1.ts:108 | Leaning your upper body backward or shrugging your shoulder to get the arm higher. | Arching your back or leaning back to get the arm higher. | Stacy PASS Oct 6 12:02 |
+| mistakeFix | app/src/pages/assessmentSteps1.ts:109 | Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your limit. Record it there. | Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear. | Stacy PASS Oct 6 12:02 |
+| grip | app/src/pages/assessmentSteps1.ts:110 | Phone in your hand, long edge along your arm, screen facing out to the side. Thumb up, wrist straight. | Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body. | Stacy PASS Oct 6 12:02 |
 
 ---
 
-## Update: Shoulder ER step title relabeled (Jim, Oct 6, 11:56 AM) [pending Stacy]
+## Update: Shoulder ER step title relabeled (Jim, Oct 6, 11:56 AM) [Stacy: not a claims issue; needs one name everywhere before ship; waiting for Jim's final title]
 
-Jim reversed the shoulder ER removal: the lying-down tucked-elbow step STAYS in Base (9 moves). Its title (what the user sees on the step header and in the meter card) is now **Shoulder Extension** **[pending Stacy]** (was: Shoulder External Rotation). The stored key `shoulder_er`, the field keys `shoulder_er_l` / `shoulder_er_r`, targets, saved answers and field labels are unchanged, so no key rename is needed. The title may change again, so other places that show the old name are listed, not changed:
+Jim reversed the shoulder ER removal: the lying-down tucked-elbow step STAYS in Base (9 moves). Its title (what the user sees on the step header and in the meter card) is now **Shoulder Extension** **[Stacy: not a claims issue; before ship it needs one name everywhere (header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.]** (was: Shoulder External Rotation). The stored key `shoulder_er`, the field keys `shoulder_er_l` / `shoulder_er_r`, targets, saved answers and field labels are unchanged, so no key rename is needed. The title may change again, so other places that show the old name are listed, not changed:
 - app/src/pages/MyProtocol.tsx:128 label 'Shoulder External Rotation' (Protocol)
 - app/src/pages/ResultsPreview.tsx:44 'Shoulder External Rotation' (results preview)
 - app/src/lib/mobilityBands.ts:553 label / short 'Shoulder ER' (My Body list and spider chart)
 - romrxbjj-v2 supabase/functions/ai-chat/handler.js:22 "shoulder external rotation" (ROMBot wording)
 
 Shoulder ER range label "Typical range: 40-75° / Source: Gill et al., 2020" kept as is (Jim's call) and is **NOT Stacy-cleared: Quinn says Gill measured standing and 40-75 is a derived mean ± SD**.
+
+### Added Oct 6 (12:01 PM): shoulder flexion always-visible cue [Stacy PASS Oct 6 12:02]
+Jim asked for these cues after his phone hit the floor, so they must not sit under More help. Added as the LAST Setup line (Setup always shows); the full Fix box is unchanged.
+- **Shoulder Flexion** (Setup, new line 4, app/src/pages/assessmentSteps1.ts:103): Keep your arm straight, your elbow locked and your back against the chair the whole time. **[Stacy PASS Oct 6 12:02]**
 

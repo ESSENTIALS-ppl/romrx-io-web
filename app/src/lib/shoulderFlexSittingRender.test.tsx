@@ -55,6 +55,14 @@ describe('shoulder flexion sitting: what the screen shows', () => {
       expect(li!.closest('[data-help-body]'), line).toBeNull()
     }
     expect(setup.some(l => l.includes('Sit tall with your back against the chair'))).toBe(true)
+    // Jim's always-visible cue: last Setup line, shown with More help still closed (never in the More help body).
+    const cue = 'Keep your arm straight, your elbow locked and your back against the chair the whole time.'
+    expect(STEPS[SFLEX].position[STEPS[SFLEX].position.length - 1]).toBe(cue)
+    const more0 = host.querySelector('[data-more-help]')
+    if (more0) expect(more0.getAttribute('aria-expanded')).toBe('false')
+    const cueLi = [...host.querySelectorAll('li')].find(el => el.textContent?.includes(cue))
+    expect(cueLi, cue).toBeTruthy()
+    expect(cueLi!.closest('[data-help-body]')).toBeNull()
     // Cues and the common mistake are in the Fix / Common mistake box. On the simpler layout that box folds under a closed
     // "More help" toggle (Setup stays open); open it if it is there, so this checks they render either way.
     const more = host.querySelector('[data-more-help]') as HTMLButtonElement | null

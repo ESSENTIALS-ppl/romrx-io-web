@@ -111,6 +111,8 @@ describe('shoulder flexion sitting: copy (Jim, Oct 6 11:54 AM; pending Stacy)', 
   it('grip, move, cues and mistake are Jim\'s wording', () => {
     expect(s.position[1]).toBe('Hold the phone in that hand, standing on its long side, in line with your arm. The screen faces out, away from your body.')
     expect(s.position[2]).toBe('Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. It zeroes at the end.')
+    expect(s.position[3]).toBe('Keep your arm straight, your elbow locked and your back against the chair the whole time.')
+    expect(s.position).toHaveLength(4)
     expect(s.howTo[0]).toBe('Keep your arm straight and your elbow locked. Lift your arm forward and straight up over your head, not out to the side. Keep your palm facing in.')
     expect(s.mistake).toBe('Arching your back or leaning back to get the arm higher.')
     for (const cue of ["Keep your back against the chair. Don't arch your back or lean back.", 'Keep your wrist straight.', "Don't bend your elbow or turn your arm out.", "Don't shrug your shoulder up to your ear."]) expect(s.mistakeFix).toContain(cue)

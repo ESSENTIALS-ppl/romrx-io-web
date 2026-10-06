@@ -94,12 +94,13 @@ export const STEPS_PART1: Step[] = [
     title: 'Shoulder Flexion',
     why: 'Overhead reach and pressing movements both require full shoulder lift.',
     // Jim, Oct 6 11:54 AM: done SITTING in a chair with a back (not standing, not lying). Target, range and order unchanged.
-    // New lines pending Stacy. Meter math unchanged (see shoulderFlexSitting.test.ts).
+    // Stacy PASS Oct 6 12:02 (all lines). Meter math unchanged (see shoulderFlexSitting.test.ts).
     tool: 'Your phone. Sitting in a chair with a back.',
     position: [
       'Sit tall with your back against the chair and your feet flat. Let your arm hang straight down by your side, palm facing your body, thumb forward.',
       'Hold the phone in that hand, standing on its long side, in line with your arm. The screen faces out, away from your body.',
       'Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. It zeroes at the end.',
+      'Keep your arm straight, your elbow locked and your back against the chair the whole time.',   // Jim, Oct 6: always visible (Setup is never under More help). Stacy PASS Oct 6 12:02.
     ],
     howTo: [
       'Keep your arm straight and your elbow locked. Lift your arm forward and straight up over your head, not out to the side. Keep your palm facing in.',
