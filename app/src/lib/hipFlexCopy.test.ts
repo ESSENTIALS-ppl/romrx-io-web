@@ -72,10 +72,13 @@ describe('hip flexion copy (Stacy rules)', () => {
     expect(HIP_FLEX_RESULT_LINE_SEX_KNOWN).toBe('Compared with published averages for healthy adults of your sex (Youdas et al., 2005)')
     expect(HIP_FLEX_LEFT_RIGHT_DIFFERENT).toBe('Left and right are different')
   })
-  it('instruction: straight-leg raise on the back, hand under low back, stop at a firm stretch', () => {
+  it('instruction: straight-leg raise on the back, stop at a firm stretch; setup line 3 has no hand under the low back (Jim, Oct 6 12:02 PM)', () => {
     const all = [...HIP_FLEX_STEP.position, ...HIP_FLEX_STEP.howTo].join(' ')
     expect(all).toMatch(/on your back/)
-    expect(all).toMatch(/hand under the small of your low back/)
+    expect(HIP_FLEX_STEP.position[2]).toBe('Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.')
+    expect(HIP_FLEX_STEP.position.join(' ')).not.toMatch(/slide one hand|hand under the small of your low back/i)
+    expect(HIP_FLEX_STEP.position[0]).toBe('Lie flat on your back on the floor with both legs straight.')
+    expect(HIP_FLEX_STEP.position[1]).toBe('Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.')
     expect(all).toMatch(/firm stretch/)
     expect(all).toMatch(/knee completely straight/)
   })

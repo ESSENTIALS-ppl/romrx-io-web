@@ -52,7 +52,8 @@ export const HIP_FLEX_STEP = {
   position: [
     'Lie flat on your back on the floor with both legs straight.',
     'Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.',
-    'Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
+    // Jim, Oct 6 12:02 PM: no hand under the low back in setup. Stacy PASS Oct 6 12:02, ship-blocked: can't ship until Jim decides how-to 2 and Fix (they still mention the hand under the low back).
+    'Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
   ],
   howTo: [
     'Keep the test knee completely straight, kneecap pointing at the ceiling. Raise that leg straight up, not out, as high as you can without bending the knee, and keep your other leg flat on the floor.',

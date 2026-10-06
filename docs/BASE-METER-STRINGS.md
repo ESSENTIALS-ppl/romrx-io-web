@@ -11,6 +11,11 @@ Sources: step copy in `app/src/pages/assessmentSteps1.ts`, `assessmentSteps2.ts`
 
 
 
+## SHIP BLOCKERS (Oct 6)
+- **Hip Flexion (SLR) setup line 3** (app/src/lib/hipFlexCopy.ts, HIP_FLEX_STEP.position[2]) is Stacy PASS Oct 6 12:02 but **ship-blocked**: setup no longer puts a hand under the low back, while How to Measure 2 and the Fix still say "presses down onto your hand". Can't ship until Jim decides how-to 2 and Fix.
+- **Shoulder Extension title**: needs one name everywhere before ship (step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.
+- **Shoulder ER range label** "Typical range: 40-75° / Source: Gill et al., 2020": NOT Stacy-cleared (Quinn: Gill measured standing; 40-75 is a derived mean ± SD). Kept as is, Jim's call.
+
 ## OVERNIGHT BUILD, Oct 5-6 2026 (3 AM preview): exact strings for Stacy's final pass
 
 Update Oct 6 (Jim, real iPhone test): the countdown now shows and ticks 5, 4, 3, 2, 1, then GO at 5 s. Sounds: tick 940 Hz, about 0.11 s; GO 1320 Hz, higher, louder and longer; lock ding 1760 Hz. Older sections below that mention 480 Hz or 880 Hz are history. No other strings changed.
@@ -176,7 +181,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - Setup:
   1. Lie flat on your back on the floor with both legs straight.
   2. Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.
-  3. Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+  3. Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:02, ship-blocked: can't ship until Jim decides how-to 2 and Fix (they still mention the hand under the low back)]** (was: Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.)
 - How to Measure:
   1. Keep the test knee completely straight, kneecap pointing at the ceiling. Raise that leg straight up, not out, as high as you can without bending the knee, and keep your other leg flat on the floor.
   2. Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Hold still until the number locks and chimes.
@@ -838,4 +843,13 @@ Shoulder ER range label "Typical range: 40-75° / Source: Gill et al., 2020" kep
 ### Added Oct 6 (12:01 PM): shoulder flexion always-visible cue [Stacy PASS Oct 6 12:02]
 Jim asked for these cues after his phone hit the floor, so they must not sit under More help. Added as the LAST Setup line (Setup always shows); the full Fix box is unchanged.
 - **Shoulder Flexion** (Setup, new line 4, app/src/pages/assessmentSteps1.ts:103): Keep your arm straight, your elbow locked and your back against the chair the whole time. **[Stacy PASS Oct 6 12:02]**
+
+---
+
+## Update: Hip Flexion (SLR) setup line 3, no hand under the low back (Jim, Oct 6, 12:02 PM) [Stacy PASS Oct 6 12:02, ship-blocked]
+
+- **Hip Flexion (SLR)** (Setup 3, app/src/lib/hipFlexCopy.ts, HIP_FLEX_STEP.position[2]) **[Stacy PASS Oct 6 12:02, ship-blocked: can't ship until Jim decides how-to 2 and Fix (they still mention the hand under the low back)]**
+  - Was: Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+  - Now: Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- Not changed (Jim is deciding): setup lines 1-2, How to Measure 1-3, Common mistake and Fix. How to Measure 2 ("...or sooner when your low back presses down onto your hand.") and the Fix ("...when your low back presses down onto your hand.") still mention the hand.
 
