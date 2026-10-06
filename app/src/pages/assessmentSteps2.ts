@@ -13,11 +13,11 @@ export const STEPS_PART2: Step[] = [
       'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
-      'Back stays against the chair. Only your head nods. Flexion: Drop your chin toward your chest as far as it will go. Hold still until the number locks and dings. Tap Use this number.',
-      'Extension: Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number.',
+      'Back stays against the chair. Only your head nods. Chin down (Flexion): Drop your chin toward your chest as far as it will go. Hold still until the number locks and dings. Tap Use this number.',
+      'Chin up (Extension): Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number.',
     ],
     mistake: 'Moving your whole upper body forward or backward instead of just your head and neck.',
-    mistakeFix: 'Your shoulders and torso stay still. Only your head moves. If your back starts to round or arch, stop there.',
+    mistakeFix: 'Your shoulders and upper body stay still. Only your head moves. If your back starts to round or arch, stop there.',
     meter: { grip: 'Phone flat against the side of your head at the temple, screen facing the wall beside you.' },
     fields: [
       { key: 'cervical_flex', label: 'Flexion', unit: '°', riskBelow: 35 },
@@ -53,11 +53,11 @@ export const STEPS_PART2: Step[] = [
     ],
     howTo: [
       'Toes forward. Lift your test leg straight out to the side. No lean, no forward drift, no turning out.',
-      'Stop just before your upper body starts to lean to the opposite side or your hip hinges backward. Hold still until the number locks and dings.',
+      'Stop just before your upper body starts to lean to the other side or your hips push back. Hold still until the number locks and dings.',
       'Tap Use this number. Lower the leg, tap Start again, and repeat on the other side.',
     ],
-    mistake: 'Leaning your torso away or letting the hip hinge backward to get the leg higher.',
-    mistakeFix: 'Your torso stays upright and your hip stays directly under you. The moment either shifts, you have hit your true end range.',
+    mistake: 'Leaning your upper body away or letting your hips push back to get the leg higher.',
+    mistakeFix: 'Your upper body stays upright and your hips stay right under you. The moment either shifts, you have hit your limit.',
     meter: { grip: 'Standing. Phone flat on the outer side of your thigh, screen facing out, long edge along the thigh.' },
     fields: [
       { key: 'hip_abd_l', label: 'Left', unit: '°', riskBelow: 25 },
@@ -70,16 +70,16 @@ export const STEPS_PART2: Step[] = [
     why: 'Low back range and control support bending, lifting, and recovering from awkward positions.',
     tool: 'Type this one in for now. Use any level you have to read the angle. Standing + Floor.',  // Stacy PASS, Oct 5 11:32 PM
     position: [
-      'Flexion is standing. Extension is on the floor face down.',
-      'Flexion setup: Stand straight, feet shoulder-width apart. Hold your phone at your side, screen facing away. Set your level to 0 while you stand straight.',
-      'Extension setup: Lie face down on the floor. Place one hand under your shoulder for the press-up. Hold your phone at your side with your other hand, screen facing away. Set your level to 0 while you lie flat.',
+      'Bending forward (Flexion) is standing. Bending back (Extension) is on the floor face down.',
+      'Bend forward (Flexion) setup: Stand straight, feet shoulder-width apart. Hold your phone at your side, screen facing away. Set your level to 0 while you stand straight.',
+      'Bend back (Extension) setup: Lie face down on the floor. Place one hand under your shoulder for the press-up. Hold your phone at your side with your other hand, screen facing away. Set your level to 0 while you lie flat.',
     ],
     howTo: [
-      'Flexion: Keep your legs straight. Slowly bend forward with your back flat. Stop when you feel a strong stretch in the back of your legs. Note the angle at that point.',
-      'Extension: Press up on one arm into a cobra, keeping your hips flat on the floor. Note the angle at your end range.',
+      'Bend forward (Flexion): Keep your legs straight. Slowly bend forward with your back flat. Stop when you feel a strong stretch in the back of your legs. Note the angle at that point.',
+      'Bend back (Extension): Press up on one arm to lift your chest, keeping your hips flat on the floor. Note the angle at your end range.',
     ],
-    mistake: 'Rounding the back to get lower on flexion, or letting your hips lift off the floor during the cobra.',
-    mistakeFix: 'For flexion, the stretch in the back of your legs is your true stopping point. For extension, your hips stay flat on the floor the entire time - only your chest rises.',
+    mistake: 'Rounding your back to get lower when bending forward, or letting your hips lift off the floor during the press-up.',
+    mistakeFix: 'When bending forward, the stretch in the back of your legs is your true stopping point. When bending back, your hips stay flat on the floor the entire time - only your chest rises.',
     fields: [
       { key: 'lumbar_flex', label: 'Flexion', unit: '°', normalLow: 40, normalHigh: 80, riskBelow: 40 },
       { key: 'lumbar_ext', label: 'Extension', unit: '°', normalLow: 20, normalHigh: 30, riskBelow: 15 },

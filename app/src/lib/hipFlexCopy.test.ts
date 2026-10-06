@@ -28,6 +28,8 @@ import {
   HIP_FLEX_LEFT_RIGHT_DIFFERENT,
   HIP_FLEX_RESULT_LINE_SEX_KNOWN,
   HIP_FLEX_STEP,
+  HIP_FLEX_TYPICAL_RANGE,
+  HIP_FLEX_RANGE_SOURCE,
   HIP_FLEX_WHY_SEX_KNOWN,
   HIP_FLEX_INPUT_NOTE_SEX_KNOWN,
   HIP_FLEX_INPUT_NOTE_FALLBACK,
@@ -72,22 +74,50 @@ describe('hip flexion copy (Stacy rules)', () => {
     expect(HIP_FLEX_RESULT_LINE_SEX_KNOWN).toBe('Compared with published averages for healthy adults of your sex (Youdas et al., 2005)')
     expect(HIP_FLEX_LEFT_RIGHT_DIFFERENT).toBe('Left and right are different')
   })
-  it('instruction: straight-leg raise on the back, hand under low back, stop at a firm stretch', () => {
-    const all = [...HIP_FLEX_STEP.position, ...HIP_FLEX_STEP.howTo].join(' ')
-    expect(all).toMatch(/on your back/)
-    expect(all).toMatch(/hand under the small of your low back/)
-    expect(all).toMatch(/firm stretch/)
-    expect(all).toMatch(/knee completely straight/)
+  it("Jim's SLR copy, exact (Oct 6 12:07 PM decision; Stacy PASS Oct 6 12:07)", () => {
+    expect(HIP_FLEX_STEP.position).toEqual([
+      'Lie flat on your back, legs straight out, knees touching the floor.',
+      'Place your phone on your mid-thigh.',
+      'Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
+    ])
+    expect(HIP_FLEX_STEP.howTo).toEqual([
+      "Lift one leg and keep it straight until you can't anymore.",
+      'Pause for 2.5 seconds so the meter can lock in the range.',
+      'Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.',
+    ])
+    expect(HIP_FLEX_STEP.mistake).toBe('Your hips start coming up, or you shift in any other way.')
+    expect(HIP_FLEX_STEP.mistakeFix).toBe('Keep your hips down and your body still. If you shift, redo the lift.')
+    expect(HIP_FLEX_STEP.meterGrip).toBe('Phone on your mid-thigh.')
+    // Kept unchanged
+    expect(HIP_FLEX_STEP.why).toBe('You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.')
+    expect(HIP_FLEX_STEP.tool).toBe('Your phone. Lying on the floor.')
+    expect(HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 60-80°')
+    expect(HIP_FLEX_RANGE_SOURCE).toBe('Source: Youdas et al., 2005')
+    const step = STEPS.find(s => s.id === 'hip_flex')!
+    expect(step.title).toBe('Hip Flexion (Straight-Leg Raise)')
+    expect(step.position).toEqual([...HIP_FLEX_STEP.position])
+    expect(step.howTo).toEqual([...HIP_FLEX_STEP.howTo])
+    expect(step.mistake).toBe(HIP_FLEX_STEP.mistake)
+    expect(step.mistakeFix).toBe(HIP_FLEX_STEP.mistakeFix)
+    expect(step.meter?.grip).toBe(HIP_FLEX_STEP.meterGrip)
+    expect(step.fields.map(f => [f.key, f.label])).toEqual([['hip_flex_l', 'Left leg'], ['hip_flex_r', 'Right leg']])
   })
-  it('stop cues: firm stretch, or sooner when the low back presses down onto the hand; sharp pain; never "lifts off your hand"', () => {
-    const how = HIP_FLEX_STEP.howTo.join(' ')
-    expect(how).toContain('Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand.')
-    expect(how).toContain('Stop if you feel sharp pain.')
-    expect(HIP_FLEX_STEP.mistake).toContain('press down')
-    expect(HIP_FLEX_STEP.mistakeFix).toContain('Stop at a firm stretch, not at pain.')
-    expect(HIP_FLEX_STEP.mistakeFix).toContain('when your low back presses down onto your hand')
-    const all = [...ALL_COPY].join(' ')
-    expect(all).not.toMatch(/lifts? off your hand/i)
+  it('no hand, low back or "presses down" anywhere in the SLR step (Jim, Oct 6 12:07 PM)', () => {
+    const strings: string[] = []
+    const walk = (v: unknown) => {
+      if (typeof v === 'string') strings.push(v)
+      else if (Array.isArray(v)) v.forEach(walk)
+      else if (v && typeof v === 'object') Object.values(v).forEach(walk)
+    }
+    walk(HIP_FLEX_STEP)
+    const step = STEPS.find(s => s.id === 'hip_flex')!
+    walk([step.title, step.why, step.tool, step.position, step.howTo, step.mistake, step.mistakeFix, step.meter])
+    expect(strings.length).toBeGreaterThanOrEqual(10)
+    for (const t of strings) {
+      expect(t).not.toMatch(/hand/i)
+      expect(t).not.toMatch(/low(er)? back|small of your back/i)
+      expect(t).not.toMatch(/press(es)? down/i)
+    }
   })
   it('does not claim the active raise equals the passive published values', () => {
     for (const t of ALL_COPY) expect(t).not.toMatch(/equivalent|same as|matches the published/i)

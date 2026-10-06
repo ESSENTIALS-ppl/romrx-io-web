@@ -1,5 +1,15 @@
 import type { Step } from './assessmentMeta'
 
+/**
+ * Hip ER phone spot, kept in ONE place so a word swap is a one-line change per string (Jim, Oct 6 11:36 AM: inner calf,
+ * Stacy PASS 11:45). Quinn suggests 'inner side of the shin, just below the knee, on the flat bone' instead; that is
+ * with Jim. Change only these two lines (and the tests that pin them) if Jim picks another spot.
+ */
+export const HIP_ER_PHONE_SPOT = {
+  setup: 'Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf.',
+  grip: 'Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf.',
+} as const
+
 export const STEPS_PART1: Step[] = [
 {
     id: 'hip_er',
@@ -8,17 +18,20 @@ export const STEPS_PART1: Step[] = [
     tool: 'Your phone. A firm chair.',
     position: [
       'Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.',
-      'Hold your phone flat on the FRONT of your shin, just below the knee. The screen faces forward and the long edge runs along your shinbone.',
-      'Tap Start, then hold your shin straight up and down and stay still while it counts down from 5. It zeroes at the end.',
+      'Move your other knee out to the side and tuck that foot back, out of the way.',                   // Stacy PASS Oct 6
+      HIP_ER_PHONE_SPOT.setup,
+      'Press the phone flat against your leg with your hand the whole time.',                           // Stacy PASS Oct 6
+      'Tap Start, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end.',
     ],
     howTo: [
       'Keep your knee bent and both hips down. Slowly swing your foot INWARD, toward your other leg. Your foot moves only sideways.',
       'Stop at a firm stretch or when your thigh starts to lift off the chair. Hold still: after 2.5 seconds the number locks and dings.',
       'Tap Use this number. Return to center, tap Start, and repeat with the other leg.',
     ],
-    mistake: 'Your thigh rotates instead of just your shin.',
+    mistake: 'Your thigh turns instead of just your lower leg.',
     mistakeFix: 'Press one hand gently on your thigh to hold it still. Only the lower leg moves.',
-    meter: { grip: 'Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.' },
+    // Jim, Oct 6 11:36 AM: phone on the inner calf (it can slip on the shin as the foot moves inward). Stacy PASS Oct 6 11:45.
+    meter: { grip: HIP_ER_PHONE_SPOT.grip },
     fields: [
       { key: 'hip_er_l', label: 'Left', unit: '°', normalLow: 29, normalHigh: 43, riskBelow: 40, rangeSource: 'Simoneau et al., 1998' },
       { key: 'hip_er_r', label: 'Right', unit: '°', normalLow: 29, normalHigh: 43, riskBelow: 40, rangeSource: 'Simoneau et al., 1998' },
@@ -28,7 +41,8 @@ export const STEPS_PART1: Step[] = [
     id: 'hip_ir',
     title: 'Hip Internal Rotation',
     why: 'Supports hip escapes and rotational movement.',
-    tool: 'Same chair, same phone spot. Only the foot direction changes.',
+    // Was 'Same chair, same phone spot.' Hip ER moved to the inner calf (Jim, Oct 6), so the spot differs now. Stacy PASS Oct 6 11:45.
+    tool: 'Same chair. This time, hold the phone flat on the front of your shin.',
     position: [
       'Stay in the same chair and the same position.',
       'Keep your phone flat on the front of your shin, just below the knee, screen facing forward.',
@@ -49,45 +63,53 @@ export const STEPS_PART1: Step[] = [
   },
 {
     id: 'shoulder_er',
-    title: 'Shoulder External Rotation',
+    // Title shown to users relabeled 'Shoulder Extension' (Jim, Oct 6 11:56 AM; pending Stacy). Key shoulder_er, fields and targets unchanged.
+    title: 'Shoulder Extension',
     why: 'Supports overhead and pressing positions.',
-    tool: 'Your phone. Seated in a chair.',
+    // Jim, Oct 6 11:45 AM: tucked-elbow version lying on your back. Say 'elbow on the floor', never 'upper arm on the floor'.
+    // Copy pending Stacy. Meter math unchanged (see shoulderErTucked.test.ts).
+    tool: 'Your phone. Lying on your back on the floor.',
     position: [
-      'Sit tall. Raise one arm out to the side at shoulder height, like a T. Bend the elbow to 90° so your forearm points straight ahead.',
-      'Hold the phone along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time.',
+      'Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling.',
+      'Hold the phone in that hand along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time.',
       'Tap Start with your other hand, then hold this start position while it counts down from 5.',
     ],
     howTo: [
-      'Keep your elbow at shoulder height. Rotate up and back until you feel a strong stretch or your back starts to arch. Going past straight up is fine.',
-      'Hold still: after 2.5 seconds the number locks and dings. Tap Use this number.',
+      'Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side.',
+      'Hold still at your limit: after 2.5 seconds the number locks and dings. Tap Use this number.',
       'Switch arms, tap Start in the start position, and repeat.',
     ],
-    mistake: 'Your shoulder shrugs up or your elbow drops below shoulder height.',
-    mistakeFix: 'Keep your shoulder pressed down and your elbow at the same height the whole time. From the elbow to the shoulder, the arm only rotates - it does not lift up or drop down.',
-    meter: { grip: 'Phone along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff.' },
+    mistake: 'Your elbow slides away from your side or your shoulder lifts off the floor.',
+    mistakeFix: 'Keep your elbow on the floor, tucked in at your side, the whole time. Only your forearm moves, like a door swinging open.',
+    meter: { grip: 'Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff.' },
+    // Typical range 40-75 (Gill et al., 2020). riskBelow 40 = the Steady target (JOINT_SCORE_TARGETS on the scoring branch);
+    // riskBelow is not read by scoring or display any more, it is kept in line with the target.
     fields: [
-      { key: 'shoulder_er_l', label: 'Left', unit: '°', normalLow: 85, normalHigh: 110, riskBelow: 60, rangeSource: 'Vairo et al., 2012' },
-      { key: 'shoulder_er_r', label: 'Right', unit: '°', normalLow: 85, normalHigh: 110, riskBelow: 60, rangeSource: 'Vairo et al., 2012' },
+      { key: 'shoulder_er_l', label: 'Left', unit: '°', normalLow: 40, normalHigh: 75, riskBelow: 40, rangeSource: 'Gill et al., 2020' },
+      { key: 'shoulder_er_r', label: 'Right', unit: '°', normalLow: 40, normalHigh: 75, riskBelow: 40, rangeSource: 'Gill et al., 2020' },
     ],
   },
 {
     id: 'shoulder_flex',
     title: 'Shoulder Flexion',
     why: 'Overhead reach and pressing movements both require full shoulder lift.',
-    tool: 'Your phone. Standing.',
+    // Jim, Oct 6 11:54 AM: done SITTING in a chair with a back (not standing, not lying). Target, range and order unchanged.
+    // Stacy PASS Oct 6 12:02 (all lines). Meter math unchanged (see shoulderFlexSitting.test.ts).
+    tool: 'Your phone. Sitting in a chair with a back.',
     position: [
-      'Stand tall with room overhead and your arm hanging relaxed at your side.',
-      'Hold the phone in that hand, long edge pointing down along your arm, screen facing out to the side, away from your body.',
-      'Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5.',
+      'Sit tall with your back against the chair and your feet flat. Let your arm hang straight down by your side, palm facing your body, thumb forward.',
+      'Hold the phone in that hand, standing on its long side, in line with your arm. The screen faces out, away from your body.',
+      'Tap Start with your other hand, then let your arm hang straight down and hold still while it counts down from 5. It zeroes at the end.',
+      'Keep your arm straight, your elbow locked and your back against the chair the whole time.',   // Jim, Oct 6: always visible (Setup is never under More help). Stacy PASS Oct 6 12:02.
     ],
     howTo: [
-      'Thumb up, wrist straight, ribs down. Keep your elbow straight and raise your arm in front of you and UP as high as you can go.',
+      'Keep your arm straight and your elbow locked. Lift your arm forward and straight up over your head, not out to the side. Keep your palm facing in.',
       'Stop before your back arches or your shoulder shrugs. Hold still until the number locks and dings.',
       'Tap Use this number. Lower your arm, tap Start, and repeat on the other side.',
     ],
-    mistake: 'Leaning your upper body backward or shrugging your shoulder to get the arm higher.',
-    mistakeFix: 'Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your true end range. Record it there.',
-    meter: { grip: 'Phone in your hand, long edge along your arm, screen facing out to the side. Thumb up, wrist straight.' },
+    mistake: 'Arching your back or leaning back to get the arm higher.',
+    mistakeFix: "Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear.",
+    meter: { grip: 'Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body.' },
     fields: [
       { key: 'shoulder_flex_l', label: 'Left', unit: '°', normalLow: 140, normalHigh: 180, riskBelow: 120, rangeSource: 'Gill et al., 2020' },
       { key: 'shoulder_flex_r', label: 'Right', unit: '°', normalLow: 140, normalHigh: 180, riskBelow: 120, rangeSource: 'Gill et al., 2020' },

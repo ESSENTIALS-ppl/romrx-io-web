@@ -48,19 +48,20 @@ export const HIP_FLEX_STEP = {
   why: 'You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.',
   tool: 'Your phone. Lying on the floor.',
   /** One-line grip shown in the in-app phone meter. */
-  meterGrip: 'Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.',
+  // Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this step. Stacy PASS Oct 6 12:07 (all 9 lines).
+  meterGrip: 'Phone on your mid-thigh.',
   position: [
-    'Lie flat on your back on the floor with both legs straight.',
-    'Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.',
-    'Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
+    'Lie flat on your back, legs straight out, knees touching the floor.',
+    'Place your phone on your mid-thigh.',
+    'Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
   ],
   howTo: [
-    'Keep the test knee completely straight, kneecap pointing at the ceiling. Raise that leg straight up, not out, as high as you can without bending the knee, and keep your other leg flat on the floor.',
-    'Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Hold still until the number locks and dings.',
+    "Lift one leg and keep it straight until you can't anymore.",
+    'Pause for 2.5 seconds so the meter can lock in the range.',
     'Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.',
   ],
-  mistake: 'Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher.',
-  mistakeFix: 'Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again.',
+  mistake: 'Your hips start coming up, or you shift in any other way.',
+  mistakeFix: 'Keep your hips down and your body still. If you shift, redo the lift.',
 } as const
 
 /** Added to the "why" line ONLY when the user's sex is known (male or female). */
