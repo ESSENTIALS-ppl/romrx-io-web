@@ -8,8 +8,8 @@ export const STEPS_PART1: Step[] = [
     tool: 'Your phone. A firm chair.',
     position: [
       'Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.',
-      'Hold your phone flat on the FRONT of your shin, just below the knee. The screen faces forward and the long edge runs along your shinbone.',
-      'Tap Start, then hold your shin straight up and down and stay still while it counts down from 5. It zeroes at the end.',
+      'Hold your phone flat on your INNER calf, just below the knee. The screen faces your other leg and the long edge runs along your calf.',
+      'Tap Start, then hold your lower leg straight up and down and stay still while it counts down from 5. It zeroes at the end.',
     ],
     howTo: [
       'Keep your knee bent and both hips down. Slowly swing your foot INWARD, toward your other leg. Your foot moves only sideways.',
@@ -18,7 +18,8 @@ export const STEPS_PART1: Step[] = [
     ],
     mistake: 'Your thigh rotates instead of just your shin.',
     mistakeFix: 'Press one hand gently on your thigh to hold it still. Only the lower leg moves.',
-    meter: { grip: 'Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.' },
+    // Jim, Oct 6 11:36 AM: phone on the inner calf (it can slip on the shin as the foot moves inward). Copy pending Stacy.
+    meter: { grip: 'Phone flat on your inner calf, just below the knee. Screen faces your other leg, long edge along the calf.' },
     fields: [
       { key: 'hip_er_l', label: 'Left', unit: '°', normalLow: 29, normalHigh: 43, riskBelow: 40, rangeSource: 'Simoneau et al., 1998' },
       { key: 'hip_er_r', label: 'Right', unit: '°', normalLow: 29, normalHigh: 43, riskBelow: 40, rangeSource: 'Simoneau et al., 1998' },
@@ -28,7 +29,8 @@ export const STEPS_PART1: Step[] = [
     id: 'hip_ir',
     title: 'Hip Internal Rotation',
     why: 'Supports hip escapes and rotational movement.',
-    tool: 'Same chair, same phone spot. Only the foot direction changes.',
+    // Was 'Same chair, same phone spot.' Hip ER moved to the inner calf (Jim, Oct 6), so the spot differs now. Pending Stacy.
+    tool: 'Same chair. Phone on the front of your shin. Only the foot direction changes.',
     position: [
       'Stay in the same chair and the same position.',
       'Keep your phone flat on the front of your shin, just below the knee, screen facing forward.',
