@@ -40,4 +40,22 @@ describe('signup missing-field hint', () => {
     expect(s).toMatch(/scrollIntoView\(\{ behavior: 'smooth', block: 'center' \}\)/)
     expect(s).toContain("if (!ageBucket) { setError('Age group is required.'); return }")
   })
+
+  it('Terms box starts unchecked and is never auto-checked by the tap-to-scroll path', () => {
+    expect(s).toContain('const [agreedToTerms, setAgreedToTerms] = useState(false)')
+    // Only the checkbox's own onChange (the person's tap on the box) may set it.
+    const setters = s.match(/setAgreedToTerms\(/g) ?? []
+    expect(setters.length).toBe(1)
+    expect(s).toContain('onChange={e => { setAgreedToTerms(e.target.checked);')
+    expect(s).not.toMatch(/setAgreedToTerms\(true\)/)
+    expect(s).not.toMatch(/defaultChecked/)
+    const tap = s.slice(s.indexOf('const handleSubmitClick'), s.indexOf('const handleSubmit = async'))
+    expect(tap).not.toMatch(/setAgreedToTerms|\.checked\s*=|\.click\(\)/)
+  })
+
+  it('hint strings match Stacy-approved copy exactly (Oct 5)', () => {
+    expect(SIGNUP_HINT_BOTH).toBe('Choose your age group and check the box to continue.')
+    expect(SIGNUP_HINT_AGE).toBe('Choose your age group to continue.')
+    expect(SIGNUP_HINT_TERMS).toBe('Check the box to continue.')
+  })
 })
