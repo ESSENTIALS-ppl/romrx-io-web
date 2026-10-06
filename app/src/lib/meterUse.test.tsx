@@ -525,16 +525,21 @@ describe('phone meter in the Base measure screen', () => {
   })
 
   it('item 7: the typical range shows once per step, on the side being measured, and moves to Right after Left is saved', async () => {
+    // Range and source come from the step data, so this holds after #148 moves Shoulder ER to the
+    // tucked-elbow test (85-110° Vairo 2012 -> 40-75° Gill 2020) as well as before it. Only those two pairs pass.
+    const lf = STEPS[SER].fields.find(f => f.key === 'shoulder_er_l')!
+    expect(['85-110|Vairo et al., 2012', '40-75|Gill et al., 2020']).toContain(`${lf.normalLow}-${lf.normalHigh}|${lf.rangeSource}`)
+    const RANGE = `Typical range: ${lf.normalLow}-${lf.normalHigh}°`, SOURCE = `Source: ${lf.rangeSource}`
     mount(SER)
-    const count = () => (host.textContent!.match(/Typical range: 85-110°/g) ?? []).length
+    const count = () => host.textContent!.split(RANGE).length - 1
     expect(count()).toBe(1)
-    expect($('[data-field-note="shoulder_er_l"]')!.textContent).toBe('Typical range: 85-110°')
+    expect($('[data-field-note="shoulder_er_l"]')!.textContent).toBe(RANGE)
     expect($('[data-field-note="shoulder_er_r"]')).toBeNull()
-    expect($('[data-range-source]')!.textContent).toBe('Source: Vairo et al., 2012')
+    expect($('[data-range-source]')!.textContent).toBe(SOURCE)
     await turnOn(); startNow(); advance(3000, 70); click(btn('Use this number'))
     expect(count()).toBe(1)
-    expect($('[data-field-note="shoulder_er_r"]')!.textContent).toBe('Typical range: 85-110°')
-    expect($('[data-range-source]')!.textContent).toBe('Source: Vairo et al., 2012')
+    expect($('[data-field-note="shoulder_er_r"]')!.textContent).toBe(RANGE)
+    expect($('[data-range-source]')!.textContent).toBe(SOURCE)
   })
 
   it('item 7: SLR shows Typical range: 60-80° once, with Source: Youdas et al., 2005 (switch on); ankle keeps its note on both sides', () => {
