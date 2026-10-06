@@ -31,7 +31,7 @@ if (phase === 'setup') {
         <div className="max-w-lg mx-auto space-y-5">
           <div className="text-center">
             <h1 className="font-display font-bold text-cobalt text-2xl">ROM Self-Assessment</h1>
-            <p className="text-sm text-slate-500 mt-1">15 minutes - Smartphone inclinometer - No equipment needed</p>
+            <p className="text-sm text-slate-500 mt-1">15 minutes - Your phone is the meter - No equipment needed</p>
           </div>
 
           <div className="card p-6 space-y-4">
@@ -51,9 +51,9 @@ if (phase === 'setup') {
             <div className="flex gap-2 items-start">
               <Info size={16} className="text-cobalt mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-cobalt">The method in 4 words: Place. Zero. Move. Read.</p>
+                <p className="text-sm font-semibold text-cobalt">The method in 4 words: Place. Zero. Move. Hold.</p>
                 <p className="text-xs text-cobalt/80 mt-1 leading-relaxed">
-                  Hold phone flat against the body part. Tap screen to zero it. Move slowly to your end range. Read the number - ignore any minus sign. Each step tells you exactly where to hold the phone and which direction to move.
+                  Hold the phone against the body part as shown. Tap Zero in the start position. Move slowly to your end range, then hold still until the number locks. Each step tells you exactly where to hold the phone and which direction to move.
                 </p>
               </div>
             </div>

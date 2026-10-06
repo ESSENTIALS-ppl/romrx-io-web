@@ -3,7 +3,11 @@ import { cn } from '../lib/cn'
 import { STEPS } from './assessmentSteps'
 import { MeasureInput } from './AssessmentMeasure'
 import { HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexScreenCopy } from '../lib/hipFlexCopy'
-import type { Dispatch, SetStateAction } from 'react'
+import { useState, type Dispatch, type SetStateAction } from 'react'
+import { PhoneMeter } from '../components/PhoneMeter'
+import { meterLikelyAvailable } from '../lib/meterSensor'
+import { METER_COPY } from '../lib/meterCopy'
+import type { Field } from './assessmentMeta'
 
 export function AssessmentMeasureScreen(p: {
   stepIdx: number
@@ -23,6 +27,17 @@ export function AssessmentMeasureScreen(p: {
   const hipCopy = hipFlexScreenCopy(p.gender, parseFloat(values.hip_flex_l ?? ''), parseFloat(values.hip_flex_r ?? ''))
   const totalMeasureSteps = STEPS.length
   const progress = Math.round((stepIdx / totalMeasureSteps) * 100)
+  // Phone meter: one open at a time, tied to this step (switching steps closes it).
+  const [meterAvail] = useState(meterLikelyAvailable)
+  const [active, setActive] = useState<{ step: number; key: string; notice?: string } | null>(null)
+  const activeKey = active?.step === stepIdx ? active.key : null
+  const meterFields = step.meter ? step.fields.filter(f => f.unit === '°') : []
+  const canMeter = (f: Field) => meterAvail && meterFields.includes(f)
+  const useFromMeter = (f: Field, deg: number) => {
+    p.handleChange(f.key, String(deg))                    // exactly the typed-entry path
+    const next = meterFields.find(o => o !== f && (values[o.key] ?? '') === '')
+    setActive(next ? { step: stepIdx, key: next.key, notice: METER_COPY.savedThenNext(f.label, deg, next.label) } : null)
+  }
   return (
     <div className="min-h-screen bg-surface py-6 px-4">
       <div className="max-w-lg mx-auto space-y-4">
@@ -93,8 +108,17 @@ export function AssessmentMeasureScreen(p: {
             {/* Input fields */}
             <div className="space-y-4 pt-2 border-t border-cobalt/10">
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide">Enter your measurements</p>
+              {step.meter && !meterAvail && <p className="text-xs text-slate-500" data-desktop-note>{METER_COPY.desktopNote}</p>}
               {step.fields.map(f => (
-                <MeasureInput key={f.key} field={f.unscored ? { ...f, referenceNote: hipCopy.inputNote } : f} value={values[f.key] ?? ''} onChange={p.handleChange} />
+                <div key={f.key} className="space-y-3">
+                  <MeasureInput field={f.unscored ? { ...f, referenceNote: hipCopy.inputNote } : f} value={values[f.key] ?? ''} onChange={p.handleChange}
+                    onMeasure={canMeter(f) ? () => setActive({ step: stepIdx, key: f.key }) : undefined} measuring={activeKey === f.key} />
+                  {activeKey === f.key && step.meter && (
+                    <PhoneMeter key={`${stepIdx}-${f.key}`} movement={step.title} sideLabel={f.label} grip={step.meter.grip}
+                      zeroDelaySec={step.meter.zeroDelaySec} notice={active?.notice}
+                      onUse={deg => useFromMeter(f, deg)} onClose={() => setActive(null)} />
+                  )}
+                </div>
               ))}
               {isHip && (
                 <div className="text-xs text-slate-500 space-y-1" data-unscored-note>
@@ -105,10 +129,14 @@ export function AssessmentMeasureScreen(p: {
               )}
             </div>
 
-            {/* Hands-free screenshot tip */}
-            <p className="text-center text-xs text-slate-500">
-              📸 Can't tap the screen? Say <span className="font-semibold">&ldquo;Hey Siri, take a screenshot&rdquo;</span> (iPhone) or <span className="font-semibold">&ldquo;Hey Google, take a screenshot&rdquo;</span> (Android).
-            </p>
+            {/* Hands-free tip: the meter locks on hold; typed-only steps keep the screenshot tip */}
+            {step.meter && meterAvail ? (
+              <p className="text-center text-xs text-slate-500">🔒 Can't see the screen at the end? Hold still. The number locks and chimes, so you can read it after.</p>
+            ) : step.fields.some(f => f.unit === '°') ? (
+              <p className="text-center text-xs text-slate-500">
+                📸 Can't tap the screen? Say <span className="font-semibold">&ldquo;Hey Siri, take a screenshot&rdquo;</span> (iPhone) or <span className="font-semibold">&ldquo;Hey Google, take a screenshot&rdquo;</span> (Android).
+              </p>
+            ) : null}
 
             {error && <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
