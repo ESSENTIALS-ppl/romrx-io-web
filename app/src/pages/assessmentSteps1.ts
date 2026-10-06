@@ -9,7 +9,7 @@ export const STEPS_PART1: Step[] = [
     position: [
       'Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.',
       'Hold your phone flat on the FRONT of your shin, just below the knee. The screen faces forward and the long edge runs along your shinbone.',
-      'With your shin straight up and down, tap Zero.',
+      'Tap Zero, then hold your shin straight up and down and stay still while it counts down from 5. It zeroes at the end.',
     ],
     howTo: [
       'Keep your thigh pressed down. Slowly swing your foot INWARD, toward your other leg.',
@@ -32,7 +32,7 @@ export const STEPS_PART1: Step[] = [
     position: [
       'Stay in the same chair and the same position.',
       'Keep your phone flat on the front of your shin, just below the knee, screen facing forward.',
-      'With your shin straight up and down, tap Zero before each leg.',
+      'Before each leg, tap Zero and hold your shin straight up and down while it counts down from 5.',
     ],
     howTo: [
       'Keep your thigh pressed down. Slowly swing your foot OUTWARD, away from your other leg.',
@@ -55,7 +55,7 @@ export const STEPS_PART1: Step[] = [
     position: [
       'Sit tall. Raise one arm out to the side at shoulder height, like a T. Bend the elbow to 90° so your forearm points straight ahead.',
       'Hold the phone in that hand, lined up with your forearm, long edge toward your fingertips. Turn it on its edge so the screen faces your head.',
-      'Tap Zero with your other hand.',
+      'Tap Zero with your other hand, then hold this start position while it counts down from 5.',
     ],
     howTo: [
       'Keep your elbow in the same spot. Rotate your forearm up and back until you feel a strong stretch.',
@@ -78,7 +78,7 @@ export const STEPS_PART1: Step[] = [
     position: [
       'Stand tall with room overhead and your arm hanging relaxed at your side.',
       'Hold the phone in that hand, long edge pointing down along your arm, screen facing out to the side, away from your body.',
-      'Tap Zero with your other hand while your arm hangs straight down.',
+      'Tap Zero with your other hand, then let your arm hang straight down and hold still while it counts down from 5.',
     ],
     howTo: [
       'Keep your elbow straight. Raise your arm FORWARD and UP as high as you can go.',
@@ -101,7 +101,7 @@ export const STEPS_PART1: Step[] = [
     position: [
       'Sit upright in a chair. Feet flat. Back straight.',
       'Tap Zero, then press your phone flat against your FOREHEAD, screen facing forward, away from your face.',
-      'Look straight ahead and hold still. It zeroes after 3 seconds with a soft tick.',
+      'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
       'Tilt your ear toward your left shoulder as far as it will go. Keep your shoulder pressed down. Hold still until the number locks and chimes.',
@@ -109,7 +109,7 @@ export const STEPS_PART1: Step[] = [
     ],
     mistake: 'Shrugging your shoulder up to meet your ear.',
     mistakeFix: 'Keep both shoulders pressed down the whole time. Only your head moves. If your shoulder rises, that reading does not count.',
-    meter: { grip: 'Phone flat on your forehead, screen facing forward.', zeroDelaySec: 3 },
+    meter: { grip: 'Phone flat on your forehead, screen facing forward.' },
     fields: [
       { key: 'cervical_lat_l', label: 'Left', unit: '°', normalLow: 40, normalHigh: 45, riskBelow: 30 },
       { key: 'cervical_lat_r', label: 'Right', unit: '°', normalLow: 40, normalHigh: 45, riskBelow: 30 },

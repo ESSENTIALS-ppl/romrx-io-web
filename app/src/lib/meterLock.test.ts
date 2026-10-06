@@ -118,3 +118,17 @@ describe('Use this number value', () => {
     expect(meterValueToUse(initialLock(), null)).toBeNull()
   })
 })
+
+describe('Zero countdown and tick sound', () => {
+  it('countdown is 5 seconds; tick is short, soft and lower than the 880 Hz ding', async () => {
+    const { ZERO_COUNTDOWN_SEC } = await import('./meterLock')
+    const { COUNTDOWN_TICK } = await import('./meterAudio')
+    expect(ZERO_COUNTDOWN_SEC).toBe(5)
+    expect(COUNTDOWN_TICK.freq).toBeGreaterThanOrEqual(440)
+    expect(COUNTDOWN_TICK.freq).toBeLessThanOrEqual(520)
+    const ms = (COUNTDOWN_TICK.attack + COUNTDOWN_TICK.decay) * 1000
+    expect(ms).toBeGreaterThanOrEqual(60)
+    expect(ms).toBeLessThanOrEqual(80)
+    expect(COUNTDOWN_TICK.peak).toBeLessThanOrEqual(0.08)
+  })
+})

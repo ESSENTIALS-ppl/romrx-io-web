@@ -10,7 +10,7 @@ export const STEPS_PART2: Step[] = [
     position: [
       'Sit upright in a chair. Feet flat. Back straight.',
       'Tap Zero, then press your phone flat against the SIDE of your head at the temple, screen facing the wall beside you.',
-      'Look straight ahead and hold still. It zeroes after 3 seconds with a soft tick.',
+      'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
       'Flexion: Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number.',
@@ -18,7 +18,7 @@ export const STEPS_PART2: Step[] = [
     ],
     mistake: 'Moving your whole upper body forward or backward instead of just your head and neck.',
     mistakeFix: 'Your shoulders and torso stay still. Only your head moves. If your back starts to round or arch, stop there.',
-    meter: { grip: 'Phone flat against the side of your head at the temple, screen facing the wall beside you.', zeroDelaySec: 3 },
+    meter: { grip: 'Phone flat against the side of your head at the temple, screen facing the wall beside you.' },
     fields: [
       { key: 'cervical_flex', label: 'Flexion', unit: '°', normalLow: 45, normalHigh: 60, riskBelow: 35 },
       { key: 'cervical_ext', label: 'Extension', unit: '°', normalLow: 55, normalHigh: 70, riskBelow: 40 },
@@ -33,7 +33,7 @@ export const STEPS_PART2: Step[] = [
     howTo: [...HIP_FLEX_STEP.howTo],
     mistake: HIP_FLEX_STEP.mistake,
     mistakeFix: HIP_FLEX_STEP.mistakeFix,
-    meter: { grip: HIP_FLEX_STEP.meterGrip, zeroDelaySec: 3 },
+    meter: { grip: HIP_FLEX_STEP.meterGrip },
     // No normal/target range on purpose: see lib/hipFlexCopy.ts and HIP_FLEX_UNSCORED_FALLBACK. The input note and the
     // sex-known "why" sentence are chosen by the measure screen from the user's sex (hipFlexInputNote / hipFlexWhy).
     fields: [
@@ -49,7 +49,7 @@ export const STEPS_PART2: Step[] = [
     position: [
       'Stand upright with something nearby you can grab for balance if needed.',
       'Tap Zero, then hold your phone flat against the front of your thigh with your same-side hand. The screen faces forward, away from you, and the long edge runs along your thigh.',
-      'Stand straight with your weight even on both feet and hold still. It zeroes after 3 seconds with a soft tick.',
+      'Stand straight with your weight even on both feet. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
       'Lift your test leg sideways, out away from your body. Keep your toes pointing forward the whole time.',
@@ -58,7 +58,7 @@ export const STEPS_PART2: Step[] = [
     ],
     mistake: 'Leaning your torso away or letting the hip hinge backward to get the leg higher.',
     mistakeFix: 'Your torso stays upright and your hip stays directly under you. The moment either shifts, you have hit your true end range.',
-    meter: { grip: 'Phone flat on the front of your thigh, screen facing forward, long edge along the thigh.', zeroDelaySec: 3 },
+    meter: { grip: 'Phone flat on the front of your thigh, screen facing forward, long edge along the thigh.' },
     fields: [
       { key: 'hip_abd_l', label: 'Left', unit: '°', normalLow: 35, normalHigh: 45, riskBelow: 25 },
       { key: 'hip_abd_r', label: 'Right', unit: '°', normalLow: 35, normalHigh: 45, riskBelow: 25 },

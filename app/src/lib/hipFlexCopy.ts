@@ -38,7 +38,7 @@ export const HIP_FLEX_STEP = {
   position: [
     'Lie flat on your back on the floor with both legs straight.',
     'Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.',
-    'Tap Zero, then slide one hand under the small of your low back with your leg flat on the ground. It zeroes after 3 seconds with a soft tick.',
+    'Tap Zero, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
   ],
   howTo: [
     'Keep the test knee completely straight. Raise that leg as high as you can without bending the knee, and keep your other leg flat on the floor.',

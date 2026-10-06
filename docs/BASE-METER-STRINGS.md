@@ -15,7 +15,7 @@ Sources: step copy in `app/src/pages/assessmentSteps1.ts`, `assessmentSteps2.ts`
 2. **Ankle dorsiflexion** stays knee-to-wall in cm (typed only). Not an angle.
 3. **The meter reads the gravity angle since Zero.** It measures rotation about any horizontal axis and ignores compass heading. Movement in a second plane (for example hip flexion mixed into hip abduction, or trunk lean) adds to the number. Please confirm each grip keeps the movement in one plane.
 4. **Shoulder ER and flexion: the phone is held in the hand**, lined up with the forearm or arm. Wrist bend adds error. Is a hand grip acceptable, or should it be strapped to the forearm?
-5. **Head steps, hip flexion and hip abduction use a 3-second delayed Zero** with a soft tick, because the screen is out of view when the phone is in place.
+5. **Zero is a 5-4-3-2-1 countdown on every meter step** (Jim, Oct 5, 10:26 PM): a soft 480 Hz tick on each number, then it zeroes at the start position. This lets you get into position with the screen out of view.
 6. **Hip ER and IR (seated):** the phone sits flat on the front of the shin with the screen forward, so the shin swings in the plane of the screen. Please confirm.
 
 ## Movements (in assessment order)
@@ -26,10 +26,10 @@ Sources: step copy in `app/src/pages/assessmentSteps1.ts`, `assessmentSteps2.ts`
 | 2 | Hip Internal Rotation | Left (hip_ir_l, °), Right (hip_ir_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin. |
 | 3 | Shoulder External Rotation | Left (shoulder_er_l, °), Right (shoulder_er_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone in your hand, lined up with your forearm, on its edge with the screen facing your head. |
 | 4 | Shoulder Flexion | Left (shoulder_flex_l, °), Right (shoulder_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone in your hand, long edge along your arm, screen facing out to the side. |
-| 5 | Cervical Lateral Flexion | Left (cervical_lat_l, °), Right (cervical_lat_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on your forehead, screen facing forward. (Zero waits 3 s) |
-| 6 | Cervical Flexion + Extension | Flexion (cervical_flex, °), Extension (cervical_ext, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat against the side of your head at the temple, screen facing the wall beside you. (Zero waits 3 s) |
-| 7 | Hip Flexion (Straight-Leg Raise) | Left leg (hip_flex_l, °), Right leg (hip_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out. (Zero waits 3 s) |
-| 8 | Hip Abduction | Left (hip_abd_l, °), Right (hip_abd_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the front of your thigh, screen facing forward, long edge along the thigh. (Zero waits 3 s) |
+| 5 | Cervical Lateral Flexion | Left (cervical_lat_l, °), Right (cervical_lat_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on your forehead, screen facing forward.  |
+| 6 | Cervical Flexion + Extension | Flexion (cervical_flex, °), Extension (cervical_ext, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat against the side of your head at the temple, screen facing the wall beside you.  |
+| 7 | Hip Flexion (Straight-Leg Raise) | Left leg (hip_flex_l, °), Right leg (hip_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.  |
+| 8 | Hip Abduction | Left (hip_abd_l, °), Right (hip_abd_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the front of your thigh, screen facing forward, long edge along the thigh.  |
 | 9 | Lumbar Flexion + Extension | Flexion (lumbar_flex, °), Extension (lumbar_ext, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Typed box only | (none) |
 | 10 | Ankle Dorsiflexion (Knee-to-Wall, cm) | Left (ankle_df_l, cm), Right (ankle_df_r, cm) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Typed box only | (none) |
 
@@ -54,7 +54,7 @@ Meter: YES, grip line: Phone flat on the front of your shin, just below the knee
 
 1. Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.
 2. Hold your phone flat on the FRONT of your shin, just below the knee. The screen faces forward and the long edge runs along your shinbone.
-3. With your shin straight up and down, tap Zero.
+3. Tap Zero, then hold your shin straight up and down and stay still while it counts down from 5. It zeroes at the end.
 
 ### How to Measure
 **Old:**
@@ -96,7 +96,7 @@ Meter: YES, grip line: Phone flat on the front of your shin, just below the knee
 
 1. Stay in the same chair and the same position.
 2. Keep your phone flat on the front of your shin, just below the knee, screen facing forward.
-3. With your shin straight up and down, tap Zero before each leg.
+3. Before each leg, tap Zero and hold your shin straight up and down while it counts down from 5.
 
 ### How to Measure
 **Old:**
@@ -138,7 +138,7 @@ Meter: YES, grip line: Phone in your hand, lined up with your forearm, on its ed
 
 1. Sit tall. Raise one arm out to the side at shoulder height, like a T. Bend the elbow to 90° so your forearm points straight ahead.
 2. Hold the phone in that hand, lined up with your forearm, long edge toward your fingertips. Turn it on its edge so the screen faces your head.
-3. Tap Zero with your other hand.
+3. Tap Zero with your other hand, then hold this start position while it counts down from 5.
 
 ### How to Measure
 **Old:**
@@ -180,7 +180,7 @@ Meter: YES, grip line: Phone in your hand, long edge along your arm, screen faci
 
 1. Stand tall with room overhead and your arm hanging relaxed at your side.
 2. Hold the phone in that hand, long edge pointing down along your arm, screen facing out to the side, away from your body.
-3. Tap Zero with your other hand while your arm hangs straight down.
+3. Tap Zero with your other hand, then let your arm hang straight down and hold still while it counts down from 5.
 
 ### How to Measure
 **Old:**
@@ -222,7 +222,7 @@ Meter: YES, grip line: Phone flat on your forehead, screen facing forward.
 
 1. Sit upright in a chair. Feet flat. Back straight.
 2. Tap Zero, then press your phone flat against your FOREHEAD, screen facing forward, away from your face.
-3. Look straight ahead and hold still. It zeroes after 3 seconds with a soft tick.
+3. Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
 
 ### How to Measure
 **Old:**
@@ -262,7 +262,7 @@ Meter: YES, grip line: Phone flat against the side of your head at the temple, s
 
 1. Sit upright in a chair. Feet flat. Back straight.
 2. Tap Zero, then press your phone flat against the SIDE of your head at the temple, screen facing the wall beside you.
-3. Look straight ahead and hold still. It zeroes after 3 seconds with a soft tick.
+3. Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
 
 ### How to Measure
 **Old:**
@@ -302,7 +302,7 @@ Meter: YES, grip line: Phone flat on the outer side of your thigh, midway betwee
 
 1. Lie flat on your back on the floor with both legs straight.
 2. Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.
-3. Tap Zero, then slide one hand under the small of your low back with your leg flat on the ground. It zeroes after 3 seconds with a soft tick.
+3. Tap Zero, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
 
 ### How to Measure
 **Old:**
@@ -344,7 +344,7 @@ Meter: YES, grip line: Phone flat on the front of your thigh, screen facing forw
 
 1. Stand upright with something nearby you can grab for balance if needed.
 2. Tap Zero, then hold your phone flat against the front of your thigh with your same-side hand. The screen faces forward, away from you, and the long edge runs along your thigh.
-3. Stand straight with your weight even on both feet and hold still. It zeroes after 3 seconds with a soft tick.
+3. Stand straight with your weight even on both feet. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
 
 ### How to Measure
 **Old:**
@@ -429,7 +429,7 @@ Meter: NO (typed entry only)
 
 ### Method box
 - **Old:** The method in 4 words: Place. Zero. Move. Read. / Hold phone flat against the body part. Tap screen to zero it. Move slowly to your end range. Read the number - ignore any minus sign. Each step tells you exactly where to hold the phone and which direction to move.
-- **New:** The method in 4 words: Place. Zero. Move. Hold. / Hold the phone against the body part as shown. Tap Zero in the start position. Move slowly to your end range, then hold still until the number locks. Each step tells you exactly where to hold the phone and which direction to move.
+- **New:** The method in 4 words: Place. Zero. Move. Hold. / Hold the phone against the body part as shown. Tap Zero and hold the start position for the 5-second countdown. Move slowly to your end range, then hold still until the number locks. Each step tells you exactly where to hold the phone and which direction to move.
 
 ### Before you start items
 **Old:**
@@ -443,7 +443,7 @@ Meter: NO (typed entry only)
 
 **New:**
 
-- **Your phone is the meter:** On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Zero, move, and hold still. The number locks with a soft chime. Tap Use this number to fill it in. Turn your ringer on to hear the chime.
+- **Your phone is the meter:** On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Zero, and hold still for the 5-second countdown. Then move and hold still. The number locks with a soft chime. Tap Use this number to fill it in. Turn your ringer on to hear the chime.
 - **Typing is always OK:** You can type any number yourself. If the phone meter is not available, use the Measure app (tap Level) on iPhone or the free "Simple Inclinometer" app by Syleos Apps on Android, then type the number. The low back step uses one of these apps.
 - **Partner (recommended):** A partner makes this much easier - they hold the phone and tap the buttons while you focus on moving.
 - **Warm up first - 5 minutes:** 1) Walk or march in place for 2 minutes. 2) Arm circles - 10 forward, 10 backward. 3) Hip circles - big loops with your hips like a hula hoop, 10 each way. 4) Leg swings - hold a wall, swing each leg front-to-back 10 times then side-to-side 10 times. 5) Slow neck turns - look left and right, 5 times each way. Wear shorts and a t-shirt.
@@ -468,9 +468,8 @@ Meter: NO (typed entry only)
 - `useButton`: 'Use this number'
 - `peakLabel`: 'Peak'
 - `lockedPrefix`: 'Locked'
-- `needZero`: 'Get into the start position and tap Zero.'
-- `needZeroDelayed`: (s: number) => `Tap Zero, then get into the start position. It zeroes in ${s} seconds.`
-- `zeroCountdown`: (s: number) => `Zeroing in ${s}...`
+- `needZero`: 'Tap Zero, then hold the start position while it counts down from 5.'
+- `zeroCountdown`: 'Hold the start position...'
 - `live`: 'Move slowly to your end range, then hold still.'
 - `holding`: 'Hold still...'
 - `locked`: 'Locked. Tap Use this number, or Reset to measure again.'
@@ -487,3 +486,49 @@ Also shown: 'Normal: a-b°' labels and band chips (unchanged), the 'Locked: X°'
 ## Not changed, flagged
 - The done and lead-done screens still say **'Personal Readiness Profile'** (existing copy, also in the lead email). Rule says 'Protocol', never 'Profile'. Not changed here because it is product naming outside the meter; please decide.
 - Lumbar step still names the Measure app and Simple Inclinometer (typed-only step).
+
+---
+
+## Update: Zero countdown (Jim, Oct 5, 10:26 PM)
+
+Zero now starts a 5-4-3-2-1 countdown on every meter step, shown big in place of the number, with a short soft tick on each number (480 Hz, about 70 ms, low volume, no vibration; the lock ding stays 880 Hz). Then it zeroes at the start position and goes live. Reset or Close during the countdown cancels it. Replaces the 3-second delayed Zero. Strings changed in this update (previous draft vs now):
+
+- **Hip External Rotation** (position)
+  - Was: With your shin straight up and down, tap Zero.
+  - Now: Tap Zero, then hold your shin straight up and down and stay still while it counts down from 5. It zeroes at the end.
+- **Hip Internal Rotation** (position)
+  - Was: With your shin straight up and down, tap Zero before each leg.
+  - Now: Before each leg, tap Zero and hold your shin straight up and down while it counts down from 5.
+- **Shoulder External Rotation** (position)
+  - Was: Tap Zero with your other hand.
+  - Now: Tap Zero with your other hand, then hold this start position while it counts down from 5.
+- **Shoulder Flexion** (position)
+  - Was: Tap Zero with your other hand while your arm hangs straight down.
+  - Now: Tap Zero with your other hand, then let your arm hang straight down and hold still while it counts down from 5.
+- **Cervical Lateral Flexion** (position)
+  - Was: Look straight ahead and hold still. It zeroes after 3 seconds with a soft tick.
+  - Now: Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- **Cervical Flexion + Extension** (position)
+  - Was: Look straight ahead and hold still. It zeroes after 3 seconds with a soft tick.
+  - Now: Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- **Hip Flexion (Straight-Leg Raise)** (position)
+  - Was: Tap Zero, then slide one hand under the small of your low back with your leg flat on the ground. It zeroes after 3 seconds with a soft tick.
+  - Now: Tap Zero, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- **Hip Abduction** (position)
+  - Was: Stand straight with your weight even on both feet and hold still. It zeroes after 3 seconds with a soft tick.
+  - Now: Stand straight with your weight even on both feet. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+- **Setup screen** (Your phone is the meter)
+  - Was: On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Zero, move, and hold still. The number locks with a soft chime. Tap Use this number to fill it in. Turn your ringer on to hear the chime.
+  - Now: On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Zero, and hold still for the 5-second countdown. Then move and hold still. The number locks with a soft chime. Tap Use this number to fill it in. Turn your ringer on to hear the chime.
+- **Setup screen method box**
+  - Was: ...Tap Zero in the start position. Move slowly to your end range, then hold still until the number locks...
+  - Now: ...Tap Zero and hold the start position for the 5-second countdown. Move slowly to your end range, then hold still until the number locks...
+- **Meter status** `needZero`
+  - Was: Get into the start position and tap Zero.
+  - Now: Tap Zero, then hold the start position while it counts down from 5.
+- **Meter status** `needZeroDelayed` (removed)
+  - Was: Tap Zero, then get into the start position. It zeroes in {s} seconds.
+  - Now: (removed, every step uses the countdown)
+- **Meter status** `zeroCountdown` (shown under the big 5..1)
+  - Was: Zeroing in {s}...
+  - Now: Hold the start position...

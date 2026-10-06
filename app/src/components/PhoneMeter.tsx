@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Lock, Crosshair, X } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { averageQuats, tiltDeltaDeg, type Quat } from '../lib/orientation'
-import { initialLock, meterValueToUse, nextPeak, stepLock, type LockState } from '../lib/meterLock'
+import { ZERO_COUNTDOWN_SEC, initialLock, meterValueToUse, nextPeak, stepLock, type LockState } from '../lib/meterLock'
 import { getSensorSnapshot, latestQuat, latestRaw, recentQuats, startSensor, subscribeSensor } from '../lib/meterSensor'
-import { playLockDing, playZeroTick, resumeMeterAudio } from '../lib/meterAudio'
+import { playCountdownTick, playLockDing, resumeMeterAudio } from '../lib/meterAudio'
 import { METER_COPY as C } from '../lib/meterCopy'
 
 const TICK_MS = 50
@@ -18,11 +18,10 @@ interface View { angle: number | null; peak: number | null; locked: boolean; loc
  * (lib/meterLock.ts). Shows only: movement, grip line, big number / Locked, hold bar, Zero, Reset,
  * Use this number, Peak. Debug readout only with ?debug=1.
  */
-export function PhoneMeter({ movement, sideLabel, grip, zeroDelaySec = 0, notice, onUse, onClose }: {
+export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }: {
   movement: string
   sideLabel: string
   grip: string
-  zeroDelaySec?: number
   notice?: string | null
   onUse: (deg: number) => void
   onClose: () => void
@@ -79,25 +78,27 @@ export function PhoneMeter({ movement, sideLabel, grip, zeroDelaySec = 0, notice
 
   const timers = useRef<number[]>([])
   useEffect(() => () => { timers.current.forEach(t => window.clearTimeout(t)) }, [])
+  const cancelCountdown = () => { timers.current.forEach(t => window.clearTimeout(t)); timers.current = []; setCountdown(null) }
+  // Zero = 5-4-3-2-1 shown big with a soft tick on each number, then it zeroes at the start position.
+  // While counting there is no zero (q0 null), so nothing can lock.
   const onZero = () => {
     resumeMeterAudio()
-    timers.current.forEach(t => window.clearTimeout(t)); timers.current = []
-    if (!zeroDelaySec) { setCountdown(null); captureZero(); return }
-    // Head and leg steps: the screen is out of view, so Zero waits a few seconds, then ticks softly.
+    cancelCountdown()
     q0.current = null; setZeroed(false)
-    lock.current = initialLock()
+    lock.current = initialLock(); peak.current = null; live.current = null
     setView({ angle: null, peak: null, locked: false, lockVal: null, holdFrac: null })
-    setCountdown(zeroDelaySec)
-    for (let i = 1; i <= zeroDelaySec; i++) {
+    setCountdown(ZERO_COUNTDOWN_SEC); playCountdownTick()
+    for (let i = 1; i <= ZERO_COUNTDOWN_SEC; i++) {
       timers.current.push(window.setTimeout(() => {
-        const left = zeroDelaySec - i
-        if (left > 0) setCountdown(left)
-        else { setCountdown(null); captureZero(); playZeroTick() }
+        const left = ZERO_COUNTDOWN_SEC - i
+        if (left > 0) { setCountdown(left); playCountdownTick() }
+        else { timers.current = []; setCountdown(null); captureZero() }
       }, i * 1000))
     }
   }
   const onReset = () => {
     resumeMeterAudio()
+    if (countdown != null) { cancelCountdown(); return }   // Reset during the countdown cancels it
     lock.current = initialLock()
     peak.current = live.current
     setView(v => ({ ...v, locked: false, lockVal: null, holdFrac: null, peak: live.current == null ? null : Math.round(live.current), angle: live.current == null ? v.angle : Math.round(live.current) }))
@@ -111,8 +112,8 @@ export function PhoneMeter({ movement, sideLabel, grip, zeroDelaySec = 0, notice
   const fallback = sensor.status === 'denied' ? C.denied : sensor.status === 'error' ? C.error
     : (sensor.status === 'nodata' || sensor.status === 'unsupported') ? C.noData : null
   const shown = view.locked ? view.lockVal : view.angle
-  const status = countdown != null ? C.zeroCountdown(countdown)
-    : !zeroed ? (zeroDelaySec ? C.needZeroDelayed(zeroDelaySec) : C.needZero)
+  const status = countdown != null ? C.zeroCountdown
+    : !zeroed ? C.needZero
     : view.locked ? C.locked : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
 
   return (
@@ -122,7 +123,7 @@ export function PhoneMeter({ movement, sideLabel, grip, zeroDelaySec = 0, notice
           <p className="text-[11px] font-bold uppercase tracking-wide text-cobalt">{C.measuringPrefix}: {sideLabel}</p>
           <p className="font-display font-bold text-cobalt-ink leading-tight">{movement}</p>
         </div>
-        <button type="button" onClick={onClose} aria-label={C.closeButton}
+        <button type="button" onClick={() => { cancelCountdown(); onClose() }} aria-label={C.closeButton}
           className="-mr-2 -mt-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-slate-400 hover:text-cobalt-ink hover:bg-surface">
           <X size={18} />
         </button>
@@ -149,13 +150,13 @@ export function PhoneMeter({ movement, sideLabel, grip, zeroDelaySec = 0, notice
         <>
           <div className="text-center" aria-live="polite">
             <div className={cn('mx-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-opacity',
-              view.locked ? 'bg-cobalt text-white opacity-100' : 'opacity-0 pointer-events-none')} data-locked-badge>
-              <Lock size={14} /> {C.lockedPrefix}: {view.lockVal ?? '--'}°
+              view.locked ? 'bg-cobalt text-white opacity-100' : 'opacity-0 pointer-events-none')} data-locked-badge aria-hidden={!view.locked}>
+              {view.locked ? <><Lock size={14} /> {C.lockedPrefix}: {view.lockVal}°</> : <span className="inline-block h-[14px]">{'\u00a0'}</span>}
             </div>
             <div className={cn('font-display font-extrabold tabular-nums leading-none tracking-tight mt-1',
               view.locked ? 'text-cobalt' : 'text-cobalt-ink')} style={{ fontSize: 'clamp(72px, 24vw, 104px)' }} data-meter-number>
               {countdown != null
-                ? <span className="text-slate-300" data-countdown>{countdown}</span>
+                ? <span className="text-cobalt" data-countdown>{countdown}</span>
                 : shown == null ? <span className="text-slate-300">--</span>
                 : <>{shown}<span className="text-cobalt align-top" style={{ fontSize: '0.5em' }}>°</span></>}
             </div>
@@ -166,7 +167,7 @@ export function PhoneMeter({ movement, sideLabel, grip, zeroDelaySec = 0, notice
           </div>
           <div className="grid grid-cols-3 gap-2">
             <button type="button" onClick={onZero} className="btn-ghost min-h-[48px] text-base">{C.zeroButton}</button>
-            <button type="button" onClick={onReset} disabled={!zeroed} className="btn-ghost min-h-[48px] text-base disabled:opacity-40">{C.resetButton}</button>
+            <button type="button" onClick={onReset} disabled={!zeroed && countdown == null} className="btn-ghost min-h-[48px] text-base disabled:opacity-40">{C.resetButton}</button>
             <button type="button" onClick={onUseClick} disabled={!zeroed || view.angle == null} className="btn-primary min-h-[48px] px-2 leading-tight disabled:opacity-40">{C.useButton}</button>
           </div>
           <div className="flex items-center justify-between border-t border-cobalt/10 pt-2">

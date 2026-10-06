@@ -115,7 +115,7 @@ export function AssessmentMeasureScreen(p: {
                     onMeasure={canMeter(f) ? () => setActive({ step: stepIdx, key: f.key }) : undefined} measuring={activeKey === f.key} />
                   {activeKey === f.key && step.meter && (
                     <PhoneMeter key={`${stepIdx}-${f.key}`} movement={step.title} sideLabel={f.label} grip={step.meter.grip}
-                      zeroDelaySec={step.meter.zeroDelaySec} notice={active?.notice}
+                      notice={active?.notice}
                       onUse={deg => useFromMeter(f, deg)} onClose={() => setActive(null)} />
                   )}
                 </div>

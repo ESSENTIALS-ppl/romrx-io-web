@@ -53,7 +53,7 @@ if (phase === 'setup') {
               <div>
                 <p className="text-sm font-semibold text-cobalt">The method in 4 words: Place. Zero. Move. Hold.</p>
                 <p className="text-xs text-cobalt/80 mt-1 leading-relaxed">
-                  Hold the phone against the body part as shown. Tap Zero in the start position. Move slowly to your end range, then hold still until the number locks. Each step tells you exactly where to hold the phone and which direction to move.
+                  Hold the phone against the body part as shown. Tap Zero and hold the start position for the 5-second countdown. Move slowly to your end range, then hold still until the number locks. Each step tells you exactly where to hold the phone and which direction to move.
                 </p>
               </div>
             </div>

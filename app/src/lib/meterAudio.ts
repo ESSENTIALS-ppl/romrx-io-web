@@ -39,12 +39,16 @@ export function playLockDing(): void {
   } catch { /* ignore */ }
 }
 
-/** Very quiet short tick when a delayed Zero is captured (head and leg steps where the screen is out of view). */
-export function playZeroTick(): void {
+/**
+ * Zero countdown tick (5-4-3-2-1): short, soft, lower than the lock ding so the two never sound alike.
+ * 480 Hz sine, ~4 ms attack, fades out over ~65 ms (about 70 ms total), peak 0.06. No pip at zero.
+ */
+export const COUNTDOWN_TICK = { freq: 480, peak: 0.06, attack: 0.004, decay: 0.065 } as const
+export function playCountdownTick(): void {
   if (!ctx) return
   try {
     if (ctx.state !== 'running') void ctx.resume()
-    tone(ctx, 660, 0.05, 0.005, 0.12, ctx.currentTime + 0.02)
+    tone(ctx, COUNTDOWN_TICK.freq, COUNTDOWN_TICK.peak, COUNTDOWN_TICK.attack, COUNTDOWN_TICK.decay, ctx.currentTime + 0.02)
   } catch { /* ignore */ }
 }
 
