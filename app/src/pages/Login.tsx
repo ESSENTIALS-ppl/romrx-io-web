@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react'
 import { DoNotSellLink } from '../components/ConsentBanner'
 import { resolvePostAuthDest } from '../lib/postAuthDest'
+import { packReturnKey, safeNextPath, stashPostAuthNext } from '../lib/packReturn'
 
 export function Login() {
   const { session } = useAuth()
@@ -19,14 +20,24 @@ export function Login() {
   const [mode, setMode] = useState<'password' | 'magic'>('password')
   const [cooldown, setCooldown] = useState(0) // seconds remaining
 
+  // ?next=/some/in-app/path (e.g. a pack app sending a member to the Base assessment,
+  // or Unlock). Only same-app paths are honored (lib/packReturn safeNextPath).
+  const [nextPath] = useState(() => safeNextPath(new URLSearchParams(window.location.search).get('next')))
+  const fromPack = nextPath ? packReturnKey(nextPath.split('?')[1] ?? '') !== null : false
+
+  useEffect(() => {
+    // Kept briefly so a magic link opened in this browser still lands on `next`.
+    if (nextPath) stashPostAuthNext(nextPath)
+  }, [nextPath])
+
   useEffect(() => {
     if (!session) return
     let active = true
-    resolvePostAuthDest(session.user?.id).then((dest) => {
+    resolvePostAuthDest(session.user?.id, nextPath).then((dest) => {
       if (active) navigate(dest, { replace: true })
     })
     return () => { active = false }
-  }, [session, navigate])
+  }, [session, navigate, nextPath])
 
   // Restore cooldown from localStorage on mount
   useEffect(() => {
@@ -91,6 +102,11 @@ export function Login() {
         <div className="text-center mb-8">
           <h1 className="font-display font-bold text-cobalt text-3xl">ROMRx</h1>
           <p className="text-slate-500 text-sm mt-1">Athlete Dashboard</p>
+          {fromPack && (
+            <p className="text-slate-600 text-sm mt-3" data-testid="pack-assessment-signin-note">
+              Sign in to take your assessment. Use the same email and password you use on your sport site.
+            </p>
+          )}
         </div>
 
         <div className="card p-6">
