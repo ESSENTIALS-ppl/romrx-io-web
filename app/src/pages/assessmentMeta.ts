@@ -34,8 +34,11 @@ export interface Step {
   meter?: { grip: string }
 }
 
-/** Method line on the setup screen. STACY pre-clear (Oct 5), replaces "Place. Zero. Move. Hold.". */
-export const METHOD_LINE = 'Get in position. Tap Start. Hold still for the countdown. Move on GO. Hold until the ding.'
+/**
+ * Method line on the setup screen: Grant's Option A (Stacy PASS, Oct 5 11:30 PM). Alternates for Jim in
+ * BASE-METER-STRINGS.md: Option B "Start. Beeps. Go. Hold for the ding." and Stacy's pre-clear line.
+ */
+export const METHOD_LINE = 'Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.'
 
 export const SETUP_STEPS = [
   { icon: '📱', label: 'Your phone is the meter', detail: 'On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows, tap Start, and hold still for the countdown. Move on GO and hold still. The number locks with a ding. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.' },

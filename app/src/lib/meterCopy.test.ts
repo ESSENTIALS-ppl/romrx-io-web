@@ -41,7 +41,7 @@ describe('phone meter copy', () => {
     expect(METER_COPY.denied).toBe('Motion access is off. Type your number in the box. To use the meter, close and reopen your browser, then tap Allow when asked.')
     expect(METER_COPY.inApp).toBe('The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box.')
     expect(METER_COPY.typicalRange(40, 60)).toBe('Typical range: 40-60°')
-    expect(METHOD_LINE).toBe('Get in position. Tap Start. Hold still for the countdown. Move on GO. Hold until the ding.')
+    expect(METHOD_LINE).toBe('Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.')   // Grant Option A
     const setup = SETUP_STEPS.map(s => s.detail)
     expect(setup).toContain("Can't use the meter? Type your number in the box.")
     expect(setup).toContain('A partner can help. They hold the phone and tap the buttons while you move.')
