@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Loader2, UserPlus, Mail } from 'lucide-react'
@@ -8,6 +8,7 @@ import { captureUtmFromUrl, getSignupAttribution } from '../lib/utm'
 import { cn } from '../lib/cn'
 import { DoNotSellLink } from '../components/ConsentBanner'
 import { AGE_BUCKETS } from '../lib/ageBuckets'
+import { signupMissing, signupMissingHint, type SignupMissingField } from '../lib/signupMissing'
 
 const GENDERS = [
   { v: 'male', l: 'Male' },
@@ -45,6 +46,28 @@ export function Signup() {
   const [checkEmail, setCheckEmail] = useState(false)
   const [gender, setGender] = useState('')
   const [ageBucket, setAgeBucket] = useState('')
+  const [highlight, setHighlight] = useState<SignupMissingField | null>(null)
+  const ageRef = useRef<HTMLSelectElement | null>(null)
+  const termsRef = useRef<HTMLLabelElement | null>(null)
+  const missing = signupMissing({ ageBucket, agreedToTerms })
+  const missingHint = signupMissingHint(missing)
+
+  // The button stays tappable. If Age group or the Terms box is missing, a tap scrolls to the
+  // first missing one and highlights it instead of doing nothing. Empty text fields above are
+  // left to the browser's own required-field check, which runs first in page order.
+  const handleSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (loading || missing.length === 0) return
+    const form = e.currentTarget.form
+    const textInvalid = form?.querySelector('input:not([type=checkbox]):invalid')
+    if (textInvalid) return
+    e.preventDefault()
+    const first = missing[0]
+    setHighlight(first)
+    const target = first === 'age' ? ageRef.current : termsRef.current
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (first === 'age') ageRef.current?.focus({ preventScroll: true })
+    else termsRef.current?.querySelector('input')?.focus({ preventScroll: true })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -208,17 +231,33 @@ export function Signup() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Age group <span className="normal-case font-normal text-slate-400">(required)</span></label>
-            <select value={ageBucket} onChange={e => setAgeBucket(e.target.value)} className="input" required>
+            <select
+              ref={ageRef}
+              value={ageBucket}
+              onChange={e => { setAgeBucket(e.target.value); if (e.target.value && highlight === 'age') setHighlight(null) }}
+              className={cn('input', highlight === 'age' && !ageBucket && 'ring-2 ring-red-500 border-red-500 focus:ring-red-500 focus:border-red-500')}
+              aria-invalid={highlight === 'age' && !ageBucket ? true : undefined}
+              data-testid="signup-age"
+              required
+            >
               <option value="">Select...</option>
               {AGE_BUCKETS.map(b => (<option key={b.v} value={b.v}>{b.l}</option>))}
             </select>
           </div>
 
-          <label className="flex items-start gap-3 cursor-pointer">
+          <label
+            ref={termsRef}
+            data-testid="signup-terms"
+            className={cn(
+              'flex items-start gap-3 cursor-pointer rounded-lg',
+              highlight === 'terms' && !agreedToTerms && 'ring-2 ring-red-500 ring-offset-4 ring-offset-white',
+            )}
+          >
             <input
               type="checkbox"
               checked={agreedToTerms}
-              onChange={e => setAgreedToTerms(e.target.checked)}
+              onChange={e => { setAgreedToTerms(e.target.checked); if (e.target.checked && highlight === 'terms') setHighlight(null) }}
+              aria-invalid={highlight === 'terms' && !agreedToTerms ? true : undefined}
               className="mt-0.5 h-4 w-4 rounded border-cobalt/20 accent-cobalt shrink-0 cursor-pointer"
             />
             <span className="text-xs text-slate-500 leading-relaxed">
@@ -237,10 +276,25 @@ export function Signup() {
             Creating a profile does not require payment. Next you take the assessment and get your results by email, free. You pay only if you choose Base app access.
           </p>
 
-          <button type="submit" disabled={loading || !agreedToTerms || !ageBucket} className="btn-primary w-full flex items-center justify-center gap-2 mt-2 disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={loading}
+            onClick={handleSubmitClick}
+            aria-disabled={missing.length > 0 ? true : undefined}
+            aria-describedby={missingHint ? 'signup-missing-hint' : undefined}
+            className={cn(
+              'btn-primary w-full flex items-center justify-center gap-2 mt-2 disabled:opacity-50',
+              missing.length > 0 && 'opacity-50',
+            )}
+          >
             {loading ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
             Create account & start assessment
           </button>
+          {missingHint && !loading && (
+            <p id="signup-missing-hint" data-testid="signup-missing-hint" aria-live="polite" className="text-xs text-slate-600 text-center -mt-1">
+              {missingHint}
+            </p>
+          )}
         </form>
 
         <p className="text-center text-xs text-slate-500 mt-4">
