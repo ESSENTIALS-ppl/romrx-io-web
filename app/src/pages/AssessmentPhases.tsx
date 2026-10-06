@@ -31,7 +31,7 @@ if (phase === 'setup') {
         <div className="max-w-lg mx-auto space-y-5">
           <div className="text-center">
             <h1 className="font-display font-bold text-cobalt text-2xl">ROM Self-Assessment</h1>
-            <p className="text-sm text-slate-500 mt-1">15 minutes - Uses the ROMeter on your phone - No equipment needed</p>
+            <p className="text-sm text-slate-500 mt-1">Approximately 15 minutes using the ROMeter. Equipment needed: your phone.</p>
           </div>
 
           <div className="card p-6 space-y-4">
