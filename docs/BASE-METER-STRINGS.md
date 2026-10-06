@@ -13,6 +13,8 @@ Sources: step copy in `app/src/pages/assessmentSteps1.ts`, `assessmentSteps2.ts`
 
 ## OVERNIGHT BUILD, Oct 5-6 2026 (3 AM preview): exact strings for Stacy's final pass
 
+Update Oct 6 (Jim, real iPhone test): the countdown now shows and ticks 5, 4, 3, 2, 1, then GO at 5 s. Sounds: tick 940 Hz, about 0.11 s; GO 1320 Hz, higher, louder and longer; lock ding 1760 Hz. Older sections below that mention 480 Hz or 880 Hz are history. No other strings changed.
+
 Legend: **[STACY]** = verbatim from METER-STRINGS-STACY-PRECLEAR-20261005.md (already passes). **[NEW]** = new or changed wording outside her list (check one by one). **[QUINN]** = Quinn's grip/range sign-off wording.
 
 ### Meter panel (lib/meterCopy.ts)
@@ -25,7 +27,7 @@ Legend: **[STACY]** = verbatim from METER-STRINGS-STACY-PRECLEAR-20261005.md (al
 | Countdown button (was Zero) | Start | [STACY] |
 | Other buttons | Reset / Use this number / Close / Peak / Locked: X° / Measure with phone | [STACY] PASS |
 | Before Start | Tap Start, then hold the start position while it counts down from 5. | [STACY] rule ("tap Zero" -> "tap Start"; "counts down from 5" PASS) |
-| Big number during countdown | 5, 4, 3, 2, then GO | [NEW] (GO shown big at zero) |
+| Big number during countdown | 5, 4, 3, 2, 1, then GO | [NEW] (a tick on each number at 0, 1, 2, 3, 4 s; zero and GO at 5 s; Jim, Oct 6) |
 | Under the big number while counting | Hold still... | [STACY] |
 | At zero / live | GO. Move slowly to your end range, then hold still. | [STACY] |
 | Holding (bar filling) | Hold still... | as drafted |
@@ -196,7 +198,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   2. Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched, or ask a friend to watch.
   3. Move your foot closer or farther from the wall until you find the farthest spot where your knee still just touches the wall with the heel down. Measure from the wall to the tip of your big toe. Record it in centimeters (cm), not degrees.
   4. Do 3 tries on this foot and record the best one (the farthest distance that still counts). Repeat with the other foot.
-- Range label: Typical range: 0-0cm | Source line: Source: undefined
+- Range label: none (screen shows "Best of 3, in cm")
 
 
 ## Questions for Quinn

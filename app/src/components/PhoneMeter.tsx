@@ -4,7 +4,7 @@ import { cn } from '../lib/cn'
 import { averageQuats, tiltDeltaDeg, type Quat } from '../lib/orientation'
 import { initialLock, meterValueToUse, nextPeak, stepLock, type LockState } from '../lib/meterLock'
 import { getSensorSnapshot, latestQuat, latestRaw, recentQuats, startSensor, subscribeSensor } from '../lib/meterSensor'
-import { COUNTDOWN_FROM, countdownPlan, playLockDing, scheduleCountdownSounds, unlockMeterAudio } from '../lib/meterAudio'
+import { countdownPlan, playLockDing, playMeterTone, unlockMeterAudio } from '../lib/meterAudio'
 import { METER_COPY as C, isInAppBrowser } from '../lib/meterCopy'
 
 const TICK_MS = 50
@@ -80,29 +80,33 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
   }
 
   const timers = useRef<number[]>([])
-  const stopSounds = useRef<() => void>(() => {})
+  const run = useRef(0)                  // bumps on every Start / cancel, so a late tone from an old run never plays
   const clearTimers = () => { timers.current.forEach(t => window.clearTimeout(t)); timers.current = [] }
-  useEffect(() => () => { clearTimers(); stopSounds.current() }, [])
-  const cancelCountdown = () => { clearTimers(); stopSounds.current(); stopSounds.current = () => {}; setCountdown(null) }
-  // Start = counts down from 5: 5, 4, 3, 2 shown big with a small tick each, then GO (louder, higher)
-  // when it zeroes at the start position. All beeps are scheduled on the audio clock inside this tap.
+  useEffect(() => () => { clearTimers(); run.current++ }, [])
+  const cancelCountdown = () => { clearTimers(); run.current++; setCountdown(null) }
+  // Start = counts down from 5: 5, 4, 3, 2, 1 shown big with a tick each (one second apart), then GO
+  // (higher, louder) at 5 s when it zeroes at the start position. Each tone fires from the same timer
+  // that changes the number, after re-checking the audio state (lib/meterAudio playMeterTone).
   // While counting there is no zero (q0 null), so nothing can lock.
   const onZero = () => {
-    unlockMeterAudio()
+    unlockMeterAudio()                   // synchronous, inside the tap: resume + silent buffer + playback session
     cancelCountdown()
+    const id = ++run.current
+    const wanted = () => run.current === id
     q0.current = null; setZeroed(false)
     lock.current = initialLock(); peak.current = null; live.current = null
     setView({ angle: null, peak: null, locked: false, lockVal: null, holdFrac: null })
-    stopSounds.current = scheduleCountdownSounds()
-    setCountdown(COUNTDOWN_FROM)
     for (const e of countdownPlan()) {
-      if (e.at === 0) continue
-      timers.current.push(window.setTimeout(() => {
+      const fire = () => {
+        if (!wanted()) return
         if (e.show === 'GO') {
           captureZero(); setCountdown('GO')
           timers.current.push(window.setTimeout(() => setCountdown(c => (c === 'GO' ? null : c)), GO_SHOW_MS))
         } else setCountdown(e.show)
-      }, e.at * 1000))
+        void playMeterTone(e.sound, wanted)
+      }
+      if (e.at === 0) fire()
+      else timers.current.push(window.setTimeout(fire, e.at * 1000))
     }
   }
   const onReset = () => {

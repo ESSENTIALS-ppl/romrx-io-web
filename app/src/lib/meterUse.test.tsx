@@ -9,14 +9,17 @@ import { act, createElement, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const audio = { lock: 0, countdowns: 0, cancels: 0, unlock: 0 }
+const audio = { lock: 0, tick: 0, go: 0, unlock: 0, log: [] as string[] }
 vi.mock('./meterAudio', async (orig) => {
   const real = await orig<typeof import('./meterAudio')>()
   return {
     ...real,
     unlockMeterAudio: () => { audio.unlock++ },
     playLockDing: () => { audio.lock++ },
-    scheduleCountdownSounds: () => { audio.countdowns++; return () => { audio.cancels++ } },
+    playMeterTone: (kind: 'tick' | 'go' | 'ding', wanted: () => boolean = () => true) => {
+      if (kind === 'ding') audio.lock++; else if (wanted()) { audio[kind]++; audio.log.push(`${kind}@${Date.now()}`) }
+      return Promise.resolve(true)
+    },
   }
 })
 
@@ -54,14 +57,14 @@ const feed = (tilt: number, n = 1) => act(() => { for (let i = 0; i < n; i++) fe
 const advance = (ms: number, tilt: number) => { for (let t = 0; t < ms; t += 50) { feed(tilt); act(() => { vi.advanceTimersByTime(50) }) } }
 async function turnOn() { click(btn('Turn on the meter')); await flush(); feed(0, 12) }
 /** Tap Start and let the countdown reach GO (4 s) at the start position, then let GO clear. */
-const startNow = () => { click(btn('Start')); advance(4900, 0) }
+const startNow = () => { click(btn('Start')); advance(5900, 0) }
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'performance', 'Date'] })
   Object.defineProperty(navigator, 'maxTouchPoints', { value: 5, configurable: true })
   ;(window as unknown as { DeviceOrientationEvent: unknown }).DeviceOrientationEvent = class {}
   __resetSensorForTests()
-  audio.lock = 0; audio.countdowns = 0; audio.cancels = 0; audio.unlock = 0
+  audio.lock = 0; audio.tick = 0; audio.go = 0; audio.unlock = 0; audio.log = []
 })
 afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers() })
 
@@ -150,17 +153,28 @@ describe('phone meter in the Base measure screen', () => {
     expect(calls.filter(c => c[0] === 'shoulder_er_r')).toEqual([['shoulder_er_r', '55']])
   })
 
-  it('countdown: 5, 4, 3, 2 shown big, then GO when it zeroes (4 s); all beeps scheduled once inside the Start tap', async () => {
+  it('countdown: 5, 4, 3, 2, 1 shown big with a tick each (0-4 s), then GO + zero at 5 s; each tone fires with its number', async () => {
     mount(HIPABD)
     await turnOn()
     const unlockBefore = audio.unlock
+    const t0 = Date.now()
     click(btn('Start'))
-    expect(audio.countdowns).toBe(1)
     expect(audio.unlock).toBe(unlockBefore + 1)                     // audio unlocked/resumed in the Start tap itself
+    expect(audio.tick).toBe(1)                                      // tick on 5 fires in the tap
     const seen: string[] = [$('[data-countdown]')!.textContent!]
+    const ticks: number[] = [audio.tick]
     expect($('[data-meter-status]')!.textContent).toBe('Hold still...')
-    for (let i = 0; i < 4; i++) { advance(1000, 0); seen.push($('[data-countdown]')?.textContent ?? 'none') }
-    expect(seen).toEqual(['5', '4', '3', '2', 'GO'])
+    for (let i = 0; i < 4; i++) {
+      advance(1000, 0); seen.push($('[data-countdown]')?.textContent ?? 'none'); ticks.push(audio.tick)
+      expect($('[data-meter-number]')!.textContent).not.toBe('0°')  // not zeroed before GO
+    }
+    expect(seen).toEqual(['5', '4', '3', '2', '1'])
+    expect(ticks).toEqual([1, 2, 3, 4, 5])                          // one tick per number, when it changes
+    expect(audio.go).toBe(0)
+    advance(1000, 0)
+    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect(audio.go).toBe(1)
+    expect(audio.log.map(l => +l.split('@')[1] - t0).map(ms => Math.round(ms / 1000))).toEqual([0, 1, 2, 3, 4, 5])
     expect($('[data-meter-status]')!.textContent).toBe('GO. Move slowly to your end range, then hold still.')
     expect(btn('Use this number')!.disabled).toBe(true)                // not until a lock
     advance(900, 0)
@@ -171,7 +185,7 @@ describe('phone meter in the Base measure screen', () => {
     advance(3000, 40)
     expect(host.textContent).toContain('Locked: 40°')
     expect(audio.lock).toBe(1)
-    expect(audio.countdowns).toBe(1)
+    expect([audio.tick, audio.go]).toEqual([5, 1])
   })
 
   it('Use this number: disabled from the Start tap through the countdown and GO until a lock; enabled after lock; Reset disables it again', async () => {
@@ -179,7 +193,7 @@ describe('phone meter in the Base measure screen', () => {
     await turnOn()
     expect(btn('Use this number')!.disabled).toBe(true)
     click(btn('Start'))
-    for (let i = 0; i < 4; i++) { expect(btn('Use this number')!.disabled).toBe(true); advance(1000, 0) }
+    for (let i = 0; i < 5; i++) { expect(btn('Use this number')!.disabled).toBe(true); advance(1000, 0) }
     expect($('[data-countdown]')!.textContent).toBe('GO')
     expect(btn('Use this number')!.disabled).toBe(true)
     advance(1000, 0); advance(1000, 40)                              // live and moving, not locked yet
@@ -198,7 +212,7 @@ describe('phone meter in the Base measure screen', () => {
   it('cannot save 0 from an unlocked meter: a forced click at GO does nothing', async () => {
     const calls = mount(SER)
     await turnOn()
-    click(btn('Start')); advance(4000, 0)
+    click(btn('Start')); advance(5000, 0)
     expect($('[data-countdown]')!.textContent).toBe('GO')
     const use = btn('Use this number')!
     act(() => { use.disabled = false; use.click() })                 // even if the disabled state were bypassed
@@ -214,7 +228,7 @@ describe('phone meter in the Base measure screen', () => {
     expect(host.textContent).toContain('Locked: 60°')
     click(btn('Start'))
     expect($('[data-locked-badge]')!.className).toContain('opacity-0')
-    advance(3900, 60)
+    advance(4900, 60)
     expect(audio.lock).toBe(1)
     expect(host.textContent).not.toContain('Locked:')
     advance(1000, 60)                                                // zeroed at GO: 60 is the new 0
@@ -229,8 +243,9 @@ describe('phone meter in the Base measure screen', () => {
     const unlockBefore = audio.unlock
     click(btn('Reset'))
     expect(audio.unlock).toBe(unlockBefore + 1)
-    expect(audio.cancels).toBeGreaterThanOrEqual(1)
+    const ticksAtReset = audio.tick
     advance(5000, 30)
+    expect([audio.tick, audio.go]).toEqual([ticksAtReset, 0])       // no more beeps after Reset
     expect($('[data-countdown]')).toBeNull()
     expect(host.textContent).not.toContain('Locked:')
     expect(btn('Use this number')!.disabled).toBe(true)
@@ -241,11 +256,11 @@ describe('phone meter in the Base measure screen', () => {
     mount(SER)
     await turnOn()
     click(btn('Start')); advance(1000, 0)
-    const c = audio.cancels
+    const c = audio.tick
     click(host.querySelector('[aria-label="Close"]'))
     expect($('[data-phone-meter]')).toBeNull()
-    expect(audio.cancels).toBeGreaterThan(c)
     act(() => { vi.advanceTimersByTime(6000) })
+    expect([audio.tick, audio.go]).toEqual([c, 0])                   // no more beeps after Close
     expect($('[data-countdown]')).toBeNull()
   })
 
