@@ -120,7 +120,8 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
 - Range label: Typical range: 26-40° | Source line: Source: Simoneau et al., 1998
 
-#### Shoulder External Rotation (`shoulder_er`) (tucked elbow, lying on your back; Jim, Oct 6 11:45 AM)
+#### Shoulder Extension (`shoulder_er`) (tucked elbow, lying on your back; Jim, Oct 6 11:45 AM)
+- Title shown to users: Shoulder Extension **[pending Stacy]** (was: Shoulder External Rotation; Jim, Oct 6 11:56 AM). Key `shoulder_er` unchanged.
 - Meter grip: Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff. **[Stacy PASS Oct 6 11:55]**
 - Setup:
   1. Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling. **[Stacy PASS Oct 6 11:55]**
@@ -130,7 +131,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   1. Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side. **[Stacy PASS Oct 6 11:55]**
   2. Hold still at your limit: after 2.5 seconds the number locks and chimes. Tap Use this number. **[Stacy PASS Oct 6 11:55]**
   3. Switch arms, tap Start in the start position, and repeat.
-- Range label: Typical range: 40-75° | Source line: Source: Gill et al., 2020 **[Stacy PASS pending Quinn confirming Gill's position]**
+- Range label: Typical range: 40-75° | Source line: Source: Gill et al., 2020 **[NOT Stacy-cleared: Quinn says Gill measured standing and 40-75 is a derived mean ± SD]** (label kept as is, Jim's call)
 
 #### Shoulder Flexion (`shoulder_flex`) (sitting in a chair with a back; Jim, Oct 6 11:54 AM)
 - Tool: Your phone. Sitting in a chair with a back. **[pending Stacy]**
@@ -782,7 +783,7 @@ Every changed string. Stacy PASSED all 24 rows as written (Oct 6, 11:55), except
 | shoulder_er | setup 2 | app/src/pages/assessmentSteps1.ts:73 | Hold the phone along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time. | Hold the phone in that hand along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time. | Stacy PASS Oct 6 11:55 |
 | shoulder_er | how-to 1 | app/src/pages/assessmentSteps1.ts:77 | Keep your elbow at shoulder height. Rotate up and back until you feel a strong stretch or your back starts to arch. Going past straight up is fine. | Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side. | Stacy PASS Oct 6 11:55 |
 | shoulder_er | how-to 2 | app/src/pages/assessmentSteps1.ts:78 | Hold still: after 2.5 seconds the number locks and chimes. Tap Use this number. | Hold still at your limit: after 2.5 seconds the number locks and chimes. Tap Use this number. | Stacy PASS Oct 6 11:55 |
-| shoulder_er | fields | | shoulder_er_l 85-110 rb 60 Vairo et al., 2012; shoulder_er_r 85-110 rb 60 Vairo et al., 2012 | shoulder_er_l 40-75 rb 40 Gill et al., 2020; shoulder_er_r 40-75 rb 40 Gill et al., 2020 | Stacy PASS pending Quinn confirming Gill's position |
+| shoulder_er | fields | | shoulder_er_l 85-110 rb 60 Vairo et al., 2012; shoulder_er_r 85-110 rb 60 Vairo et al., 2012 | shoulder_er_l 40-75 rb 40 Gill et al., 2020; shoulder_er_r 40-75 rb 40 Gill et al., 2020 | NOT Stacy-cleared: Quinn says Gill measured standing and 40-75 is a derived mean ± SD (label kept, Jim's call) |
 | shoulder_flex | mistakeFix | app/src/pages/assessmentSteps1.ts:107 | Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your true end range. Record it there. | Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your limit. Record it there. | Stacy PASS Oct 6 11:55 |
 | cervical_flex_ext | mistakeFix | app/src/pages/assessmentSteps2.ts:20 | Your shoulders and torso stay still. Only your head moves. If your back starts to round or arch, stop there. | Your shoulders and upper body stay still. Only your head moves. If your back starts to round or arch, stop there. | Stacy PASS Oct 6 11:55 |
 | cervical_flex_ext | how-to 1 | app/src/pages/assessmentSteps2.ts:16 | Back stays against the chair. Only your head nods. Flexion: Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number. | Back stays against the chair. Only your head nods. Chin down (Flexion): Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number. | Stacy PASS Oct 6 11:55 |
@@ -820,4 +821,16 @@ Flag: the 1e5f02b shoulder flexion Fix row ("...that is your limit. Record it th
 | mistake | app/src/pages/assessmentSteps1.ts:108 | Leaning your upper body backward or shrugging your shoulder to get the arm higher. | Arching your back or leaning back to get the arm higher. | pending Stacy |
 | mistakeFix | app/src/pages/assessmentSteps1.ts:109 | Keep your body tall and still. The moment your back starts to arch or your shoulder creeps up toward your ear, that is your limit. Record it there. | Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear. | pending Stacy |
 | grip | app/src/pages/assessmentSteps1.ts:110 | Phone in your hand, long edge along your arm, screen facing out to the side. Thumb up, wrist straight. | Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body. | pending Stacy |
+
+---
+
+## Update: Shoulder ER step title relabeled (Jim, Oct 6, 11:56 AM) [pending Stacy]
+
+Jim reversed the shoulder ER removal: the lying-down tucked-elbow step STAYS in Base (9 moves). Its title (what the user sees on the step header and in the meter card) is now **Shoulder Extension** **[pending Stacy]** (was: Shoulder External Rotation). The stored key `shoulder_er`, the field keys `shoulder_er_l` / `shoulder_er_r`, targets, saved answers and field labels are unchanged, so no key rename is needed. The title may change again, so other places that show the old name are listed, not changed:
+- app/src/pages/MyProtocol.tsx:128 label 'Shoulder External Rotation' (Protocol)
+- app/src/pages/ResultsPreview.tsx:44 'Shoulder External Rotation' (results preview)
+- app/src/lib/mobilityBands.ts:553 label / short 'Shoulder ER' (My Body list and spider chart)
+- romrxbjj-v2 supabase/functions/ai-chat/handler.js:22 "shoulder external rotation" (ROMBot wording)
+
+Shoulder ER range label "Typical range: 40-75° / Source: Gill et al., 2020" kept as is (Jim's call) and is **NOT Stacy-cleared: Quinn says Gill measured standing and 40-75 is a derived mean ± SD**.
 

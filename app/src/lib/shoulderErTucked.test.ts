@@ -131,6 +131,10 @@ describe('shoulder_er copy and fields (Jim, Oct 6 11:45 AM; copy pending Stacy)'
     expect(s.position[1]).toContain('Keep your wrist straight and stiff the whole time.')
     expect(s.position[2]).toBe('Tap Start with your other hand, then hold this start position while it counts down from 5.')
   })
+  it('title shown to users is "Shoulder Extension" (Jim, Oct 6 11:56 AM; pending Stacy); id stays shoulder_er', () => {
+    expect(s.title).toBe('Shoulder Extension')
+    expect(s.id).toBe('shoulder_er')
+  })
   it('fields: typical range 40-75 (Gill et al., 2020), riskBelow 40 (the Steady target), keys unchanged', () => {
     expect(s.fields.map(f => f.key)).toEqual(['shoulder_er_l', 'shoulder_er_r'])
     for (const f of s.fields) {

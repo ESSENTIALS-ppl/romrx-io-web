@@ -79,6 +79,8 @@ describe('shoulder_er meter, tucked elbow lying on your back', () => {
     mount()
     expect(host.textContent).toContain('Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff.')
     expect(host.textContent).toContain('Typical range: 40-75°')
+    expect(host.querySelector('h2')!.textContent).toBe('Shoulder Extension')        // display title only; key stays shoulder_er
+    expect(host.textContent).not.toContain('Shoulder External Rotation')
     expect(host.textContent).toContain('elbow on the floor')
     expect(host.textContent).not.toMatch(/upper arm/i)
   })

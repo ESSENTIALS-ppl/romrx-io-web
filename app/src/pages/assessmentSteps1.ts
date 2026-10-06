@@ -63,7 +63,8 @@ export const STEPS_PART1: Step[] = [
   },
 {
     id: 'shoulder_er',
-    title: 'Shoulder External Rotation',
+    // Title shown to users relabeled 'Shoulder Extension' (Jim, Oct 6 11:56 AM; pending Stacy). Key shoulder_er, fields and targets unchanged.
+    title: 'Shoulder Extension',
     why: 'Supports overhead and pressing positions.',
     // Jim, Oct 6 11:45 AM: tucked-elbow version lying on your back. Say 'elbow on the floor', never 'upper arm on the floor'.
     // Copy pending Stacy. Meter math unchanged (see shoulderErTucked.test.ts).
