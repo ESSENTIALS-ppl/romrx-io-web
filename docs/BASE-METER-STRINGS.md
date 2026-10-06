@@ -11,11 +11,6 @@ Sources: step copy in `app/src/pages/assessmentSteps1.ts`, `assessmentSteps2.ts`
 
 
 
-## SHIP BLOCKERS (Oct 6)
-- **Hip Flexion (SLR) setup line 3** (app/src/lib/hipFlexCopy.ts, HIP_FLEX_STEP.position[2]) is Stacy PASS Oct 6 12:02 but **ship-blocked**: setup no longer puts a hand under the low back, while How to Measure 2 and the Fix still say "presses down onto your hand". Can't ship until Jim decides how-to 2 and Fix.
-- **Shoulder Extension title**: needs one name everywhere before ship (step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.
-- **Shoulder ER range label** "Typical range: 40-75° / Source: Gill et al., 2020": NOT Stacy-cleared (Quinn: Gill measured standing; 40-75 is a derived mean ± SD). Kept as is, Jim's call.
-
 ## OVERNIGHT BUILD, Oct 5-6 2026 (3 AM preview): exact strings for Stacy's final pass
 
 Update Oct 6 (Jim, real iPhone test): the countdown now shows and ticks 5, 4, 3, 2, 1, then GO at 5 s. Sounds: tick 940 Hz, about 0.11 s; GO 1320 Hz, higher, louder and longer; lock ding 1760 Hz. Older sections below that mention 480 Hz or 880 Hz are history. No other strings changed.
@@ -177,16 +172,20 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - Range label: none (no number shown)
 
 #### Hip Flexion (Straight-Leg Raise) (`hip_flex`)
-- Meter grip: Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.
+Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this step. Title, why, tool, per-leg fields and range unchanged.
+- Meter grip: Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
 - Setup:
-  1. Lie flat on your back on the floor with both legs straight.
-  2. Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.
-  3. Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:02, ship-blocked: can't ship until Jim decides how-to 2 and Fix (they still mention the hand under the low back)]** (was: Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.)
+  1. Lie flat on your back, legs straight out, knees touching the floor. **[Stacy PASS Oct 6 12:07]**
+  2. Place your phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
+  3. Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:07]**
 - How to Measure:
-  1. Keep the test knee completely straight, kneecap pointing at the ceiling. Raise that leg straight up, not out, as high as you can without bending the knee, and keep your other leg flat on the floor.
-  2. Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Hold still until the number locks and chimes.
-  3. Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.
-- Range label: none (no number shown)
+  1. Lift one leg and keep it straight until you can't anymore. **[Stacy PASS Oct 6 12:07]**
+  2. Pause for 2.5 seconds so the meter can lock in the range. **[Stacy PASS Oct 6 12:07]**
+  3. Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number. **[Stacy PASS Oct 6 12:07]**
+- Common mistake: Your hips start coming up, or you shift in any other way. **[Stacy PASS Oct 6 12:07]**
+- Fix: Keep your hips down and your body still. If you shift, redo the lift. **[Stacy PASS Oct 6 12:07]**
+- No stop or safety line remains on this step (Jim's copy replaced both fields that had one). See SHIP BLOCKERS at the end of this doc.
+- Range label: Typical range: 60-80° / Source: Youdas et al., 2005 (unchanged)
 
 #### Hip Abduction (`hip_abd`)
 - Meter grip: Standing. Phone flat on the outer side of your thigh, screen facing out, long edge along the thigh.
@@ -490,7 +489,9 @@ Meter: YES, grip line: Phone flat against the side of your head at the temple, s
 
 ## Hip Flexion (Straight-Leg Raise) (`hip_flex`)
 
-Meter: YES, grip line: Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.
+Meter: YES, grip line: Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** (was: Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.)
+
+Current copy below is Jim's Oct 6 12:07 PM decision (no hand, no low back). The Old lines are history.
 
 ### Tool line
 - **Old:** iPhone: Measure -> Level. Android: Simple Inclinometer. Lying on the floor. A partner is helpful.
@@ -503,11 +504,11 @@ Meter: YES, grip line: Phone flat on the outer side of your thigh, midway betwee
 2. Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.
 3. Slide one hand under the small of your low back. Tap to zero with your leg flat on the ground.
 
-**New:**
+**New (Jim, Oct 6 12:07 PM):**
 
-1. Lie flat on your back on the floor with both legs straight.
-2. Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward.
-3. Tap Zero, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
+1. Lie flat on your back, legs straight out, knees touching the floor. **[Stacy PASS Oct 6 12:07]**
+2. Place your phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
+3. Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:07]**
 
 ### How to Measure
 **Old:**
@@ -516,17 +517,21 @@ Meter: YES, grip line: Phone flat on the outer side of your thigh, midway betwee
 2. Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Read the number.
 3. Record it for this leg. Lower the leg slowly. Re-zero. Repeat with the other leg. Each leg gets its own number.
 
-**New:**
+**New (Jim, Oct 6 12:07 PM):**
 
-1. Keep the test knee completely straight. Raise that leg as high as you can without bending the knee, and keep your other leg flat on the floor.
-2. Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Hold still until the number locks and chimes.
-3. Tap Use this number for this leg. Lower the leg slowly. Tap Zero again and repeat with the other leg. Each leg gets its own number.
+1. Lift one leg and keep it straight until you can't anymore. **[Stacy PASS Oct 6 12:07]**
+2. Pause for 2.5 seconds so the meter can lock in the range. **[Stacy PASS Oct 6 12:07]**
+3. Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number. **[Stacy PASS Oct 6 12:07]**
 
 ### Common mistake
-(unchanged) Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher.
+**Old:** Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher.
+
+**New (Jim, Oct 6 12:07 PM):** Your hips start coming up, or you shift in any other way. **[Stacy PASS Oct 6 12:07]**
 
 ### Fix
-(unchanged) Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again.
+**Old:** Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again.
+
+**New (Jim, Oct 6 12:07 PM):** Keep your hips down and your body still. If you shift, redo the lift. **[Stacy PASS Oct 6 12:07]**
 
 ---
 
@@ -846,10 +851,36 @@ Jim asked for these cues after his phone hit the floor, so they must not sit und
 
 ---
 
-## Update: Hip Flexion (SLR) setup line 3, no hand under the low back (Jim, Oct 6, 12:02 PM) [Stacy PASS Oct 6 12:02, ship-blocked]
+## Update: Hip Flexion (SLR) setup line 3, no hand under the low back (Jim, Oct 6, 12:02 PM) [Stacy PASS Oct 6 12:02; ship-block SUPERSEDED by Jim's 12:07 copy below]
 
 - **Hip Flexion (SLR)** (Setup 3, app/src/lib/hipFlexCopy.ts, HIP_FLEX_STEP.position[2]) **[Stacy PASS Oct 6 12:02, ship-blocked: can't ship until Jim decides how-to 2 and Fix (they still mention the hand under the low back)]**
   - Was: Tap Start, then slide one hand under the small of your low back with your leg flat on the ground. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
   - Now: Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.
 - Not changed (Jim is deciding): setup lines 1-2, How to Measure 1-3, Common mistake and Fix. How to Measure 2 ("...or sooner when your low back presses down onto your hand.") and the Fix ("...when your low back presses down onto your hand.") still mention the hand.
 
+---
+
+## Update: Hip Flexion (SLR), every hand reference removed (Jim, Oct 6, 12:07 PM, decided) [Stacy PASS Oct 6 12:07, all 9 lines]
+
+All in `app/src/lib/hipFlexCopy.ts`, HIP_FLEX_STEP (the step in assessmentSteps2.ts reads from it). Unchanged: title, why, tool ("Your phone. Lying on the floor. A partner is helpful."), per-leg fields (Left leg / Right leg), "Typical range: 60-80°" with "Source: Youdas et al., 2005".
+
+| Field | Was | Now |
+|---|---|---|
+| Setup 1 (position[0]) | Lie flat on your back on the floor with both legs straight. | Lie flat on your back, legs straight out, knees touching the floor. **[Stacy PASS Oct 6 12:07]** |
+| Setup 2 (position[1]) | Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward. | Place your phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** |
+| Setup 3 (position[2]) | (same) | Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:07]** |
+| How to Measure 1 (howTo[0]) | Keep the test knee completely straight, kneecap pointing at the ceiling. Raise that leg straight up, not out, as high as you can without bending the knee, and keep your other leg flat on the floor. | Lift one leg and keep it straight until you can't anymore. **[Stacy PASS Oct 6 12:07]** |
+| How to Measure 2 (howTo[1]) | Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Hold still until the number locks and chimes. | Pause for 2.5 seconds so the meter can lock in the range. **[Stacy PASS Oct 6 12:07]** |
+| How to Measure 3 (howTo[2]) | (same) | Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number. **[Stacy PASS Oct 6 12:07]** |
+| Common mistake (mistake) | Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher. | Your hips start coming up, or you shift in any other way. **[Stacy PASS Oct 6 12:07]** |
+| Fix (mistakeFix) | Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again. | Keep your hips down and your body still. If you shift, redo the lift. **[Stacy PASS Oct 6 12:07]** |
+| Meter grip (meterGrip) | Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out. | Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** |
+
+Removed with these fields: both SLR safety lines ("Stop if you feel sharp pain." in How to Measure 2, "Stop at a firm stretch, not at pain." in the Fix). No other SLR helper, overlay or tooltip in app/src mentions a hand, the low back or "presses down". Test: hipFlexCopy.test.ts fails if "hand", "low back" or "press down" appears in any HIP_FLEX_STEP string.
+
+---
+
+## SHIP BLOCKERS (Oct 6)
+- **SLR step:** no stop or safety line remains (Jim's copy removed both). Stacy recommends adding the cleared line "Stop if anything hurts." as an always-visible line on the step; waiting for Jim's yes via Sable.
+- **Shoulder Extension title**: needs one name everywhere before ship (step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.
+- **Shoulder ER range label** "Typical range: 40-75° / Source: Gill et al., 2020": NOT Stacy-cleared (Quinn: Gill measured standing; 40-75 is a derived mean ± SD). Kept as is, Jim's call.
