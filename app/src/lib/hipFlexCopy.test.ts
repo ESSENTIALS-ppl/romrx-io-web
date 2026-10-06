@@ -197,7 +197,7 @@ describe('straight-leg raise typical range (Grant, Oct 5 11:14 PM: OFF)', () => 
   it('toggle is OFF: no number and no source line for SLR', async () => {
     const m = await import('./hipFlexCopy')
     expect(m.SHOW_SLR_TYPICAL_RANGE).toBe(false)
-    expect(m.HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 60-85°')
+    expect(m.HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 60 to 80°')
     const step = STEPS.find(s => s.id === 'hip_flex')!
     for (const f of step.fields) { expect(f.rangeSource).toBeUndefined(); expect(f.normalLow).toBeUndefined() }
   })
