@@ -56,12 +56,15 @@ export const JOINT_SCORE_TARGETS: Record<string, number> = {
   //   neck rotation 70 (was 80): Swinkels & Swinkels-Meewisse 2014 (Spine, PMID 24573069), mean minus 1 SD for ages 20-49.
   //   neck side bend 38 (was 45): same paper, 20-29 mean minus 1 SD (46 - 7.5 / 45 - 7.5). Neck flexion 50 / extension 60 unchanged.
   //   No typical range shown on screen for the neck.
+  //   shoulder ER 40 (was 90): Base switches to the tucked-elbow test lying on your back (Jim, Oct 6 11:45 AM); typical range
+  //     40-75, Gill et al. 2020 (PMID 33046038). Readings taken with the old goalpost method (arm out at 90) are still scored
+  //     against 40 until Jim decides how goalpost history is handled.
   // Mirrored in public.compute_joint_scores() and romrxbjj-v2 compute-tiers JOINT_TARGETS + submit-lead-assessment email.ts BAND_JOINTS.
   hip_er: 29,
   hip_ir: 26,
   hip_abd: 40,
   hip_flex: 120,
-  shoulder_er: 90,
+  shoulder_er: 40,
   shoulder_flex: 140,
   ankle_df: 6,
   cervical_rot: 70,

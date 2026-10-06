@@ -14,10 +14,11 @@ WITH a AS (
 bi(k, l, r, rb, nm, tgt) AS (VALUES
   -- tgt = compute_joint_scores() target. Oct 6 2026: hip ER 29 / IR 26 / abduction 40 (were 45 / 45 / 90),
   -- shoulder flexion 140 (was 180), ankle 6 cm (was 20), neck side bend 38 (was 45; Swinkels 2014).
+  -- shoulder ER 40 (was 90; tucked-elbow test, Gill 2020). rb / nm stay = what the old UI showed (legacy exposure only).
   -- cervical_rot is not in this audit (no Base step collects it); its compute_joint_scores() target is 70 (was 80).
   ('hip_er','hip_er_l','hip_er_r',40,40,29),('hip_ir','hip_ir_l','hip_ir_r',30,30,26),
   ('hip_abd','hip_abd_l','hip_abd_r',30,40,40),('hip_flex','hip_flex_l','hip_flex_r',100,100,120),
-  ('shoulder_er','shoulder_er_l','shoulder_er_r',60,60,90),('shoulder_flex','shoulder_flex_l','shoulder_flex_r',120,140,140),
+  ('shoulder_er','shoulder_er_l','shoulder_er_r',60,60,40),('shoulder_flex','shoulder_flex_l','shoulder_flex_r',120,140,140),
   ('ankle_df','ankle_df_l','ankle_df_r',10,10,6),('cervical_lat','cervical_lat_l','cervical_lat_r',30,40,38)),
 si(k, c, rb, nm, tgt) AS (VALUES
   ('lumbar_flex','lumbar_flex',40,40,60),('lumbar_ext','lumbar_ext',15,20,25),
