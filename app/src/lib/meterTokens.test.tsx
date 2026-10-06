@@ -80,7 +80,7 @@ describe('meter files use the tokens, not cobalt accents, raw hex or white-on-fi
       expect(code).not.toMatch(/btn-primary|text-white|pink|rose|fuchsia|magenta/)
     })
   }
-  it('assessment step meter controls (Measure with phone, Saved row, all saved) use the tokens', () => {
+  it('assessment step meter controls (Measure, Saved row, all saved) use the tokens', () => {
     expect(read('src/pages/AssessmentMeasure.tsx')).toContain("'border border-meter-text/30 bg-meter-tint text-meter-text hover:bg-meter hover:text-meter-ink'")
     const s = read('src/pages/AssessmentMeasureScreen.tsx')
     expect(s).toContain('border-meter-text/20 bg-meter-tint')
