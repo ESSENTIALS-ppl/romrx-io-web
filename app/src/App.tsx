@@ -3,6 +3,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { PageViewTracker } from './components/PageViewTracker'
 import { ConsentBanner } from './components/ConsentBanner'
+import { TermsReacceptGate } from './components/TermsReacceptGate'
 import { Login } from './pages/Login'
 import { AuthCallback } from './pages/AuthCallback'
 import { AuthConfirm } from './pages/AuthConfirm'
@@ -33,6 +34,7 @@ export default function App() {
     <BrowserRouter basename="/app">
       <PageViewTracker />
       <ConsentBanner />
+      <TermsReacceptGate />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
