@@ -172,10 +172,10 @@ describe('phone meter in the Base measure screen', () => {
     expect(ticks).toEqual([1, 2, 3, 4, 5])                          // one tick per number, when it changes
     expect(audio.go).toBe(0)
     advance(1000, 0)
-    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect($('[data-countdown]')!.textContent).toBe('Move')
     expect(audio.go).toBe(1)
     expect(audio.log.map(l => +l.split('@')[1] - t0).map(ms => Math.round(ms / 1000))).toEqual([0, 1, 2, 3, 4, 5])
-    expect($('[data-meter-status]')!.textContent).toBe('GO. Move slowly to your end range, then hold still.')
+    expect($('[data-meter-status]')!.textContent).toBe('Move slowly to your end range, then hold still.')
     expect(btn('Use this number')!.disabled).toBe(true)                // not until a lock
     advance(900, 0)
     expect($('[data-countdown]')).toBeNull()
@@ -194,7 +194,7 @@ describe('phone meter in the Base measure screen', () => {
     expect(btn('Use this number')!.disabled).toBe(true)
     click(btn('Start'))
     for (let i = 0; i < 5; i++) { expect(btn('Use this number')!.disabled).toBe(true); advance(1000, 0) }
-    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect($('[data-countdown]')!.textContent).toBe('Move')
     expect(btn('Use this number')!.disabled).toBe(true)
     advance(1000, 0); advance(1000, 40)                              // live and moving, not locked yet
     expect(host.textContent).not.toContain('Locked:')
@@ -213,7 +213,7 @@ describe('phone meter in the Base measure screen', () => {
     const calls = mount(SER)
     await turnOn()
     click(btn('Start')); advance(5000, 0)
-    expect($('[data-countdown]')!.textContent).toBe('GO')
+    expect($('[data-countdown]')!.textContent).toBe('Move')
     const use = btn('Use this number')!
     act(() => { use.disabled = false; use.click() })                 // even if the disabled state were bypassed
     advance(1000, 0)

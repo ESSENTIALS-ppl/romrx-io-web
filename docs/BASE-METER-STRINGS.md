@@ -910,6 +910,31 @@ Kept on purpose: `desktopNote` "Type your numbers here. On a phone, you can also
 
 ---
 
+## Update: Before you start + sound words (Jim, Oct 6, 12:16 PM) [Jim wording 12:16]
+
+### Before you start (app/src/pages/assessmentMeta.ts SETUP_STEPS, rendered by AssessmentPhases.tsx), in this order [Jim wording 12:16]
+1. **Warm up first - 5 minutes**: detail unchanged, moved to first.
+2. **Your phone is the meter, and we call it ROMeter.**: Tap Measure. Your phone may ask for access. If it does, accept it. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up, and turn off silent mode so you can hear the beeps.
+   - Second paragraph of the same card (the card needs a label and Jim gave this sentence no title): Tap Start and move into position during the five-second countdown beeps. After the final beep, begin your move. Then hold for 2.5 seconds, and you'll hear a finishing ding.
+3. **Skip is always OK**: If a position is too difficult or you feel any pain, tap Skip. Your score is based on what you complete. You can always try to redo this position during a reassessment if you're able.
+
+Removed: the Typing is always OK card, the second-person card, the Solo tip card, and the method box under the cards (its sub-line "Each step shows where to hold the phone and which way to move." is gone; its method line is now card 2's second paragraph, so it is not shown twice).
+METHOD_LINE (also on the ROMeter page) was: Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding. Now: Jim's sentence above. [Jim wording 12:16]
+Note: the button on angle steps is labeled **Measure with phone** (not renamed); Jim's card says "Tap Measure."
+Timing check (no change): countdown is 5 beeps (5, 4, 3, 2, 1, one second apart), then a distinct higher start beep at 5 s when the start position is captured; lock hold is 2.5 s (LOCK_HOLD_MS = 2500).
+
+### Sound words: countdown = beeps, start signal = beep (never GO), finish/lock = ding (never chime) [Jim wording 12:16]
+| Where | Was | Now |
+|---|---|---|
+| meterCopy.ts `go` (big on-screen label at the start beep) | GO | Move |
+| meterCopy.ts `live` | GO. Move slowly to your end range, then hold still. | Move slowly to your end range, then hold still. |
+| Lock tip on each meter step (AssessmentMeasureScreen.tsx) | ...The number locks and chimes, so you can read it after. | ...The number locks and dings, so you can read it after. |
+| Hip ER, Hip IR, Shoulder ER, Shoulder Flexion, Neck side bend, Neck chin down, Hip side lift (How to Measure) | ...the number locks and chimes. | ...the number locks and dings. |
+
+"counts down from 5 with a soft beep each second" (setup lines) already matches and is unchanged. Sound files and code identifiers (GO_TONE, 'go' tone kind) are unchanged.
+
+---
+
 ## SHIP BLOCKERS (Oct 6)
 - **SLR step:** no stop or safety line remains (Jim's copy removed both). Stacy recommends adding the cleared line "Stop if anything hurts." as an always-visible line on the step; waiting for Jim's yes via Sable.
 - **Shoulder Extension title**: needs one name everywhere before ship (step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.

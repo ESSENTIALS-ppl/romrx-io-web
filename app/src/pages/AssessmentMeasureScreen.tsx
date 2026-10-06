@@ -167,7 +167,7 @@ export function AssessmentMeasureScreen(p: {
 
             {/* Hands-free tip: the meter locks on hold; typed-only steps keep the screenshot tip */}
             {step.meter && meterAvail ? (
-              <p className="text-center text-xs text-slate-500">🔒 Can't see the screen at the end? Hold still. The number locks and chimes, so you can read it after.</p>
+              <p className="text-center text-xs text-slate-500">🔒 Can't see the screen at the end? Hold still. The number locks and dings, so you can read it after.</p>
             ) : step.fields.some(f => f.unit === '°') ? (
               <p className="text-center text-xs text-slate-500">
                 📸 Can't tap the screen? Say <span className="font-semibold">&ldquo;Hey Siri, take a screenshot&rdquo;</span> (iPhone) or <span className="font-semibold">&ldquo;Hey Google, take a screenshot&rdquo;</span> (Android).

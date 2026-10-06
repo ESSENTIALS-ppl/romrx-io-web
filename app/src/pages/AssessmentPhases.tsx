@@ -1,6 +1,6 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
-import { Loader2, ChevronRight, CheckCircle2, Info } from 'lucide-react'
-import { METHOD_LINE, SETUP_STEPS } from './assessmentMeta'
+import { Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { SETUP_STEPS } from './assessmentMeta'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
 import { track } from '../lib/track'
 
@@ -42,21 +42,10 @@ if (phase === 'setup') {
                 <div>
                   <p className="text-sm font-semibold text-cobalt-ink">{s.label}</p>
                   <p className="text-xs text-slate-500 leading-relaxed">{s.detail}</p>
+                  {s.more && <p className="text-xs text-slate-500 leading-relaxed mt-2" data-method-line>{s.more}</p>}
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="bg-cobalt-light rounded-card p-4">
-            <div className="flex gap-2 items-start">
-              <Info size={16} className="text-cobalt mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-cobalt" data-method-line>{METHOD_LINE}</p>
-                <p className="text-xs text-cobalt/80 mt-1 leading-relaxed">
-                  Each step shows where to hold the phone and which way to move.
-                </p>
-              </div>
-            </div>
           </div>
 
           <button onClick={() => { track('assessment_started'); p.setPhase('measure') }} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">

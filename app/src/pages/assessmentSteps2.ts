@@ -13,7 +13,7 @@ export const STEPS_PART2: Step[] = [
       'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
-      'Back stays against the chair. Only your head nods. Chin down (Flexion): Drop your chin toward your chest as far as it will go. Hold still until the number locks and chimes. Tap Use this number.',
+      'Back stays against the chair. Only your head nods. Chin down (Flexion): Drop your chin toward your chest as far as it will go. Hold still until the number locks and dings. Tap Use this number.',
       'Chin up (Extension): Look straight ahead, tap Start the same way, then lift your chin toward the ceiling as far as it will go. Hold until it locks and tap Use this number.',
     ],
     mistake: 'Moving your whole upper body forward or backward instead of just your head and neck.',
@@ -53,7 +53,7 @@ export const STEPS_PART2: Step[] = [
     ],
     howTo: [
       'Toes forward. Lift your test leg straight out to the side. No lean, no forward drift, no turning out.',
-      'Stop just before your upper body starts to lean to the other side or your hips push back. Hold still until the number locks and chimes.',
+      'Stop just before your upper body starts to lean to the other side or your hips push back. Hold still until the number locks and dings.',
       'Tap Use this number. Lower the leg, tap Start again, and repeat on the other side.',
     ],
     mistake: 'Leaning your upper body away or letting your hips push back to get the leg higher.',
