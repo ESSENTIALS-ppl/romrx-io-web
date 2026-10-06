@@ -106,7 +106,7 @@ describe('hip flexion copy (Stacy rules)', () => {
   })
   it('measure screen only prints a range when a field has one', () => {
     const s = readFileSync(join(SRC, 'pages', 'AssessmentMeasure.tsx'), 'utf8')
-    expect(s).toMatch(/!field\.unscored && field\.normalLow != null/)
+    expect(s).toMatch(/!field\.unscored && field\.rangeSource && field\.normalLow != null/)
   })
 })
 

@@ -68,7 +68,7 @@ export const STEPS_PART2: Step[] = [
     id: 'lumbar',
     title: 'Lumbar Flexion + Extension',
     why: 'Low back range and control support bending, lifting, and recovering from awkward positions.',
-    tool: 'iPhone: Measure -> Level. Android: Simple Inclinometer. Standing + Floor.',
+    tool: 'Type this one in for now. Use any level you have to read the angle. Standing + Floor.',  // PROPOSED, Stacy clears 3:08 AM
     position: [
       'Flexion is standing. Extension is on the floor face down.',
       'Flexion setup: Stand straight, feet shoulder-width apart. Hold your phone at your side, screen facing away. Make sure to zero before you start.',

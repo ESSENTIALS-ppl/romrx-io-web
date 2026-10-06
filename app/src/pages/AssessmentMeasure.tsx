@@ -22,7 +22,8 @@ export function MeasureInput({ field, value, onChange, onMeasure, measuring, upN
       <div className="flex items-center justify-between">
         <label htmlFor={`m-${field.key}`} className="text-sm font-semibold text-cobalt-ink">{field.label}{upNext && <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400" data-up-next>{METER_COPY.upNext}</span>}</label>
         {(() => {
-          const note = field.referenceNote ?? (!field.unscored && field.normalLow != null && field.normalHigh != null ? METER_COPY.typicalRange(field.normalLow, field.normalHigh, field.unit ?? '') : null)
+          // A typical range shows ONLY where a source exists (Stacy/Grant, Oct 5): rangeSource is required.
+          const note = field.referenceNote ?? (!field.unscored && field.rangeSource && field.normalLow != null && field.normalHigh != null ? METER_COPY.typicalRange(field.normalLow, field.normalHigh, field.unit ?? '') : null)
           return note ? <span className="text-xs text-slate-500">{note}</span> : null
         })()}
       </div>

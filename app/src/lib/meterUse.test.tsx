@@ -308,6 +308,18 @@ describe('phone meter in the Base measure screen', () => {
     }
   })
 
+  it('a typical range shows only where a source exists: lumbar (flag OFF) and ankle show none', () => {
+    const lumbar = STEPS.findIndex(s => s.id === 'lumbar')
+    for (const i of [lumbar, STEPS.findIndex(s => s.id === 'ankle_df')].filter(i => i >= 0)) {
+      act(() => root?.unmount()); host?.remove()
+      mount(i)
+      expect(host.textContent).not.toMatch(/Typical range|Normal/)
+      expect($('[data-range-source]')).toBeNull()
+    }
+    const shown = STEPS.filter(s => s.fields.some(f => f.rangeSource && f.normalLow != null && !f.unscored && !f.referenceNote)).map(s => s.id)
+    expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_er', 'shoulder_flex'])
+  })
+
   it('no debug readout unless ?debug=1', async () => {
     mount(SER)
     await turnOn(); startNow(); advance(200, 20)

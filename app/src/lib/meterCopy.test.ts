@@ -50,6 +50,9 @@ describe('phone meter copy', () => {
     const meterSteps = STEPS.filter(s => s.meter).flatMap(s => [s.tool, ...s.position, ...s.howTo, s.meter?.grip ?? ''])
     for (const t of [...meterSteps, ...setupStrings, ...meterStrings]) expect(t).not.toMatch(/\bZero\b/)
   })
+  it('no step at all (including the typed low-back step) names another app', () => {
+    for (const s of STEPS) expect([s.tool, ...s.position, ...s.howTo, s.mistakeFix].join(' '), s.id).not.toMatch(/Simple Inclinometer|Measure app|Measure -> Level|\bLevel\b/)
+  })
   it('American spelling', () => { for (const t of ALL) expect(t).not.toMatch(/centre|colour|metre\b|calibrat(e|ion) your/i) })
   it('every degree step except lumbar has a meter grip; ankle (cm) and lumbar are typed only', () => {
     for (const s of STEPS) {
