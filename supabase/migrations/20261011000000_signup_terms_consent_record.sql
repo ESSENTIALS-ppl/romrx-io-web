@@ -12,6 +12,7 @@
 --     transaction. Bad or stale values raise, so the signup fails instead of completing without a
 --     record. Signups that do not send terms_accepted (romrxbjj.com / romrxbodybuilding.com apps,
 --     admin-created users) are untouched: those paths must be checked before they record anything.
+--     Covers all three apps: romrx.io, romrxbjj.com and romrxbodybuilding.com use this same project.
 --  4. public.record_terms_reaccept(...): SECURITY DEFINER RPC for the re-accept screen; records
 --     for auth.uid() only, server timestamp, current version only.
 --  5. handle_consent_signed: no longer moves athletes.onboarding_status backwards on a re-accept
@@ -39,7 +40,24 @@ returns text language sql immutable set search_path = pg_catalog, pg_temp as $$ 
 
 create or replace function public.allowed_consent_text_version(p text)
 returns boolean language sql immutable set search_path = pg_catalog, pg_temp as $$
-  select p in ('signup-checkbox-2026-10-05')
+  select p in ('signup-checkbox-2026-10-05', 'bb-coach-signup-checkbox-2026-10-05')
+$$;
+
+-- Signup source -> the checkbox wording that source shows (only places a real box is shown).
+-- romrxbjj.com has no account-creating signup (athletes sign up on romrx.io; coach signup is a waitlist).
+create or replace function public.allowed_signup_consent(p_source text, p_text text)
+returns boolean language sql immutable set search_path = pg_catalog, pg_temp as $$
+  select (p_source, p_text) in (
+    ('romrx.io/app/signup', 'signup-checkbox-2026-10-05'),
+    ('romrxbodybuilding.com/coach-signup', 'bb-coach-signup-checkbox-2026-10-05')
+  )
+$$;
+
+-- Re-accept screens (romrx.io, romrxbjj.com, romrxbodybuilding.com apps) all show the romrx.io
+-- signup checkbox text, so they all use signup-checkbox-2026-10-05.
+create or replace function public.allowed_reaccept_source(p_source text)
+returns boolean language sql immutable set search_path = pg_catalog, pg_temp as $$
+  select p_source in ('romrx.io/app/reaccept', 'romrxbjj.com/app/reaccept', 'romrxbodybuilding.com/app/reaccept')
 $$;
 
 -- 3. signup trigger -------------------------------------------------------------------------
@@ -64,8 +82,8 @@ begin
   if not public.allowed_consent_text_version(v_text) then
     raise exception 'terms record: unknown consent_text_version' using errcode = '22023';
   end if;
-  if v_source is distinct from 'romrx.io/app/signup' then
-    raise exception 'terms record: unknown source' using errcode = '22023';
+  if not coalesce(public.allowed_signup_consent(v_source, v_text), false) then
+    raise exception 'terms record: unknown source for this checkbox' using errcode = '22023';
   end if;
 
   insert into public.consents (
@@ -111,10 +129,10 @@ begin
   if p_terms_version is distinct from public.current_terms_version() then
     raise exception 'terms record: version is not current' using errcode = '22023';
   end if;
-  if not public.allowed_consent_text_version(p_consent_text_version) then
+  if p_consent_text_version is distinct from 'signup-checkbox-2026-10-05' then
     raise exception 'terms record: unknown consent_text_version' using errcode = '22023';
   end if;
-  if p_source is distinct from 'romrx.io/app/reaccept' then
+  if not coalesce(public.allowed_reaccept_source(p_source), false) then
     raise exception 'terms record: unknown source' using errcode = '22023';
   end if;
   -- Idempotent: one current-version row is enough.
@@ -196,5 +214,6 @@ commit;
 --   drop trigger if exists zx_copy_signup_demographics on auth.users;
 --   drop function if exists public.record_signup_terms_consent(), public.copy_signup_demographics(),
 --     public.record_terms_reaccept(text, text, text, text), public.allowed_consent_text_version(text),
+--     public.allowed_signup_consent(text, text), public.allowed_reaccept_source(text),
 --     public.current_terms_version();
 --   (consent_text_version/source columns can stay; handle_consent_signed: restore prior body.)

@@ -36,7 +36,12 @@ describe('versions (Stacy)', () => {
 
   it('the SQL constants match the app constants', () => {
     expect(migration).toContain(`select '${TERMS_VERSION}'::text`)
-    expect(migration).toContain(`select p in ('${SIGNUP_CONSENT_TEXT_VERSION}')`)
+    expect(migration).toContain(`select p in ('${SIGNUP_CONSENT_TEXT_VERSION}', 'bb-coach-signup-checkbox-2026-10-05')`)
+    expect(migration).toContain(`('${SIGNUP_CONSENT_SOURCE}', '${SIGNUP_CONSENT_TEXT_VERSION}')`)
+    expect(migration).toContain("('romrxbodybuilding.com/coach-signup', 'bb-coach-signup-checkbox-2026-10-05')")
+    expect(migration).toContain("select p_source in ('romrx.io/app/reaccept', 'romrxbjj.com/app/reaccept', 'romrxbodybuilding.com/app/reaccept')")
+    // no BJJ signup source: romrxbjj.com never creates accounts with a checkbox
+    expect(migration).not.toContain("'romrxbjj.com/app/signup'")
     expect(migration).toContain(`'${SIGNUP_CONSENT_SOURCE}'`)
     expect(migration).toContain(`'${REACCEPT_CONSENT_SOURCE}'`)
   })
@@ -143,5 +148,13 @@ describe('migration (proposed, not applied)', () => {
 
   it('copies age_bucket and gender server-side', () => {
     expect(migration).toMatch(/create trigger zx_copy_signup_demographics\s+after insert on auth\.users/)
+  })
+})
+
+describe('magic link never creates an account (no checkbox shown there)', () => {
+  it('Login.tsx sends shouldCreateUser: false and explains a missing account', () => {
+    const login = read(join(SRC, 'pages/Login.tsx'))
+    expect(login).toContain('shouldCreateUser: false')
+    expect(login).toContain("\"We couldn't find an account for that email.\"")
   })
 })
