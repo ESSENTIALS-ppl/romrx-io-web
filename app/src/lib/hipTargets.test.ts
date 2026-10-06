@@ -1,9 +1,11 @@
 /**
- * Hip Steady targets (Jim decisions, Oct 6 2026).
+ * Steady targets changed by Jim's decisions of Oct 6 2026 (sources: ledger/ROMRX-ASSESSMENT-STUDY-REFERENCE.md).
  *  - Seated hip rotation reads Steady once inside the typical range (Simoneau et al. 1998, Quinn option B1):
  *    hip ER 29 and hip IR 26, replacing 45.
  *  - Standing hip abduction is scored against 40, replacing 90, and shows NO typical range on screen.
- * Mirrored in public.compute_joint_scores() and romrxbjj-v2 compute-tiers / submit-lead-assessment JOINT_TARGETS.
+ *  - Shoulder flexion 140, replacing 180 (Gill et al. 2020, mean minus 1 SD).
+ *  - Ankle knee-to-wall 6 cm, replacing 20 (mean minus 1 SD, Konor 2012 / McBride 2026), no range shown.
+ * Mirrored in public.compute_joint_scores() and romrxbjj-v2 compute-tiers JOINT_TARGETS / submit-lead-assessment email.ts.
  */
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -20,18 +22,20 @@ import { STEPS } from '../pages/assessmentSteps'
 
 const SRC = resolve(__dirname, '..')
 
-describe('hip Steady targets (Oct 6)', () => {
-  it('hip ER 29, hip IR 26, hip abduction 40', () => {
+describe('Steady targets (Oct 6): hips, shoulder flexion, ankle', () => {
+  it('hip ER 29, hip IR 26, hip abduction 40, shoulder flexion 140, ankle 6 cm', () => {
     expect(JOINT_SCORE_TARGETS.hip_er).toBe(29)
     expect(JOINT_SCORE_TARGETS.hip_ir).toBe(26)
     expect(JOINT_SCORE_TARGETS.hip_abd).toBe(40)
+    expect(JOINT_SCORE_TARGETS.shoulder_flex).toBe(140)
+    expect(JOINT_SCORE_TARGETS.ankle_df).toBe(6)
   })
 
   it('every other target is unchanged', () => {
-    const { hip_er, hip_ir, hip_abd, ...rest } = JOINT_SCORE_TARGETS
-    void hip_er; void hip_ir; void hip_abd
+    const { hip_er, hip_ir, hip_abd, shoulder_flex, ankle_df, ...rest } = JOINT_SCORE_TARGETS
+    void hip_er; void hip_ir; void hip_abd; void shoulder_flex; void ankle_df
     expect(rest).toEqual({
-      hip_flex: 120, shoulder_er: 90, shoulder_flex: 180, ankle_df: 20, cervical_rot: 80,
+      hip_flex: 120, shoulder_er: 90, cervical_rot: 80,
       cervical_lat: 45, lumbar_flex: 60, lumbar_ext: 25, cervical_flex: 50, cervical_ext: 60,
     })
   })
@@ -42,6 +46,8 @@ describe('hip Steady targets (Oct 6)', () => {
     ['hip_er', 29, 28, 26.5, 26],
     ['hip_ir', 26, 25, 23.5, 23],
     ['hip_abd', 40, 39, 36, 35.5],
+    ['shoulder_flex', 140, 139, 126, 125.5],
+    ['ankle_df', 6, 5.5, 5.4, 5], // cm
   ]
   for (const [joint, steady, under, buildingFloor, needsFocus] of CASES) {
     const t = JOINT_SCORE_TARGETS[joint]
@@ -70,10 +76,21 @@ describe('hip Steady targets (Oct 6)', () => {
     expect(overallBandForAssessment(a)).toBe(3)
   })
 
-  it('old 45 / 90 numbers are no longer needed for Steady', () => {
+  it('old 45 / 90 / 180 / 20 numbers are no longer needed for Steady', () => {
     expect(bandScoreFromTargetRatio(30, JOINT_SCORE_TARGETS.hip_er)).toBe(3)
     expect(bandScoreFromTargetRatio(27, JOINT_SCORE_TARGETS.hip_ir)).toBe(3)
     expect(bandScoreFromTargetRatio(45, JOINT_SCORE_TARGETS.hip_abd)).toBe(3)
+    expect(bandScoreFromTargetRatio(160, JOINT_SCORE_TARGETS.shoulder_flex)).toBe(3) // Gill 2020 average adult
+    expect(bandScoreFromTargetRatio(9.5, JOINT_SCORE_TARGETS.ankle_df)).toBe(3)       // Konor 2012 average adult
+  })
+
+  it('ankle step shows no typical range (only the "Best of 3, in cm" note)', () => {
+    const ankle = STEPS.find(s => s.fields.some(f => f.key === 'ankle_df_l'))!
+    for (const f of ankle.fields) {
+      const field = f as typeof f & { rangeSource?: string }
+      expect(field.rangeSource).toBeUndefined()
+      expect(f.referenceNote).toBe('Best of 3, in cm')
+    }
   })
 })
 
