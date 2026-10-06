@@ -97,7 +97,7 @@ export const STEPS_PART2: Step[] = [
     ],
     howTo: [
       'Bend the knee over the test foot and drive it forward toward the wall, over your second and third toes. Do not let the knee cave inward. Keep your heel flat on the floor.',
-      'Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched, or ask a friend to watch.',
+      'Check your heel: it should stay down the whole time. A slip of paper under the heel should stay pinched.',
       'Move your foot closer or farther from the wall until you find the farthest spot where your knee still just touches the wall with the heel down. Measure from the wall to the tip of your big toe. Record it in centimeters (cm), not degrees.',
       'Do 3 tries on this foot and record the best one (the farthest distance that still counts). Repeat with the other foot.',
     ],

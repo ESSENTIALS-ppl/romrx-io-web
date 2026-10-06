@@ -46,7 +46,7 @@ export const HIP_FLEX_FALLBACK_LINE = 'Saved for each leg, not scored.'
 export const HIP_FLEX_STEP = {
   /** Always shown. Makes no comparison claim, so it is safe when sex is unknown. */
   why: 'You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.',
-  tool: 'Your phone. Lying on the floor. A partner is helpful.',
+  tool: 'Your phone. Lying on the floor.',
   /** One-line grip shown in the in-app phone meter. */
   meterGrip: 'Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.',
   position: [

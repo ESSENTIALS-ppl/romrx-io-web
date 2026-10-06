@@ -31,10 +31,10 @@ export const METER_COPY = {
   allSaved: (labels: string[]) => labels.every(l => /^(Left|Right)/.test(l)) ? 'Both sides saved.' : 'Both saved.',
   measureAgain: 'Measure again',
   upNext: 'Up next',
-  denied: 'Motion access is off. Type your number in the box. To use the ROMeter, close and reopen your browser, then tap Allow when asked.', // STACY (ROMeter rename cleared Oct 6)
-  inApp: 'The ROMeter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box.',   // STACY (ROMeter rename cleared Oct 6)
-  error: 'The ROMeter did not start. Tap the button again, or type your number in the box.',          // STACY (Oct 6)
-  noData: 'This device is not sending motion readings, so type your number in the box.',
+  denied: 'Motion access is off. To use the ROMeter, close and reopen your browser, then tap Allow when asked.', // STACY (ROMeter rename cleared Oct 6)
+  inApp: 'The ROMeter may not work inside Instagram or Facebook. Open this page in Safari or Chrome.',   // STACY (ROMeter rename cleared Oct 6)
+  error: 'The ROMeter did not start. Tap the button again.',          // STACY (Oct 6)
+  noData: 'This device is not sending motion readings.',
   desktopNote: 'Type your numbers here. On a phone, you can also use the ROMeter.',                  // STACY (Oct 6)
   manualPlaceholder: 'Type',
   manualAria: (label: string) => `${label}, type your number`,
