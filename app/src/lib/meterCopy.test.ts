@@ -1,6 +1,6 @@
 /** Phone meter copy rules: no em/en dashes, no accuracy/medical claims, "Protocol" never "Profile", US spelling. */
 import { describe, expect, it } from 'vitest'
-import { METER_COPY, MEASUREMENTS_HEADER } from './meterCopy'
+import { METER_COPY, MEASUREMENTS_HEADER, MORE_HELP_LABEL } from './meterCopy'
 import { STEPS } from '../pages/assessmentSteps'
 import { STEPS_PART2 } from '../pages/assessmentSteps2'
 import { METHOD_LINE, SETUP_STEPS } from '../pages/assessmentMeta'
@@ -9,7 +9,7 @@ const meterStrings = [
   ...(Object.values(METER_COPY).filter(v => typeof v === 'string') as string[]),
   METER_COPY.saved('Left', 48), METER_COPY.nextReady('Right'), METER_COPY.nextReady('Extension'),
   METER_COPY.allSaved(['Left', 'Right']), METER_COPY.allSaved(['Flexion', 'Extension']),
-  METER_COPY.manualAria('Left'), METER_COPY.typicalRange(60, 90),
+  METER_COPY.manualAria('Left'), METER_COPY.typicalRange(60, 90), MORE_HELP_LABEL,
 ]
 const stepStrings = STEPS.flatMap(s => [s.tool, ...s.position, ...s.howTo, s.meter?.grip ?? ''])
 const setupStrings = SETUP_STEPS.flatMap(s => [s.label, s.detail])

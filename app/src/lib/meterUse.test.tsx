@@ -26,6 +26,7 @@ vi.mock('./meterAudio', async (orig) => {
 import { AssessmentMeasureScreen } from '../pages/AssessmentMeasureScreen'
 import { STEPS } from '../pages/assessmentSteps'
 import { __resetSensorForTests, feedOrientation } from './meterSensor'
+import { SHOW_SLR_TYPICAL_RANGE } from './hipFlexCopy'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -56,6 +57,17 @@ async function flush() { await act(async () => { await Promise.resolve(); await 
 const feed = (tilt: number, n = 1) => act(() => { for (let i = 0; i < n; i++) feedOrientation(30, 10 + tilt, 0) })
 const advance = (ms: number, tilt: number) => { for (let t = 0; t < ms; t += 50) { feed(tilt); act(() => { vi.advanceTimersByTime(50) }) } }
 async function turnOn() { click(btn('Turn on the meter')); await flush(); feed(0, 12) }
+/** Layout item 1: the badge says just "Locked"; the big number shows the value that will be saved. */
+const badge = () => $('[data-locked-badge]')!
+const isLocked = () => !badge().className.includes('opacity-0')
+function expectLockedAt(deg: number) {
+  expect(isLocked()).toBe(true)
+  expect(badge().textContent!.trim()).toBe('Locked')
+  expect($('[data-meter-number]')!.textContent).toBe(`${deg}°`)
+  expect($('[data-meter-status]')!.textContent).toBe('Locked. Tap Use this number, or Reset to measure again.')
+}
+/** Layout item 4: the filled (primary) buttons inside the meter card. */
+const primaries = () => [...$('[data-phone-meter]')!.querySelectorAll('button.btn-primary')].map(b => b.textContent!.trim())
 /** Tap Start and let the countdown reach GO (4 s) at the start position, then let GO clear. */
 const startNow = () => { click(btn('Start')); advance(5900, 0) }
 
@@ -90,13 +102,15 @@ describe('phone meter in the Base measure screen', () => {
     startNow()
     advance(400, 45)
     advance(600, 90)
-    expect($('[data-locked-badge]')!.className).toContain('opacity-0')
+    expect(isLocked()).toBe(false)
     advance(2600, 90)
-    expect(host.textContent).toContain('Locked: 90°')
+    expectLockedAt(90)
+    expect(host.textContent).not.toContain('Locked: 90°')          // item 1: no number in the badge
     expect(audio.lock).toBe(1)
     advance(2000, 130)                              // move after lock: stays frozen, no second ding
-    expect($('[data-meter-number]')!.textContent).toContain('90')
-    expect($('[data-meter-peak]')!.textContent).toBe('90°')
+    expect($('[data-meter-number]')!.textContent).toBe('90°')
+    expect($('[data-meter-peak]')).toBeNull()                       // item 2: Peak hidden (only with ?debug=1)
+    expect(host.textContent).not.toContain('Peak')
     expect(audio.lock).toBe(1)
     click(btn('Use this number'))
     expect(calls).toEqual([['shoulder_er_l', '90']])
@@ -176,48 +190,52 @@ describe('phone meter in the Base measure screen', () => {
     expect(audio.go).toBe(1)
     expect(audio.log.map(l => +l.split('@')[1] - t0).map(ms => Math.round(ms / 1000))).toEqual([0, 1, 2, 3, 4, 5])
     expect($('[data-meter-status]')!.textContent).toBe('GO. Move slowly to your end range, then hold still.')
-    expect(btn('Use this number')!.disabled).toBe(true)                // not until a lock
+    expect(btn('Use this number')).toBeUndefined()                     // not until a lock (item 3: not shown)
     advance(900, 0)
     expect($('[data-countdown]')).toBeNull()
     expect($('[data-meter-number]')!.textContent).toBe('0°')
     advance(3000, 0)
-    expect(host.textContent).not.toContain('Locked:')              // never locks within 2 deg of zero
+    expect(isLocked()).toBe(false)                                  // never locks within 2 deg of zero
     advance(3000, 40)
-    expect(host.textContent).toContain('Locked: 40°')
+    expectLockedAt(40)
     expect(audio.lock).toBe(1)
     expect([audio.tick, audio.go]).toEqual([5, 1])
   })
 
-  it('Use this number: disabled from the Start tap through the countdown and GO until a lock; enabled after lock; Reset disables it again', async () => {
+  it('Use this number: not shown from the Start tap through the countdown and GO until a lock; shown after lock; Reset hides it again', async () => {
     const calls = mount(SER)
     await turnOn()
-    expect(btn('Use this number')!.disabled).toBe(true)
+    expect(btn('Use this number')).toBeUndefined()
     click(btn('Start'))
-    for (let i = 0; i < 5; i++) { expect(btn('Use this number')!.disabled).toBe(true); advance(1000, 0) }
+    for (let i = 0; i < 5; i++) { expect(btn('Use this number')).toBeUndefined(); advance(1000, 0) }
     expect($('[data-countdown]')!.textContent).toBe('GO')
-    expect(btn('Use this number')!.disabled).toBe(true)
+    expect(btn('Use this number')).toBeUndefined()
     advance(1000, 0); advance(1000, 40)                              // live and moving, not locked yet
-    expect(host.textContent).not.toContain('Locked:')
-    expect(btn('Use this number')!.disabled).toBe(true)
+    expect(isLocked()).toBe(false)
+    expect(btn('Use this number')).toBeUndefined()
     advance(3000, 40)
-    expect(host.textContent).toContain('Locked: 40°')
+    expectLockedAt(40)
     expect(btn('Use this number')!.disabled).toBe(false)
     click(btn('Reset')); advance(100, 40)
-    expect(btn('Use this number')!.disabled).toBe(true)
+    expect(btn('Use this number')).toBeUndefined()
     expect(calls).toEqual([])
     // typing stays available the whole time
     expect(($('#m-shoulder_er_l') as HTMLInputElement).disabled).toBe(false)
   })
 
-  it('cannot save 0 from an unlocked meter: a forced click at GO does nothing', async () => {
+  it('cannot save 0 from an unlocked meter: at GO and while live there is no Use button, and nothing is saved', async () => {
     const calls = mount(SER)
     await turnOn()
     click(btn('Start')); advance(5000, 0)
     expect($('[data-countdown]')!.textContent).toBe('GO')
-    const use = btn('Use this number')!
-    act(() => { use.disabled = false; use.click() })                 // even if the disabled state were bypassed
+    expect(btn('Use this number')).toBeUndefined()
+    expect($('[data-use-btn]')).toBeNull()                           // not in the page at all, so it cannot be tapped
     advance(1000, 0)
-    act(() => { const u = btn('Use this number')!; u.disabled = false; u.click() })
+    expect($('[data-meter-number]')!.textContent).toBe('0°')
+    expect($('[data-use-btn]')).toBeNull()
+    for (const b of host.querySelectorAll('[data-phone-meter] button')) {
+      if (b.getAttribute('aria-label') !== 'Close' && b.textContent?.trim() !== 'Start' && b.textContent?.trim() !== 'Reset') throw new Error(`unexpected button ${b.textContent}`)
+    }
     expect(calls).toEqual([])
     expect($('[data-saved-row]')).toBeNull()
   })
@@ -225,12 +243,12 @@ describe('phone meter in the Base measure screen', () => {
   it('no lock during the countdown, even if held still away from the start', async () => {
     mount(SER)
     await turnOn(); startNow(); advance(3000, 60)
-    expect(host.textContent).toContain('Locked: 60°')
-    click(btn('Start'))
-    expect($('[data-locked-badge]')!.className).toContain('opacity-0')
+    expectLockedAt(60)
+    click(btn('Start'))                                              // the small Start under Use this number
+    expect(isLocked()).toBe(false)
     advance(4900, 60)
     expect(audio.lock).toBe(1)
-    expect(host.textContent).not.toContain('Locked:')
+    expect(isLocked()).toBe(false)
     advance(1000, 60)                                                // zeroed at GO: 60 is the new 0
     expect($('[data-meter-number]')!.textContent).toBe('0°')
   })
@@ -239,6 +257,7 @@ describe('phone meter in the Base measure screen', () => {
     mount(SER)
     await turnOn()
     click(btn('Start')); advance(2000, 0)
+    expect(btn('Reset')).toBeTruthy()
     expect(btn('Reset')!.disabled).toBe(false)
     const unlockBefore = audio.unlock
     click(btn('Reset'))
@@ -247,8 +266,9 @@ describe('phone meter in the Base measure screen', () => {
     advance(5000, 30)
     expect([audio.tick, audio.go]).toEqual([ticksAtReset, 0])       // no more beeps after Reset
     expect($('[data-countdown]')).toBeNull()
-    expect(host.textContent).not.toContain('Locked:')
-    expect(btn('Use this number')!.disabled).toBe(true)
+    expect(isLocked()).toBe(false)
+    expect(btn('Use this number')).toBeUndefined()
+    expect(btn('Reset')).toBeUndefined()                             // nothing left to reset (item 5)
     expect($('[data-meter-status]')!.textContent).toBe('Tap Start, then hold the start position while it counts down from 5.')
   })
 
@@ -264,18 +284,24 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-countdown]')).toBeNull()
   })
 
-  it('Reset after lock unlocks back to live (Peak restarts from the current reading) and can lock again', async () => {
-    mount(SER)
-    await turnOn(); startNow(); advance(3000, 60)
-    expect(host.textContent).toContain('Locked: 60°')
-    advance(500, 30)
-    click(btn('Reset'))
-    advance(100, 30)
-    expect($('[data-locked-badge]')!.className).toContain('opacity-0')
-    expect($('[data-meter-peak]')!.textContent).toBe('30°')
-    advance(2700, 30)
-    expect(host.textContent).toContain('Locked: 30°')
-    expect(audio.lock).toBe(2)
+  it('Reset after lock unlocks back to live (Peak, shown with ?debug=1, restarts from the current reading) and can lock again', async () => {
+    const url = window.location.href
+    window.history.replaceState(null, '', '/?debug=1')
+    try {
+      mount(SER)
+      await turnOn(); startNow(); advance(3000, 60)
+      expectLockedAt(60)
+      expect($('[data-meter-peak]')!.textContent).toBe('60°')
+      advance(500, 30)
+      click(btn('Reset'))
+      advance(100, 30)
+      expect(isLocked()).toBe(false)
+      expect($('[data-meter-number]')!.textContent).toBe('30°')
+      expect($('[data-meter-peak]')!.textContent).toBe('30°')
+      advance(2700, 30)
+      expectLockedAt(30)
+      expect(audio.lock).toBe(2)
+    } finally { window.history.replaceState(null, '', url) }
   })
 
   it('denied: Stacy line, typed entry still works', async () => {
@@ -382,5 +408,143 @@ describe('phone meter in the Base measure screen', () => {
     await turnOn(); startNow(); advance(200, 20)
     expect($('[data-meter-debug]')).toBeNull()
     expect(host.textContent).not.toMatch(/β|γ|α|quaternion|twist|tilt/i)
+  })
+
+  // ---- Layout review items (METER-UI-REVIEW-20261006.md section 5), Oct 6 -----------------------
+  it('item 3: Use this number appears only after the reading locks, and goes away again on Start', async () => {
+    const calls = mount(SER)
+    expect(btn('Use this number')).toBeUndefined()                      // meter off
+    await turnOn()
+    expect(btn('Use this number')).toBeUndefined()                      // idle
+    click(btn('Start')); advance(2000, 0)
+    expect(btn('Use this number')).toBeUndefined()                      // countdown
+    advance(3900, 0); advance(600, 50)
+    expect(btn('Use this number')).toBeUndefined()                      // live, moving
+    advance(3000, 50)
+    expectLockedAt(50)
+    expect(btn('Use this number')).toBeTruthy()                         // locked
+    click(btn('Start'))                                                  // measure again from the small Start
+    expect(btn('Use this number')).toBeUndefined()
+    advance(5900, 0); advance(3000, 65)
+    click(btn('Use this number'))
+    expect(calls).toEqual([['shoulder_er_l', '65']])
+  })
+
+  it('item 4: exactly one big filled button in the meter at a time (Turn on, then Start, then Use this number)', async () => {
+    mount(SER)
+    expect(primaries()).toEqual(['Turn on the meter'])
+    await turnOn()
+    expect(primaries()).toEqual(['Start'])                               // idle
+    click(btn('Start')); advance(2000, 0)
+    expect(primaries()).toEqual(['Start'])                               // countdown
+    advance(3900, 0); advance(600, 45)
+    expect(primaries()).toEqual(['Start'])                               // live
+    advance(3000, 45)
+    expect(primaries()).toEqual(['Use this number'])                     // locked: Use is the big one
+    const small = [...$('[data-meter-small]')!.querySelectorAll('button')].map(b => b.textContent!.trim())
+    expect(small).toEqual(['Start', 'Reset'])                            // Start again + Reset become small
+    expect([...host.querySelectorAll('[data-phone-meter] button')].filter(b => b.textContent!.trim() === 'Start').length).toBe(1)
+  })
+
+  it('item 5: Reset is hidden until there is something to reset', async () => {
+    mount(SER)
+    await turnOn()
+    expect(btn('Reset')).toBeUndefined()                                 // idle: nothing to reset
+    click(btn('Start'))
+    expect(btn('Reset')).toBeTruthy()                                    // countdown: Reset cancels it
+    advance(5900, 0)
+    expect(btn('Reset')).toBeTruthy()                                    // zeroed and live
+    advance(3000, 40)
+    expectLockedAt(40)
+    expect(btn('Reset')).toBeTruthy()                                    // locked
+    click(btn('Start')); advance(1000, 0); click(btn('Reset'))           // cancel a new countdown
+    expect(btn('Reset')).toBeUndefined()                                 // back to idle: hidden again
+    expect(btn('Start')).toBeTruthy()
+  })
+
+  it('item 9: on a meter step, How to Measure, Common mistake and the lock tip sit under a closed More help; Setup stays open', () => {
+    const step = STEPS[SER]
+    mount(SER)
+    const toggle = $('[data-more-help]') as HTMLButtonElement
+    expect(toggle.textContent!.trim()).toBe('More help')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(host.textContent).toContain('Setup')
+    for (const line of step.position) expect(host.textContent).toContain(line)
+    expect(host.textContent).not.toContain('How to Measure')
+    expect(host.textContent).not.toContain('Common mistake')
+    expect(host.textContent).not.toContain(step.mistakeFix)
+    expect(host.textContent).not.toContain("Can't see the screen at the end?")
+    // More help sits between Setup and Your measurements (the meter moves up the page)
+    const order = host.textContent!
+    expect(order.indexOf('More help')).toBeLessThan(order.indexOf('Your measurements'))
+    expect(order.indexOf(step.position.at(-1)!)).toBeLessThan(order.indexOf('More help'))
+    click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(host.textContent).toContain('How to Measure')
+    for (const line of step.howTo) expect(host.textContent).toContain(line)
+    expect(host.textContent).toContain('Common mistake')
+    expect(host.textContent).toContain(`Fix: ${step.mistakeFix}`)
+    expect($('[data-lock-tip]')!.textContent).toBe("🔒 Can't see the screen at the end? Hold still. The number locks and chimes, so you can read it after.")
+    expect(host.textContent!.indexOf('More help')).toBeLessThan(host.textContent!.indexOf('Your measurements'))
+    click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(host.textContent).not.toContain('How to Measure')
+  })
+
+  it('item 9: typed-only steps and no-meter devices keep How to Measure and Common mistake open, with no More help', () => {
+    const ankle = STEPS.findIndex(s => s.id === 'ankle_df')
+    mount(ankle)
+    expect($('[data-more-help]')).toBeNull()
+    expect(host.textContent).toContain('How to Measure')
+    expect(host.textContent).toContain('Common mistake')
+    act(() => root.unmount()); host.remove()
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true })
+    const saved = (window as unknown as { ontouchstart?: unknown }).ontouchstart
+    const had = 'ontouchstart' in window
+    delete (window as unknown as { ontouchstart?: unknown }).ontouchstart
+    delete (Object.getPrototypeOf(window) as { ontouchstart?: unknown }).ontouchstart
+    mount(SER)
+    if (had) (window as unknown as { ontouchstart?: unknown }).ontouchstart = saved
+    expect($('[data-phone-meter]')).toBeNull()
+    expect($('[data-more-help]')).toBeNull()
+    expect(host.textContent).toContain('How to Measure')
+    expect(host.textContent).toContain('Common mistake')
+    expect(host.textContent).toContain('Hey Siri, take a screenshot')       // no-meter devices keep the screenshot tip
+  })
+
+  it('items 6 and 8: no movement name inside the meter (screen-reader label only); the grip line has no box, same words', () => {
+    const step = STEPS[SER]
+    mount(SER)
+    const card = $('[data-phone-meter]')!
+    expect(card.getAttribute('aria-label')).toBe(step.title)
+    expect(card.textContent).not.toContain(step.title)
+    expect($('h2')!.textContent).toBe(step.title)                          // the step header still says it
+    const grip = $('[data-meter-grip]')!
+    expect(grip.textContent).toBe(step.meter!.grip)
+    expect(grip.className).not.toMatch(/bg-|rounded/)
+  })
+
+  it('item 7: the typical range shows once per step, on the side being measured, and moves to Right after Left is saved', async () => {
+    mount(SER)
+    const count = () => (host.textContent!.match(/Typical range: 85-110°/g) ?? []).length
+    expect(count()).toBe(1)
+    expect($('[data-field-note="shoulder_er_l"]')!.textContent).toBe('Typical range: 85-110°')
+    expect($('[data-field-note="shoulder_er_r"]')).toBeNull()
+    expect($('[data-range-source]')!.textContent).toBe('Source: Vairo et al., 2012')
+    await turnOn(); startNow(); advance(3000, 70); click(btn('Use this number'))
+    expect(count()).toBe(1)
+    expect($('[data-field-note="shoulder_er_r"]')!.textContent).toBe('Typical range: 85-110°')
+    expect($('[data-range-source]')!.textContent).toBe('Source: Vairo et al., 2012')
+  })
+
+  it('item 7: SLR shows Typical range: 60-80° once, with Source: Youdas et al., 2005 (switch on); ankle keeps its note on both sides', () => {
+    expect(SHOW_SLR_TYPICAL_RANGE).toBe(true)
+    mount(STEPS.findIndex(s => s.id === 'hip_flex'))
+    expect((host.textContent!.match(/Typical range: 60-80°/g) ?? []).length).toBe(1)
+    expect($('[data-field-note="hip_flex_l"]')!.textContent).toBe('Typical range: 60-80°')
+    expect($('[data-range-source]')!.textContent).toBe('Source: Youdas et al., 2005')
+    act(() => root.unmount()); host.remove()
+    mount(STEPS.findIndex(s => s.id === 'ankle_df'))
+    expect((host.textContent!.match(/Best of 3, in cm/g) ?? []).length).toBe(2)
   })
 })

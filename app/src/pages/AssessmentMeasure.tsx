@@ -7,13 +7,15 @@ import { METER_COPY } from '../lib/meterCopy'
 // -- Single field input ----------------------------------------------------------
 // Typed entry is always available. When the step has a phone meter, "Measure with phone" opens it;
 // "Use this number" calls the same onChange(key, value) as typing, so scoring and saving are identical.
-export function MeasureInput({ field, value, onChange, onMeasure, measuring, upNext }: {
+export function MeasureInput({ field, value, onChange, onMeasure, measuring, upNext, hideRange }: {
   field: Field; value: string; onChange: (k: string, v: string) => void
   /** Present only when the phone meter can be used for this field. */
   onMeasure?: () => void
   measuring?: boolean
   /** This side is next in line for the meter (shown small next to the label). */
   upNext?: boolean
+  /** Layout item 7: the step's typical range is shown on one side only, so the other sides hide it. */
+  hideRange?: boolean
 }) {
   const score = getScore(value, field)
   const tone = score != null ? BAND_TONE[score] : null
@@ -24,7 +26,7 @@ export function MeasureInput({ field, value, onChange, onMeasure, measuring, upN
         {(() => {
           // A typical range shows ONLY where a source exists (Stacy/Grant, Oct 5): rangeSource is required.
           const note = field.referenceNote ?? (!field.unscored && field.rangeSource && field.normalLow != null && field.normalHigh != null ? METER_COPY.typicalRange(field.normalLow, field.normalHigh, field.unit ?? '') : null)
-          return note ? <span className="text-xs text-slate-500">{note}</span> : null
+          return note && !hideRange ? <span className="text-xs text-slate-500" data-field-note={field.key}>{note}</span> : null
         })()}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

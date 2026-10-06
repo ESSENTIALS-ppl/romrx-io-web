@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { Lock, Crosshair, X } from 'lucide-react'
+import { Lock, Crosshair, X, Smartphone } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { averageQuats, tiltDeltaDeg, type Quat } from '../lib/orientation'
 import { initialLock, meterValueToUse, nextPeak, stepLock, type LockState } from '../lib/meterLock'
@@ -17,8 +17,10 @@ interface View { angle: number | null; peak: number | null; locked: boolean; loc
 /**
  * Inline phone meter for one angle field. Same math as the sandbox Jim tested (lib/orientation.ts
  * tiltDeltaDeg: gravity angle since Zero, smooth past 90, no heading drift) and the same lock rule
- * (lib/meterLock.ts). Shows only: movement, grip line, big number / Locked, hold bar, Start, Reset,
- * Use this number, Peak. Debug readout only with ?debug=1.
+ * (lib/meterLock.ts). Shows only: side, grip line, Locked badge, big number, hold bar, status, ONE big
+ * button (Start until it locks, then Use this number), and small Start / Reset only when useful.
+ * The movement name is the screen-reader label only (the step header shows it). Peak and the debug
+ * readout show only with ?debug=1 (layout review, Oct 6).
  */
 export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }: {
   movement: string
@@ -117,8 +119,9 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
     peak.current = live.current
     setView(v => ({ ...v, locked: false, lockVal: null, holdFrac: null, peak: live.current == null ? null : Math.round(live.current), angle: live.current == null ? v.angle : Math.round(live.current) }))
   }
-  // Use this number only fills a LOCKED reading (Reid, Oct 5: tapping it at GO saved 0°). Disabled from
-  // the Start tap, through the countdown, until a lock; Reset unlocks and disables it again.
+  // Use this number only fills a LOCKED reading (Reid, Oct 5: tapping it at GO saved 0°). Not shown from
+  // the Start tap, through the countdown, until a lock; Reset unlocks and hides it again. The guard
+  // below stays as a second line of defense.
   const onUseClick = () => {
     unlockMeterAudio()
     if (!lock.current.locked) return
@@ -130,24 +133,27 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
   const fallback = sensor.status === 'denied' ? (inApp ? C.inApp : C.denied) : sensor.status === 'error' ? C.error
     : (sensor.status === 'nodata' || sensor.status === 'unsupported') ? (inApp ? C.inApp : C.noData) : null
   const counting = typeof countdown === 'number'
+  const showUse = view.locked && !counting
+  const showReset = zeroed || counting
   const shown = view.locked ? view.lockVal : view.angle
   const status = counting ? C.zeroCountdown
     : !zeroed ? C.needZero
     : view.locked ? C.locked : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
 
   return (
-    <div data-phone-meter className={cn('rounded-card border bg-white p-4 space-y-3 transition-colors', view.locked ? 'border-2 border-cobalt shadow-md' : 'border-cobalt/15')}>
+    <div data-phone-meter role="group" aria-label={movement} className={cn('rounded-card border bg-white p-4 space-y-3 transition-colors', view.locked ? 'border-2 border-cobalt shadow-md' : 'border-cobalt/15')}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
+          {/* Layout item 6: no movement name here; the step header above already shows it. */}
           <p className="text-[11px] font-bold uppercase tracking-wide text-cobalt">{C.measuringPrefix}: {sideLabel}</p>
-          <p className="font-display font-bold text-cobalt-ink leading-tight">{movement}</p>
         </div>
         <button type="button" onClick={() => { cancelCountdown(); onClose() }} aria-label={C.closeButton}
           className="-mr-2 -mt-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-slate-400 hover:text-cobalt-ink hover:bg-surface">
           <X size={18} />
         </button>
       </div>
-      <p className="text-sm text-slate-600 leading-snug bg-cobalt-light rounded-card px-3 py-2">{grip}</p>
+      {/* Layout item 8: plain grip line with a small phone icon, no box. Same words. */}
+      <p className="flex gap-2 text-sm text-slate-600 leading-snug" data-meter-grip><Smartphone size={16} className="text-slate-400 shrink-0 mt-0.5" aria-hidden />{grip}</p>
       {notice && <p className="text-xs font-semibold text-cobalt" role="status">{notice}</p>}
 
       {fallback ? (
@@ -172,7 +178,8 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
           <div className="text-center" aria-live="polite">
             <div className={cn('mx-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold transition-opacity',
               view.locked ? 'bg-cobalt text-white opacity-100' : 'opacity-0 pointer-events-none')} data-locked-badge aria-hidden={!view.locked}>
-              {view.locked ? <><Lock size={14} /> {C.lockedPrefix}: {view.lockVal}°</> : <span className="inline-block h-[14px]">{'\u00a0'}</span>}
+              {/* Layout item 1: the badge says just "Locked"; the big number below shows the value. */}
+              {view.locked ? <><Lock size={14} /> {C.lockedPrefix}</> : <span className="inline-block h-[14px]">{'\u00a0'}</span>}
             </div>
             <div className={cn('font-display font-extrabold tabular-nums leading-none tracking-tight mt-1',
               view.locked ? 'text-cobalt' : 'text-cobalt-ink')} style={{ fontSize: 'clamp(72px, 24vw, 104px)' }} data-meter-number>
@@ -186,15 +193,27 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose }
             </div>
             <p className="text-xs text-slate-500 mt-2 min-h-[16px]" data-meter-status>{status}</p>
           </div>
-          <div className="grid grid-cols-[1fr_1fr_1.6fr] gap-2">
-            <button type="button" onClick={onZero} className="btn-ghost min-h-[44px] py-1.5 px-2">{C.zeroButton}</button>
-            <button type="button" onClick={onReset} disabled={!zeroed && !counting} className="btn-ghost min-h-[44px] py-1.5 px-2 disabled:opacity-40">{C.resetButton}</button>
-            <button type="button" onClick={onUseClick} disabled={!view.locked || counting} data-use-btn className="btn-primary min-h-[44px] py-1.5 px-1.5 text-[13px] whitespace-nowrap disabled:opacity-40">{C.useButton}</button>
+          {/* Layout items 3, 4, 5: ONE big button. Start until the reading locks; then Use this number
+              (not shown at all before a lock). Start again and Reset are small text buttons underneath,
+              and Reset shows only when there is something to reset (a countdown or a zeroed reading). */}
+          <div className="space-y-1">
+            {showUse
+              ? <button type="button" onClick={onUseClick} data-use-btn data-meter-primary className="btn-primary w-full min-h-[44px] py-2">{C.useButton}</button>
+              : <button type="button" onClick={onZero} data-zero-btn data-meter-primary className="btn-primary w-full min-h-[44px] py-2">{C.zeroButton}</button>}
+            {(showUse || showReset) && (
+              <div className="flex justify-center gap-2" data-meter-small>
+                {showUse && <button type="button" onClick={onZero} data-zero-btn className="min-h-[44px] px-4 text-sm font-semibold text-slate-600 hover:text-cobalt-ink">{C.zeroButton}</button>}
+                {showReset && <button type="button" onClick={onReset} data-reset-btn className="min-h-[44px] px-4 text-sm font-semibold text-slate-600 hover:text-cobalt-ink">{C.resetButton}</button>}
+              </div>
+            )}
           </div>
-          <div className="flex items-center justify-between border-t border-cobalt/10 pt-2">
-            <span className="text-sm text-slate-500">{C.peakLabel}</span>
-            <span className="font-display font-bold text-xl text-cobalt-ink tabular-nums" data-meter-peak>{view.peak == null ? '--' : `${view.peak}°`}</span>
-          </div>
+          {/* Layout item 2: Peak hidden (the locked number is the one that is saved); ?debug=1 still shows it. */}
+          {debug && (
+            <div className="flex items-center justify-between border-t border-cobalt/10 pt-2">
+              <span className="text-sm text-slate-500">{C.peakLabel}</span>
+              <span className="font-display font-bold text-xl text-cobalt-ink tabular-nums" data-meter-peak>{view.peak == null ? '--' : `${view.peak}°`}</span>
+            </div>
+          )}
           {debug && <p className="font-mono text-[11px] text-slate-400" data-meter-debug>{dbg}</p>}
         </>
       )}

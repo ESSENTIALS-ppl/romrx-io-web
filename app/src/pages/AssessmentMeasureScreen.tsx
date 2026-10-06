@@ -1,4 +1,4 @@
-import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, SkipForward } from 'lucide-react'
+import { Loader2, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, AlertTriangle, SkipForward } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { STEPS } from './assessmentSteps'
 import { MeasureInput } from './AssessmentMeasure'
@@ -6,7 +6,7 @@ import { HIP_FLEX_LEFT_RIGHT_DIFFERENT, HIP_FLEX_RANGE_SOURCE, HIP_FLEX_TYPICAL_
 import { useState, type Dispatch, type SetStateAction } from 'react'
 import { PhoneMeter } from '../components/PhoneMeter'
 import { meterLikelyAvailable } from '../lib/meterSensor'
-import { METER_COPY, MEASUREMENTS_HEADER } from '../lib/meterCopy'
+import { METER_COPY, MEASUREMENTS_HEADER, MORE_HELP_LABEL } from '../lib/meterCopy'
 import type { Field } from './assessmentMeta'
 
 export function AssessmentMeasureScreen(p: {
@@ -47,6 +47,19 @@ export function AssessmentMeasureScreen(p: {
     const next = meterFields.find(o => o !== f && (values[o.key] ?? '') === '')
     setActive({ step: stepIdx, key: next?.key ?? null, notice: next ? METER_COPY.nextReady(next.label) : undefined })
   }
+  // Layout item 7: the typical range shows once per step, on the side being measured now (or the first
+  // side still open), never repeated on the other side. Only real "Typical range" notes move; other
+  // notes (ankle "Best of 3, in cm", the SLR sex note when the range switch is off) are untouched.
+  const isRangeNote = (f: Field) => f.unscored ? SHOW_SLR_TYPICAL_RANGE
+    : !f.referenceNote && !!f.rangeSource && f.normalLow != null && f.normalHigh != null
+  const isCollapsed = (f: Field) => canMeter(f) && activeKey !== f.key && (values[f.key] ?? '') !== '' && !!savedByMeter[f.key]
+  const rangeOpen = step.fields.filter(f => isRangeNote(f) && !isCollapsed(f))
+  const rangeKey = (rangeOpen.find(f => f.key === activeKey) ?? rangeOpen[0])?.key
+  // Layout item 9: on meter steps, How to Measure + Common mistake + the lock tip fold under one
+  // "More help" toggle (closed when a step opens). Setup stays open. Typed-only steps are unchanged.
+  const moreHelp = !!step.meter && meterAvail
+  const [help, setHelp] = useState<{ step: number; open: boolean }>({ step: stepIdx, open: false })
+  const helpOpen = help.step === stepIdx && help.open
   const allMeterSaved = meterOn && meterFields.every(f => (values[f.key] ?? '') !== '') && meterFields.some(f => savedByMeter[f.key])
   return (
     <div className="min-h-screen bg-surface py-6 px-4">
@@ -90,6 +103,15 @@ export function AssessmentMeasureScreen(p: {
               </ol>
             </div>
 
+            {moreHelp && (
+              <button type="button" onClick={() => setHelp({ step: stepIdx, open: !helpOpen })}
+                aria-expanded={helpOpen} aria-controls="more-help" data-more-help
+                className="flex items-center gap-1.5 min-h-[44px] text-sm font-semibold text-cobalt hover:underline">
+                {MORE_HELP_LABEL}
+                <ChevronDown size={16} aria-hidden className={cn('transition-transform', helpOpen && 'rotate-180')} />
+              </button>
+            )}
+            {(!moreHelp || helpOpen) && (<div id={moreHelp ? 'more-help' : undefined} className="space-y-5" data-help-body>
             {/* How to */}
             <div>
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide mb-2">How to Measure</p>
@@ -115,6 +137,12 @@ export function AssessmentMeasureScreen(p: {
               </div>
             </div>
 
+            {/* Hands-free tip on meter steps: the meter locks on hold (moved under More help, item 9) */}
+            {moreHelp && (
+              <p className="text-xs text-slate-500" data-lock-tip>🔒 Can't see the screen at the end? Hold still. The number locks and chimes, so you can read it after.</p>
+            )}
+            </div>)}
+
             {/* Input fields */}
             <div className="space-y-4 pt-2 border-t border-cobalt/10">
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide" data-measurements-header>{MEASUREMENTS_HEADER}</p>
@@ -137,7 +165,8 @@ export function AssessmentMeasureScreen(p: {
                   <div key={f.key} className="space-y-3">
                     <MeasureInput field={f.unscored ? { ...f, referenceNote: SHOW_SLR_TYPICAL_RANGE ? HIP_FLEX_TYPICAL_RANGE : hipCopy.inputNote } : f} value={v} onChange={p.handleChange}
                       onMeasure={canMeter(f) ? () => setActive({ step: stepIdx, key: f.key }) : undefined} measuring={isActive}
-                      upNext={canMeter(f) && !isActive && activeKey != null && v === ''} />
+                      upNext={canMeter(f) && !isActive && activeKey != null && v === ''}
+                      hideRange={isRangeNote(f) && f.key !== rangeKey} />
                     {isActive && step.meter && (
                       <PhoneMeter key={`${stepIdx}-${f.key}`} movement={step.title} sideLabel={f.label} grip={step.meter.grip}
                         notice={active?.notice}
@@ -165,10 +194,9 @@ export function AssessmentMeasureScreen(p: {
               )}
             </div>
 
-            {/* Hands-free tip: the meter locks on hold; typed-only steps keep the screenshot tip */}
-            {step.meter && meterAvail ? (
-              <p className="text-center text-xs text-slate-500">🔒 Can't see the screen at the end? Hold still. The number locks and chimes, so you can read it after.</p>
-            ) : step.fields.some(f => f.unit === '°') ? (
+            {/* Typed-only angle steps (and no-meter devices) keep the screenshot tip here; on meter steps
+                the lock tip lives under More help (item 9). */}
+            {moreHelp ? null : step.fields.some(f => f.unit === '°') ? (
               <p className="text-center text-xs text-slate-500">
                 📸 Can't tap the screen? Say <span className="font-semibold">&ldquo;Hey Siri, take a screenshot&rdquo;</span> (iPhone) or <span className="font-semibold">&ldquo;Hey Google, take a screenshot&rdquo;</span> (Android).
               </p>
