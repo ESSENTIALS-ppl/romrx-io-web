@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { METER_COPY } from './meterCopy'
 import { STEPS } from '../pages/assessmentSteps'
+import { STEPS_PART2 } from '../pages/assessmentSteps2'
 import { METHOD_LINE, SETUP_STEPS } from '../pages/assessmentMeta'
 
 const meterStrings = [
@@ -52,6 +53,13 @@ describe('phone meter copy', () => {
   })
   it('no step at all (including the typed low-back step) names another app', () => {
     for (const s of STEPS) expect([s.tool, ...s.position, ...s.howTo, s.mistakeFix].join(' '), s.id).not.toMatch(/Simple Inclinometer|Measure app|Measure -> Level|\bLevel\b/)
+  })
+  it('live low-back step (flag OFF path): Stacy-passed lines, verbatim (Oct 5 11:32 PM)', () => {
+    const all = (STEPS_PART2.find(s => s.id === 'lumbar'))!
+    expect(all.tool).toBe('Type this one in for now. Use any level you have to read the angle. Standing + Floor.')
+    const text = [...all.position, ...all.howTo].join(' ')
+    for (const t of ['Set your level to 0 while you stand straight.', 'Set your level to 0 while you lie flat.', 'Note the angle at that point.', 'Note the angle at your end range.']) expect(text).toContain(t)
+    expect(text).not.toMatch(/\bzero\b|Read the number/i)
   })
   it('American spelling', () => { for (const t of ALL) expect(t).not.toMatch(/centre|colour|metre\b|calibrat(e|ion) your/i) })
   it('every degree step except lumbar has a meter grip; ankle (cm) and lumbar are typed only', () => {

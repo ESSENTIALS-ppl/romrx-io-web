@@ -68,15 +68,15 @@ export const STEPS_PART2: Step[] = [
     id: 'lumbar',
     title: 'Lumbar Flexion + Extension',
     why: 'Low back range and control support bending, lifting, and recovering from awkward positions.',
-    tool: 'Type this one in for now. Use any level you have to read the angle. Standing + Floor.',  // PROPOSED, Stacy clears 3:08 AM
+    tool: 'Type this one in for now. Use any level you have to read the angle. Standing + Floor.',  // Stacy PASS, Oct 5 11:32 PM
     position: [
       'Flexion is standing. Extension is on the floor face down.',
-      'Flexion setup: Stand straight, feet shoulder-width apart. Hold your phone at your side, screen facing away. Make sure to zero before you start.',
-      'Extension setup: Lie face down on the floor. Place one hand under your shoulder for the press-up. Hold your phone at your side with your other hand, screen facing away. Zero lying flat.',
+      'Flexion setup: Stand straight, feet shoulder-width apart. Hold your phone at your side, screen facing away. Set your level to 0 while you stand straight.',
+      'Extension setup: Lie face down on the floor. Place one hand under your shoulder for the press-up. Hold your phone at your side with your other hand, screen facing away. Set your level to 0 while you lie flat.',
     ],
     howTo: [
-      'Flexion: Keep your legs straight. Slowly bend forward with your back flat. Stop when you feel a strong stretch in the back of your legs. Read the number.',
-      'Extension: Press up on one arm into a cobra, keeping your hips flat on the floor. Read the number at your end range.',
+      'Flexion: Keep your legs straight. Slowly bend forward with your back flat. Stop when you feel a strong stretch in the back of your legs. Note the angle at that point.',
+      'Extension: Press up on one arm into a cobra, keeping your hips flat on the floor. Note the angle at your end range.',
     ],
     mistake: 'Rounding the back to get lower on flexion, or letting your hips lift off the floor during the cobra.',
     mistakeFix: 'For flexion, the stretch in the back of your legs is your true stopping point. For extension, your hips stay flat on the floor the entire time - only your chest rises.',

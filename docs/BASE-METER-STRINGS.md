@@ -69,7 +69,16 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - "Enter your measurements" header and "Record it" in tips: kept (PASS).
 - "Personal Readiness Profile" on done screens + lead email: NOT changed (Sunday Protocol pass).
 - Setup box label "Typing is always OK" kept; its text is Stacy's line. Label "Partner (recommended)" -> "Partner (optional)" [NEW].
-- Lumbar step text (only visible when the low-back flag is OFF, i.e. production at the 6 AM ship) still names the Measure/Level and Simple Inclinometer apps. With the flag ON (draft) the step is gone.
+- Low-back step (only visible when the low-back flag is OFF, i.e. production at the 6 AM ship; with the flag ON it is gone). Grant call: names no app. Stacy PASS, Oct 5 11:32 PM:
+  | Line | Old | New |
+  |---|---|---|
+  | Tool | iPhone: Measure -> Level. Android: Simple Inclinometer. Standing + Floor. | Type this one in for now. Use any level you have to read the angle. Standing + Floor. |
+  | Flexion setup (end) | Make sure to zero before you start. | Set your level to 0 while you stand straight. |
+  | Extension setup (end) | Zero lying flat. | Set your level to 0 while you lie flat. |
+  | Flexion how-to (end) | Read the number. | Note the angle at that point. |
+  | Extension how-to (end) | Read the number at your end range. | Note the angle at your end range. |
+  | Range label | Normal: 40-80° / 20-30° | none (no source; a typical range shows only where rangeSource exists) |
+  Grip ("Hold your phone at your side, screen facing away") unchanged: Quinn's call (a phone in a hanging hand reads about 0).
 
 ### Full step text as built (draft, low-back flag ON)
 #### Method line (setup screen)
