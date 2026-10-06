@@ -55,7 +55,7 @@ function expectLockedAt(deg: number) {
 }
 /** The filled (primary) buttons inside the meter card. */
 const primaries = () => [...$('[data-phone-meter]')!.querySelectorAll('button.btn-primary')].map(b => b.textContent!.trim())
-async function turnOn() { click(btn('Turn on the meter') ?? btn('Turn on the ROMeter')); await flush(); for (let i = 0; i < 12; i++) feed(0) }
+async function turnOn() { click(btn('Turn on the ROMeter')); await flush(); for (let i = 0; i < 12; i++) feed(0) }
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'performance', 'Date'] })

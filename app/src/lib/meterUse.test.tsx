@@ -56,7 +56,7 @@ async function flush() { await act(async () => { await Promise.resolve(); await 
 /** Phone flat, pitching about its x axis: tilt since zero = beta - 10. */
 const feed = (tilt: number, n = 1) => act(() => { for (let i = 0; i < n; i++) feedOrientation(30, 10 + tilt, 0) })
 const advance = (ms: number, tilt: number) => { for (let t = 0; t < ms; t += 50) { feed(tilt); act(() => { vi.advanceTimersByTime(50) }) } }
-async function turnOn() { click(btn('Turn on the meter')); await flush(); feed(0, 12) }
+async function turnOn() { click(btn('Turn on the ROMeter')); await flush(); feed(0, 12) }
 /** Layout item 1: the badge says just "Locked"; the big number shows the value that will be saved. */
 const badge = () => $('[data-locked-badge]')!
 const isLocked = () => !badge().className.includes('opacity-0')
@@ -81,7 +81,7 @@ beforeEach(() => {
 afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers() })
 
 describe('phone meter in the Base measure screen', () => {
-  it('opens on the first side by itself; iOS requestPermission is called only on the Turn on the meter tap', async () => {
+  it('opens on the first side by itself; iOS requestPermission is called only on the Turn on the ROMeter tap', async () => {
     const req = vi.fn(() => Promise.resolve('granted'))
     ;(window as unknown as { DeviceOrientationEvent: { requestPermission?: unknown } }).DeviceOrientationEvent.requestPermission = req
     mount(SER)
@@ -90,7 +90,7 @@ describe('phone meter in the Base measure screen', () => {
     expect(req).not.toHaveBeenCalled()
     expect(btn('Start sensor')).toBeUndefined()
     expect(host.textContent).toContain('Sound on, volume up. Turn off silent mode to hear the beeps.')
-    click(btn('Turn on the meter'))
+    click(btn('Turn on the ROMeter'))
     expect(req).toHaveBeenCalledTimes(1)
     await flush()
   })
@@ -307,8 +307,8 @@ describe('phone meter in the Base measure screen', () => {
   it('denied: Stacy line, typed entry still works', async () => {
     ;(window as unknown as { DeviceOrientationEvent: { requestPermission?: unknown } }).DeviceOrientationEvent.requestPermission = () => Promise.resolve('denied')
     mount(SER)
-    click(btn('Turn on the meter')); await flush()
-    expect(host.textContent).toContain('Motion access is off. Type your number in the box. To use the meter, close and reopen your browser, then tap Allow when asked.')
+    click(btn('Turn on the ROMeter')); await flush()
+    expect(host.textContent).toContain('Motion access is off. Type your number in the box. To use the ROMeter, close and reopen your browser, then tap Allow when asked.')
     expect($('#m-shoulder_er_l')).toBeTruthy()
   })
 
@@ -317,16 +317,16 @@ describe('phone meter in the Base measure screen', () => {
     Object.defineProperty(navigator, 'userAgent', { value: 'Mozilla/5.0 (iPhone) Instagram 300.0', configurable: true })
     ;(window as unknown as { DeviceOrientationEvent: { requestPermission?: unknown } }).DeviceOrientationEvent.requestPermission = () => Promise.resolve('denied')
     mount(SER)
-    const line = 'The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box.'
+    const line = 'The ROMeter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box.'
     expect($('[data-inapp-note]')!.textContent).toBe(line)
-    click(btn('Turn on the meter')); await flush()
+    click(btn('Turn on the ROMeter')); await flush()
     expect(host.textContent).toContain(line)
     Object.defineProperty(navigator, 'userAgent', { value: ua, configurable: true })
   })
 
   it('no readings (desktop-like): falls back to typing after 2.5 s', async () => {
     mount(SER)
-    click(btn('Turn on the meter')); await flush()
+    click(btn('Turn on the ROMeter')); await flush()
     act(() => { vi.advanceTimersByTime(2600) })
     expect(host.textContent).toContain('This device is not sending motion readings, so type your number in the box.')
   })
@@ -432,7 +432,7 @@ describe('phone meter in the Base measure screen', () => {
 
   it('item 4: exactly one big filled button in the meter at a time (Turn on, then Start, then Use this number)', async () => {
     mount(SER)
-    expect(primaries()).toEqual(['Turn on the meter'])
+    expect(primaries()).toEqual(['Turn on the ROMeter'])
     await turnOn()
     expect(primaries()).toEqual(['Start'])                               // idle
     click(btn('Start')); advance(2000, 0)

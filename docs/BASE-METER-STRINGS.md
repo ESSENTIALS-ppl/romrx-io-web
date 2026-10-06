@@ -1,4 +1,4 @@
-# Base assessment phone meter: customer strings for review
+# Base assessment ROMeter (phone meter): customer strings for review
 
 Branch `feat/base-inclinometer-20261005` (romrx-io-web). Old = main 600a2a4, New = this branch. Draft only, not live.
 
@@ -11,6 +11,14 @@ Sources: step copy in `app/src/pages/assessmentSteps1.ts`, `assessmentSteps2.ts`
 
 
 
+## ROMeter rename (Stacy cleared, Oct 6 2026, ROMETER-STACY-CLEAR-20261006.md)
+- Turn on the meter -> **Turn on the ROMeter**; Turning on the meter... -> **Turning on the ROMeter...**; denied: To use the meter -> **To use the ROMeter**; in-app: The meter may not work -> **The ROMeter may not work**; Can't use the meter? -> **Can't use the ROMeter?** (straight swaps PASS)
+- Meter error: **The ROMeter did not start. Tap the button again, or type your number in the box.** PASS
+- Setup tip label: Your phone is the meter -> **Meet the ROMeter** PASS
+- Setup subtitle: 15 minutes - Your phone is the meter - No equipment needed -> **15 minutes - Uses the ROMeter on your phone - No equipment needed** PASS
+- Desktop note: -> **Type your numbers here. On a phone, you can also use the ROMeter.** PASS
+- Kept: **Measure with phone** (Stacy: clearest action, no script change). Older entries below this point that still say "meter" are history.
+
 ## OVERNIGHT BUILD, Oct 5-6 2026 (3 AM preview): exact strings for Stacy's final pass
 
 Update Oct 6 (Jim, real iPhone test): the countdown now shows and ticks 5, 4, 3, 2, 1, then GO at 5 s. Sounds: tick 940 Hz, about 0.11 s; GO 1320 Hz, higher, louder and longer; lock ding 1760 Hz. Older sections below that mention 480 Hz or 880 Hz are history. No other strings changed.
@@ -20,8 +28,8 @@ Legend: **[STACY]** = verbatim from METER-STRINGS-STACY-PRECLEAR-20261005.md (al
 ### Meter panel (lib/meterCopy.ts)
 | Where | String | Status |
 |---|---|---|
-| Button that asks for motion | Turn on the meter | [STACY] |
-| While asking | Turning on the meter... | [STACY] |
+| Button that asks for motion | Turn on the ROMeter | [STACY] |
+| While asking | Turning on the ROMeter... | [STACY] |
 | Under that button | Your phone may ask to use motion. Tap Allow. | [STACY] |
 | Under that button | Sound on, volume up. Turn off silent mode to hear the beeps. | [STACY] (keep only "Sound on, volume up." if Reid shows iPhone beeps play in silent mode) |
 | Countdown button (was Zero) | Start | [STACY] |
@@ -39,9 +47,9 @@ Legend: **[STACY]** = verbatim from METER-STRINGS-STACY-PRECLEAR-20261005.md (al
 | Both done, neck flexion + extension | Both saved. | [NEW] |
 | Link on a saved card | Measure again | [NEW] |
 | Tag on the side that is next | Up next | [NEW] |
-| Motion denied | Motion access is off. Type your number in the box. To use the meter, close and reopen your browser, then tap Allow when asked. | [STACY] (Reid/Avery to confirm on a real iPhone) |
-| Instagram / Facebook browser (shown up front in the meter, and instead of the denied/no-data line) | The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box. | [STACY] |
-| Meter error | The phone meter did not start. Tap Turn on the meter again, or type your number in the box. | [STACY] rule (as drafted, button renamed) |
+| Motion denied | Motion access is off. Type your number in the box. To use the ROMeter, close and reopen your browser, then tap Allow when asked. | [STACY] (Reid/Avery to confirm on a real iPhone) |
+| Instagram / Facebook browser (shown up front in the meter, and instead of the denied/no-data line) | The ROMeter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box. | [STACY] |
+| Meter error | The ROMeter did not start. Tap the button again, or type your number in the box. | [STACY] rule (as drafted, button renamed) |
 | No readings | This device is not sending motion readings, so type your number in the box. | as drafted |
 | Desktop | Type your numbers here. On a phone, you can also measure with the phone itself. | as drafted |
 | Range label (every step that shows one) | Typical range: X-Y° | [STACY] (Quinn suggested "29 to 43°"; Stacy's dash form used) |
@@ -90,8 +98,8 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - (sub-line) Each step shows where to hold the phone and which way to move.
 
 #### Setup boxes (changed ones)
-- **Your phone is the meter**: On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.
-- **Typing is always OK**: Can't use the meter? Type your number in the box.
+- **Meet the ROMeter**: On each angle step, tap Measure with phone and allow motion access if asked. Hold the phone where the step shows. Tap Use this number to fill it in. Sound on, volume up. Turn off silent mode to hear the beeps.
+- **Typing is always OK**: Can't use the ROMeter? Type your number in the box.
 - **Partner (optional)**: A partner can help. They hold the phone and tap the buttons while you move.
 
 #### Hip External Rotation (`hip_er`)

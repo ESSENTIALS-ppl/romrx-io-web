@@ -28,8 +28,8 @@ describe('phone meter copy', () => {
     }
   })
   it('Stacy pre-clear lines, verbatim', () => {
-    expect(METER_COPY.startButton).toBe('Turn on the meter')
-    expect(METER_COPY.starting).toBe('Turning on the meter...')
+    expect(METER_COPY.startButton).toBe('Turn on the ROMeter')
+    expect(METER_COPY.starting).toBe('Turning on the ROMeter...')
     expect(METER_COPY.startNote).toBe('Your phone may ask to use motion. Tap Allow.')
     expect(METER_COPY.zeroButton).toBe('Start')
     expect(METER_COPY.soundLine).toBe('Sound on, volume up. Turn off silent mode to hear the beeps.')
@@ -39,12 +39,16 @@ describe('phone meter copy', () => {
     expect(METER_COPY.nextReady('Right')).toBe('Right side ready. Get in position and tap Start.')
     expect(METER_COPY.nextReady('Left')).toBe('Left side ready. Get in position and tap Start.')
     expect(METER_COPY.allSaved(['Left', 'Right'])).toBe('Both sides saved.')
-    expect(METER_COPY.denied).toBe('Motion access is off. Type your number in the box. To use the meter, close and reopen your browser, then tap Allow when asked.')
-    expect(METER_COPY.inApp).toBe('The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box.')
+    expect(METER_COPY.denied).toBe('Motion access is off. Type your number in the box. To use the ROMeter, close and reopen your browser, then tap Allow when asked.')
+    expect(METER_COPY.inApp).toBe('The ROMeter may not work inside Instagram or Facebook. Open this page in Safari or Chrome, or type your number in the box.')
     expect(METER_COPY.typicalRange(40, 60)).toBe('Typical range: 40-60°')
     expect(METHOD_LINE).toBe('Tap Start and hold still for the beeps. Move on GO. Hold at your limit until the ding.')   // Grant Option A
     const setup = SETUP_STEPS.map(s => s.detail)
-    expect(setup).toContain("Can't use the meter? Type your number in the box.")
+    expect(setup).toContain("Can't use the ROMeter? Type your number in the box.")
+    expect(METER_COPY.error).toBe('The ROMeter did not start. Tap the button again, or type your number in the box.')   // Stacy, Oct 6
+    expect(METER_COPY.desktopNote).toBe('Type your numbers here. On a phone, you can also use the ROMeter.')            // Stacy, Oct 6
+    expect(METER_COPY.measureButton).toBe('Measure with phone')                                                          // Stacy, Oct 6: kept
+    expect(SETUP_STEPS[0].label).toBe('Meet the ROMeter')                                                               // Stacy, Oct 6
     expect(setup).toContain('A partner can help. They hold the phone and tap the buttons while you move.')
   })
   it('no meter step or setup line says "Zero" any more', () => {
@@ -63,7 +67,7 @@ describe('phone meter copy', () => {
   })
   it('step header is Stacy\'s pre-cleared "Your measurements"; setup tip no longer repeats the countdown (Option A covers it)', () => {
     expect(MEASUREMENTS_HEADER).toBe('Your measurements')
-    const tip = SETUP_STEPS.find(s => s.label === 'Your phone is the meter')!.detail
+    const tip = SETUP_STEPS.find(s => s.label === 'Meet the ROMeter')!.detail
     expect(tip).not.toMatch(/countdown|Move on GO|Hold until the ding|Get in position/)
     expect(tip).toContain('Sound on, volume up. Turn off silent mode to hear the beeps.')
   })
