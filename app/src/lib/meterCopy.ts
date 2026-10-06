@@ -35,7 +35,7 @@ export const METER_COPY = {
   inApp: 'The meter may not work inside Instagram or Facebook. Open this page in Safari or Chrome.',     // STACY
   error: 'The phone meter did not start. Tap Turn on the meter again.',
   noData: 'This device is not sending motion readings.',
-  desktopNote: 'Type your numbers here. On a phone, you can also measure with the phone itself.',
+  desktopNote: 'Open this page on your phone to measure.',                     // Jim, Oct 6 12:29 PM
   manualPlaceholder: 'Type',
   manualAria: (label: string) => `${label}, type your number`,
   typicalRange: (lo: number, hi: number, unit = '°') => `Typical range: ${lo}-${hi}${unit}`, // STACY

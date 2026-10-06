@@ -943,7 +943,18 @@ Timing check (no change): countdown is 5 beeps (5, 4, 3, 2, 1, one second apart)
 
 ---
 
+## Update: intro equipment, shoulder range, desktop note, lumbar flag (Jim, Oct 6, 12:29 PM) [Jim wording 12:29]
+
+- **Setup screen subtitle** (AssessmentPhases.tsx:34): Approximately 15 minutes using the ROMeter. Equipment needed: your phone. -> **Approximately 15 minutes using the ROMeter. Equipment needed: your phone, a chair, a wall, and a tape measure or ruler.** [Jim wording 12:29, Stacy check pending]
+- **Shoulder Extension range**: "Typical range: 40-75°" with "Source: Gill et al., 2020" (normalLow 40, normalHigh 75, rangeSource 'Gill et al., 2020'), same Typical range / Source format as the other steps. **Jim decided 12:29: show.** Test: shoulderRangeShown.test.tsx.
+- **desktopNote** (meterCopy.ts): Type your numbers here. On a phone, you can also measure with the phone itself. (ROMeter stack: "...you can also use the ROMeter.") -> **Open this page on your phone to measure.** [Jim wording 12:29, Stacy check pending]
+- noData unchanged: This device is not sending motion readings.
+- **Ship note: Jim 12:29: lumbar flag ON in prod at ship (set env var on romrx.io Netlify); pack lumbar fix before next pack buyer.** (VITE_BASE_LUMBAR_REMOVED=1)
+
+---
+
 ## SHIP BLOCKERS (Oct 6)
 - **SLR step:** no stop or safety line remains (Jim's copy removed both). Stacy recommends adding the cleared line "Stop if anything hurts." as an always-visible line on the step; waiting for Jim's yes via Sable. UPDATE Jim 12:26 PM: every step now shows "We don't want you hurt, so stop if anything hurts." (Stacy check pending).
 - **Shoulder Extension title**: needs one name everywhere before ship (step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.
-- **Shoulder ER range label** "Typical range: 40-75° / Source: Gill et al., 2020": NOT Stacy-cleared (Quinn: Gill measured standing; 40-75 is a derived mean ± SD). Kept as is, Jim's call.
+- **Shoulder ER range label** "Typical range: 40-75° / Source: Gill et al., 2020": NOT Stacy-cleared (Quinn: Gill measured standing; 40-75 is a derived mean ± SD). Kept as is, Jim's call. **Jim decided 12:29: show.**
+- **Lumbar at ship**: Jim 12:29: lumbar flag ON in prod at ship (set env var on romrx.io Netlify); pack lumbar fix before next pack buyer.
