@@ -75,12 +75,15 @@ export function Login() {
       options: { emailRedirectTo: `${window.location.origin}/app/auth/confirm`, shouldCreateUser: false },
     })
     setLoading(false)
-    if (err) {
+    // Privacy (Stacy, Oct 5): never reveal whether an email has an account. With
+    // shouldCreateUser: false, Supabase answers an unknown email with otp_disabled /
+    // "Signups not allowed for otp" / user not found. Treat that exactly like success:
+    // same screen, same cooldown, no error text.
+    const noAccount = !!err && /signups? not allowed|otp_disabled|user[_ ]not[_ ]found/i.test(`${err.message} ${(err as { code?: string }).code ?? ''}`)
+    if (err && !noAccount) {
       setError(err.message.includes('rate') || err.message.includes('many')
         ? 'Too many attempts. Wait a minute and try again, or use your password instead.'
-        : /signups? not allowed|otp_disabled|user not found/i.test(err.message)
-          ? "We couldn't find an account for that email."
-          : err.message)
+        : err.message)
     } else {
       setMagicSent(true)
       // Set 60-second cooldown, persisted in localStorage so page refresh doesn't bypass it
@@ -176,6 +179,7 @@ export function Login() {
               </div>
               <h2 className="font-display font-bold text-base text-cobalt-ink mb-1">Check your email</h2>
               <p className="text-sm text-slate-500">Link sent to <strong>{email}</strong></p>
+              <p className="text-sm text-slate-500 mt-2" data-testid="magic-new-here">New here? <Link to="/signup" className="text-cobalt underline">Create an account</Link>.</p>
               <button onClick={() => { setMagicSent(false); setMode('password') }}
                 className="mt-4 text-cobalt text-xs underline">
                 Use password instead
@@ -204,10 +208,12 @@ export function Login() {
           )}
         </div>
 
-        <p className="text-center text-xs text-slate-500 mt-4">
-          New athlete?{' '}
-          <Link to="/signup" className="text-cobalt underline">Create an account</Link>
-        </p>
+        {!magicSent && (
+          <p className="text-center text-xs text-slate-500 mt-4">
+            New athlete?{' '}
+            <Link to="/signup" className="text-cobalt underline">Create an account</Link>
+          </p>
+        )}
         <p className="text-center text-xs text-slate-500 mt-3">ROMRx™ and related marks are trademarks of ROMRx LLC. All rights reserved.</p>
         <div className="text-center mt-4"><DoNotSellLink /></div>
       </div>

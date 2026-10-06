@@ -152,9 +152,27 @@ describe('migration (proposed, not applied)', () => {
 })
 
 describe('magic link never creates an account (no checkbox shown there)', () => {
-  it('Login.tsx sends shouldCreateUser: false and explains a missing account', () => {
+  it('Login.tsx sends shouldCreateUser: false', () => {
+    expect(read(join(SRC, 'pages/Login.tsx'))).toContain('shouldCreateUser: false')
+  })
+
+  it('privacy: an unknown email looks exactly like success (Stacy, Oct 5)', () => {
     const login = read(join(SRC, 'pages/Login.tsx'))
-    expect(login).toContain('shouldCreateUser: false')
-    expect(login).toContain("\"We couldn't find an account for that email.\"")
+    expect(login).not.toContain("couldn't find an account")
+    expect(login).toMatch(/const noAccount = !!err && \/signups\? not allowed\|otp_disabled\|user\[_ \]not\[_ \]found\/i/)
+    expect(login).toContain('if (err && !noAccount) {')
+    // the not-found branch falls through to the same success path (sent screen + cooldown)
+    const handler = login.slice(login.indexOf('const noAccount'), login.indexOf('setCooldown(60)'))
+    expect(handler).toContain('setMagicSent(true)')
+    expect(handler).not.toMatch(/console\.|noAccount \?/)
+  })
+
+  it('sent screen adds only "New here? Create an account." and never shows two Create links', () => {
+    const login = read(join(SRC, 'pages/Login.tsx'))
+    const fl = login.replace(/\{' '\}/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+    expect(fl).toContain('Link sent to {email}')
+    expect(fl).toContain('New here? Create an account .')
+    expect(login).toMatch(/data-testid="magic-new-here">New here\? <Link to="\/signup"[^>]*>Create an account<\/Link>\.<\/p>/)
+    expect(login).toMatch(/\{!magicSent && \(\s*<p[^>]*>\s*New athlete\?/)
   })
 })
