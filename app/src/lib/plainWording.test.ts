@@ -10,8 +10,12 @@ import { STEPS_PART2 } from '../pages/assessmentSteps2'
 
 const ALL_STEPS = [...STEPS_PART1, ...STEPS_PART2]
 const JARGON = /abduct|adduct|lateral|medial|supine|prone|torso|dorsiflex|cobra|hinge|anterior|posterior|sagittal|cervical|lumbar|thoracic|rotat|upper arm|\bflex(ion|ed|es)?\b|\bextension\b/i
-/** Strip the allowed bracketed field-label references, e.g. "(Flexion)". */
-const strip = (t: string) => t.replace(/\((Flexion|Extension)\)/g, '')
+/**
+ * Strip the allowed bracketed field-label references, e.g. "(Flexion)", and the one Jim-approved, Stacy-PASS cue that says
+ * "Rotate" (Quinn's exact shoulder ER words, Oct 6 8:19 PM).
+ */
+export const SHOULDER_ER_CUE_ROTATE = 'Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching.'
+const strip = (t: string) => (t === SHOULDER_ER_CUE_ROTATE ? '' : t.replace(/\((Flexion|Extension)\)/g, ''))
 
 describe('plain wording on every Base step', () => {
   for (const s of ALL_STEPS) {

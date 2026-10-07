@@ -63,30 +63,35 @@ export const STEPS_PART1: Step[] = [
   },
 {
     id: 'shoulder_er',
-    // Title shown to users relabeled 'Shoulder Extension' (Jim, Oct 6 11:56 AM; pending Stacy). Key shoulder_er, fields and targets unchanged.
-    title: 'Shoulder Extension',
+    // Oct 6 2026, 8:19 PM (Jim-approved, Quinn spec; Stacy PASS title, cue and stop line): STANDING goal-post shoulder ER
+    // replaces the lying tucked-elbow step that was shown as 'Shoulder Extension'. Key shoulder_er and fields unchanged.
+    title: 'Shoulder External Rotation',
     why: 'Supports overhead and pressing positions.',
-    // Jim, Oct 6 11:45 AM: tucked-elbow version lying on your back. Say 'elbow on the floor', never 'upper arm on the floor'.
-    // Copy pending Stacy. Meter math unchanged (see shoulderErTucked.test.ts).
-    tool: 'Your phone. Lying on your back on the floor.',
+    // Cue sentences are Quinn's exact words, split Setup / How to Measure like every meter step. The stop line is the shared
+    // STOP_LINE (rendered once on every step). Meter math unchanged: gravity angle since zero (see shoulderErStanding.test.ts).
+    tool: 'Your phone. Standing.',
     position: [
-      'Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling.',
-      'Hold the phone in that hand along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time.',
+      'Stand tall. Hold the phone along your forearm like a ruler, wrist straight.',
+      'Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.',
       'Tap Start with your other hand, then hold this start position while it counts down from 5.',
     ],
     howTo: [
-      'Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side.',
+      'Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching.',
       'Hold still at your limit: after 2.5 seconds the number locks and dings. Tap Use this number.',
       'Switch arms, tap Start in the start position, and repeat.',
     ],
-    mistake: 'Your elbow slides away from your side or your shoulder lifts off the floor.',
-    mistakeFix: 'Keep your elbow on the floor, tucked in at your side, the whole time. Only your forearm moves, like a door swinging open.',
-    meter: { grip: 'Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff.' },
-    // Typical range 40-75 (Gill et al., 2020). riskBelow 40 = the Steady target (JOINT_SCORE_TARGETS on the scoring branch);
-    // riskBelow is not read by scoring or display any more, it is kept in line with the target.
+    // Mistake line restored word for word from the pre-Oct 6 goal-post step (same arm position). The fix line is that
+    // step's first sentence plus a plain-words second sentence (the old one said 'rotates'). Both pending Stacy.
+    mistake: 'Your shoulder shrugs up or your elbow drops below shoulder height.',
+    mistakeFix: 'Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves.',
+    // Quinn: flat along the forearm, top edge toward the hand, screen facing out to the side.
+    meter: { grip: 'Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight.' },
+    // NO typical range and NO source line (Stacy, Oct 6 8:19 PM: Vairo 2012 tested cadets lying down, not general adults
+    // standing; Gill 40-75 removed). Scoring target 85 lives in JOINT_SCORE_TARGETS. riskBelow is not read by scoring or
+    // display; 57 = Quinn's riskBelow for the server Protocol mirror.
     fields: [
-      { key: 'shoulder_er_l', label: 'Left', unit: '°', normalLow: 40, normalHigh: 75, riskBelow: 40, rangeSource: 'Gill et al., 2020' },
-      { key: 'shoulder_er_r', label: 'Right', unit: '°', normalLow: 40, normalHigh: 75, riskBelow: 40, rangeSource: 'Gill et al., 2020' },
+      { key: 'shoulder_er_l', label: 'Left', unit: '°', riskBelow: 57 },
+      { key: 'shoulder_er_r', label: 'Right', unit: '°', riskBelow: 57 },
     ],
   },
 {

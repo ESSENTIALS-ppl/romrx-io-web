@@ -138,18 +138,24 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
 - Range label: Typical range: 26-40° | Source line: Source: Simoneau et al., 1998
 
-#### Shoulder Extension (`shoulder_er`) (tucked elbow, lying on your back; Jim, Oct 6 11:45 AM)
-- Title shown to users: Shoulder Extension **[Stacy: not a claims issue; before ship it needs one name everywhere (header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.]** (was: Shoulder External Rotation; Jim, Oct 6 11:56 AM). Key `shoulder_er` unchanged.
-- Meter grip: Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff. **[Stacy PASS Oct 6 11:55]**
+#### Shoulder External Rotation (`shoulder_er`) (STANDING goal-post; Jim-approved, Quinn spec, Oct 6 8:19 PM) - replaces the lying tucked-elbow "Shoulder Extension" step
+- Title shown to users: Shoulder External Rotation **[Stacy PASS Oct 6 8:19 PM]** (was: Shoulder Extension). Now one name everywhere: step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, ROMBot ("shoulder external rotation"); My Body / radar keep the short label "Shoulder ER" (mobilityBands.ts BASE_DISPLAY_JOINTS, unchanged). Key `shoulder_er` unchanged.
+- Tool: Your phone. Standing. **[NEW, pending Stacy]**
+- Meter grip: Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight. **[NEW from Quinn's placement, pending Stacy]**
 - Setup:
-  1. Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling. **[Stacy PASS Oct 6 11:55]**
-  2. Hold the phone in that hand along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time. **[Stacy PASS Oct 6 11:55]**
-  3. Tap Start with your other hand, then hold this start position while it counts down from 5.
-- How to Measure:
-  1. Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side. **[Stacy PASS Oct 6 11:55]**
-  2. Hold still at your limit: after 2.5 seconds the number locks and chimes. Tap Use this number. **[Stacy PASS Oct 6 11:55]**
-  3. Switch arms, tap Start in the start position, and repeat.
-- Range label: Typical range: 40-75° | Source line: Source: Gill et al., 2020 **[NOT Stacy-cleared: Quinn says Gill measured standing and 40-75 is a derived mean ± SD]** (label kept as is, Jim's call)
+  1. Stand tall. Hold the phone along your forearm like a ruler, wrist straight. **[Quinn 8:30 PM: prepended "Stand tall. "; Stacy review in flight]**
+  2. Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead. **[Quinn exact cue, Stacy PASS]**
+  3. Tap Start with your other hand, then hold this start position while it counts down from 5. (unchanged)
+- Stop line (shared, every step, unchanged): We don't want you hurt, so stop if anything hurts. **[Jim's words, Stacy PASS]**
+- How to Measure (under More help):
+  1. Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching. **[Quinn exact cue, Stacy PASS]**
+  2. Hold still at your limit: after 2.5 seconds the number locks and dings. Tap Use this number. (unchanged)
+  3. Switch arms, tap Start in the start position, and repeat. (unchanged)
+- Common mistake: Your shoulder shrugs up or your elbow drops below shoulder height. **[restored word for word from the pre-Oct 6 goal-post step, pending Stacy re-check]**
+- Fix: Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves. **[first sentence restored, second sentence NEW, pending Stacy]**
+- Range label: **NONE. Source line: NONE.** (Stacy Oct 6 8:19 PM: Vairo 2012 tested cadets about 19 lying down, not general adults standing; the Gill 40-75 line is removed and Vairo is not added.)
+- Scoring target: 85 (JOINT_SCORE_TARGETS; server mirror prepared on romrxbjj-v2 fix/base-shoulder-er-85-20261006). Not shown as a range anywhere; My Protocol's existing "Steady target" chip reads 85° (was 40°).
+- Meter math: unchanged (gravity angle since zero). Zero = forearm level and pointing ahead, straight up = 90, reads past 90 (tests 0 / 90 / 105 and 0-110: shoulderErStanding.test.ts, shoulderErStandingMeter.test.tsx).
 
 #### Shoulder Flexion (`shoulder_flex`) (sitting in a chair with a back; Jim, Oct 6 11:54 AM)
 - Tool: Your phone. Sitting in a chair with a back. **[Stacy PASS Oct 6 12:02]**
@@ -973,6 +979,30 @@ Timing check (no change): countdown is 5 beeps (5, 4, 3, 2, 1, one second apart)
 
 ## SHIP BLOCKERS (Oct 6)
 - **SLR step:** no stop or safety line remains (Jim's copy removed both). Stacy recommends adding the cleared line "Stop if anything hurts." as an always-visible line on the step; waiting for Jim's yes via Sable. UPDATE Jim 12:26 PM: every step now shows "We don't want you hurt, so stop if anything hurts." (Stacy check pending).
-- **Shoulder Extension title**: needs one name everywhere before ship (step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, mobilityBands.ts:553, ROMBot). Waiting for Jim's final title.
-- **Shoulder ER range label** "Typical range: 40-75° / Source: Gill et al., 2020": NOT Stacy-cleared (Quinn: Gill measured standing; 40-75 is a derived mean ± SD). Kept as is, Jim's call. **Jim decided 12:29: show.**
+- **Shoulder Extension title**: RESOLVED Oct 6 8:19 PM: "Shoulder External Rotation" everywhere (standing goal-post step, see the update below).
+- **Shoulder ER range label**: RESOLVED Oct 6 8:19 PM: no range and no source line on the step (Stacy).
 - **Lumbar at ship**: Jim 12:29: lumbar flag ON in prod at ship (set env var on romrx.io Netlify); pack lumbar fix before next pack buyer.
+
+---
+
+## Update: Shoulder ER becomes the STANDING goal-post step (Oct 6, 8:19 PM; Jim-approved, Quinn spec; Stacy PASS title, cue, stop line; range line NOT passed, so none)
+
+Every customer-visible string changed on this step (old -> new):
+| where | old | new | status |
+|---|---|---|---|
+| Step title (h2) + meter aria-label | Shoulder Extension | Shoulder External Rotation | Stacy PASS |
+| Tool line | Your phone. Lying on your back on the floor. | Your phone. Standing. | NEW, pending Stacy |
+| Setup 1 | Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling. | Stand tall. Hold the phone along your forearm like a ruler, wrist straight. | Quinn 8:30 PM (Stand tall prepend), Stacy review in flight |
+| Setup 2 | Hold the phone in that hand along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time. | Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead. | Quinn exact, Stacy PASS |
+| Setup 3 | Tap Start with your other hand, then hold this start position while it counts down from 5. | (unchanged) | - |
+| How to Measure 1 | Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side. | Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching. | Quinn exact, Stacy PASS |
+| How to Measure 2, 3 | Hold still at your limit: ... / Switch arms, ... | (unchanged) | - |
+| Common mistake | Your elbow slides away from your side or your shoulder lifts off the floor. | Your shoulder shrugs up or your elbow drops below shoulder height. | restored from pre-Oct 6 goal-post step, pending Stacy |
+| Fix | Keep your elbow on the floor, tucked in at your side, the whole time. Only your forearm moves, like a door swinging open. | Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves. | pending Stacy |
+| Meter grip | Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff. | Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight. | NEW (Quinn placement), pending Stacy |
+| Range label under Left input | Typical range: 40-75° | (removed, nothing shown) | Stacy |
+| Source line | Source: Gill et al., 2020 | (removed, nothing shown) | Stacy |
+| Stop line | We don't want you hurt, so stop if anything hurts. | (unchanged, shared STOP_LINE) | Stacy PASS |
+| My Protocol shoulder card, "Steady target" chip | 40° | 85° (value follows the scoring target; not a range) | flag for Stacy |
+Not changed: "why" line (Supports overhead and pressing positions.), My Protocol label "Shoulder External Rotation" and why line, ResultsPreview label, My Body / radar "Shoulder ER", ROMBot wording.
+

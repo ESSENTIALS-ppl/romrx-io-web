@@ -128,16 +128,16 @@ describe('fixture 01 regression (cloned from real Sep 8 app result)', () => {
   }
   const rows: JointScoreRow[] = [
     // re-scored with the Oct 6 targets (hip ER 29, IR 26, abduction 40, shoulder flexion 140, ankle 6 cm):
-    // hip_abd 38/40 → 2, hip_ir 36/26 → 3, ankle_df 10.8/6 → 3, shoulder_flex 162/140 → 3; neck side bend 40/38 → 3 (was 40/45 → 1); shoulder ER 76/40 → 3 (was 76/90 → 1)
+    // hip_abd 38/40 → 2, hip_ir 36/26 → 3, ankle_df 10.8/6 → 3, shoulder_flex 162/140 → 3; neck side bend 40/38 → 3 (was 40/45 → 1); shoulder ER 76/85 → 1 (standing goal-post target 85, Oct 6 8:19 PM; was 76/40 → 3)
     ['ankle_df', 3], ['cervical_ext', 3], ['cervical_flex', 3], ['cervical_lat', 3], ['hip_abd', 2],
     ['hip_er', 3], ['hip_flex', 2], ['hip_ir', 3], ['lumbar_ext', 3], ['lumbar_flex', 3],
-    ['shoulder_er', 3], ['shoulder_flex', 3],
+    ['shoulder_er', 1], ['shoulder_flex', 3],
   ].map(([joint_key, score]) => ({ joint_key: joint_key as string, score: score as number }))
 
   it('My Body and My Protocol show the same band', () => {
     const s = surfaces(a, rows)
-    // Oct 6 targets: shoulder ER 76/40 is Steady now, so the worst joint is hip abduction 38/40 (Building), on every surface
-    expect(new Set(Object.values(s))).toEqual(new Set([2]))
+    // Shoulder ER target 85 (Oct 6 8:19 PM): 76/85 = 0.89 is Needs focus, so the worst joint is shoulder ER, on every surface
+    expect(new Set(Object.values(s))).toEqual(new Set([1]))
   })
   it('persisted rows agree with the client formula', () => {
     const fromRows = bandMapFromJointScores(rows)
@@ -249,7 +249,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     },
     a: {
       hip_er_l: 30, hip_er_r: 32, hip_ir_l: 22, hip_ir_r: 25, hip_abd_l: 55, hip_abd_r: 60,
-      hip_flex_l: 95, hip_flex_r: 100, shoulder_er_l: 28.9, shoulder_er_r: 31.1,
+      hip_flex_l: 95, hip_flex_r: 100, shoulder_er_l: 61.4, shoulder_er_r: 66.1,   // rescaled to the shoulder ER target 85 (was 28.9 / 31.1 vs 40)
       shoulder_flex_l: 150, shoulder_flex_r: 155, ankle_df_l: 7.0, ankle_df_r: 8.5,
       lumbar_flex: 45, lumbar_ext: 16, cervical_lat_l: 32, cervical_lat_r: 34,   // rescaled to the Oct 6 neck side-bend target 38 (was 38 / 40 vs 45)
       cervical_flex: 46, cervical_ext: 60,
@@ -264,7 +264,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     },
     a: {
       hip_er_l: 45, hip_er_r: 47, hip_ir_l: 44.5, hip_ir_r: 46, hip_abd_l: 81, hip_abd_r: 81.5,
-      hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 36.2, shoulder_er_r: 37.8,
+      hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 76.9, shoulder_er_r: 80.3,   // rescaled to target 85 (was 36.2 / 37.8 vs 40)
       shoulder_flex_l: 170, shoulder_flex_r: 172, ankle_df_l: 18.0, ankle_df_r: 19.0,
       lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 36.2, cervical_lat_r: 37.2,   // rescaled to the Oct 6 neck side-bend target 38 (was 43 / 44 vs 45)
       cervical_flex: 49.5, cervical_ext: 62,
@@ -295,7 +295,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     },
     a: {
       hip_er_l: 45, hip_er_r: 47, hip_ir_l: 44.5, hip_ir_r: 46, hip_abd_l: 81, hip_abd_r: 81.5,
-      hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 35.8, shoulder_er_r: 37.8,
+      hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 76.1, shoulder_er_r: 80.3,   // rescaled to target 85 (was 35.8 / 37.8 vs 40)
       shoulder_flex_l: 170, shoulder_flex_r: 172, ankle_df_l: 18.0, ankle_df_r: 19.0,
       lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 36.2, cervical_lat_r: 37.2,   // rescaled to the Oct 6 neck side-bend target 38 (was 43 / 44 vs 45)
       cervical_flex: 49.5, cervical_ext: 62,
