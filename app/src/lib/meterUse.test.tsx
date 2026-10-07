@@ -363,21 +363,24 @@ describe('phone meter in the Base measure screen', () => {
     expect(calls).toContainEqual(['shoulder_er_r', ''])
   })
 
-  it('Typical range label on every scored angle step, never "Normal"', () => {
-    mount(SER)
-    expect(host.textContent).toContain('Typical range: 40-75°')                  // tucked-elbow shoulder ER (Jim, Oct 6 11:45 AM)
-    expect($('[data-range-source]')!.textContent).toBe('Source: Gill et al., 2020')
+  it('Typical range label on every ranged angle step, never "Normal"; standing shoulder ER shows none (Stacy, Oct 6 8:19 PM)', () => {
+    mount(STEPS.findIndex(s => s.id === 'hip_er'))
+    expect(host.textContent).toContain('Typical range: 29-43°')
+    expect($('[data-range-source]')!.textContent).toBe('Source: Simoneau et al., 1998')
     expect(host.textContent).not.toMatch(/Normal/)
+    act(() => root?.unmount()); host?.remove()
+    mount(SER)
+    expect(host.textContent).not.toMatch(/Typical range|Normal|Source:/)
+    expect($('[data-range-source]')).toBeNull()
   })
 
-  it('Quinn ranges: hip ER 29-43, hip IR 26-40, shoulder flexion 140-180, SLR 60-80 with sources; neck and hip abduction show no number', () => {
+  it('Quinn ranges: hip ER 29-43, hip IR 26-40, shoulder flexion 140-180, SLR 60-80 with sources; neck, hip abduction and shoulder ER show no number', () => {
     const want: Record<string, [string, string] | null> = {
       hip_er: ['Typical range: 29-43°', 'Source: Simoneau et al., 1998'],
       hip_ir: ['Typical range: 26-40°', 'Source: Simoneau et al., 1998'],
-      shoulder_er: ['Typical range: 40-75°', 'Source: Gill et al., 2020'],
       shoulder_flex: ['Typical range: 140-180°', 'Source: Gill et al., 2020'],
       hip_flex: ['Typical range: 60-80°', 'Source: Youdas et al., 2005'],
-      cervical_lat: null, cervical_flex_ext: null, hip_abd: null,
+      cervical_lat: null, cervical_flex_ext: null, hip_abd: null, shoulder_er: null,   // shoulder ER: no range (Stacy, Oct 6 8:19 PM)
     }
     for (const [id, exp] of Object.entries(want)) {
       act(() => root?.unmount()); host?.remove()
@@ -401,7 +404,7 @@ describe('phone meter in the Base measure screen', () => {
       expect($('[data-range-source]')).toBeNull()
     }
     const shown = STEPS.filter(s => s.fields.some(f => f.rangeSource && f.normalLow != null && !f.unscored && !f.referenceNote)).map(s => s.id)
-    expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_er', 'shoulder_flex'])
+    expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_flex'])
   })
 
   it('no debug readout unless ?debug=1', async () => {
@@ -526,20 +529,20 @@ describe('phone meter in the Base measure screen', () => {
   })
 
   it('item 7: the typical range shows once per step, on the side being measured, and moves to Right after Left is saved', async () => {
-    // Range and source come from the step data, so this holds after #148 moves Shoulder ER to the
-    // tucked-elbow test (85-110° Vairo 2012 -> 40-75° Gill 2020) as well as before it. Only those two pairs pass.
-    const lf = STEPS[SER].fields.find(f => f.key === 'shoulder_er_l')!
-    expect(['85-110|Vairo et al., 2012', '40-75|Gill et al., 2020']).toContain(`${lf.normalLow}-${lf.normalHigh}|${lf.rangeSource}`)
+    // Shoulder ER shows no range since Oct 6 8:19 PM (Stacy), so this uses hip ER (29-43°, Simoneau et al., 1998).
+    const HER = STEPS.findIndex(s => s.id === 'hip_er')
+    const lf = STEPS[HER].fields.find(f => f.key === 'hip_er_l')!
+    expect(`${lf.normalLow}-${lf.normalHigh}|${lf.rangeSource}`).toBe('29-43|Simoneau et al., 1998')
     const RANGE = `Typical range: ${lf.normalLow}-${lf.normalHigh}°`, SOURCE = `Source: ${lf.rangeSource}`
-    mount(SER)
+    mount(HER)
     const count = () => host.textContent!.split(RANGE).length - 1
     expect(count()).toBe(1)
-    expect($('[data-field-note="shoulder_er_l"]')!.textContent).toBe(RANGE)
-    expect($('[data-field-note="shoulder_er_r"]')).toBeNull()
+    expect($('[data-field-note="hip_er_l"]')!.textContent).toBe(RANGE)
+    expect($('[data-field-note="hip_er_r"]')).toBeNull()
     expect($('[data-range-source]')!.textContent).toBe(SOURCE)
-    await turnOn(); startNow(); advance(3000, 70); click(btn('Use this number'))
+    await turnOn(); startNow(); advance(3000, 30); click(btn('Use this number'))
     expect(count()).toBe(1)
-    expect($('[data-field-note="shoulder_er_r"]')!.textContent).toBe(RANGE)
+    expect($('[data-field-note="hip_er_r"]')!.textContent).toBe(RANGE)
     expect($('[data-range-source]')!.textContent).toBe(SOURCE)
   })
 

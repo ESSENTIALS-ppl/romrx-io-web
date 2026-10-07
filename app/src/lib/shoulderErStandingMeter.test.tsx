@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
- * Shoulder ER, tucked elbow lying on your back (Jim, Oct 6 11:45 AM), end to end in the real Base measure screen:
- * shows the new grip and typical range, zeroes with the forearm pointing at the ceiling, and locks at 30, 45 and 75
- * as the hand falls outward, positive, for both arms. Synthetic deviceorientation readings for that pose.
+ * Shoulder ER, STANDING goal-post test (Oct 6 2026, 8:19 PM), end to end in the real Base measure screen: shows the title,
+ * Quinn's cue, the new grip and NO typical range / source; zeroes with the forearm level and pointing ahead, and locks at
+ * 45, 90 and 105 as the hand rotates up and back, positive, for both arms. Synthetic deviceorientation readings for that pose.
  */
 import { act, createElement, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -24,14 +24,14 @@ const SER = STEPS.findIndex(s => s.id === 'shoulder_er')
 const D = Math.PI / 180
 
 /**
- * W3C (alpha, beta, gamma) for the phone in that hand along the forearm, on its edge, screen facing your head, while
- * lying face up (head north): forearm up at 0, hand falls outward by deg (left arm toward east, right arm toward west).
- * Device x, y, z columns of the device->earth matrix after a turn about the north axis.
+ * W3C (alpha, beta, gamma) for the phone flat along the forearm, top edge toward the hand, screen facing out to the side,
+ * standing facing north: forearm level and pointing ahead at 0, rotated up and back by deg about the level upper arm
+ * (left arm out to the west, right arm out to the east). Device x, y, z columns of the device->earth matrix.
  */
 function forearmEuler(arm: 'left' | 'right', deg: number): [number, number, number] {
-  const c = Math.cos(deg * D), s = Math.sin(deg * D), m = arm === 'left' ? 1 : -1
-  const y = [m * s, 0, c]                    // long edge: from straight up toward the outside
-  const z = [0, 1, 0]                        // screen faces your head
+  const c = Math.cos(deg * D), s = Math.sin(deg * D)
+  const y = [0, c, s]                        // top edge: from straight ahead, up, then back past 90
+  const z = arm === 'left' ? [-1, 0, 0] : [1, 0, 0]   // screen faces out to the side
   const x = [y[1] * z[2] - y[2] * z[1], y[2] * z[0] - y[0] * z[2], y[0] * z[1] - y[1] * z[0]]
   const R = [[x[0], y[0], z[0]], [x[1], y[1], z[1]], [x[2], y[2], z[2]]]
   const beta = Math.asin(Math.max(-1, Math.min(1, R[2][1])))
@@ -74,19 +74,22 @@ beforeEach(() => {
 })
 afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers() })
 
-describe('shoulder_er meter, tucked elbow lying on your back', () => {
-  it('shows the new grip and Typical range: 40-75°, never "upper arm"', () => {
+describe('shoulder_er meter, standing goal-post', () => {
+  it('shows the title, the cue, the new grip and NO typical range or source line', () => {
     mount()
-    expect(host.textContent).toContain('Phone in that hand, along your forearm like a ruler, on its edge, screen facing your head. Wrist straight and stiff.')
-    expect(host.textContent).toContain('Typical range: 40-75°')
-    expect(host.querySelector('h2')!.textContent).toBe('Shoulder Extension')        // display title only; key stays shoulder_er
-    expect(host.textContent).not.toContain('Shoulder External Rotation')
-    expect(host.textContent).toContain('elbow on the floor')
-    expect(host.textContent).not.toMatch(/upper arm/i)
+    expect(host.querySelector('h2')!.textContent).toBe('Shoulder External Rotation')
+    expect(host.textContent).toContain('Your phone. Standing.')
+    expect(host.textContent).toContain('Hold the phone along your forearm like a ruler, wrist straight.')
+    expect(host.textContent).toContain('Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.')
+    expect(host.textContent).toContain('Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight.')
+    expect(host.textContent).toContain("We don't want you hurt, so stop if anything hurts.")
+    expect(host.textContent).not.toMatch(/Typical range|Source:|Gill|Vairo|85-110|40-75/)
+    expect(host.querySelector('[data-range-source]')).toBeNull()
+    expect(host.textContent).not.toMatch(/Shoulder Extension|lying|on your back|floor/i)
   })
 
   for (const which of ['left', 'right'] as const) {
-    it(`${which} arm: zero with the forearm up, hand falls 30, 45, 75 -> locks at each; Use saves 75`, async () => {
+    it(`${which} arm: zero with the forearm level and ahead, rotate up 45, 90, 105 -> locks at each; Use saves 105`, async () => {
       arm = which
       const calls = mount()
       const key = which === 'left' ? 'shoulder_er_l' : 'shoulder_er_r'
@@ -94,14 +97,14 @@ describe('shoulder_er meter, tucked elbow lying on your back', () => {
       click(btn(METER_COPY.startButton))
       await act(async () => { await Promise.resolve(); await Promise.resolve() })
       feed(0, 12)
-      for (const deg of [30, 45, 75]) {
-        click(btn(METER_COPY.zeroButton)); advance(5900, 0)          // countdown, zero with the forearm pointing at the ceiling
+      for (const deg of [45, 90, 105]) {
+        click(btn(METER_COPY.zeroButton)); advance(5900, 0)          // countdown, zero with the forearm level and pointing ahead
         advance(400, deg / 2); advance(3000, deg)
         expectLockedAt(deg)
-        if (deg !== 75) { click(btn(METER_COPY.resetButton)); advance(200, 0) }
+        if (deg !== 105) { click(btn(METER_COPY.resetButton)); advance(200, 0) }
       }
       click(btn(METER_COPY.useButton))
-      expect(calls).toEqual([[key, '75']])
+      expect(calls).toEqual([[key, '105']])
     })
   }
 })

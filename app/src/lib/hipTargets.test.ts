@@ -8,8 +8,8 @@
  *  - Neck rotation 70 (was 80) and neck side bend 38 (was 45): Swinkels & Swinkels-Meewisse 2014, Spine, PMID 24573069
  *    (rotation mean minus 1 SD for ages 20-49; side bend 20-29 mean minus 1 SD). Neck flexion 50 / extension 60 unchanged.
  *    No typical range on screen for the neck.
- *  - Shoulder ER 40 (was 90): tucked-elbow test lying on your back (Jim, Oct 6 11:45 AM), typical range 40-75, Gill et al. 2020
- *    (PMID 33046038). The measure-screen range text lives on the #148 branch, not here.
+ *  - Shoulder ER 85 (Oct 6 8:19 PM, Jim-approved, Quinn): standing goal-post test. Replaces 40 (lying tucked-elbow test,
+ *    11:45 AM). No typical range is shown on the measure screen (Stacy, Oct 6 8:19 PM).
  * Mirrored in public.compute_joint_scores() and romrxbjj-v2 compute-tiers JOINT_TARGETS / submit-lead-assessment email.ts.
  */
 import { readFileSync } from 'node:fs'
@@ -36,8 +36,8 @@ describe('Steady targets (Oct 6): hips, shoulder flexion, ankle, neck', () => {
     expect(JOINT_SCORE_TARGETS.ankle_df).toBe(6)
   })
 
-  it('shoulder ER 40 (tucked elbow, Gill 2020); shoulder flexion stays 140', () => {
-    expect(JOINT_SCORE_TARGETS.shoulder_er).toBe(40)
+  it('shoulder ER 85 (standing goal-post, Oct 6 8:19 PM); shoulder flexion stays 140', () => {
+    expect(JOINT_SCORE_TARGETS.shoulder_er).toBe(85)
     expect(JOINT_SCORE_TARGETS.shoulder_flex).toBe(140)
   })
 
@@ -65,7 +65,7 @@ describe('Steady targets (Oct 6): hips, shoulder flexion, ankle, neck', () => {
     ['shoulder_flex', 140, 139, 126, 125.5],
     ['ankle_df', 6, 5.5, 5.4, 5], // cm
     ['cervical_rot', 70, 69, 63, 62.5],
-    ['shoulder_er', 40, 39, 36, 35.5],
+    ['shoulder_er', 85, 84, 76.5, 76],
     ['cervical_lat', 38, 37.5, 34.5, 34], // 0.90 x 38 = 34.2, off the 0.5 grid
   ]
   for (const [joint, steady, under, buildingFloor, needsFocus] of CASES) {
@@ -101,7 +101,8 @@ describe('Steady targets (Oct 6): hips, shoulder flexion, ankle, neck', () => {
     expect(bandScoreFromTargetRatio(45, JOINT_SCORE_TARGETS.hip_abd)).toBe(3)
     expect(bandScoreFromTargetRatio(160, JOINT_SCORE_TARGETS.shoulder_flex)).toBe(3) // Gill 2020 average adult
     expect(bandScoreFromTargetRatio(9.5, JOINT_SCORE_TARGETS.ankle_df)).toBe(3)       // Konor 2012 average adult
-    expect(bandScoreFromTargetRatio(40, JOINT_SCORE_TARGETS.shoulder_er)).toBe(3)     // bottom of the 40-75 tucked-elbow range
+    expect(bandScoreFromTargetRatio(85, JOINT_SCORE_TARGETS.shoulder_er)).toBe(3)     // standing goal-post target 85
+    expect(bandScoreFromTargetRatio(75, JOINT_SCORE_TARGETS.shoulder_er)).toBe(1)     // a top-of-range tucked-elbow reading is not Steady at 85
     expect(bandScoreFromTargetRatio(71, JOINT_SCORE_TARGETS.cervical_rot)).toBe(3)    // Swinkels 2014 50-59 mean rotation
     expect(bandScoreFromTargetRatio(38, JOINT_SCORE_TARGETS.cervical_lat)).toBe(3)    // Swinkels 2014 50-59 mean side bend
   })
