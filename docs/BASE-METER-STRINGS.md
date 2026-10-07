@@ -143,7 +143,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 - Tool: Your phone. Standing. **[NEW, pending Stacy]**
 - Meter grip: Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight. **[NEW from Quinn's placement, pending Stacy]**
 - Setup:
-  1. Hold the phone along your forearm like a ruler, wrist straight. **[Quinn exact cue, Stacy PASS Oct 6 8:19 PM]**
+  1. Stand tall. Hold the phone along your forearm like a ruler, wrist straight. **[Quinn 8:30 PM: prepended "Stand tall. "; Stacy review in flight]**
   2. Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead. **[Quinn exact cue, Stacy PASS]**
   3. Tap Start with your other hand, then hold this start position while it counts down from 5. (unchanged)
 - Stop line (shared, every step, unchanged): We don't want you hurt, so stop if anything hurts. **[Jim's words, Stacy PASS]**
@@ -992,7 +992,7 @@ Every customer-visible string changed on this step (old -> new):
 |---|---|---|---|
 | Step title (h2) + meter aria-label | Shoulder Extension | Shoulder External Rotation | Stacy PASS |
 | Tool line | Your phone. Lying on your back on the floor. | Your phone. Standing. | NEW, pending Stacy |
-| Setup 1 | Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling. | Hold the phone along your forearm like a ruler, wrist straight. | Quinn exact, Stacy PASS |
+| Setup 1 | Lie on your back on the floor with your knees bent and feet flat. Keep your elbow on the floor, tucked in at your side, and bend it so your forearm points at the ceiling. | Stand tall. Hold the phone along your forearm like a ruler, wrist straight. | Quinn 8:30 PM (Stand tall prepend), Stacy review in flight |
 | Setup 2 | Hold the phone in that hand along your forearm like a ruler: thumb on one long edge, fingers on the other, top edge in line with your knuckles. Turn it on its edge so the screen faces your head. Keep your wrist straight and stiff the whole time. | Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead. | Quinn exact, Stacy PASS |
 | Setup 3 | Tap Start with your other hand, then hold this start position while it counts down from 5. | (unchanged) | - |
 | How to Measure 1 | Keep your elbow on the floor, tucked in at your side. Let your hand fall slowly outward, away from your body, toward the floor. Stop at a strong stretch or when your elbow starts to slide away from your side. | Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching. | Quinn exact, Stacy PASS |

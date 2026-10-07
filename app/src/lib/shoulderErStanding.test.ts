@@ -132,7 +132,7 @@ describe('shoulder_er copy and fields (Oct 6 8:19 PM; Stacy PASS title, cue, sto
     expect(s.fields.map(f => f.key)).toEqual(['shoulder_er_l', 'shoulder_er_r'])
   })
   it("Quinn's cue, word for word, in order (Setup 1-2, then How to Measure 1)", () => {
-    expect(s.position[0]).toBe('Hold the phone along your forearm like a ruler, wrist straight.')
+    expect(s.position[0]).toBe('Stand tall. Hold the phone along your forearm like a ruler, wrist straight.')
     expect(s.position[1]).toBe('Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.')
     expect(s.position[2]).toBe('Tap Start with your other hand, then hold this start position while it counts down from 5.')
     expect(s.howTo[0]).toBe('Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching.')

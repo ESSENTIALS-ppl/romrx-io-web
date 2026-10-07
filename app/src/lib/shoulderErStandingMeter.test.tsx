@@ -79,7 +79,7 @@ describe('shoulder_er meter, standing goal-post', () => {
     mount()
     expect(host.querySelector('h2')!.textContent).toBe('Shoulder External Rotation')
     expect(host.textContent).toContain('Your phone. Standing.')
-    expect(host.textContent).toContain('Hold the phone along your forearm like a ruler, wrist straight.')
+    expect(host.textContent).toContain('Stand tall. Hold the phone along your forearm like a ruler, wrist straight.')
     expect(host.textContent).toContain('Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.')
     expect(host.textContent).toContain('Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight.')
     expect(host.textContent).toContain("We don't want you hurt, so stop if anything hurts.")
