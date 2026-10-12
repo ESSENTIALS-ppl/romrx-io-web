@@ -1,0 +1,28 @@
+-- ROLLBACK for 20261011000000_signup_terms_consent_record.sql (NOT a migration; run by hand only if needed).
+-- handle_consent_signed() body below = LIVE body read Oct 12 2026 (md5(prosrc) 4b54b7b9a0bffd7125914cc123039d5f).
+BEGIN;
+drop trigger if exists zy_record_signup_terms_consent on auth.users;
+drop trigger if exists zx_copy_signup_demographics on auth.users;
+drop function if exists public.record_signup_terms_consent(), public.copy_signup_demographics(),
+  public.record_terms_reaccept(text, text, text, text), public.allowed_consent_text_version(text),
+  public.allowed_signup_consent(text, text), public.allowed_reaccept_source(text),
+  public.current_terms_version();
+CREATE OR REPLACE FUNCTION public.handle_consent_signed()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+begin
+  update public.athletes
+  set
+    terms_accepted_at          = new.signed_at,
+    medical_waiver_accepted_at = new.signed_at,
+    onboarding_status          = 'consent_signed',
+    updated_at                 = now()
+  where user_id = new.user_id;
+  return new;
+end;
+$function$;
+-- consents.consent_text_version / source columns are left in place (nullable, harmless).
+COMMIT;

@@ -3,6 +3,9 @@
 // Jan 1, 2027 trial end until post-Jan-1 Base terms are approved.
 export const BASE_UNAVAILABLE_CODE = 'base_checkout_unavailable'
 export const BASE_UNAVAILABLE_MESSAGE = 'Base sign-up is temporarily unavailable. Please check back soon.'
+// packs_closed: create-checkout-session v40 refuses sport pack checkouts until packs open (env PACKS_CHECKOUT_OPEN).
+export const PACKS_CLOSED_CODE = 'packs_closed'
+export const PACKS_CLOSED_MESSAGE = 'Sport packs open in January 2027.'
 
 /** Returns the message to show for a checkout response body, or the fallback when there is no better text. */
 export function checkoutErrorMessage(

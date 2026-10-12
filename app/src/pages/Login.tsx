@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react'
 import { DoNotSellLink } from '../components/ConsentBanner'
 import { resolvePostAuthDest } from '../lib/postAuthDest'
+import { packReturnKey, safeNextPath, stashPostAuthNext } from '../lib/packReturn'
 
 export function Login() {
   const { session } = useAuth()
@@ -19,14 +20,24 @@ export function Login() {
   const [mode, setMode] = useState<'password' | 'magic'>('password')
   const [cooldown, setCooldown] = useState(0) // seconds remaining
 
+  // ?next=/some/in-app/path (e.g. a pack app sending a member to the Base assessment,
+  // or Unlock). Only same-app paths are honored (lib/packReturn safeNextPath).
+  const [nextPath] = useState(() => safeNextPath(new URLSearchParams(window.location.search).get('next')))
+  const fromPack = nextPath ? packReturnKey(nextPath.split('?')[1] ?? '') !== null : false
+
+  useEffect(() => {
+    // Kept briefly so a magic link opened in this browser still lands on `next`.
+    if (nextPath) stashPostAuthNext(nextPath)
+  }, [nextPath])
+
   useEffect(() => {
     if (!session) return
     let active = true
-    resolvePostAuthDest(session.user?.id).then((dest) => {
+    resolvePostAuthDest(session.user?.id, nextPath).then((dest) => {
       if (active) navigate(dest, { replace: true })
     })
     return () => { active = false }
-  }, [session, navigate])
+  }, [session, navigate, nextPath])
 
   // Restore cooldown from localStorage on mount
   useEffect(() => {
@@ -70,10 +81,17 @@ export function Login() {
       email,
       // Must include the /app basename so the link lands on a real SPA route.
       // Origin-based so localhost and Netlify previews keep working.
-      options: { emailRedirectTo: `${window.location.origin}/app/auth/confirm` },
+      // shouldCreateUser: false. A magic link must never create an account: account creation only
+      // happens on /signup, where the terms checkbox is shown (Stacy, Oct 5).
+      options: { emailRedirectTo: `${window.location.origin}/app/auth/confirm`, shouldCreateUser: false },
     })
     setLoading(false)
-    if (err) {
+    // Privacy (Stacy, Oct 5): never reveal whether an email has an account. With
+    // shouldCreateUser: false, Supabase answers an unknown email with otp_disabled /
+    // "Signups not allowed for otp" / user not found. Treat that exactly like success:
+    // same screen, same cooldown, no error text.
+    const noAccount = !!err && /signups? not allowed|otp_disabled|user[_ ]not[_ ]found/i.test(`${err.message} ${(err as { code?: string }).code ?? ''}`)
+    if (err && !noAccount) {
       setError(err.message.includes('rate') || err.message.includes('many')
         ? 'Too many attempts. Wait a minute and try again, or use your password instead.'
         : err.message)
@@ -91,6 +109,11 @@ export function Login() {
         <div className="text-center mb-8">
           <h1 className="font-display font-bold text-cobalt text-3xl">ROMRx</h1>
           <p className="text-slate-500 text-sm mt-1">Athlete Dashboard</p>
+          {fromPack && (
+            <p className="text-slate-600 text-sm mt-3" data-testid="pack-assessment-signin-note">
+              Sign in to take your assessment. Use the same email and password you use on your sport site.
+            </p>
+          )}
         </div>
 
         <div className="card p-6">
@@ -171,7 +194,8 @@ export function Login() {
                 <Mail size={22} className="text-cobalt" />
               </div>
               <h2 className="font-display font-bold text-base text-cobalt-ink mb-1">Check your email</h2>
-              <p className="text-sm text-slate-500">Link sent to <strong>{email}</strong></p>
+              <p className="text-sm text-slate-500">If that email has an account, we sent a sign-in link.</p>
+              <p className="text-sm text-slate-500 mt-2" data-testid="magic-new-here">New here? <Link to="/signup" className="text-cobalt underline">Create an account</Link>.</p>
               <button onClick={() => { setMagicSent(false); setMode('password') }}
                 className="mt-4 text-cobalt text-xs underline">
                 Use password instead
@@ -200,10 +224,12 @@ export function Login() {
           )}
         </div>
 
-        <p className="text-center text-xs text-slate-500 mt-4">
-          New athlete?{' '}
-          <Link to="/signup" className="text-cobalt underline">Create an account</Link>
-        </p>
+        {!magicSent && (
+          <p className="text-center text-xs text-slate-500 mt-4">
+            New athlete?{' '}
+            <Link to="/signup" className="text-cobalt underline">Create an account</Link>
+          </p>
+        )}
         <p className="text-center text-xs text-slate-500 mt-3">ROMRx™ and related marks are trademarks of ROMRx LLC. All rights reserved.</p>
         <div className="text-center mt-4"><DoNotSellLink /></div>
       </div>
