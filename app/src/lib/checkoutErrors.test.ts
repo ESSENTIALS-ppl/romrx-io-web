@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BASE_UNAVAILABLE_MESSAGE, checkoutErrorMessage } from './checkoutErrors'
+import { BASE_UNAVAILABLE_MESSAGE, PACKS_CLOSED_CODE, PACKS_CLOSED_MESSAGE, checkoutErrorMessage } from './checkoutErrors'
 
 describe('checkoutErrorMessage', () => {
   it('maps base_checkout_unavailable to the friendly message', () => {
@@ -12,5 +12,10 @@ describe('checkoutErrorMessage', () => {
     expect(checkoutErrorMessage({ error: 'invalid_token' }, 'fb')).toBe('invalid_token')
     expect(checkoutErrorMessage({}, 'fb')).toBe('fb')
     expect(checkoutErrorMessage(null, 'fb')).toBe('fb')
+  })
+  it('packs_closed: code and Stacy-approved sentence match create-checkout-session v40', () => {
+    expect(PACKS_CLOSED_CODE).toBe('packs_closed')
+    expect(PACKS_CLOSED_MESSAGE).toBe('Sport packs open in January 2027.')
+    expect(checkoutErrorMessage({ error: PACKS_CLOSED_MESSAGE, message: PACKS_CLOSED_MESSAGE, code: PACKS_CLOSED_CODE } as never, 'fb')).toBe(PACKS_CLOSED_MESSAGE)
   })
 })
