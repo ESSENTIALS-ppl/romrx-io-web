@@ -170,7 +170,8 @@ describe('magic link never creates an account (no checkbox shown there)', () => 
   it('sent screen adds only "New here? Create an account." and never shows two Create links', () => {
     const login = read(join(SRC, 'pages/Login.tsx'))
     const fl = login.replace(/\{' '\}/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
-    expect(fl).toContain('Link sent to {email}')
+    expect(fl).toContain('If that email has an account, we sent a sign-in link.')
+    expect(fl).not.toContain('Link sent to')
     expect(fl).toContain('New here? Create an account .')
     expect(login).toMatch(/data-testid="magic-new-here">New here\? <Link to="\/signup"[^>]*>Create an account<\/Link>\.<\/p>/)
     expect(login).toMatch(/\{!magicSent && \(\s*<p[^>]*>\s*New athlete\?/)
