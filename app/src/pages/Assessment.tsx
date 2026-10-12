@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -6,15 +6,26 @@ import { bandFull, mobilityScoreForAssessment, overallBandForAssessment } from '
 import { STEPS } from './assessmentSteps'
 import { AssessmentPhases } from './AssessmentPhases'
 import { track } from '../lib/track'
+import { loginForPackAssessment, packReturnKey, packReturnUrl } from '../lib/packReturn'
+import { Spinner } from '../components/Spinner'
 
 // Authenticated Base HQ → submit-assessment (great-job). Lead path unchanged.
 const SUBMIT_ASSESSMENT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-assessment`
 const SUBMIT_LEAD_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-lead-assessment`
 
 export function Assessment() {
-  const { session } = useAuth()
+  const { session, loading: authLoading } = useAuth()
   const { profile } = useProfile(session?.user?.id)
   const navigate = useNavigate()
+  // Sent here by a pack app (?return_to=bjj|bodybuilding): the pack has no assessment of
+  // its own any more. Sign in first so the result saves to the member's account (never the
+  // signed-out lead path), and go back to the pack dashboard when done (lib/packReturn).
+  const [returnKey] = useState(() => packReturnKey(window.location.search))
+  const needsPackSignIn = returnKey !== null && !authLoading && !session
+
+  useEffect(() => {
+    if (needsPackSignIn && returnKey) navigate(loginForPackAssessment(returnKey), { replace: true })
+  }, [needsPackSignIn, returnKey, navigate])
   const [phase, setPhase] = useState<'setup' | 'measure' | 'lead' | 'done' | 'lead-done'>('setup')
   const [stepIdx, setStepIdx] = useState(0)
   const [values, setValues] = useState<Record<string, string>>({})
@@ -76,7 +87,11 @@ export function Assessment() {
         }
         track('assessment_completed_ui', { authenticated: true, measured_fields: Object.values(assessment_data).filter(v => v !== null).length })
         setPhase('done')
-        setTimeout(() => navigate('/onboarding/results', { replace: true }), 2000)
+        const packUrl = packReturnUrl(returnKey)
+        setTimeout(() => {
+          if (packUrl) window.location.assign(packUrl)
+          else navigate('/onboarding/results', { replace: true })
+        }, 2000)
       } catch {
         setLoading(false)
         setError('Something went wrong. Please try again.')
@@ -116,6 +131,9 @@ export function Assessment() {
     if (!email) { setError('Please enter your email.'); return }
     submit(email, fullName)
   }
+
+  // Pack hand-off: hold a spinner until we know the member is signed in.
+  if (returnKey && (authLoading || !session)) return <Spinner />
 
   // -- Setup screen -----------------------------------------------------------
   
