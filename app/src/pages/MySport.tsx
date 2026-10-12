@@ -6,8 +6,8 @@ import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
 import { ExternalLink, Trophy, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { CHECKOUT_URL, SPORT_PRICE_IDS } from '../lib/stripe'
-import { BASE_UNAVAILABLE_CODE, BASE_UNAVAILABLE_MESSAGE, PACKS_CLOSED_CODE, PACKS_CLOSED_MESSAGE } from '../lib/checkoutErrors'
+import { CHECKOUT_URL } from '../lib/stripe'
+import { BASE_UNAVAILABLE_CODE, BASE_UNAVAILABLE_MESSAGE, PACKS_CLOSED_MESSAGE } from '../lib/checkoutErrors'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 
 // Sport app URLs. Each sport add-on ships its own dashboard.
@@ -31,7 +31,6 @@ export function MySport() {
   const { profile, loading } = useProfile(user?.id)
   const [busy, setBusy] = useState(false)
   const [baseNotice, setBaseNotice] = useState<string | null>(null)
-  const [sportNotice, setSportNotice] = useState<string | null>(null)
 
   if (loading) return <Spinner />
 
@@ -79,28 +78,6 @@ export function MySport() {
     window.open(url, '_blank', 'noopener')
   }
 
-  async function startSportCheckout(slug: string) {
-    if (!user) return
-    setBusy(true)
-    try {
-      const headers = await authHeaders()
-      const res = await fetch(CHECKOUT_URL, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(withStripeTestFlag({ mode: 'unlock', token: slug, price_id: SPORT_PRICE_IDS[slug] })),
-      })
-      const data = await res.json()
-      if (res.status === 409 && data.error === 'base_required') {
-        await startBaseCheckout()
-        return
-      }
-      if (data.url) window.location.href = data.url
-      else if (data.code === PACKS_CLOSED_CODE) setSportNotice(PACKS_CLOSED_MESSAGE)
-    } finally {
-      setBusy(false)
-    }
-  }
-
   return (
     <div className="space-y-5">
       <PageHeader title="My Sport" subtitle="Your sport add-ons and available upgrades" />
@@ -113,7 +90,7 @@ export function MySport() {
             </div>
             <h3 className="font-display font-bold text-base text-cobalt-ink mb-1">No sport add-ons yet</h3>
             <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
-              Add a sport below to unlock its dedicated training dashboard.
+              {PACKS_CLOSED_MESSAGE}
             </p>
           </div>
         </SectionCard>
@@ -149,7 +126,7 @@ export function MySport() {
               <p className="text-sm font-semibold text-cobalt-ink">Start with ROMRx Base</p>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              ROMRx Base unlocks your Assessment history, ROMBot, and the ability to add any Sport pack. Base is free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime.
+              ROMRx Base unlocks your Assessment history, ROMBot, and sport packs when they open in January 2027. Base is free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime.
             </p>
             <button
               onClick={startBaseCheckout}
@@ -167,18 +144,19 @@ export function MySport() {
             {addable.map(s => (
               <div key={s.slug} className="border border-cobalt/10 rounded-card p-4 flex flex-col gap-2">
                 <p className="text-sm font-semibold text-cobalt-ink">{s.label}</p>
-                <p className="text-xs text-slate-500">Sport packs are add-ons. Base is free through December 31, 2026. Billing starts January 1, 2027. Or {s.price} at checkout after beta.</p>
+                <p className="text-xs text-slate-500">{PACKS_CLOSED_MESSAGE}</p>
+                {/* Packs are closed during beta (Jim, Oct 6): no checkout from here. Stacy PASS R8 Oct 6. */}
                 <button
-                  onClick={() => startSportCheckout(s.slug)}
-                  disabled={busy}
-                  className="btn-primary text-sm text-center mt-1 disabled:opacity-60"
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  className="btn-primary text-sm text-center mt-1 opacity-60 cursor-not-allowed"
                 >
-                  Add {s.label.replace('ROMRx+', '')}
+                  Coming January 2027
                 </button>
               </div>
             ))}
           </div>
-          {sportNotice && <p role="alert" className="text-xs text-slate-600 mt-3">{sportNotice}</p>}
         </SectionCard>
       )}
     </div>
