@@ -9,6 +9,7 @@ import { cn } from '../lib/cn'
 import { DoNotSellLink } from '../components/ConsentBanner'
 import { AGE_BUCKETS } from '../lib/ageBuckets'
 import { signupMissing, signupMissingHint, type SignupMissingField } from '../lib/signupMissing'
+import { signupConsentMetadata } from '../lib/termsConsent'
 
 const GENDERS = [
   { v: 'male', l: 'Male' },
@@ -97,6 +98,9 @@ export function Signup() {
           ...(gender ? { gender } : {}),
           ...utmMeta,
           ...(addSport ? { add_sport: addSport } : {}),
+          // Terms record (Stacy Oct 5): the database writes the consents row from these keys in the
+          // same step as the account. If that write fails, signUp fails and nothing is created.
+          ...signupConsentMetadata(agreedToTerms, navigator.userAgent),
         },
         emailRedirectTo: `${window.location.origin}/app/auth/confirm?next=${encodeURIComponent(nextDest)}${leadToken ? `&lead=${encodeURIComponent(leadToken)}` : ''}`,
       },
@@ -110,14 +114,12 @@ export function Signup() {
     }
 
     if (data.session && data.user) {
-      const utmPatch: Record<string, string> = { signup_source }
-      for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const) {
-        if (utmMeta[k]) utmPatch[k] = utmMeta[k]
-      }
+      // signup_source and utm_* are set server-side from signUp metadata (ensure_public_user_profile).
+      // Sending them here made the whole update 403 (no UPDATE grant on those columns), so age_bucket
+      // and gender were never saved (Oct 5 audit). Only send the two columns users may update.
       const { error: demoErr } = await supabase.from('users').update({
         age_bucket: ageBucket,
         gender: gender || null,
-        ...utmPatch,
       }).eq('id', data.user.id)
       if (demoErr && import.meta.env.DEV) console.warn('[signup] demographics/utm update', demoErr.message)
       trackMetaLead()

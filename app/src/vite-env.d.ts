@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_META_PIXEL_ID?: string
   /** '1' = Base low-back step removed (lib/lumbarFlag.ts). Unset in production = OFF. */
   readonly VITE_BASE_LUMBAR_REMOVED?: string
+  /** 'on' turns on the one-time terms re-accept screen (default off; Sunday batch). */
+  readonly VITE_TERMS_REACCEPT_GATE?: string
 }
 
 interface ImportMeta {
