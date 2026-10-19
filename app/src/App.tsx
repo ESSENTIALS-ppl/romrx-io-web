@@ -47,7 +47,7 @@ export default function App() {
         <Route path="/unlock/:token" element={<Unlock />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
 
-        <Route path="/" element={null} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>

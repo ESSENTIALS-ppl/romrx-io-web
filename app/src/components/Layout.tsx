@@ -48,11 +48,12 @@ export function Layout() {
     <div className="min-h-screen flex flex-col bg-surface">
       <FuelCalculateTracker />
       <header className="sticky top-0 z-10 bg-white border-b border-cobalt/10">
-        <div className="max-w-5xl mx-auto px-4 flex items-center h-14 gap-1">
-          <span className="font-display font-bold mr-4 text-base text-cobalt">
+        <div className="max-w-5xl mx-auto px-4 flex flex-wrap sm:flex-nowrap items-center min-h-14 py-2 sm:py-0 sm:h-14 gap-1">
+          <span className="font-display font-bold mr-auto sm:mr-4 shrink-0 text-base text-cobalt">
             ROMRx
           </span>
-          <nav className="flex gap-1 flex-1 overflow-x-auto">
+          {/* 375px fix (Reid, Oct 19): on phones the nav wraps onto its own full-width row so every tab stays visible. */}
+          <nav className="order-last sm:order-none w-full sm:w-auto flex flex-wrap sm:flex-nowrap gap-1 sm:flex-1 min-w-0 sm:overflow-x-auto">
             {NAV.map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}
@@ -71,7 +72,7 @@ export function Layout() {
           </nav>
           <button
             onClick={handleSignOut}
-            className="ml-2 p-2 rounded-full text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="ml-2 shrink-0 p-2 rounded-full text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
             title="Sign out"
           >
             <LogOut size={16} />

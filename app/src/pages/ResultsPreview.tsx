@@ -72,7 +72,7 @@ function getTopAsymmetries(assessment: Record<string, number | null>): Asymmetry
 }
 
 export function ResultsPreview() {
-  const { user, session } = useAuth()
+  const { user, session, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [assessment, setAssessment] = useState<Record<string, number | null> | null>(null)
@@ -103,6 +103,8 @@ export function ResultsPreview() {
     } catch {
       track('results_viewed', { authenticated: !!user, pending_sport: pendingSport ?? null })
     }
+    // Race fix (Reid, Oct 19): wait for auth to resolve before deciding there is no user / no assessment.
+    if (authLoading) return
     if (!user) { setLoading(false); return }
     ;(async () => {
       // Check if base subscription is already active
@@ -120,18 +122,24 @@ export function ResultsPreview() {
       }
 
       // Load latest assessment
-      const { data } = await supabase
-        .from('assessments')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('assessed_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      // The row can land a moment after submit redirects here, so retry briefly before showing "No assessment found".
+      let data: Record<string, number | null> | null = null
+      for (let attempt = 0; attempt < 4 && !data; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 750))
+        const res = await supabase
+          .from('assessments')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('assessed_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        data = (res.data as Record<string, number | null> | null) ?? null
+      }
 
-      setAssessment(data ?? null)
+      setAssessment(data)
       setLoading(false)
     })()
-  }, [user, navigate])
+  }, [user, authLoading, navigate])
 
   const handleUnlock = async (includePendingSport: boolean) => {
     track('results_unlock_clicked', {

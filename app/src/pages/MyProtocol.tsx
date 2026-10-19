@@ -160,6 +160,26 @@ const JOINTS: JointDef[] = [
     leftKey: 'cervical_rot_l', rightKey: 'cervical_rot_r',
     rxKey: 'cervical_rot',
   },
+  // Oct 19 2026: Base measures neck flexion, extension and side bend (not rotation), so they join the protocol.
+  // `why` lines are NEW COPY, FOR STACY before ship.
+  {
+    key: 'cervical_flex', label: 'Neck Flexion',
+    why: 'Looking down at a phone, desk work, and tucking your chin.',
+    singleKey: 'cervical_flex',
+    rxKey: 'cervical_flex',
+  },
+  {
+    key: 'cervical_ext', label: 'Neck Extension',
+    why: 'Looking up, overhead reaching, and upright head posture.',
+    singleKey: 'cervical_ext',
+    rxKey: 'cervical_ext',
+  },
+  {
+    key: 'cervical_lat', label: 'Neck Side Bend',
+    why: 'Checking over your shoulder and easing side-to-side neck stiffness.',
+    leftKey: 'cervical_lat_l', rightKey: 'cervical_lat_r',
+    rxKey: 'cervical_lat',
+  },
 ]
 
 // ---- Scoring ---------------------------------------------------------------
@@ -216,6 +236,9 @@ const JOINT_KEY_ALIASES: Record<string, string[]> = {
   lumbar_flex:   ['lumbar_flex', 'lumbar_flexion'],
   lumbar_ext:    ['lumbar_ext', 'lumbar_extension'],
   cervical_rot:  ['cervical_rot', 'cervical_rotation'],
+  cervical_flex: ['cervical_flex', 'cervical_flexion'],
+  cervical_ext:  ['cervical_ext', 'cervical_extension'],
+  cervical_lat:  ['cervical_lat', 'cervical_lateral_flexion'],
 }
 
 function toRx(row: DbExercise): Rx {
