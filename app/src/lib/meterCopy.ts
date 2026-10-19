@@ -38,7 +38,7 @@ export const METER_COPY = {
   desktopNote: 'Open this page on your phone to measure.',                     // Jim, Oct 6 12:29 PM
   manualPlaceholder: 'Type',
   manualAria: (label: string) => `${label}, type your number`,
-  typicalRange: (lo: number, hi: number, unit = '°') => `Typical range: ${lo}-${hi}${unit}`, // STACY
+  typicalRange: (lo: number, hi: number, unit = '°') => `Typical range: ${lo}-${hi}${unit === 'cm' ? ' cm' : unit}`, // STACY
 } as const
 
 /** Section header above the boxes on every step. STACY pre-clear optional (line 30), Grant: use it. Was "Enter your measurements". */

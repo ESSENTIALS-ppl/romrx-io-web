@@ -138,8 +138,8 @@ export const STEPS_PART1: Step[] = [
     mistakeFix: 'Keep both shoulders pressed down the whole time. Only your head moves. If your shoulder rises, that reading does not count.',
     meter: { grip: 'Phone flat on your forehead, screen facing forward.' },
     fields: [
-      { key: 'cervical_lat_l', label: 'Left', unit: '°', riskBelow: 30 },
-      { key: 'cervical_lat_r', label: 'Right', unit: '°', riskBelow: 30 },
+      { key: 'cervical_lat_l', label: 'Left', unit: '°', normalLow: 38, normalHigh: 46, riskBelow: 30, rangeSource: 'Swinkels, 2014' },
+      { key: 'cervical_lat_r', label: 'Right', unit: '°', normalLow: 38, normalHigh: 46, riskBelow: 30, rangeSource: 'Swinkels, 2014' },
     ],
   }
 ]

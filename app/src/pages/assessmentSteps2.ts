@@ -104,9 +104,9 @@ export const STEPS_PART2: Step[] = [
     mistake: 'Your heel lifts off the floor, or your knee drifts inward or outward as it drives forward.',
     mistakeFix: 'Keep your eye on your heel and your knee over your second and third toes. If your heel lifts even slightly, that try does not count. Move your foot closer to the wall and try again.',
     fields: [
-      // normalLow/normalHigh/riskBelow are unused (0): there is no published centimeter cutoff, so no "Normal" range is shown.
-      { key: 'ankle_df_l', label: 'Left', unit: 'cm', normalLow: 0, normalHigh: 0, riskBelow: 0, referenceNote: 'Best of 3, in cm' },
-      { key: 'ankle_df_r', label: 'Right', unit: 'cm', normalLow: 0, normalHigh: 0, riskBelow: 0, referenceNote: 'Best of 3, in cm' },
+      // Typical range 6-13 cm (Quinn, TYPICAL-RANGES-FOR-AVERY-20261019.md: Konor 2012, mean 9.5 cm, SD 3.1). Display only, never scoring.
+      { key: 'ankle_df_l', label: 'Left', unit: 'cm', normalLow: 6, normalHigh: 13, riskBelow: 0, rangeSource: 'Konor et al., 2012' },
+      { key: 'ankle_df_r', label: 'Right', unit: 'cm', normalLow: 6, normalHigh: 13, riskBelow: 0, rangeSource: 'Konor et al., 2012' },
     ],
   }
 ]

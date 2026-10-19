@@ -320,7 +320,7 @@ function RetestBanner({ assessedAt }: { assessedAt: string }) {
   } else {
     status = 'red'; Icon = RefreshCw
     message = `Retest overdue by ${Math.abs(daysUntilRetest)} days`
-    subtext = "Retake now to see how much you've improved and update your protocol."
+    subtext = "Retake now to see where you are and update your protocol."
   }
 
   const styles = {
