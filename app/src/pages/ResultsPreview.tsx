@@ -323,7 +323,7 @@ export function ResultsPreview() {
               Unlock Base only (free through Dec 31, 2026)
             </button>
             <p className="text-center text-xs text-white/40">
-              Base is free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime. {sportCopy.wordmark} is an add-on after Base.
+              Free through Dec 31, 2026. Add a card to start. Then $60 a year unless you cancel. Cancel online anytime. {sportCopy.wordmark} is an add-on after Base.
               Combo checkout starts Base and carries your sport intent for the next step.
             </p>
           </div>
@@ -340,7 +340,7 @@ export function ResultsPreview() {
         )}
 
         <p className="text-center text-xs text-white/30">
-          Free through Dec 31, 2026. Add a card now. No charge until Jan 1, 2027, then $60 per year until you cancel. Cancel anytime in Settings, under Subscription. Your results are saved to your account.
+          Free through December 31, 2026. Add a card to start. You pay nothing before January 1, 2027. Then $60 a year, renewing until you cancel. Cancel online anytime.
         </p>
       </div>
     </div>

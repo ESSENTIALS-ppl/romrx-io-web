@@ -126,7 +126,7 @@ export function MySport() {
               <p className="text-sm font-semibold text-cobalt-ink">Start with ROMRx Base</p>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              ROMRx Base unlocks your Assessment history, ROMBot, and sport packs when they open in January 2027. Base is free through December 31, 2026. Then $60/year starting January 1, 2027, renews yearly until you cancel. Card required. Cancel online anytime.
+              ROMRx Base unlocks your Assessment history, ROMBot, and sport packs when they open in January 2027. Free through Dec 31, 2026. Add a card to start. Then $60 a year unless you cancel. Cancel online anytime.
             </p>
             <button
               onClick={startBaseCheckout}
