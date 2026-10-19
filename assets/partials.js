@@ -1,5 +1,6 @@
-/* romrx.utm first-touch capture — shared key with app/src/lib/utm.ts
-   Runs on marketing pages (/beta, homepage, etc.) so UTMs survive CTA → /app/signup. */
+/* romrx.utm capture, shared key with app/src/lib/utm.ts. Runs on marketing pages so UTMs survive CTA -> /app/signup.
+   Oct 19 2026 (Reid utm1 FAIL): a URL with utm_* params WINS (last touch overwrites romrx.utm). The first touch is
+   kept separately in romrx.utm.first. CTAs to /app/signup carry the current params through. */
 (function captureRomrxUtm() {
   try {
     var KEY = 'romrx.utm';
@@ -12,10 +13,22 @@
       if (v) { found[keys[i]] = v; any = true; }
     }
     if (!any) return;
-    if (localStorage.getItem(KEY)) return; // first-touch only
     found.captured_at = new Date().toISOString();
     found.landing_path = window.location.pathname + window.location.search;
-    localStorage.setItem(KEY, JSON.stringify(found));
+    if (!localStorage.getItem(KEY + '.first')) localStorage.setItem(KEY + '.first', localStorage.getItem(KEY) || JSON.stringify(found));
+    localStorage.setItem(KEY, JSON.stringify(found)); // last touch wins
+    // Carry the live params on every /app/signup link (static and injected partials).
+    var qs = keys.filter(function (k) { return found[k]; }).map(function (k) { return k + '=' + encodeURIComponent(found[k]); }).join('&');
+    var tag = function () {
+      var links = document.querySelectorAll('a[href^="/app/signup"]');
+      for (var j = 0; j < links.length; j++) {
+        var h = links[j].getAttribute('href');
+        if (h.indexOf('utm_') !== -1) continue;
+        links[j].setAttribute('href', h + (h.indexOf('?') === -1 ? '?' : '&') + qs);
+      }
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tag); else tag();
+    setTimeout(tag, 500); // after partials inject the nav
   } catch (e) { /* ignore private mode */ }
 })();
 

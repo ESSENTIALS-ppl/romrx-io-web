@@ -1,10 +1,12 @@
 // utm.ts — first-party attribution capture (Kai UTM dict → signup user_metadata)
 //
-// First-touch: write once when URL has attrib params and storage is empty.
+// Last touch wins (Oct 19 2026, Reid utm1 FAIL): a URL with attrib params overwrites storage. First touch is kept in
+// UTM_FIRST_TOUCH_KEY (no column for it today).
 // Signup prefers live URL params, then stored, then fallback signup_source 'romrx.io'.
 // Storage key shared with assets/partials.js so /beta + marketing landings persist across /app.
 
 export const UTM_STORAGE_KEY = 'romrx.utm'
+export const UTM_FIRST_TOUCH_KEY = 'romrx.utm.first'
 
 const PARAM_KEYS = [
   'utm_source',
@@ -48,19 +50,19 @@ export function loadStoredUtm(): UtmAttribution | null {
   }
 }
 
-/** Capture first-touch UTM/click ids from the current URL into localStorage. Idempotent. */
+/** Capture UTM/click ids (last touch wins) from the current URL into localStorage. Idempotent. */
 export function captureUtmFromUrl(search?: string, path?: string): UtmAttribution | null {
   try {
     const fromUrl = readParams(search ?? (typeof window !== 'undefined' ? window.location.search : ''))
     if (!hasAttrib(fromUrl)) return loadStoredUtm()
 
-    const existing = loadStoredUtm()
-    if (existing) return existing
-
     const payload: UtmAttribution = {
       ...fromUrl,
       captured_at: new Date().toISOString(),
       landing_path: path ?? (typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : undefined),
+    }
+    if (!localStorage.getItem(UTM_FIRST_TOUCH_KEY)) {
+      localStorage.setItem(UTM_FIRST_TOUCH_KEY, localStorage.getItem(UTM_STORAGE_KEY) ?? JSON.stringify(payload))
     }
     localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(payload))
     return payload
