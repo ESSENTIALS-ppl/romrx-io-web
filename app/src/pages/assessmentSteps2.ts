@@ -1,3 +1,4 @@
+// STACY: Quinn F1-F5 copy (QUINN-COPY-F1-F5.md, Oct 19 2026) applied on beta/fixes-20261019; still needs a Stacy PASS.
 import type { Step } from './assessmentMeta'
 import { HIP_FLEX_STEP } from '../lib/hipFlexCopy'
 
@@ -5,7 +6,7 @@ export const STEPS_PART2: Step[] = [
 {
     id: 'cervical_flex_ext',
     title: 'Cervical Flexion + Extension',
-    why: 'Chin-to-chest and looking-up range both matter for posture and neck safety under load.',
+    why: 'Covers your chin-to-chest and looking-up range.',
     tool: 'Your phone. Seated in a chair.',
     position: [
       'Sit upright in a chair. Feet flat. Back straight.',
@@ -44,7 +45,7 @@ export const STEPS_PART2: Step[] = [
 {
     id: 'hip_abd',
     title: 'Hip Abduction',
-    why: 'A wide, stable base depends on healthy hip abduction range.',
+    why: 'A wide stance asks for hip abduction range.',
     tool: 'Your phone. Standing.',
     position: [
       'Stand upright with something nearby you can grab for balance if needed.',

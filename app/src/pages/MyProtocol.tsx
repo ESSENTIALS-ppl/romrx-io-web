@@ -1,3 +1,4 @@
+// STACY: Quinn F1-F5 copy (QUINN-COPY-F1-F5.md, Oct 19 2026) applied on beta/fixes-20261019; still needs a Stacy PASS.
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -108,7 +109,7 @@ const JOINTS: JointDef[] = [
   },
   {
     key: 'hip_ir', label: 'Hip Internal Rotation',
-    why: 'Rotational sports, walking gait, knee tracking, and lower-back health.',
+    why: 'Used in rotational sports, walking and knee tracking.',
     leftKey: 'hip_ir_l', rightKey: 'hip_ir_r',
     rxKey: 'hip_ir',
   },
@@ -150,13 +151,13 @@ const JOINTS: JointDef[] = [
   },
   {
     key: 'lumbar_ext', label: 'Lumbar Extension',
-    why: 'Standing posture, back-strength foundation, and disc health.',
+    why: 'Used when you stand tall and bend backward.',
     singleKey: 'lumbar_ext',
     rxKey: 'lumbar_ext',
   },
   {
     key: 'cervical_rot', label: 'Cervical Rotation',
-    why: 'Driving safety, situational awareness, and reducing neck strain from screens.',
+    why: 'Used when you turn your head to check a blind spot or look around you.',
     leftKey: 'cervical_rot_l', rightKey: 'cervical_rot_r',
     rxKey: 'cervical_rot',
   },

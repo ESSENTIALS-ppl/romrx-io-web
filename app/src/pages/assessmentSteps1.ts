@@ -1,3 +1,4 @@
+// STACY: Quinn F1-F5 copy (QUINN-COPY-F1-F5.md, Oct 19 2026) applied on beta/fixes-20261019; still needs a Stacy PASS.
 import type { Step } from './assessmentMeta'
 
 /**
@@ -14,7 +15,7 @@ export const STEPS_PART1: Step[] = [
 {
     id: 'hip_er',
     title: 'Hip External Rotation',
-    why: 'Supports seated and ground-based positions that require an open hip.',
+    why: 'Used in seated and floor positions that ask for an open hip.',
     tool: 'Your phone. A firm chair.',
     position: [
       'Sit tall in a firm chair with both feet flat on the floor and your knees bent to 90°.',
@@ -97,7 +98,7 @@ export const STEPS_PART1: Step[] = [
 {
     id: 'shoulder_flex',
     title: 'Shoulder Flexion',
-    why: 'Overhead reach and pressing movements both require full shoulder lift.',
+    why: 'Overhead reaching and pressing both ask for full shoulder lift.',
     // Jim, Oct 6 11:54 AM: done SITTING in a chair with a back (not standing, not lying). Target, range and order unchanged.
     // Stacy PASS Oct 6 12:02 (all lines). Meter math unchanged (see shoulderFlexSitting.test.ts).
     tool: 'Your phone. Sitting in a chair with a back.',
@@ -123,7 +124,7 @@ export const STEPS_PART1: Step[] = [
 {
     id: 'cervical_lat',
     title: 'Cervical Lateral Flexion',
-    why: 'Lateral neck strength and range support balance and control in scrambles and contact.',
+    why: 'Shows how far you can tilt your head toward each shoulder.',
     tool: 'Your phone. Seated in a chair.',
     position: [
       'Sit upright in a chair. Feet flat. Back straight.',
