@@ -1,4 +1,4 @@
-// STACY: Quinn F1-F5 copy (QUINN-COPY-F1-F5.md, Oct 19 2026) applied on beta/fixes-20261019; still needs a Stacy PASS.
+// Quinn F1-F5 copy (QUINN-COPY-F1-F5.md): Stacy PASS Oct 19 2026.
 import type { Step } from './assessmentMeta'
 import { HIP_FLEX_STEP } from '../lib/hipFlexCopy'
 
