@@ -67,6 +67,8 @@ function getTopAsymmetries(assessment: Record<string, number | null>): Asymmetry
       return { joint: JOINT_LABELS[j.key], gap, left: Number(l), right: Number(r), unit: jointUnit(j.key) }
     })
     .filter((x): x is AsymmetryFlag => x !== null)
+    // Reid field #3: a 0 gap is not an asymmetry, never list it.
+    .filter(x => x.gap > 0)
     .sort((a, b) => b.gap - a.gap)
     .slice(0, 3)
 }
