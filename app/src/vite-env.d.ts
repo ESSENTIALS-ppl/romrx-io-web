@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_BASE_LUMBAR_REMOVED?: string
   /** 'on' turns on the one-time terms re-accept screen (default off; Sunday batch). */
   readonly VITE_TERMS_REACCEPT_GATE?: string
+  /** 'on' turns on survey card B on My Body (default off; Sunday Oct 25 batch, after the client_feedback 'survey' migration). */
+  readonly VITE_SURVEY_CARD_B?: string
 }
 
 interface ImportMeta {
