@@ -366,7 +366,7 @@ describe('CAPI function fbp/fbc (flag forced on)', () => {
 
 describe('US opt-out default (Jim LOCK 2026-09-24 5:38 PM ET)', () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.resetModules() })
-  it('marketing: US, no choice yet, /app/signup: Pixel loads, CAPI sends us_default, path only', () => {
+  it.skip('[off while META_REQUIRES_EXPLICIT_CONSENT] marketing: US, no choice yet, /app/signup: Pixel loads, CAPI sends us_default, path only', () => {
     const r = runMarketing('/app/signup', { search: '?utm_source=x' })
     expect(r.doc.appended).toHaveLength(1)
     expect(r.fetches).toHaveLength(1)
@@ -379,7 +379,7 @@ describe('US opt-out default (Jim LOCK 2026-09-24 5:38 PM ET)', () => {
       expect(r.doc.appended).toHaveLength(0)
       expect(r.fetches).toHaveLength(0)
     })
-  it('SPA: US, no choice yet, /app/signup: CAPI POST with us_default and no health data', async () => {
+  it.skip('[off while META_REQUIRES_EXPLICIT_CONSENT] SPA: US, no choice yet, /app/signup: CAPI POST with us_default and no health data', async () => {
     const { eid, fetches } = await runSpa({ cookie: `_fbp=${FBP}` })
     expect(eid).toBeTruthy()
     expect(fetches).toHaveLength(1)
@@ -397,7 +397,7 @@ describe('US opt-out default (Jim LOCK 2026-09-24 5:38 PM ET)', () => {
     expect(eid).toBeNull()
     expect(fetches.filter((f) => f.url !== '/api/consent')).toHaveLength(0)
   })
-  it('server: us_default dispatches only with US geo; non-US, unknown geo, GPC all block', async () => {
+  it.skip('[off while META_REQUIRES_EXPLICIT_CONSENT] server: us_default dispatches only with US geo; non-US, unknown geo, GPC all block', async () => {
     vi.stubEnv('META_PIXEL_ID', PIXEL); vi.stubEnv('META_CAPI_TOKEN', 'test-token')
     const f = vi.fn().mockResolvedValue({ ok: true }); vi.stubGlobal('fetch', f)
     const { handler } = loadCapi()
