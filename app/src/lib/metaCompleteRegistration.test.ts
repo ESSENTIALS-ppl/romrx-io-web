@@ -58,7 +58,7 @@ const tick = () => new Promise((r) => setTimeout(r, 30))
 describe('SPA trackMetaCompleteRegistration', () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.resetModules() })
 
-  it('US default on /app/signup: Pixel + CAPI with the same event_id, minimal payload', async () => {
+  it.skip('[US default; off while META_REQUIRES_EXPLICIT_CONSENT] US default on /app/signup: Pixel + CAPI with the same event_id, minimal payload', async () => {
     const t = await setup({ search: '?utm_source=owned&utm_medium=ig_bio' })
     const eid = t.mod.trackMetaCompleteRegistration(USER_ID)
     await tick()
@@ -69,7 +69,7 @@ describe('SPA trackMetaCompleteRegistration', () => {
     expect(m[0].url).toBe('/api/attribution/meta')
     const b = m[0].body
     expect(b).toMatchObject({ event_name: 'CompleteRegistration', event_id: eid, action_source: 'website',
-      event_source_url: 'https://romrx.io/app/signup', consent_state: 'us_default', fbp: FBP })
+      event_source_url: 'https://romrx.io/app/signup', consent_state: 'granted', fbp: FBP })
     expect(Object.keys(b).every((k) => ALLOWED_BODY_KEYS.includes(k))).toBe(true)
     expect(b.properties).toEqual({})
     const s = JSON.stringify(b)
@@ -146,7 +146,7 @@ function crEvent(extra: Record<string, unknown> = {}, headers: Record<string, st
     headers: { origin: 'https://romrx.io', 'user-agent': 'UA-test', 'x-nf-client-connection-ip': '203.0.113.9', 'x-country': 'US', ...headers },
     body: JSON.stringify({
       event_name: 'CompleteRegistration', event_id: `cr-${Math.random()}`, event_time: Math.floor(Date.now() / 1000),
-      event_source_url: 'https://romrx.io/app/signup?utm_source=x&email=a%40b.co', consent_state: 'us_default',
+      event_source_url: 'https://romrx.io/app/signup?utm_source=x&email=a%40b.co', consent_state: 'granted',
       consent_version: '2026-09-21-privacy-b', properties: {}, fbp: FBP, email: 'a@b.co', user_id: USER_ID, ...extra,
     }),
   }
@@ -197,7 +197,7 @@ describe('CAPI function: CompleteRegistration', () => {
     vi.stubEnv('META_CAPI_TOKEN', 'test-token')
     expect(JSON.parse((await handler(crEvent({ consent_state: 'denied' }))).body).reason).toBe('consent_blocked')
     expect(JSON.parse((await handler(crEvent({}, { 'sec-gpc': '1' }))).body).reason).toBe('gpc_opt_out')
-    expect(JSON.parse((await handler(crEvent({}, { 'x-country': 'DE' }))).body).reason).toBe('consent_blocked_non_us')
+    expect(JSON.parse((await handler(crEvent({ consent_state: 'us_default' }, { 'x-country': 'US' }))).body).reason).toBe('consent_blocked_explicit_only')
     expect(f).not.toHaveBeenCalled()
   })
   it('upstream failure or timeout never errors the request', async () => {
