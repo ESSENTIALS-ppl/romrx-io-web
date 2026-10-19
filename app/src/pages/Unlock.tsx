@@ -4,7 +4,7 @@ import { AlertTriangle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { CHECKOUT_URL, SPORT_PRICE_IDS } from '../lib/stripe'
-import { checkoutErrorMessage } from '../lib/checkoutErrors'
+import { checkoutErrorMessage, PACKS_CLOSED_CODE, PACKS_CLOSED_MESSAGE } from '../lib/checkoutErrors'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 
 export function Unlock() {
@@ -13,6 +13,8 @@ export function Unlock() {
   const { user, loading: authLoading } = useAuth()
   const [status, setStatus] = useState<'redirecting' | 'error'>('redirecting')
   const [message, setMessage] = useState('')
+  // Packs locked (server 403 packs_closed): show only the lock line, never 'Link invalid or expired'. Stacy PASS Oct 19.
+  const [packsLocked, setPacksLocked] = useState(false)
 
   useEffect(() => {
     if (!token) { setStatus('error'); setMessage('Missing unlock token.'); return }
@@ -24,6 +26,8 @@ export function Unlock() {
     ;(async () => {
       try {
         if (isSportSlug) {
+          // Packs locked until January 2027 (VITE_PACKS_OPEN off by default): never start a pack checkout or collect a card.
+          if (import.meta.env.VITE_PACKS_OPEN !== 'on') { setPacksLocked(true); setStatus('error'); return }
           // Existing convenience path - handle as sport unlock
           const priceId = SPORT_PRICE_IDS[token] ?? null
 
@@ -40,6 +44,7 @@ export function Unlock() {
             body: JSON.stringify(withStripeTestFlag({ token, price_id: priceId, mode: 'unlock' })),
           })
           const data = await res.json()
+          if (data.error === PACKS_CLOSED_CODE) { setPacksLocked(true); setStatus('error'); return }
 
           if (res.status === 409 && data.error === 'base_required') {
             if (!user) {
@@ -59,6 +64,7 @@ export function Unlock() {
               })),
             })
             const baseData = await baseRes.json()
+            if (baseData.error === PACKS_CLOSED_CODE) { setPacksLocked(true); setStatus('error'); return }
             if (baseData.url) {
               window.location.href = baseData.url
               return
@@ -129,6 +135,7 @@ export function Unlock() {
 
         let data: { url?: string; error?: string; message?: string } = {}
         try { data = await res.json() } catch { /* non-JSON body */ }
+        if (data.error === PACKS_CLOSED_CODE) { setPacksLocked(true); setStatus('error'); return }
 
         if (data.url) {
           window.location.href = data.url
@@ -142,6 +149,17 @@ export function Unlock() {
       }
     })()
   }, [token, authLoading, user, navigate])
+
+  if (status === 'error' && (packsLocked || message === PACKS_CLOSED_MESSAGE)) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+        <div className="text-center max-w-sm space-y-4">
+          <p className="text-sm text-slate-600">{PACKS_CLOSED_MESSAGE}</p>
+          <Link to="/dashboard" className="btn-primary inline-flex">Back to dashboard</Link>
+        </div>
+      </div>
+    )
+  }
 
   if (status === 'error') {
     return (
