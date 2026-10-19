@@ -25,17 +25,17 @@ function memStorage() {
 }
 
 describe('versions (Stacy)', () => {
-  it('terms and waiver are 2026-10-03, matching the /legal Effective date', () => {
-    expect(TERMS_VERSION).toBe('2026-10-03')
-    expect(MEDICAL_WAIVER_VERSION).toBe('2026-10-03')
-    expect(read(join(ROOT, 'legal.html'))).toContain('Effective October 3, 2026')
+  it('terms and waiver are 2026-10-19, matching the /legal Effective date', () => {
+    expect(TERMS_VERSION).toBe('2026-10-19')
+    expect(MEDICAL_WAIVER_VERSION).toBe('2026-10-19')
+    expect(read(join(ROOT, 'legal.html'))).toContain('Effective October 19, 2026')
     expect(SIGNUP_CONSENT_TEXT_VERSION).toBe('signup-checkbox-2026-10-05')
     expect(SIGNUP_CONSENT_SOURCE).toBe('romrx.io/app/signup')
     expect(REACCEPT_CONSENT_SOURCE).toBe('romrx.io/app/reaccept')
   })
 
   it('the SQL constants match the app constants', () => {
-    expect(migration).toContain(`select '${TERMS_VERSION}'::text`)
+    expect(read(join(ROOT, 'supabase/migrations/20261019180000_terms_version_20261019.sql'))).toContain(`select '${TERMS_VERSION}'::text`)
     expect(migration).toContain(`select p in ('${SIGNUP_CONSENT_TEXT_VERSION}', 'bb-coach-signup-checkbox-2026-10-05')`)
     expect(migration).toContain(`('${SIGNUP_CONSENT_SOURCE}', '${SIGNUP_CONSENT_TEXT_VERSION}')`)
     expect(migration).toContain("('romrxbodybuilding.com/coach-signup', 'bb-coach-signup-checkbox-2026-10-05')")
@@ -52,7 +52,7 @@ describe('signup sends the record in signUp metadata', () => {
     expect(signupConsentMetadata(false, 'UA')).toEqual({})
     expect(signupConsentMetadata(true, 'Mozilla/5.0')).toEqual({
       terms_accepted: true,
-      terms_version: '2026-10-03',
+      terms_version: '2026-10-19',
       consent_text_version: 'signup-checkbox-2026-10-05',
       consent_source: 'romrx.io/app/signup',
       consent_user_agent: 'Mozilla/5.0',

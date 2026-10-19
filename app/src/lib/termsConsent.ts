@@ -10,7 +10,7 @@
  * reads these signUp metadata keys), so it cannot silently fail the way a separate client write can.
  * No IP address is recorded.
  */
-export const TERMS_VERSION = '2026-10-03'
+export const TERMS_VERSION = '2026-10-19'
 /** Terms section 3 is accepted by the same checkbox, so the waiver version equals the terms version. */
 export const MEDICAL_WAIVER_VERSION = TERMS_VERSION
 /** Id for the exact signup checkbox wording (Stacy, Oct 5). Bump it if that wording changes. */
