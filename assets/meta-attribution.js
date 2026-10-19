@@ -102,6 +102,9 @@
   function consentLabel() {
     var st = readConsentState();
     if (st === 'granted') return 'granted';
+    // Oct 19 2026 (HELD for Jim's yes): explicit 'Allow ads cookies' only, every region. false restores the US default.
+    var META_REQUIRES_EXPLICIT_CONSENT = true;
+    if (META_REQUIRES_EXPLICIT_CONSENT) return null;
     if (st === 'unknown' && detectRegion() === 'us') return 'us_default';
     return null;
   }

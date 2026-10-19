@@ -201,6 +201,12 @@ export const GPC_HONORED_NOTE =
  * Reject, Don't Sell or Share, and GPC write 'denied'/'revoked' and kill it.
  * EU/UK stays opt-in: only an explicit 'granted' counts.
  */
+/**
+ * Oct 19 2026 (HELD for Jim's yes): Meta pixel and CAPI only after an explicit 'Allow ads cookies' in EVERY
+ * region. true = no US default. Set false to restore the Sep 24 US opt-out rule.
+ */
+export const META_REQUIRES_EXPLICIT_CONSENT = true
+
 export function metaConsentAllows(
   state: ConsentState,
   region: 'us' | 'eu_uk' = detectRegion(),
@@ -208,6 +214,7 @@ export function metaConsentAllows(
 ): boolean {
   if (gpc) return false
   if (state === 'granted') return true
+  if (META_REQUIRES_EXPLICIT_CONSENT) return false
   return state === 'unknown' && region === 'us'
 }
 
