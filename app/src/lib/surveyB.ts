@@ -76,7 +76,7 @@ export const SURVEY_B_COPY = {
         id: 'q3',
         prompt: 'What should the daily protocol do first?',
         why: 'This decides what we try next.',
-        options: ['Loosen what feels tight', 'Make training days feel easier', 'Show progress I can see', "Keep it short enough I'll do it", SOMETHING_ELSE],
+        options: ['Work on what feels stiff', 'Make training days feel easier', 'Show progress I can see', "Keep it short enough I'll do it", SOMETHING_ELSE],
         otherOption: SOMETHING_ELSE,
       },
       {
