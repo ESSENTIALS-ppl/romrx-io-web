@@ -22,4 +22,5 @@ UPDATE public.exercises SET joint_key = 'hip_flex' WHERE id = 'fd20d02b-511b-43f
 UPDATE public.exercises SET joint_key = 'hip_flex' WHERE id = '51aec777-c9f4-4b37-aea8-237ab3e294b7' AND joint_key = 'hip_ext';
 UPDATE public.exercises SET joint_key = 'hip_flexion' WHERE id = 'bc8d9cd2-e8d3-45d8-aafa-392b5e99f065' AND joint_key = 'hip_extension';
 UPDATE public.exercises SET joint_key = 'hip_flexion' WHERE id = 'e48ce9a5-1a51-4789-a3fc-e6890c193e7c' AND joint_key = 'hip_extension';
+UPDATE public.exercises SET joint_key = 'cervical_flexion' WHERE id = '2816599f-4fe5-4717-b04e-b9a6f960dd1d' AND joint_key = 'cervical_lateral_flexion';
 COMMIT;

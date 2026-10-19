@@ -1,0 +1,27 @@
+== rerun Oct 19 6:4x PM ET (re-file now 23 rows)
+before: 8c4c11ddae05bfe7b555f08e16f2be24
+applied-ok
+{"ok": true, "joints": ["cervical_ext", "hip_er", "hip_ir"], "ranked": ["cervical_ext", "hip_er", "hip_ir"], "written": 9}
+1|cervical_ext|foam_roll|Thoracic Spine Extension (Supports Cervical Extension)
+1|cervical_ext|resistance|Prone Chin Tuck with Head Lift
+1|cervical_ext|stretch|SCM (Sternocleidomastoid) Stretch
+2|hip_er|foam_roll|Piriformis/Glute Foam Roll
+2|hip_er|resistance|Clamshell with Band
+2|hip_er|stretch|Supine Figure-4 Stretch (Piriformis)
+3|hip_ir|foam_roll|TFL/Lateral Hip Foam Roll
+3|hip_ir|resistance|Seated Banded Hip Internal Rotation
+3|hip_ir|stretch|90/90 Internal Rotation Stretch
+{"ok": true, "joints": ["cervical_flex", "cervical_lat", "hip_er"], "ranked": ["cervical_lat", "cervical_flex", "hip_er"], "written": 9}
+1|cervical_lat|foam_roll|Lateral Neck/Upper Trap Release
+1|cervical_lat|resistance|Banded Lateral Neck Flexion
+1|cervical_lat|stretch|Upper Trapezius Stretch
+2|cervical_flex|foam_roll|Suboccipital Foam Roller Release
+2|cervical_flex|resistance|Isometric Neck Flexion (Hand Resistance)
+2|cervical_flex|stretch|Suboccipital Stretch (Chin Tuck Overpressure)
+3|hip_er|foam_roll|Piriformis/Glute Foam Roll
+3|hip_er|resistance|Clamshell with Band
+3|hip_er|stretch|Supine Figure-4 Stretch (Piriformis)
+em dashes in Base tips: 0
+expected 23 re-filed rows, got 0
+reverted
+after revert: 8c4c11ddae05bfe7b555f08e16f2be24 (baseline 8c4c11ddae05bfe7b555f08e16f2be24)

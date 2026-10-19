@@ -24,6 +24,7 @@ DO $$ DECLARE c int := 0; k int; BEGIN
   UPDATE public.exercises SET joint_key = 'hip_ext' WHERE id = '51aec777-c9f4-4b37-aea8-237ab3e294b7' AND joint_key = 'hip_flex'; GET DIAGNOSTICS k = ROW_COUNT; c := c + k; -- Quad/rectus roll is hip extension
   UPDATE public.exercises SET joint_key = 'hip_extension' WHERE id = 'bc8d9cd2-e8d3-45d8-aafa-392b5e99f065' AND joint_key = 'hip_flexion'; GET DIAGNOSTICS k = ROW_COUNT; c := c + k; -- Kneeling hip flexor stretch is hip extension
   UPDATE public.exercises SET joint_key = 'hip_extension' WHERE id = 'e48ce9a5-1a51-4789-a3fc-e6890c193e7c' AND joint_key = 'hip_flexion'; GET DIAGNOSTICS k = ROW_COUNT; c := c + k; -- Quad/rectus roll is hip extension
-  IF c <> 22 THEN RAISE EXCEPTION 'expected 22 re-filed rows, got %', c; END IF;
+  UPDATE public.exercises SET joint_key = 'cervical_lateral_flexion' WHERE id = '2816599f-4fe5-4717-b04e-b9a6f960dd1d' AND joint_key = 'cervical_flexion'; GET DIAGNOSTICS k = ROW_COUNT; c := c + k; -- Upper Trapezius Stretch is side bend (Quinn Oct 19); flexion stretch slot then picks Suboccipital Stretch (Chin Tuck Overpressure)
+  IF c <> 23 THEN RAISE EXCEPTION 'expected 23 re-filed rows, got %', c; END IF;
 END $$;
 COMMIT;
