@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { markPromptShown } from '../lib/promptSession'
 import { useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -52,6 +53,10 @@ export function TermsReacceptGate() {
       })
     return () => { alive = false }
   }, [enabled, loading, user])
+
+  const gateShowing = enabled && status === 'needed' && !reacceptGateSkipsPath(pathname)
+  // One prompt per session: survey card B never shows in a session where this screen showed.
+  useEffect(() => { if (gateShowing) markPromptShown('terms_reaccept') }, [gateShowing])
 
   if (!enabled || status !== 'needed' || reacceptGateSkipsPath(pathname)) return null
 
