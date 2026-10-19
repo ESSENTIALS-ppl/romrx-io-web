@@ -340,7 +340,7 @@ export function ResultsPreview() {
         )}
 
         <p className="text-center text-xs text-white/30">
-          Free through Dec 31, 2026. Add a card now. No charge until Jan 1, 2027, then $60 per year until you cancel. Cancel anytime in Settings > Subscription. Your results are saved to your account.
+          Free through Dec 31, 2026. Add a card now. No charge until Jan 1, 2027, then $60 per year until you cancel. Cancel anytime in Settings, under Subscription. Your results are saved to your account.
         </p>
       </div>
     </div>
