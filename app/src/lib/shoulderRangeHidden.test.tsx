@@ -47,6 +47,6 @@ describe('Shoulder External Rotation shows no typical range (Stacy, Oct 6 8:19 P
   it('the other ranged steps keep their line (hip ER, hip IR, shoulder flexion)', () => {
     expect(METER_COPY.typicalRange(140, 180)).toBe('Typical range: 140-180°')
     const shown = STEPS.filter(s => s.fields.some(f => f.rangeSource && f.normalLow != null && !f.unscored && !f.referenceNote)).map(s => s.id)
-    expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_flex'])
+    expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_flex', 'cervical_lat', 'ankle_df'])
   })
 })

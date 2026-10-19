@@ -107,12 +107,11 @@ describe('Steady targets (Oct 6): hips, shoulder flexion, ankle, neck', () => {
     expect(bandScoreFromTargetRatio(38, JOINT_SCORE_TARGETS.cervical_lat)).toBe(3)    // Swinkels 2014 50-59 mean side bend
   })
 
-  it('ankle step shows no typical range (only the "Best of 3, in cm" note)', () => {
+  it('ankle step shows Typical range 6-13 cm (Quinn, Oct 19: Konor 2012); display only', () => {
     const ankle = STEPS.find(s => s.fields.some(f => f.key === 'ankle_df_l'))!
     for (const f of ankle.fields) {
       const field = f as typeof f & { rangeSource?: string }
-      expect(field.rangeSource).toBeUndefined()
-      expect(f.referenceNote).toBe('Best of 3, in cm')
+      expect([field.normalLow, field.normalHigh, field.rangeSource, f.referenceNote]).toEqual([6, 13, 'Konor et al., 2012', undefined])
     }
   })
 })
@@ -151,11 +150,11 @@ describe('neck: NO typical range on screen (Jim, Oct 6)', () => {
     expect(keys.some(k => k.startsWith('cervical_rot'))).toBe(false)
   })
 
-  it('no range numbers and no range source on the side-bend fields', () => {
+  it('side bend shows Typical range 38-46 (Oct 19, Quinn: Swinkels 2014); flexion/extension still none', () => {
     const lat = STEPS.find(s => s.id === 'cervical_lat')!
     for (const f of lat.fields) {
       const field = f as typeof f & { rangeSource?: string }
-      expect([f.key, f.normalLow, f.normalHigh, field.rangeSource]).toEqual([f.key, undefined, undefined, undefined])
+      expect([f.key, f.normalLow, f.normalHigh, field.rangeSource]).toEqual([f.key, 38, 46, 'Swinkels, 2014'])
     }
   })
 

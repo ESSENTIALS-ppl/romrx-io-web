@@ -380,7 +380,7 @@ describe('phone meter in the Base measure screen', () => {
       hip_ir: ['Typical range: 26-40°', 'Source: Simoneau et al., 1998'],
       shoulder_flex: ['Typical range: 140-180°', 'Source: Gill et al., 2020'],
       hip_flex: ['Typical range: 60-80°', 'Source: Youdas et al., 2005'],
-      cervical_lat: null, cervical_flex_ext: null, hip_abd: null, shoulder_er: null,   // shoulder ER: no range (Stacy, Oct 6 8:19 PM)
+      cervical_lat: ['Typical range: 38-46°', 'Source: Swinkels, 2014'], ankle_df: ['Typical range: 6-13 cm', 'Source: Konor et al., 2012'], cervical_flex_ext: null, hip_abd: null, shoulder_er: null,   // shoulder ER: no range (Stacy, Oct 6 8:19 PM)
     }
     for (const [id, exp] of Object.entries(want)) {
       act(() => root?.unmount()); host?.remove()
@@ -395,16 +395,16 @@ describe('phone meter in the Base measure screen', () => {
     }
   })
 
-  it('a typical range shows only where a source exists: lumbar (flag OFF) and ankle show none', () => {
+  it('a typical range shows only where a source exists: lumbar (flag OFF) shows none', () => {
     const lumbar = STEPS.findIndex(s => s.id === 'lumbar')
-    for (const i of [lumbar, STEPS.findIndex(s => s.id === 'ankle_df')].filter(i => i >= 0)) {
+    for (const i of [lumbar].filter(i => i >= 0)) {
       act(() => root?.unmount()); host?.remove()
       mount(i)
       expect(host.textContent).not.toMatch(/Typical range|Normal/)
       expect($('[data-range-source]')).toBeNull()
     }
     const shown = STEPS.filter(s => s.fields.some(f => f.rangeSource && f.normalLow != null && !f.unscored && !f.referenceNote)).map(s => s.id)
-    expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_flex'])
+    expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_flex', 'cervical_lat', 'ankle_df'])
   })
 
   it('no debug readout unless ?debug=1', async () => {
@@ -546,7 +546,7 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-range-source]')!.textContent).toBe(SOURCE)
   })
 
-  it('item 7: SLR shows Typical range: 60-80° once, with Source: Youdas et al., 2005 (switch on); ankle keeps its note on both sides', () => {
+  it('item 7: SLR shows Typical range: 60-80° once, with Source: Youdas et al., 2005 (switch on); ankle shows its range once', () => {
     expect(SHOW_SLR_TYPICAL_RANGE).toBe(true)
     mount(STEPS.findIndex(s => s.id === 'hip_flex'))
     expect((host.textContent!.match(/Typical range: 60-80°/g) ?? []).length).toBe(1)
@@ -554,6 +554,6 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-range-source]')!.textContent).toBe('Source: Youdas et al., 2005')
     act(() => root.unmount()); host.remove()
     mount(STEPS.findIndex(s => s.id === 'ankle_df'))
-    expect((host.textContent!.match(/Best of 3, in cm/g) ?? []).length).toBe(2)
+    expect((host.textContent!.match(/Typical range: 6-13 cm/g) ?? []).length).toBe(1)
   })
 })
