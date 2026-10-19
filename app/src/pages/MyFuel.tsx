@@ -647,7 +647,7 @@ export function MyFuel() {
     const setMsg = kind === 'nutrition' ? setNSave : setHSave
     setMsg('Saving…')
     void saveFuelLog(user.id, kind, inputs, outputs).then(res => {
-      if (res.error) setMsg(`Saved locally only — cloud save failed: ${res.error}`)
+      if (res.error) setMsg(`Saved locally only. Cloud save failed: ${res.error}`)
       else setMsg(`Saved to your Fuel log${res.id ? ` (${res.id.slice(0, 8)})` : ''}.`)
     })
   }
