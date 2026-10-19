@@ -1,20 +1,17 @@
 /**
- * BASE LOW-BACK REMOVAL FLAG (Jim decided removal; Grant approved the plan, Oct 5 2026).
+ * BASE LOW-BACK REMOVAL (Jim CLOSED Oct 5 2026 10:59 PM, ledger L312: remove the low back step for now).
  *
  * ON  = the low back (lumbar flexion + extension) step is not in the Base assessment, nothing new is
  *       saved for it (null, never 0), My Body shows one "Low back: not measured" line instead of the two
  *       lumbar bars, and the radar leaves out unmeasured lumbar axes. Stored lumbar values are kept and
  *       used exactly as before.
- * OFF = today's behavior, unchanged.
+ * OFF = the old behavior with the low back step.
  *
- * Build-time switch: VITE_BASE_LUMBAR_REMOVED=1 turns it ON. Anything else (unset) = OFF.
- * PRODUCTION DEFAULT IS OFF: the Netlify site has no such env var, so the 6 AM ship keeps the low back
- * step. Only the base-meter draft is built with VITE_BASE_LUMBAR_REMOVED=1.
- * To flip ON in production later (after the pack + compute-tiers fixes pass Reid): set
- * VITE_BASE_LUMBAR_REMOVED=1 in the romrx.io Netlify env and rebuild. To flip OFF: remove it and rebuild.
+ * DEFAULT IS NOW ON (Oct 19 2026). Kill switch: set VITE_BASE_LUMBAR_REMOVED=0 in the Netlify env and
+ * rebuild to bring the step back. Anything else (unset, "1") = ON.
  */
 export function baseLumbarRemoved(): boolean {
-  return import.meta.env.VITE_BASE_LUMBAR_REMOVED === '1'
+  return import.meta.env.VITE_BASE_LUMBAR_REMOVED !== '0'
 }
 
 export const LUMBAR_KEYS = ['lumbar_flex', 'lumbar_ext'] as const

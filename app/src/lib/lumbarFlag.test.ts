@@ -1,6 +1,6 @@
 /**
- * Base low-back removal flag (VITE_BASE_LUMBAR_REMOVED). OFF by default (production); ON only in the
- * base-meter draft build. ON: no lumbar step, nothing saved for it (never 0), the /100 and bands are over
+ * Base low-back removal flag (VITE_BASE_LUMBAR_REMOVED). ON by default (Jim, Oct 5 10:59 PM, ledger L312);
+ * "0" is the kill switch. ON: no lumbar step, nothing saved for it (never 0), the /100 and bands are over
  * the measured joints only, My Body shows "Low back: not measured" and drops unmeasured lumbar radar axes.
  * Stored lumbar values are kept and scored as before.
  */
@@ -18,15 +18,8 @@ const OTHER = {
 }
 
 describe('flag value', () => {
-  it('OFF when the env var is unset (production default): lumbar step still offered', async () => {
+  it('ON when the env var is unset (default): lumbar step gone, 9 steps, no lumbar field anywhere', async () => {
     vi.stubEnv('VITE_BASE_LUMBAR_REMOVED', '')
-    const { baseLumbarRemoved } = await import('./lumbarFlag')
-    const { STEPS } = await import('../pages/assessmentSteps')
-    expect(baseLumbarRemoved()).toBe(false)
-    expect(STEPS.some(s => s.id === 'lumbar')).toBe(true)
-  })
-  it('ON only for exactly "1": lumbar step gone, step count drops by one, no lumbar field anywhere', async () => {
-    vi.stubEnv('VITE_BASE_LUMBAR_REMOVED', '1')
     const { baseLumbarRemoved } = await import('./lumbarFlag')
     const { STEPS } = await import('../pages/assessmentSteps')
     expect(baseLumbarRemoved()).toBe(true)
@@ -34,18 +27,24 @@ describe('flag value', () => {
     expect(STEPS.flatMap(s => s.fields.map(f => f.key)).filter(k => k.startsWith('lumbar'))).toEqual([])
     expect(STEPS.length).toBe(9)
   })
-  it('"true" or "0" do not turn it on', async () => {
-    for (const v of ['true', '0', 'yes']) {
-      vi.stubEnv('VITE_BASE_LUMBAR_REMOVED', v)
-      const { baseLumbarRemoved } = await import('./lumbarFlag')
-      expect(baseLumbarRemoved()).toBe(false)
-    }
+  it('ON for "1" too', async () => {
+    vi.stubEnv('VITE_BASE_LUMBAR_REMOVED', '1')
+    const { baseLumbarRemoved } = await import('./lumbarFlag')
+    expect(baseLumbarRemoved()).toBe(true)
   })
-  it('production build config never sets it (netlify.toml has no VITE_BASE_LUMBAR_REMOVED)', () => {
+  it('kill switch: exactly "0" brings the lumbar step back', async () => {
+    vi.stubEnv('VITE_BASE_LUMBAR_REMOVED', '0')
+    const { baseLumbarRemoved } = await import('./lumbarFlag')
+    const { STEPS } = await import('../pages/assessmentSteps')
+    expect(baseLumbarRemoved()).toBe(false)
+    expect(STEPS.some(s => s.id === 'lumbar')).toBe(true)
+  })
+  it('netlify.toml does not override it', () => {
     const toml = readFileSync(resolve(SRC, '..', '..', 'netlify.toml'), 'utf8')
     expect(toml).not.toMatch(/VITE_BASE_LUMBAR_REMOVED/)
   })
 })
+
 
 describe('scoring with no lumbar (null, never 0)', () => {
   it('the /100, overall band and problem areas equal an assessment that never had lumbar', async () => {
