@@ -18,6 +18,7 @@ import {
   mobilityScoreForAssessment,
   overallBandForAssessment,
   rankBadgeClass,
+  rankProblemJoints,
   sideBandsForJoint,
   valueToneClass,
   formatMeasure,
@@ -26,7 +27,6 @@ import {
   topProblemAreasForAssessment,
   BAND_DESC,
   BAND_TONE,
-  TOP_PROBLEM_AREAS_MAX,
   type BandScore,
 } from '../lib/mobilityBands'
 import {
@@ -832,22 +832,14 @@ export function MyProtocol() {
     [assessment],
   )
   const ranked = useMemo(() => {
-    const idx = (k: string) => {
-      const i = problemOrder.indexOf(k)
-      return i === -1 ? Number.POSITIVE_INFINITY : i
-    }
-    return scored
+    const rows = scored
       .filter(s => s.left !== null || s.right !== null || s.single !== null)
-      // Hip flexion is never a problem area while it is unscored (HIP_FLEX_UNSCORED_FALLBACK).
       .filter(s => !isUnscoredJoint(s.def.key))
-      .sort((a, b) => {
-        const ia = idx(a.def.key), ib = idx(b.def.key)
-        if (ia !== ib) return ia - ib
-        if (b.asymmetry !== a.asymmetry) return b.asymmetry - a.asymmetry
-        return b.severity - a.severity
-      })
-      .slice(0, TOP_PROBLEM_AREAS_MAX)
-  }, [scored, problemOrder])
+      .map(s => ({ key: s.def.key, asymmetry: s.asymmetry, severity: s.severity, s }))
+    // Shared with My Body (lib/mobilityBands rankProblemJoints); problemOrder kept for callers below.
+    void problemOrder
+    return rankProblemJoints(assessment, rows).map(r => r.s)
+  }, [scored, problemOrder, assessment])
 
   // Fetch drills for the top-3 priority joints from Supabase.
   useEffect(() => {

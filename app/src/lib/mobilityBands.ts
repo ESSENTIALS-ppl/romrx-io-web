@@ -717,3 +717,27 @@ export function radarSideRowsForAssessment(
     }
   })
 }
+
+/**
+ * ONE shared top-N ranking for My Body and My Protocol (Reid, Oct 19 2026: the two screens disagreed).
+ * Order = topProblemAreasForAssessment (worst_joints, deduped to base keys), then asymmetry, then severity.
+ * Unscored joints (hip flexion) are never ranked. Callers pass their own joint rows.
+ */
+export function rankProblemJoints<T extends { key: string; asymmetry?: number; severity?: number }>(
+  assessment: object | null | undefined,
+  rows: readonly T[],
+  max: number = TOP_PROBLEM_AREAS_MAX,
+): T[] {
+  const order = topProblemAreasForAssessment(assessment, max).map(jointKeyBase)
+  const idx = (k: string) => { const i = order.indexOf(jointKeyBase(k)); return i === -1 ? Number.POSITIVE_INFINITY : i }
+  return rows
+    .filter(r => !isUnscoredJoint(r.key))
+    .slice()
+    .sort((a, b) => {
+      const ia = idx(a.key), ib = idx(b.key)
+      if (ia !== ib) return ia - ib
+      if ((b.asymmetry ?? 0) !== (a.asymmetry ?? 0)) return (b.asymmetry ?? 0) - (a.asymmetry ?? 0)
+      return (b.severity ?? 0) - (a.severity ?? 0)
+    })
+    .slice(0, max)
+}
