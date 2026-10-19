@@ -1,0 +1,31 @@
+== apply neck, tips, refile
+applied-ok
+== beta1 ranking + protocol
+{"ok": true, "joints": ["cervical_ext", "hip_er", "hip_ir"], "ranked": ["cervical_ext", "hip_er", "hip_ir"], "written": 9}
+1|cervical_ext|Prone Chin Tuck with Head Lift
+1|cervical_ext|SCM (Sternocleidomastoid) Stretch
+1|cervical_ext|Thoracic Spine Extension (Supports Cervical Extension)
+2|hip_er|Clamshell with Band
+2|hip_er|Piriformis/Glute Foam Roll
+2|hip_er|Supine Figure-4 Stretch (Piriformis)
+3|hip_ir|90/90 Internal Rotation Stretch
+3|hip_ir|Seated Banded Hip Internal Rotation
+3|hip_ir|TFL/Lateral Hip Foam Roll
+== em dashes left in general coaching_cue:
+0
+== guard: re-run tips must fail
+expected 75 tip rows, updated 0
+== revert
+reverted
+md5 after revert: 8c4c11ddae05bfe7b555f08e16f2be24 (before 8c4c11ddae05bfe7b555f08e16f2be24)
+== neck flex + side bend case
+{"ok": true, "joints": ["cervical_flex", "cervical_lat", "hip_er"], "ranked": ["cervical_lat", "cervical_flex", "hip_er"], "written": 9}
+1|cervical_lat|Banded Lateral Neck Flexion
+1|cervical_lat|Lateral Neck/Upper Trap Release
+1|cervical_lat|Upper Trapezius Stretch
+2|cervical_flex|Isometric Neck Flexion (Hand Resistance)
+2|cervical_flex|Suboccipital Foam Roller Release
+2|cervical_flex|Upper Trapezius Stretch
+3|hip_er|Clamshell with Band
+3|hip_er|Piriformis/Glute Foam Roll
+3|hip_er|Supine Figure-4 Stretch (Piriformis)
