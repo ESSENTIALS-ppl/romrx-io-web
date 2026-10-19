@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { setPromptVisible } from '../lib/promptSession'
 import {
   applyGpcIfPresent,
   detectRegion,
@@ -134,6 +135,12 @@ export function ConsentBanner() {
       </div>
     )
   }
+
+  // Survey card B waits while the consent banner is on screen (lib/promptSession.ts).
+  useEffect(() => {
+    setPromptVisible('consent_banner', phase === 'banner')
+    return () => setPromptVisible('consent_banner', false)
+  }, [phase])
 
   if (phase !== 'banner') return null
 
