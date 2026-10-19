@@ -35,7 +35,7 @@ export const SOMETHING_ELSE = 'Something else'
 
 /**
  * Copy: Stacy PASS Oct 19 7:24 PM ET + 7:27 PM ET edits (Quinn cycles 2 to 4), ticket SURVEY-CARD-B-TICKET-20261019.md "Stacy copy clear".
- * Use EXACTLY. Any change goes back to Stacy. The only string not in her PASS is `error` (marked PLACEHOLDER).
+ * Use EXACTLY. Any change goes back to Stacy. Send error line PASS 7:30 PM ET.
  */
 export const SURVEY_B_COPY = {
   first: {
@@ -49,7 +49,7 @@ export const SURVEY_B_COPY = {
     after: 'Thanks. Your answers help us decide what to work on.',
   },
   reassess: {
-    title: 'Help us build ROMRx',
+    title: 'Help shape ROMRx', // Stacy 7:30 PM ET: match Quinn's header
     body: "You've been using ROMRx for a while. What should we make better?",
     placeholder: 'Tell us in a sentence or two.',
     tap: { id: 'q1', prompt: 'What would you use most?', options: ['Clearer results', 'More exercises', 'Progress tracking', SOMETHING_ELSE] } as SurveyQuestion,
@@ -85,8 +85,8 @@ export const SURVEY_B_COPY = {
       },
     } as Record<2 | 3 | 4, { q1: SurveyQuestion; q2: SurveyQuestion; text: string; q2SmallPrint?: string }>,
   },
-  /** PLACEHOLDER: not in Stacy's PASS. Needs Stacy before the flag flip. */
-  error: '[PLACEHOLDER: send error line, needs Stacy] Could not send. Try again.',
+  /** Stacy PASS 7:30 PM ET. */
+  error: "Couldn't send your answers. Please try again.",
 } as const
 
 /** Every user-facing string (for tests). */
