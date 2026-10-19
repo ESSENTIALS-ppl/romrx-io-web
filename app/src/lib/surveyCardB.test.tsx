@@ -35,6 +35,7 @@ const click = async (text: string) => {
 
 describe('SurveyCardB', () => {
   it('flag off (default): renders nothing', async () => {
+    vi.stubEnv('VITE_SURVEY_CARD_B', '')
     act(() => root.render(createElement(SurveyCardB, props())))
     await flush()
     expect(host.querySelector('[data-testid="survey-card-b"]')).toBeNull()
