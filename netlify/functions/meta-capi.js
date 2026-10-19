@@ -143,6 +143,11 @@ exports.handler = async (event) => {
   // Jim LOCK 2026-09-24 (US opt-out): explicit 'granted' anywhere, or
   // 'us_default' ONLY when Netlify geo says the request comes from the US.
   // Unknown geo fails closed. EU/UK stays opt-in.
+  // Oct 19 2026 (HELD for Jim's yes): explicit grant only, every region. false restores the US default.
+  const META_REQUIRES_EXPLICIT_CONSENT = true;
+  if (consentState === 'us_default' && META_REQUIRES_EXPLICIT_CONSENT) {
+    return json(200, { ok: true, dispatched: false, reason: 'consent_blocked_explicit_only' }, origin);
+  }
   if (consentState === 'us_default') {
     if (requestCountry(event.headers) !== 'US') {
       return json(200, { ok: true, dispatched: false, reason: 'consent_blocked_non_us' }, origin);
