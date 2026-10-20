@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase'
 import { CHECKOUT_URL } from '../lib/stripe'
 import { BASE_UNAVAILABLE_CODE, BASE_UNAVAILABLE_MESSAGE, PACKS_CLOSED_MESSAGE } from '../lib/checkoutErrors'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
+import { CARD_LINE_SHORT } from '../lib/cardLine'
 
 // Sport app URLs. Each sport add-on ships its own dashboard.
 const SPORT_APPS: Record<string, string> = {
@@ -126,7 +127,7 @@ export function MySport() {
               <p className="text-sm font-semibold text-cobalt-ink">Start with ROMRx Base</p>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              ROMRx Base unlocks your Assessment history, ROMBot, and sport packs when they open in January 2027. Free through Dec 31, 2026. Add a card to start. Then $60 a year unless you cancel. Cancel online anytime.
+              ROMRx Base unlocks your Assessment history, ROMBot, and sport packs when they open in January 2027. Free through Dec 31, 2026. {CARD_LINE_SHORT} Then $60 a year unless you cancel. Cancel online anytime.
             </p>
             <button
               onClick={startBaseCheckout}
