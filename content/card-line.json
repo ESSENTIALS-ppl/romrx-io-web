@@ -1,0 +1,10 @@
+{
+  "_note": "Card 21 (Jim YES 2026-10-20, Stacy+Grant text 11:08 AM). ONE source for the card line. To swap: move a string's current value into previous.<key>, set the new value, run `node scripts/card-line.mjs`. `npm test` runs --check so pages and app cannot drift. short = spots that already show 'Free through' / $60 next to it (all current body spots). meta = meta/og descriptions (whole price segment replaced, max 110). body = full line for any new spot with no price text nearby (unused today).",
+  "body": "Free through Dec 31, 2026. No card needed to start. You add one when you unlock Base, with no charge until January 1, 2027. Then $60 a year unless you cancel.",
+  "short": "No card needed to start. You add one when you unlock Base, with no charge until January 1, 2027.",
+  "meta": "Free through Dec 31, 2026. No card needed to start. Then $60 a year for Base unless you cancel.",
+  "previous": {
+    "short": ["Add a card to start."],
+    "meta": ["Free through Dec 31, 2026. Add a card to start. Then $60 a year unless you cancel."]
+  }
+}
