@@ -1,0 +1,3 @@
+-- revert
+create or replace function public.current_terms_version()
+returns text language sql immutable set search_path = pg_catalog, pg_temp as $$ select '2026-10-03'::text $$;

@@ -215,10 +215,13 @@ function ensurePixelLoaded(): boolean {
   return true
 }
 
-function stripForbidden(props: Record<string, unknown> | undefined): Record<string, unknown> {
+/** Property keys never sent to Meta (matched anywhere in the key, case-insensitive). 'mood' added Oct 19 2026 (ROMood). */
+export const META_FORBIDDEN_KEYS = /rom|score|protocol|joint|health|assessment|tier|soreness|injury|fuel|weight|height|mood/i
+
+export function stripForbidden(props: Record<string, unknown> | undefined): Record<string, unknown> {
   if (!props) return {}
   const out: Record<string, unknown> = {}
-  const forbidden = /rom|score|protocol|joint|health|assessment|tier|soreness|injury|fuel|weight|height/i
+  const forbidden = META_FORBIDDEN_KEYS
   for (const [k, v] of Object.entries(props)) {
     if (forbidden.test(k)) continue
     if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {

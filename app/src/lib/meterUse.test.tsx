@@ -374,13 +374,22 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-range-source]')).toBeNull()
   })
 
-  it('Quinn ranges: hip ER 29-43, hip IR 26-40, shoulder flexion 140-180, SLR 60-80 with sources; neck, hip abduction and shoulder ER show no number', () => {
+  it('card 14: neck flexion shows 53 to 60 degrees and extension 64 to 75 degrees, once each, no retest hint, no dash', () => {
+    mount(STEPS.findIndex(s => s.id === 'cervical_flex_ext'))
+    const t = host.textContent ?? ''
+    expect(t.split('Typical range: 53 to 60 degrees').length - 1).toBe(1)
+    expect(t.split('Typical range: 64 to 75 degrees').length - 1).toBe(1)
+    expect(t).not.toMatch(/53-60|64-75|\u2014|retest|narrow/i)
+    expect($('[data-range-source]')!.textContent).toBe('Source: Swinkels, 2014')
+  })
+
+  it('Quinn ranges: hip ER 29-43, hip IR 26-40, shoulder flexion 140-180, SLR 60-80, neck flexion 53 to 60 and extension 64 to 75 with sources; hip abduction and shoulder ER show no number', () => {
     const want: Record<string, [string, string] | null> = {
       hip_er: ['Typical range: 29-43°', 'Source: Simoneau et al., 1998'],
       hip_ir: ['Typical range: 26-40°', 'Source: Simoneau et al., 1998'],
       shoulder_flex: ['Typical range: 140-180°', 'Source: Gill et al., 2020'],
       hip_flex: ['Typical range: 60-80°', 'Source: Youdas et al., 2005'],
-      cervical_lat: ['Typical range: 38-46°', 'Source: Swinkels, 2014'], ankle_df: ['Typical range: 6-13 cm', 'Source: Konor et al., 2012'], cervical_flex_ext: null, hip_abd: null, shoulder_er: null,   // shoulder ER: no range (Stacy, Oct 6 8:19 PM)
+      cervical_lat: ['Typical range: 38-46°', 'Source: Swinkels, 2014'], ankle_df: ['Typical range: 6-13 cm', 'Source: Konor et al., 2012'], cervical_flex_ext: ['Typical range: 53 to 60 degrees', 'Source: Swinkels, 2014'], hip_abd: null, shoulder_er: null,   // shoulder ER: no range (Stacy, Oct 6 8:19 PM)
     }
     for (const [id, exp] of Object.entries(want)) {
       act(() => root?.unmount()); host?.remove()
