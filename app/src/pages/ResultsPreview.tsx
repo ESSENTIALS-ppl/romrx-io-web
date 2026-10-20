@@ -9,7 +9,7 @@ import {
   bandFull,
   bandChip,
   formatScoreBand,
-  mobilityScoreForAssessment,
+  mobilityScoreForAssessment, NOT_RATED_LABEL, NOT_RATED_TONE,
   overallBandForAssessment,
   ASSESSMENT_JOINTS,
   isUnscoredJoint,
@@ -230,7 +230,7 @@ export function ResultsPreview() {
 
   const prs = mobilityScoreForAssessment(assessment)
   const overallBand: BandScore = overallBandForAssessment(assessment) ?? 3
-  const tier = getBandTier(overallBand)
+  const tier = prs == null ? { ...getBandTier(overallBand), ...NOT_RATED_TONE } : getBandTier(overallBand)
   const asymmetries = getTopAsymmetries(assessment)
 
   return (
@@ -248,13 +248,19 @@ export function ResultsPreview() {
           <p className="text-xs font-bold text-cobalt-light uppercase tracking-widest mb-4">Mobility band</p>
           <div className={cn('inline-flex items-center justify-center w-32 h-32 rounded-full border-4 mb-4', tier.bg, tier.ring)}>
             <div>
-              <span className={cn('font-display font-bold text-5xl leading-none block', tier.color)}>{prs}</span>
-              <span className={cn('text-xs font-bold uppercase tracking-wide', tier.color)}>/ 100</span>
+              {prs == null ? (
+                <span className={cn('font-display font-bold text-lg leading-tight block', tier.color)}>{NOT_RATED_LABEL}</span>
+              ) : (
+                <>
+                  <span className={cn('font-display font-bold text-5xl leading-none block', tier.color)}>{prs}</span>
+                  <span className={cn('text-xs font-bold uppercase tracking-wide', tier.color)}>/ 100</span>
+                </>
+              )}
             </div>
           </div>
           <div className={cn('inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold mb-3', tier.bg, tier.color)}>
             <TrendingUp size={14} />
-            {formatScoreBand(prs, overallBand)}
+            {prs == null ? NOT_RATED_LABEL : formatScoreBand(prs, overallBand)}
           </div>
           <p className="text-sm text-white/70 leading-relaxed">{tier.desc}</p>
         </div>

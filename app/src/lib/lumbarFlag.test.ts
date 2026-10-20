@@ -56,7 +56,7 @@ describe('scoring with no lumbar (null, never 0)', () => {
     expect(m.scoredJointKeysWorstFirst(withNulls)).toEqual(m.scoredJointKeysWorstFirst(OTHER))
     expect(m.scoredJointKeysWorstFirst(withNulls).some(k => k.startsWith('lumbar'))).toBe(false)
     // and a real 0 would have been different (proves null is not treated as 0)
-    expect(m.mobilityScoreForAssessment({ ...OTHER, lumbar_flex: 0, lumbar_ext: 0 })).toBeLessThan(m.mobilityScoreForAssessment(OTHER))
+    expect(m.mobilityScoreForAssessment({ ...OTHER, lumbar_flex: 0, lumbar_ext: 0 })).toBeLessThan(m.mobilityScoreForAssessment(OTHER)!)
   })
   it('unmeasured lumbar rows carry pct null and no band (mobilityBands no longer fakes 0)', async () => {
     const m = await import('./mobilityBands')

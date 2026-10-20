@@ -487,13 +487,14 @@ export function jointPercentsForAssessment(
  * THE /100 mobility score for one assessment (My Body, My Protocol, results
  * preview, Settings history, My Body delta, lead submit). Pure and
  * deterministic. Pass the same jointScores the surface uses for its band so the
- * number is clamped into exactly the band shown next to it. With nothing
- * measured it returns 100, matching the surfaces' Steady fallback.
+ * number is clamped into exactly the band shown next to it. With no scored
+ * joint measured it returns null: surfaces show a grey "Not rated" with no
+ * number (Oct 20, same badge work as romrxbjj-v2 PR #93), never 100 Steady.
  */
 export function mobilityScoreForAssessment(
   assessment: object | null | undefined,
   jointScores?: JointScoreRow[] | null,
-): number {
+): number | null {
   const rec = (assessment ?? {}) as Record<string, unknown>
   let sum = 0
   let n = 0
@@ -504,7 +505,7 @@ export function mobilityScoreForAssessment(
     sum += p
     n += 1
   }
-  if (n === 0) return 100
+  if (n === 0) return null
   const s = Math.floor(sum / n)
   const band = overallBandForAssessment(assessment, jointScores) ?? 3
   return clampPercentToBand(s, band)
@@ -517,6 +518,22 @@ export function mobilityScoreForAssessment(
  */
 export function rankBadgeClass(band: BandScore | null | undefined): string {
   return band != null ? BAND_TONE[band].badge : 'bg-slate-100 text-slate-700 border border-slate-200'
+}
+
+/** Label shown instead of a score when no scored joint was measured. */
+export const NOT_RATED_LABEL = 'Not rated'
+
+/** Grey (neutral slate) tone for the "Not rated" badge: same keys as getBandTier. */
+export const NOT_RATED_TONE = {
+  color: 'text-slate-500',
+  bg: 'bg-slate-100',
+  ring: 'border-slate-300',
+  desc: 'No joints were measured in this assessment, so there is no mobility score yet. Retake the assessment to get rated.',
+} as const
+
+/** "NN/100 · Band", or "Not rated" (no number) when the score is null. */
+export function formatScoreBandOrNotRated(score: number | null, band: BandScore): string {
+  return score == null ? NOT_RATED_LABEL : formatScoreBand(score, band)
 }
 
 /** Separator between score and band: U+00B7 MIDDLE DOT, never an em dash. */

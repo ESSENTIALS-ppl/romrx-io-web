@@ -16,7 +16,7 @@ import {
   isUnscoredJoint,
   jointKeyBase,
   formatScoreBand,
-  mobilityScoreForAssessment,
+  mobilityScoreForAssessment, NOT_RATED_LABEL, NOT_RATED_TONE,
   overallBandForAssessment,
   rankBadgeClass,
   rankProblemJoints,
@@ -888,7 +888,7 @@ export function MyProtocol() {
   const dateStr = new Date(assessedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   const prs  = mobilityScoreForAssessment(assessment, jointScores)
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
-  const tier = getBandTier(overallBand)
+  const tier = prs == null ? { ...getBandTier(overallBand), ...NOT_RATED_TONE } : getBandTier(overallBand)
 
   return (
     <div className="space-y-5">
@@ -897,15 +897,21 @@ export function MyProtocol() {
       {/* Mobility band (matches MyBody so the two pages read as siblings) */}
       <div className={cn('flex items-center gap-4 rounded-card border p-4 border-cobalt/10', tier.bg)}>
         <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
-          <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
-          <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
+          {prs == null ? (
+            <span className={cn('text-[10px] font-bold text-center leading-tight', tier.color)}>{NOT_RATED_LABEL}</span>
+          ) : (
+            <>
+              <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
+              <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
+            </>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <TrendingUp size={13} className={tier.color} />
             <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
           </div>
-          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{formatScoreBand(prs, overallBand)}</p>
+          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{prs == null ? NOT_RATED_LABEL : formatScoreBand(prs, overallBand)}</p>
           <p className="text-xs text-slate-500 mt-0.5">Your top three problem areas shape today's plan</p>
         </div>
       </div>
