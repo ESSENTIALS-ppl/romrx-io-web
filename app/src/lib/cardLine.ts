@@ -2,3 +2,4 @@
 export const CARD_LINE_BODY = "Free through Dec 31, 2026. No card needed to start. You add one when you unlock Base, with no charge until January 1, 2027. Then $60 a year unless you cancel."
 export const CARD_LINE_SHORT = "No card needed to start. You add one when you unlock Base, with no charge until January 1, 2027."
 export const CARD_LINE_META = "Free through Dec 31, 2026. No card needed to start. Then $60 a year for Base unless you cancel."
+export const CARD_LINE_SHORT_NODATE = "No card needed to start. You add one when you unlock Base."
