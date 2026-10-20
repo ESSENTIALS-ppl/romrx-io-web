@@ -18,7 +18,7 @@ import { withStripeTestFlag } from '../lib/stripeTestMode'
 import {
   requestAccountDeletion, deletionErrorCopy, DELETION_BUTTON_LABEL, DELETION_SUCCESS_COPY,
 } from '../lib/accountDeletionRequest'
-import { bandFull, formatScoreBand, mobilityScoreForAssessment, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
+import { bandFull, formatScoreBand, mobilityScoreForAssessment, NOT_RATED_LABEL, NOT_RATED_TONE, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
 import {
   Save, Loader2, ExternalLink, LogOut, Mail, HelpCircle, ChevronRight,
   ClipboardList, TrendingUp, Bell, KeyRound, Trash2, MessageSquarePlus,
@@ -501,18 +501,18 @@ export function Settings() {
               {history.map((a, i) => {
                 const prs = mobilityScoreForAssessment(a)
                 const band: BandScore = overallBandForAssessment(a) ?? 3
-                const tier = getBandTier(band)
+                const tier = prs == null ? { ...getBandTier(band), ...NOT_RATED_TONE } : getBandTier(band)
                 return (
                   <div key={a.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                     <div className="flex items-center gap-3">
                       <div className={cn('w-10 h-10 rounded-full flex items-center justify-center shrink-0', tier.bg)}>
-                        <span className={cn('font-display font-bold text-sm leading-none', tier.color)}>{prs}</span>
+                        <span className={cn('font-display font-bold leading-none', prs == null ? 'text-[8px] text-center' : 'text-sm', tier.color)}>{prs == null ? NOT_RATED_LABEL : prs}</span>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-cobalt-ink">
                           {new Date(a.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
-                        <p className={cn('text-xs font-bold', tier.color)}>{formatScoreBand(prs, band)}</p>
+                        <p className={cn('text-xs font-bold', tier.color)}>{prs == null ? NOT_RATED_LABEL : formatScoreBand(prs, band)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">

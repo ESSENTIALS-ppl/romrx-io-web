@@ -29,6 +29,9 @@ import {
   worstBandScore,
   formatScoreBand,
   mobilityScoreForAssessment,
+  NOT_RATED_LABEL,
+  NOT_RATED_TONE,
+  formatScoreBandOrNotRated,
   SCORE_BAND_SEPARATOR,
   jointBandsForAssessment,
   overallBandForAssessment,
@@ -328,7 +331,7 @@ describe('mobilityScoreForAssessment: one shared /100 number', () => {
   it.each(AUDIT_FIXTURES)('fixture $name → $text', ({ a, score, band, text }) => {
     expect(mobilityScoreForAssessment(a)).toBe(score)
     expect(overallBandForAssessment(a)).toBe(band)
-    expect(formatScoreBand(mobilityScoreForAssessment(a), overallBandForAssessment(a)!)).toBe(text)
+    expect(formatScoreBand(mobilityScoreForAssessment(a)!, overallBandForAssessment(a)!)).toBe(text)
   })
   it('same assessment → same score (deterministic, no mutation)', () => {
     for (const { a } of AUDIT_FIXTURES) {
@@ -346,15 +349,27 @@ describe('mobilityScoreForAssessment: one shared /100 number', () => {
     expect(mobilityScoreForAssessment(a, rows)).toBe(mobilityScoreForAssessment(a))
     expect(topProblemAreas(worst)).toHaveLength(3)
   })
-  it('nothing measured → 100 (matches the Steady fallback every surface uses)', () => {
-    expect(mobilityScoreForAssessment({})).toBe(100)
-    expect(mobilityScoreForAssessment(null)).toBe(100)
+  it('nothing measured → null, shown as grey "Not rated" with no number (Oct 20, joins #93 badge)', () => {
+    expect(mobilityScoreForAssessment({})).toBeNull()
+    expect(mobilityScoreForAssessment(null)).toBeNull()
+    expect(mobilityScoreForAssessment({}, [])).toBeNull()
+    expect(NOT_RATED_LABEL).toBe('Not rated')
+    expect(formatScoreBandOrNotRated(null, 3)).toBe('Not rated')
+    expect(formatScoreBandOrNotRated(null, 3)).not.toMatch(/\d/)
+    expect(NOT_RATED_TONE.color).toMatch(/slate/)
+  })
+  it('one measured joint still scores normally (no threshold change)', () => {
+    for (const { a, text } of AUDIT_FIXTURES) {
+      const score = mobilityScoreForAssessment(a)
+      expect(score).not.toBeNull()
+      expect(formatScoreBandOrNotRated(score, overallBandForAssessment(a)!)).toBe(text)
+    }
   })
   it('every surface shows the identical "NN/100 · Band" string for one assessment', () => {
     for (const { a, text } of AUDIT_FIXTURES) {
       const s = surfaces(a)
       const score = mobilityScoreForAssessment(a)
-      const strings = Object.values(s).map(b => formatScoreBand(score, b!))
+      const strings = Object.values(s).map(b => formatScoreBand(score!, b!))
       expect(new Set(strings)).toEqual(new Set([text]))
     }
   })
@@ -507,9 +522,9 @@ describe('Fix A: generated assessments never contradict the band (per joint and 
         if (overall == null) { expect(score).toBe(100); continue }
         seen.add(overall)
         expect(overall).toBe(worstBandScore([...bands.values()]))
-        if (!RANGE_OK(score, overall)) throw new Error(`/100 ${score} contradicts ${BAND_FULL[overall]} in ${JSON.stringify(a)}`)
+        if (!RANGE_OK(score!, overall)) throw new Error(`/100 ${score} contradicts ${BAND_FULL[overall]} in ${JSON.stringify(a)}`)
         // /100 never exceeds 89 when any joint is Needs focus, and every surface string agrees
-        expect(formatScoreBand(score, overall)).toMatch(new RegExp(`^${score}/100 \u00B7 ${BAND_FULL[overall]}$`))
+        expect(formatScoreBand(score!, overall)).toMatch(new RegExp(`^${score}/100 \u00B7 ${BAND_FULL[overall]}$`))
       }
     }
     expect(seen).toEqual(new Set([1, 2, 3]))

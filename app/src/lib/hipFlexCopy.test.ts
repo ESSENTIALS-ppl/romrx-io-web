@@ -275,7 +275,7 @@ describe('safe fallback: hip flexion is never judged', () => {
     expect(jointBandsForAssessment(avgMan, rows).has('hip_flex')).toBe(false)
     expect(overallBandForAssessment(avgMan, rows)).toBeNull()
     expect(overallBandFromJointScores(rows)).toBeNull()
-    expect(mobilityScoreForAssessment(avgMan, rows)).toBe(100)
+    expect(mobilityScoreForAssessment(avgMan, rows)).toBeNull()
   })
 
   it('a Steady user with a straight-leg raise of 68 deg stays Steady 100/100', () => {

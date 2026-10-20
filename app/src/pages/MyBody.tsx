@@ -18,7 +18,7 @@ import {
   radarSideRowsForAssessment,
   formatMeasure,
   formatScoreBand,
-  mobilityScoreForAssessment,
+  mobilityScoreForAssessment, NOT_RATED_LABEL, NOT_RATED_TONE,
   overallBandForAssessment,
   topProblemAreasForAssessment,
   BAND_DESC,
@@ -175,12 +175,12 @@ export function MyBody() {
   const jointRows = hideLumbar ? allJointRows.filter(r => !isLumbarKey(r.key)) : allJointRows
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreasForAssessment(assessment)
-  const tier = getBandTier(overallBand)
+  const tier = prs == null ? { ...getBandTier(overallBand), ...NOT_RATED_TONE } : getBandTier(overallBand)
 
   // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
   const previousAssessment = assessments.length > 1 ? assessments[1] : null
   const previousPrs = previousAssessment ? mobilityScoreForAssessment(previousAssessment) : null
-  const prsDelta = previousPrs != null ? prs - previousPrs : null
+  const prsDelta = previousPrs != null && prs != null ? prs - previousPrs : null
   const previousDateStr = previousAssessment
     ? new Date(previousAssessment.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : null
@@ -211,8 +211,14 @@ export function MyBody() {
       <div className={cn('rounded-card border p-4', tier.bg, 'border-cobalt/10')}>
         <div className="flex items-center gap-4">
           <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
-            <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
-            <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
+            {prs == null ? (
+              <span className={cn('text-[10px] font-bold text-center leading-tight', tier.color)}>{NOT_RATED_LABEL}</span>
+            ) : (
+              <>
+                <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
+                <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
+              </>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -227,7 +233,7 @@ export function MyBody() {
                 </span>
               )}
             </div>
-            <p className={cn('text-lg font-bold leading-tight', tier.color)}>{formatScoreBand(prs, overallBand)}</p>
+            <p className={cn('text-lg font-bold leading-tight', tier.color)}>{prs == null ? NOT_RATED_LABEL : formatScoreBand(prs, overallBand)}</p>
             <p className="text-xs text-slate-500 mt-0.5">Retest every 6 weeks to track progress</p>
           </div>
         </div>
