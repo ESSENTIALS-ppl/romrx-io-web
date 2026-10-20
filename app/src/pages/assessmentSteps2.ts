@@ -20,9 +20,11 @@ export const STEPS_PART2: Step[] = [
     mistake: 'Moving your whole upper body forward or backward instead of just your head and neck.',
     mistakeFix: 'Your shoulders and upper body stay still. Only your head moves. If your back starts to round or arch, stop there.',
     meter: { grip: 'Phone flat against the side of your head at the temple, screen facing the wall beside you.' },
+    // Card 14 (Jim YES Oct 20 10:52 AM ET): published Swinkels 2014 decade means, flexion 53 to 60, extension 64 to 75
+    // (TYPICAL-RANGES-FOR-AVERY-20261019.md rows 10-11). Display only, never scoring. Own note per field so each shows.
     fields: [
-      { key: 'cervical_flex', label: 'Flexion', unit: '°', riskBelow: 35 },
-      { key: 'cervical_ext', label: 'Extension', unit: '°', riskBelow: 40 },
+      { key: 'cervical_flex', label: 'Flexion', unit: '°', normalLow: 53, normalHigh: 60, riskBelow: 35, referenceNote: 'Typical range: 53 to 60 degrees', rangeSource: 'Swinkels, 2014' },
+      { key: 'cervical_ext', label: 'Extension', unit: '°', normalLow: 64, normalHigh: 75, riskBelow: 40, referenceNote: 'Typical range: 64 to 75 degrees', rangeSource: 'Swinkels, 2014' },
     ],
   },
 {
