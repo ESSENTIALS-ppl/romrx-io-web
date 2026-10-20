@@ -1,7 +1,7 @@
 // Card 21: sync the card line strings from content/card-line.json into the static pages and the app.
 // node scripts/card-line.mjs          rewrite previous -> current, regenerate app/src/lib/cardLine.ts
 // node scripts/card-line.mjs --check  fail on any previous string left, missing strings, drifted cardLine.ts,
-//                                     or a meta string over 110 chars. Prints each spot and the string it uses.
+//                                     a meta string over 110 chars, or any of the 21 meta/og/twitter tags not EXACTLY src.meta.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,23 +19,40 @@ const check = process.argv.includes('--check')
 let bad = 0
 const err = m => { console.error('FAIL ' + m); bad++ }
 if (src.meta.length > 110) err(`meta string is ${src.meta.length} chars (max 110)`)
-const META_RE = /(<meta (?:name="description"|property="og:description") content=")([^"]*)(")/g
+// Meta: on every page, description, og:description and twitter:description must be EXACTLY src.meta
+// (Vera, 11:19 AM). Missing tags are inserted after the last one present. 7 pages x 3 = 21 tags.
+const TAGS = [['name', 'description'], ['property', 'og:description'], ['name', 'twitter:description']]
+const tagRe = ([a, n]) => new RegExp(`<meta ${a}="${n.replace('.', '\\.')}" content="[^"]*">`, 'g')
+const tagOut = ([a, n]) => `<meta ${a}="${n}" content="${src.meta}">`
+let tagCount = 0
 for (const f of PAGES) {
   const p = join(root, f); const before = readFileSync(p, 'utf8')
-  // 1) meta/og: whole price segment -> meta
-  let s = before.replace(META_RE, (_, a, c, z) => { for (const o of src.previous.meta) c = c.split(o).join(src.meta); return a + c + z })
-  // 2) everything else: old card sentence -> short
-  if (!check) for (const o of src.previous.short) s = s.split(o).join(src.short)
-  if (!check && s !== before) writeFileSync(p, s)
-  for (const o of [...src.previous.short, ...src.previous.meta]) if (s.includes(o)) err(`${f}: still has "${o}"`)
-  s.split('\n').forEach((l, i) => {
-    const m = /<meta (name="description"|property="og:description")/.exec(l)
-    if (m && l.includes(src.meta)) {
-      const len = /content="([^"]*)"/.exec(l)[1].length, lim = m[1].startsWith('property') ? 200 : 160
-      console.log(`${f}:${i + 1} ${m[1].startsWith('property') ? 'og' : 'meta'} -> meta (whole tag ${len} chars${len > lim ? `, OVER ${lim}` : ''})`)
-    } else if (!m && l.includes(src.short)) console.log(`${f}:${i + 1} -> short`)
-  })
+  let s = before
+  if (!check) {
+    let lastEnd = -1
+    for (const t of TAGS) {
+      const re = tagRe(t); let found = false
+      s = s.replace(re, () => { found = true; return tagOut(t) })
+      if (found) { const m = [...s.matchAll(tagRe(t))].pop(); lastEnd = Math.max(lastEnd, m.index + m[0].length) }
+      else {
+        if (lastEnd < 0) lastEnd = s.indexOf('>', s.indexOf('<title')) >= 0 ? s.indexOf('</title>') + 8 : s.indexOf('<head>') + 6
+        const ins = `\n  ${tagOut(t)}`; s = s.slice(0, lastEnd) + ins + s.slice(lastEnd); lastEnd += ins.length
+      }
+    }
+    for (const o of src.previous.short) s = s.split(o).join(src.short)
+    if (s !== before) writeFileSync(p, s)
+  }
+  for (const o of src.previous.short) if (s.includes(o)) err(`${f}: still has "${o}"`)
+  for (const t of TAGS) {
+    const all = [...s.matchAll(new RegExp(`<meta ${t[0]}="${t[1].replace('.', '\\.')}" content="([^"]*)"`, 'g'))]
+    if (all.length !== 1) { err(`${f}: ${t[1]} appears ${all.length} times (need 1)`); continue }
+    if (all[0][1] !== src.meta) err(`${f}: ${t[1]} is not exactly the meta string`)
+    else { tagCount++; console.log(`${f}:${s.slice(0, all[0].index).split('\n').length} ${t[1]} == meta (${all[0][1].length} chars)`) }
+  }
+  s.split('\n').forEach((l, i) => { if (!/<meta /.test(l) && l.includes(src.short)) console.log(`${f}:${i + 1} -> short`) })
 }
+if (tagCount !== PAGES.length * TAGS.length) err(`meta tags equal to meta string: ${tagCount}/${PAGES.length * TAGS.length}`)
+else console.log(`meta tags: ${tagCount}/21 equal the meta string`)
 for (const f of APP_USERS) {
   const s = readFileSync(join(root, f), 'utf8')
   for (const o of src.previous.short) if (s.includes(o)) err(`${f}: still has "${o}"`)
