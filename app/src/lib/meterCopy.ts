@@ -23,7 +23,7 @@ export const METER_COPY = {
   zeroCountdown: 'Hold still...',                                        // STACY (under the big number)
   live: 'Move slowly to your end range, then hold still.',           // STACY (at zero)
   holding: 'Hold still...',
-  wrongWay: 'Wrong way, return to start',
+  wrongWay: 'Wrong way. Return to start.',
   maxReached: 'Highest reading shown. Tap Use this number to save it.',   // NEW Oct 21 2026, pending Stacy                                // NEW Oct 21 2026, pending Stacy
   locked: 'Locked. Tap Use this number, or Reset to measure again.',
   saved: (label: string, val: string | number) => `Saved: ${label} ${val}°`,   // STACY "Saved: Left 48°"

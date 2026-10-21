@@ -68,7 +68,7 @@ function sim(q0: Quat, axis: V, deg: number, key: string) {
 }
 
 describe('meter direction check', () => {
-  it('new user string, exact', () => expect(METER_COPY.wrongWay).toBe('Wrong way, return to start'))
+  it('new user string, exact', () => expect(METER_COPY.wrongWay).toBe('Wrong way. Return to start.'))
   it('margin is 3 deg', () => expect(WRONG_WAY_MARGIN_DEG).toBe(3))
   for (const c of CASES) for (const y of c.ys) {
     const tag = `${c.key} (top edge ${y.join(',')})`
