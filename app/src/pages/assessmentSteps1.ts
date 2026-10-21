@@ -86,7 +86,7 @@ export const STEPS_PART1: Step[] = [
     mistake: 'Your shoulder shrugs up or your elbow drops below shoulder height.',
     mistakeFix: 'Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves.',
     // Quinn: flat along the forearm, top edge toward the hand, screen facing out to the side.
-    // Jim/Quinn Oct 21 2026 grip change: phone held upright in the fist (in-hand grip). Copy only, meter math unchanged.
+    // Jim/Quinn Oct 21 2026 grip change: phone in the fist, top edge forward, screen up (in-hand grip). Copy only, meter math unchanged.
     meter: { grip: 'Hold the phone in your fist, long edge in line with your forearm, top edge pointing forward past your fingers, screen facing up. Keep your wrist straight and your grip firm.' },
     // NO typical range and NO source line (Stacy, Oct 6 8:19 PM: Vairo 2012 tested cadets lying down, not general adults
     // standing; Gill 40-75 removed). Scoring target 85 lives in JOINT_SCORE_TARGETS. riskBelow is not read by scoring or
