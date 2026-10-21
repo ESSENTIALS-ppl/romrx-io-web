@@ -62,7 +62,7 @@ describe('phone meter copy', () => {
     const all = (STEPS_PART2.find(s => s.id === 'lumbar'))!
     expect(all.tool).toBe('Type this one in for now. Use any level you have to read the angle. Standing + Floor.')
     const text = [...all.position, ...all.howTo].join(' ')
-    for (const t of ['Set your level to 0 while you stand straight.', 'Set your level to 0 while you lie flat.', 'Note the angle at that point.', 'Note the angle at your end range.']) expect(text).toContain(t)
+    for (const t of ['Set your level to 0 while you stand straight.', 'Set your level to 0 while you lie flat.', 'Note the angle at that point.', 'Note the angle at the highest point.']) expect(text).toContain(t)
     expect(text).not.toMatch(/\bzero\b|Read the number/i)
   })
   it('step header is Stacy\'s pre-cleared "Your measurements"; setup tip no longer repeats the countdown (Option A covers it)', () => {
