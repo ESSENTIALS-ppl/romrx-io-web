@@ -72,7 +72,7 @@ export const STEPS_PART1: Step[] = [
     // STOP_LINE (rendered once on every step). Meter math unchanged: gravity angle since zero (see shoulderErStanding.test.ts).
     tool: 'Your phone. Standing.',
     position: [
-      'Stand tall. Hold the phone along your forearm like a ruler, wrist straight.',
+      'Stand tall. Hold the phone upright in your fist, long edge in line with your forearm, top edge pointing up past your fingers, screen facing forward. Keep your wrist straight and your grip firm.',
       'Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.',
       'Tap Start with your other hand, then hold this start position while it counts down from 5.',
     ],
@@ -86,7 +86,8 @@ export const STEPS_PART1: Step[] = [
     mistake: 'Your shoulder shrugs up or your elbow drops below shoulder height.',
     mistakeFix: 'Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves.',
     // Quinn: flat along the forearm, top edge toward the hand, screen facing out to the side.
-    meter: { grip: 'Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight.' },
+    // Jim/Quinn Oct 21 2026 grip change: phone held upright in the fist (in-hand grip). Copy only, meter math unchanged.
+    meter: { grip: 'Hold the phone upright in your fist, long edge in line with your forearm, top edge pointing up past your fingers, screen facing forward. Keep your wrist straight and your grip firm.' },
     // NO typical range and NO source line (Stacy, Oct 6 8:19 PM: Vairo 2012 tested cadets lying down, not general adults
     // standing; Gill 40-75 removed). Scoring target 85 lives in JOINT_SCORE_TARGETS. riskBelow is not read by scoring or
     // display; 57 = Quinn's riskBelow for the server Protocol mirror.
