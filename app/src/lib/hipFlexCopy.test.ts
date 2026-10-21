@@ -76,17 +76,17 @@ describe('hip flexion copy (Stacy rules)', () => {
   })
   it("Jim's SLR copy, exact (Oct 6 12:07 PM decision; Stacy PASS Oct 6 12:07)", () => {
     expect(HIP_FLEX_STEP.position).toEqual([
-      'Lie flat on your back, legs straight out, knees touching the floor.',
+      'Lie flat on your back, legs straight out, the backs of your knees resting on the floor.',
       'Place your phone on your mid-thigh.',
       'Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ])
     expect(HIP_FLEX_STEP.howTo).toEqual([
-      "Lift one leg and keep it straight until you can't anymore.",
+      "Slowly lift one leg, keeping the knee straight, until you can't go higher without bending the knee or lifting your hips.",
       'Pause for 2.5 seconds so the meter can lock in the range.',
       'Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.',
     ])
-    expect(HIP_FLEX_STEP.mistake).toBe('Your hips start coming up, or you shift in any other way.')
-    expect(HIP_FLEX_STEP.mistakeFix).toBe('Keep your hips down and your body still. If you shift, redo the lift.')
+    expect(HIP_FLEX_STEP.mistake).toBe('Your other leg lifts, your knee bends, or your hips come up.')
+    expect(HIP_FLEX_STEP.mistakeFix).toBe('Keep your other leg flat on the floor, your knee straight and your hips down. If any of these change, redo the lift.')
     expect(HIP_FLEX_STEP.meterGrip).toBe('Phone on your mid-thigh.')
     // Kept unchanged
     expect(HIP_FLEX_STEP.why).toBe('You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.')
