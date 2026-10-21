@@ -3,6 +3,7 @@ import { Lock, Crosshair, X, Smartphone } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { averageQuats, tiltDeltaDeg, type Quat } from '../lib/orientation'
 import { gateReading, type DirectionSpec } from '../lib/meterDirection'
+import { initialFallback, stepFallback, type FallbackState } from '../lib/meterFallback'
 import { initialLock, meterValueToUse, nextPeak, stepLock, type LockState } from '../lib/meterLock'
 import { getSensorSnapshot, latestQuat, latestRaw, recentQuats, startSensor, subscribeSensor } from '../lib/meterSensor'
 import { countdownPlan, playLockDing, playMeterTone, unlockMeterAudio } from '../lib/meterAudio'
@@ -13,7 +14,7 @@ const TICK_MS = 50
 const GO_SHOW_MS = 800
 const showDebug = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1'
 
-interface View { angle: number | null; peak: number | null; locked: boolean; lockVal: number | null; holdFrac: number | null; wrong?: boolean }
+interface View { angle: number | null; peak: number | null; locked: boolean; lockVal: number | null; holdFrac: number | null; wrong?: boolean; offer?: number | null }
 
 /**
  * Inline phone meter for one angle field. Same math as the sandbox Jim tested (lib/orientation.ts
@@ -44,6 +45,8 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
   const sensor = useSyncExternalStore(subscribeSensor, getSensorSnapshot, getSensorSnapshot)
   const q0 = useRef<Quat | null>(null)
   const lock = useRef<LockState>(initialLock())
+  const fb = useRef<FallbackState>(initialFallback())
+  const offer = useRef<number | null>(null)
   const peak = useRef<number | null>(null)
   const live = useRef<number | null>(null)
   const [view, setView] = useState<View>({ angle: null, peak: null, locked: false, lockVal: null, holdFrac: null })
@@ -63,6 +66,9 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
       const { wrong, lockInput } = gateReading(q0.current, q, v, direction)
       const st = stepLock(lock.current, lockInput, performance.now())
       lock.current = st.state
+      const f = stepFallback(fb.current, lockInput, performance.now(), st.state.locked)
+      fb.current = f.state
+      offer.current = f.offer
       if (!wrong) peak.current = nextPeak(peak.current, v, st.state.locked)
       if (st.justLocked) playLockDing()
       const next: View = {
@@ -72,9 +78,10 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
         lockVal: st.state.lockVal,
         holdFrac: st.holdFrac == null ? null : Math.round(st.holdFrac * 50) / 50,
         wrong: wrong && !st.state.locked,
+        offer: f.offer,
       }
       setView(prev => (prev.angle === next.angle && prev.peak === next.peak && prev.locked === next.locked &&
-        prev.lockVal === next.lockVal && prev.holdFrac === next.holdFrac && prev.wrong === next.wrong) ? prev : next)
+        prev.lockVal === next.lockVal && prev.holdFrac === next.holdFrac && prev.wrong === next.wrong && prev.offer === next.offer) ? prev : next)
       if (debug) {
         const r = latestRaw()
         setDbg(`tilt ${v.toFixed(1)}° · β/γ/α ${r ? `${Math.round(r.b)}/${Math.round(r.g)}/${Math.round(r.a ?? 0)}` : '--'} · samples ${getSensorSnapshot().samples} · hold ${st.holdFrac == null ? '-' : st.holdFrac.toFixed(2)}`)
@@ -87,7 +94,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
     const qs = recentQuats()
     if (!qs.length) return
     q0.current = averageQuats(qs)
-    lock.current = initialLock()
+    lock.current = initialLock(); fb.current = initialFallback(); offer.current = null
     peak.current = 0
     live.current = 0
     setZeroed(true)
@@ -109,7 +116,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
     const id = ++run.current
     const wanted = () => run.current === id
     q0.current = null; setZeroed(false)
-    lock.current = initialLock(); peak.current = null; live.current = null
+    lock.current = initialLock(); fb.current = initialFallback(); offer.current = null; peak.current = null; live.current = null
     setView({ angle: null, peak: null, locked: false, lockVal: null, holdFrac: null })
     for (const e of countdownPlan()) {
       const fire = () => {
@@ -128,17 +135,17 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
     unlockMeterAudio()
     if (typeof countdown === 'number') { cancelCountdown(); return }   // Reset during the countdown cancels it
     if (countdown === 'GO') setCountdown(null)
-    lock.current = initialLock()
+    lock.current = initialLock(); fb.current = initialFallback(); offer.current = null
     peak.current = live.current
-    setView(v => ({ ...v, locked: false, lockVal: null, holdFrac: null, peak: live.current == null ? null : Math.round(live.current), angle: live.current == null ? v.angle : Math.round(live.current) }))
+    setView(v => ({ ...v, locked: false, lockVal: null, holdFrac: null, offer: null, wrong: false, peak: live.current == null ? null : Math.round(live.current), angle: live.current == null ? v.angle : Math.round(live.current) }))
   }
   // Use this number only fills a LOCKED reading (Reid, Oct 5: tapping it at GO saved 0°). Not shown from
   // the Start tap, through the countdown, until a lock; Reset unlocks and hides it again. The guard
   // below stays as a second line of defense.
   const onUseClick = () => {
     unlockMeterAudio()
-    if (!lock.current.locked) return
-    const v = meterValueToUse(lock.current, null)
+    if (!lock.current.locked && offer.current == null) return
+    const v = lock.current.locked ? meterValueToUse(lock.current, null) : offer.current
     if (v != null) onUse?.(v)
   }
 
@@ -146,12 +153,13 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
   const fallback = sensor.status === 'denied' ? (inApp ? C.inApp : C.denied) : sensor.status === 'error' ? C.error
     : (sensor.status === 'nodata' || sensor.status === 'unsupported') ? (inApp ? C.inApp : C.noData) : null
   const counting = typeof countdown === 'number'
-  const showUse = !!onUse && view.locked && !counting   // standalone ROMeter (no onUse): never shown
+  const offered = !view.locked && view.offer != null
+  const showUse = !!onUse && (view.locked || offered) && !counting   // standalone ROMeter (no onUse): never shown
   const showReset = zeroed || counting
-  const shown = view.locked ? view.lockVal : view.angle
+  const shown = view.locked ? view.lockVal : offered ? view.offer! : view.angle
   const status = counting ? C.zeroCountdown
     : !zeroed ? C.needZero
-    : view.locked ? (lockedLine ?? C.locked) : view.wrong ? C.wrongWay : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
+    : view.locked ? (lockedLine ?? C.locked) : view.wrong ? C.wrongWay : offered ? C.maxReached : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
 
   return (
     <div data-phone-meter role="group" aria-label={movement} className={cn('rounded-card border bg-white p-4 space-y-3 transition-colors', view.locked ? 'border-2 border-meter-text shadow-md' : 'border-meter-text/20')}>

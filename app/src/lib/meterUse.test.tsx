@@ -571,4 +571,21 @@ describe('phone meter in the Base measure screen', () => {
     mount(STEPS.findIndex(s => s.id === 'ankle_df'))
     expect((host.textContent!.match(/Typical range: 6-13 cm/g) ?? []).length).toBe(1)
   })
+
+  it('max-reached fallback (Oct 21 2026): after 10 s of movement with no lock it shows the highest reading, needs a tap, and Reset clears it', async () => {
+    const calls = mount(SER)
+    await turnOn(); startNow()
+    for (let t = 0; t < 10500; t += 50) { feed(Math.floor(t / 50) % 2 ? 26 : 20); act(() => { vi.advanceTimersByTime(50) }) }
+    expect(isLocked()).toBe(false)
+    expect($('[data-meter-status]')!.textContent).toBe('Highest reading shown. Tap Use this number to save it.')
+    expect($('[data-meter-number]')!.textContent).toBe('26°')
+    expect(calls).toEqual([])                                     // offered only, never auto-saved
+    click(btn('Reset'))
+    expect(btn('Use this number')).toBeUndefined()
+    expect($('[data-meter-status]')!.textContent).not.toBe('Highest reading shown. Tap Use this number to save it.')
+    for (let t = 0; t < 10500; t += 50) { feed(Math.floor(t / 50) % 2 ? 31 : 25); act(() => { vi.advanceTimersByTime(50) }) }
+    expect(calls).toEqual([])
+    click(btn('Use this number'))
+    expect(calls).toEqual([['shoulder_er_l', '31']])
+  })
 })
