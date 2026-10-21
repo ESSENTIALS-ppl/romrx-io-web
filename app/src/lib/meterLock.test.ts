@@ -1,6 +1,6 @@
 /**
  * Phone meter lock-on-hold (Jim, Oct 5 2026): lock after 2.5 s within +/-2 deg of the reading at the
- * start of the hold window; any reading outside restarts the timer; never within 2 deg of zero; stays
+ * start of the hold window; any reading outside restarts the timer; never within 5 deg of zero; stays
  * locked until Reset or Zero (no auto unlock or re-arm). Locked value = rounded mean of the window.
  */
 import { describe, expect, it } from 'vitest'
@@ -19,11 +19,11 @@ function run(fn: (t: number) => number, ms: number, start: LockState = initialLo
 }
 
 describe('meter lock constants', () => {
-  it('2.5 s hold, +/-2 deg band, 2 deg zero guard', () => {
+  it('2.5 s hold, +/-2 deg band, 5 deg zero guard (Oct 21 2026)', () => {
     expect(LOCK_HOLD_MS).toBe(2500)
     expect(LOCK_BAND_DEG).toBe(2)
-    expect(ZERO_GUARD_DEG).toBe(2)
-    expect(DEFAULT_LOCK).toEqual({ band: 2, holdMs: 2500, zeroGuard: 2 })
+    expect(ZERO_GUARD_DEG).toBe(5)
+    expect(DEFAULT_LOCK).toEqual({ band: 2, holdMs: 2500, zeroGuard: 5 })
   })
 })
 
@@ -64,12 +64,12 @@ describe('stepLock', () => {
     expect(r.locks).toBe(0)
   })
 
-  it('never locks within 2 deg of zero (start position), and shows no hold bar there', () => {
+  it('never locks within 5 deg of zero (start position), and shows no hold bar there', () => {
     const r = run(t => Math.sin(t / 100) * 1.5, 8000)
     expect(r.locks).toBe(0)
     expect(r.maxFrac).toBe(0)
-    expect(run(() => 2, 5000).locks).toBe(0)
-    expect(run(() => 2.5, 5000).locks).toBe(1)
+    expect(run(() => 5, 5000).locks).toBe(0)
+    expect(run(() => 5.5, 5000).locks).toBe(1)
   })
 
   it('stays locked while moving after lock: no unlock, no re-arm, no second lock', () => {
@@ -125,5 +125,14 @@ describe('Start countdown length', () => {
     const { ZERO_AT_SEC } = await import('./meterAudio')
     expect(ZERO_COUNTDOWN_SEC).toBe(5)
     expect(ZERO_AT_SEC).toBe(5)
+  })
+})
+
+describe('zero guard 5 deg (Oct 21 2026)', () => {
+  it('a still hold at 5.x deg locks', () => {
+    for (const v of [5.1, 5.5, 5.9]) expect(run(() => v, 4000).s.locked, String(v)).toBe(true)
+  })
+  it('a still hold at 4.x deg never locks and shows no hold bar', () => {
+    for (const v of [4.1, 4.5, 4.9]) { const r = run(() => v, 8000); expect(r.s.locked, String(v)).toBe(false); expect(r.maxFrac).toBe(0) }
   })
 })

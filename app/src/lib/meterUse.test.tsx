@@ -54,7 +54,10 @@ const btn = (text: string) => [...host.querySelectorAll('button')].find(b => b.t
 const click = (el: Element | null | undefined) => act(() => { (el as HTMLElement).click() })
 async function flush() { await act(async () => { await Promise.resolve(); await Promise.resolve() }) }
 /** Phone flat, pitching about its x axis: tilt since zero = beta - 10. */
-const feed = (tilt: number, n = 1) => act(() => { for (let i = 0; i < n; i++) feedOrientation(30, 10 + tilt, 0) })
+/** Pose for the direction check (Oct 21 2026): base beta and the sign of the move. Defaults = the original flat feed. */
+const SIGN_UPRIGHT = -1
+let POSE = { beta0: 10, sign: 1 }
+const feed = (tilt: number, n = 1) => act(() => { for (let i = 0; i < n; i++) feedOrientation(30, POSE.beta0 + POSE.sign * tilt, 0) })
 const advance = (ms: number, tilt: number) => { for (let t = 0; t < ms; t += 50) { feed(tilt); act(() => { vi.advanceTimersByTime(50) }) } }
 async function turnOn() { click(btn('Turn on the ROMeter')); await flush(); feed(0, 12) }
 /** Layout item 1: the badge says just "Locked"; the big number shows the value that will be saved. */
@@ -77,6 +80,7 @@ beforeEach(() => {
   ;(window as unknown as { DeviceOrientationEvent: unknown }).DeviceOrientationEvent = class {}
   __resetSensorForTests()
   audio.lock = 0; audio.tick = 0; audio.go = 0; audio.unlock = 0; audio.log = []
+  POSE = { beta0: 10, sign: 1 }
 })
 afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers() })
 
@@ -168,6 +172,7 @@ describe('phone meter in the Base measure screen', () => {
   })
 
   it('countdown: 5, 4, 3, 2, 1 shown big with a tick each (0-4 s), then GO + zero at 5 s; each tone fires with its number', async () => {
+    POSE = { beta0: 90, sign: SIGN_UPRIGHT }   // hip abduction starts with the screen facing out (direction check)
     mount(HIPABD)
     await turnOn()
     const unlockBefore = audio.unlock
@@ -195,7 +200,7 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-countdown]')).toBeNull()
     expect($('[data-meter-number]')!.textContent).toBe('0°')
     advance(3000, 0)
-    expect(isLocked()).toBe(false)                                  // never locks within 2 deg of zero
+    expect(isLocked()).toBe(false)                                  // never locks within 5 deg of zero
     advance(3000, 40)
     expectLockedAt(40)
     expect(audio.lock).toBe(1)
@@ -543,6 +548,7 @@ describe('phone meter in the Base measure screen', () => {
     const lf = STEPS[HER].fields.find(f => f.key === 'hip_er_l')!
     expect(`${lf.normalLow}-${lf.normalHigh}|${lf.rangeSource}`).toBe('23-41|Simoneau et al., 1998; Roach and Miles, 1991')
     const RANGE = `Typical range: ${lf.normalLow}-${lf.normalHigh}°`, SOURCE = `Source: ${lf.rangeSource}`
+    POSE = { beta0: 90, sign: SIGN_UPRIGHT }   // hip ER starts with the screen facing the other leg (direction check)
     mount(HER)
     const count = () => host.textContent!.split(RANGE).length - 1
     expect(count()).toBe(1)
@@ -564,5 +570,45 @@ describe('phone meter in the Base measure screen', () => {
     act(() => root.unmount()); host.remove()
     mount(STEPS.findIndex(s => s.id === 'ankle_df'))
     expect((host.textContent!.match(/Typical range: 6\.1-12\.9 cm/g) ?? []).length).toBe(1)
+  })
+
+  it('max-reached fallback (Oct 21 2026): after 10 s of movement with no lock it shows the highest reading, needs a tap, and Reset clears it', async () => {
+    const calls = mount(SER)
+    await turnOn(); startNow()
+    for (let t = 0; t < 10500; t += 50) { feed(Math.floor(t / 50) % 2 ? 26 : 20); act(() => { vi.advanceTimersByTime(50) }) }
+    expect(isLocked()).toBe(false)
+    expect($('[data-meter-status]')!.textContent).toBe('Highest reading shown. Tap Use this number to save it.')
+    expect($('[data-meter-number]')!.textContent).toBe('26°')
+    expect(calls).toEqual([])                                     // offered only, never auto-saved
+    click(btn('Reset'))
+    expect(btn('Use this number')).toBeUndefined()
+    expect($('[data-meter-status]')!.textContent).not.toBe('Highest reading shown. Tap Use this number to save it.')
+    for (let t = 0; t < 10500; t += 50) { feed(Math.floor(t / 50) % 2 ? 31 : 25); act(() => { vi.advanceTimersByTime(50) }) }
+    expect(calls).toEqual([])
+    click(btn('Use this number'))
+    expect(calls).toEqual([['shoulder_er_l', '31']])
+  })
+
+  it('stiff joint (Quinn 1:08 PM): max 3 deg offers 3 after 10 s, needs a tap', async () => {
+    const calls = mount(SER)
+    await turnOn(); startNow()
+    for (let t = 0; t < 10500; t += 50) { feed(Math.min(3, t / 1000)); act(() => { vi.advanceTimersByTime(50) }) }
+    expect(isLocked()).toBe(false)
+    expect($('[data-meter-number]')!.textContent).toBe('3°')
+    expect($('[data-meter-status]')!.textContent).toBe('Highest reading shown. Tap Use this number to save it.')
+    expect(calls).toEqual([])
+    click(btn('Use this number'))
+    expect(calls).toEqual([['shoulder_er_l', '3']])
+  })
+
+  it('Skip still works while the fallback offer is showing: clears both sides, saves nothing from the offer', async () => {
+    const calls = mount(SER)
+    await turnOn(); startNow()
+    for (let t = 0; t < 10500; t += 50) { feed(Math.floor(t / 50) % 2 ? 26 : 20); act(() => { vi.advanceTimersByTime(50) }) }
+    expect(btn('Use this number')).toBeDefined()
+    click(btn('Skip'))
+    expect(calls).toContainEqual(['shoulder_er_l', ''])
+    expect(calls).toContainEqual(['shoulder_er_r', ''])
+    expect(calls.some(([, v]) => v === '26')).toBe(false)
   })
 })

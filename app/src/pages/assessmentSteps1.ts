@@ -48,7 +48,7 @@ export const STEPS_PART1: Step[] = [
     tool: 'Same chair. This time, hold the phone flat on the front of your shin.',
     position: [
       'Stay in the same chair and the same position.',
-      'Keep your phone flat on the front of your shin, just below the knee, screen facing forward.',
+      'Keep your phone flat on the front of your shin, just below the knee, screen facing forward. Press the phone flat against your leg with your hand the whole time.',
       'Before each leg, tap Start and hold your shin straight up and down while it counts down from 5.',
     ],
     howTo: [
@@ -57,7 +57,7 @@ export const STEPS_PART1: Step[] = [
       'Tap Use this number. Return to center, tap Start, and repeat with the other leg.',
     ],
     mistake: 'One hip lifts off the chair.',
-    mistakeFix: 'You must stay sitting evenly on both sides. The moment one side lifts, that is your endpoint. Record it.',
+    mistakeFix: 'Stay sitting evenly on both sides. The moment one side lifts, stop there and hold still until the number locks.',
     meter: { grip: 'Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.' },
     // Range reset (Jim Oct 21 2026): pooled Simoneau 1998 (PMID 9742472) + Roach 1991 (PMID 1881956), N 1,743: 32.0 (8.0).
     fields: [
@@ -67,29 +67,28 @@ export const STEPS_PART1: Step[] = [
   },
 {
     id: 'shoulder_er',
-    // Oct 6 2026, 8:19 PM (Jim-approved, Quinn spec; Stacy PASS title, cue and stop line): STANDING goal-post shoulder ER
+    // Jim 1:00 PM Oct 21 2026: SEATED in a chair with a back (Quinn's exact seated copy, app-steps-audit.md). Was: Oct 6 8:19 PM STANDING goal-post shoulder ER
     // replaces the lying tucked-elbow step that was shown as 'Shoulder Extension'. Key shoulder_er and fields unchanged.
     title: 'Shoulder External Rotation',
     why: 'Supports overhead and pressing positions.',
     // Cue sentences are Quinn's exact words, split Setup / How to Measure like every meter step. The stop line is the shared
     // STOP_LINE (rendered once on every step). Meter math unchanged: gravity angle since zero (see shoulderErStanding.test.ts).
-    tool: 'Your phone. Standing.',
+    tool: 'Phone meter, held in your hand.',
     position: [
-      'Stand tall. Hold the phone along your forearm like a ruler, wrist straight.',
-      'Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.',
+      'Sit tall in a chair with a back, feet flat, your back against the chair. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead.',
       'Tap Start with your other hand, then hold this start position while it counts down from 5.',
     ],
     howTo: [
-      'Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching.',
-      'Hold still at your limit: after 2.5 seconds the number locks and dings. Tap Use this number.',
+      'Keep your elbow at shoulder height and in line with your shoulders. Slowly rotate your forearm up and back, like waving hello over your shoulder, until it stops on its own. Hold still until the number locks.',
       'Switch arms, tap Start in the start position, and repeat.',
     ],
     // Mistake line restored word for word from the pre-Oct 6 goal-post step (same arm position). The fix line is that
     // step's first sentence plus a plain-words second sentence (the old one said 'rotates'). Both pending Stacy.
-    mistake: 'Your shoulder shrugs up or your elbow drops below shoulder height.',
-    mistakeFix: 'Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves.',
+    mistake: 'Arching your back off the chair, letting your elbow drop or pull back, or bending your wrist.',
+    mistakeFix: 'Keep your back against the chair and your elbow at shoulder height. Only your forearm moves.',
     // Quinn: flat along the forearm, top edge toward the hand, screen facing out to the side.
-    meter: { grip: 'Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight.' },
+    // Jim 12:58 PM Oct 21 2026: natural in-hand grip, screen facing you. Tilt math unchanged (1:1 for any rigid grip); direction check uses z, see lib/meterDirection.ts.
+    meter: { grip: 'Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.' },
     // NO typical range and NO source line (Stacy, Oct 6 8:19 PM: Vairo 2012 tested cadets lying down, not general adults
     // standing; Gill 40-75 removed). Scoring target 85 lives in JOINT_SCORE_TARGETS. riskBelow is not read by scoring or
     // display; 57 = Quinn's riskBelow for the server Protocol mirror.
@@ -129,19 +128,22 @@ export const STEPS_PART1: Step[] = [
     id: 'cervical_lat',
     title: 'Cervical Lateral Flexion',
     why: 'Shows how far you can tilt your head toward each shoulder.',
-    tool: 'Your phone. Seated in a chair.',
+    // Jim 1:13 PM Oct 21 2026, Quinn's exact copy: phone flat on the side of the head AWAY from the tilt, just above the
+    // ear, same-side hand. Left tilt first (phone on the right), then switch sides, re-Start, tilt right. Direction check:
+    // lib/meterDirection.ts (z, -1 on both sides; the phone switching sides is what flips the world direction).
+    tool: 'Phone meter, held flat against the side of your head.',
     position: [
-      'Sit upright in a chair. Feet flat. Back straight.',
-      'Tap Start, then press your phone flat against your FOREHEAD, screen facing forward, away from your face.',
-      'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
+      'Sit tall in a chair, feet flat, shoulders down and level, nose pointing forward.',
+      'For the left tilt, hold the back of the phone flat against the RIGHT side of your head, just above your ear, with your right hand. Top edge points up, screen facing out.',
+      'Tap Start, then hold this start position while it counts down from 5.',
     ],
     howTo: [
-      'Nose points forward and chin stays level. Tilt your ear toward your left shoulder as far as it will go. Shoulders down, body still. Hold still until the number locks and dings.',
-      'Tap Use this number. Then tap Start the same way and tilt toward your right shoulder.',
+      'Nose points forward and chin stays level. Slowly tilt your left ear toward your left shoulder until it stops on its own. Keep the phone pressed flat. Hold still until the number locks and dings.',
+      'Tap Use this number. Move the phone to the LEFT side of your head, just above your ear, with your left hand. Sit back up straight, tap Start, hold for the countdown, then tilt your right ear toward your right shoulder.',
     ],
-    mistake: 'Shrugging your shoulder up to meet your ear.',
-    mistakeFix: 'Keep both shoulders pressed down the whole time. Only your head moves. If your shoulder rises, that reading does not count.',
-    meter: { grip: 'Phone flat on your forehead, screen facing forward.' },
+    mistake: 'Turning your face, lifting your shoulder toward your ear, leaning your body, or letting the phone slide or tip.',
+    mistakeFix: 'Nose forward, shoulders down, body still, phone pressed flat. Only your head tilts.',
+    meter: { grip: 'Back of the phone flat against the side of your head, just above your ear, on the side away from the tilt.' },
     // Range reset (Jim Oct 21 2026): pooled, WITH Wadhwa 2024 (Grant ruling). PMIDs 23829201, 32626769, 33868830, 39677250;
     // N 260: 44.5 (7.4). Without-Wadhwa alternative: proof-20261020/range-reset-neck-no-wadhwa.patch (not default).
     fields: [
