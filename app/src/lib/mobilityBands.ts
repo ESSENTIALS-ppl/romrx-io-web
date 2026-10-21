@@ -253,7 +253,7 @@ export function overallBandFromJointScores(
   for (const row of rows ?? []) {
     const b = bandScoreFromJointScore(row.score)
     const k = normalizeJointScoreKey(row)
-    if (b != null && !(k && isUnscoredJoint(k))) bands.push(b)
+    if (b != null && !(k && (isUnscoredJoint(k) || isLumbarKey(k)))) bands.push(b) // Grant Oct 21 2026 7:20 PM: lumbar out of the overall
   }
   return worstBandScore(bands)
 }
@@ -395,7 +395,8 @@ export function overallBandForAssessment(
   assessment: object | null | undefined,
   jointScores?: JointScoreRow[] | null,
 ): BandScore | null {
-  return worstBandScore([...jointBandsForAssessment(assessment, jointScores).values()])
+  // Grant Oct 21 2026 7:20 PM: lumbar out of the overall: lumbar bands are still computed per joint for saved values but never count here.
+  return worstBandScore([...jointBandsForAssessment(assessment, jointScores).entries()].filter(([k]) => !isLumbarKey(k)).map(([, b]) => b))
 }
 
 /** Copy says "top three problem areas" — never show more than this. */
@@ -604,6 +605,7 @@ export function mobilityScoreForAssessment(
   let n = 0
   for (const j of ASSESSMENT_JOINTS) {
     if (isUnscoredJoint(j.key)) continue
+    if (isLumbarKey(j.key)) continue // Grant Oct 21 2026 7:20 PM: lumbar out of the overall /100
     const p = cappedRatioPct(worseSideValue(measuredFor(rec, j)), JOINT_SCORE_TARGETS[j.key])
     if (p == null) continue
     sum += p

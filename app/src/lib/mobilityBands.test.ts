@@ -113,7 +113,9 @@ describe('boundaries: same measurement → same band on every surface', () => {
         if (!isNarrowJoint(joint)) expect(bandScoreFromTargetRatio(v, target)).toBe(expected)
         expect(sqlScore(v, target, joint)).toBe(expected)
         const s = surfaces(a, rows)
-        for (const [name, b] of Object.entries(s)) expect([name, b]).toEqual([name, expected])
+        // Lumbar is out of the overall (Grant Oct 21 2026 7:20 PM): a lumbar-only assessment has no overall band.
+        const overallExpected = joint.startsWith('lumbar') ? null : expected
+        for (const [name, b] of Object.entries(s)) expect([name, b]).toEqual([name, overallExpected])
         // Joint chip / bar / name colour (My Body) and My Protocol card chip
         expect(jointBandsForAssessment(a, rows).get(joint)).toBe(expected)
         expect(jointBandsForAssessment(a).get(joint)).toBe(expected)
