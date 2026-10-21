@@ -200,7 +200,7 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-countdown]')).toBeNull()
     expect($('[data-meter-number]')!.textContent).toBe('0°')
     advance(3000, 0)
-    expect(isLocked()).toBe(false)                                  // never locks within 2 deg of zero
+    expect(isLocked()).toBe(false)                                  // never locks within 5 deg of zero
     advance(3000, 40)
     expectLockedAt(40)
     expect(audio.lock).toBe(1)

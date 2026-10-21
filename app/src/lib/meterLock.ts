@@ -4,14 +4,14 @@
  * - Lock when every reading stays within +/-LOCK_BAND_DEG of the reading at the START of the hold
  *   window for LOCK_HOLD_MS. Any reading outside the band restarts the window from that reading.
  * - Locked value = mean of the window, rounded to a whole degree (as displayed).
- * - No hold window while the reading is within ZERO_GUARD_DEG of 0 (still at the start position),
+ * - No hold window while the reading is within ZERO_GUARD_DEG (5, raised from 2 on Oct 21 2026) of 0 (still at the start position),
  *   so it never locks before you move.
  * - Once locked it stays locked: there is no automatic unlock or re-arm. Only Reset or Zero unlock.
  * Pure functions, no timers: callers pass the time. Guarded by meterLock.test.ts.
  */
 export const LOCK_BAND_DEG = 2
 export const LOCK_HOLD_MS = 2500
-export const ZERO_GUARD_DEG = 2
+export const ZERO_GUARD_DEG = 5
 /** Start = counts down from 5: a tick on 5, 4, 3, 2, 1, then GO at 5 s, when the start position is set (Jim, Oct 6 9:05 AM). */
 export const ZERO_COUNTDOWN_SEC = 5
 
