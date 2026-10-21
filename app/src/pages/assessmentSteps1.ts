@@ -46,7 +46,7 @@ export const STEPS_PART1: Step[] = [
     tool: 'Same chair. This time, hold the phone flat on the front of your shin.',
     position: [
       'Stay in the same chair and the same position.',
-      'Keep your phone flat on the front of your shin, just below the knee, screen facing forward.',
+      'Keep your phone flat on the front of your shin, just below the knee, screen facing forward. Press the phone flat against your leg with your hand the whole time.',
       'Before each leg, tap Start and hold your shin straight up and down while it counts down from 5.',
     ],
     howTo: [
@@ -55,7 +55,7 @@ export const STEPS_PART1: Step[] = [
       'Tap Use this number. Return to center, tap Start, and repeat with the other leg.',
     ],
     mistake: 'One hip lifts off the chair.',
-    mistakeFix: 'You must stay sitting evenly on both sides. The moment one side lifts, that is your endpoint. Record it.',
+    mistakeFix: 'Stay sitting evenly on both sides. The moment one side lifts, stop there and hold still until the number locks.',
     meter: { grip: 'Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.' },
     fields: [
       { key: 'hip_ir_l', label: 'Left', unit: '°', normalLow: 26, normalHigh: 40, riskBelow: 30, rangeSource: 'Simoneau et al., 1998' },
