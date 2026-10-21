@@ -130,6 +130,76 @@ export function bandScoreFromTargetRatio(worse: number, target: number): BandSco
   return 1
 }
 
+/**
+ * T1 option A (Jim, Oct 21 2026 10:53 AM ET, "T1: A plus C"; spec Quinn narrow-bands-options.md).
+ * Narrow joints (Building band at or under published measuring error) get a buffer E below each
+ * cutoff, and a reading inside the buffer gets the better color. Stored values are never changed.
+ * Same rule in public.t1_joint_band() (compute_joint_scores), compute-tiers joint_totals.ts and
+ * submit-lead-assessment email.ts. Units: degrees, ankle_df in cm.
+ *   Steady   if worse + E >= target
+ *   Building if worse + E >= 0.9 x target
+ *   else Needs focus
+ * Joints not listed keep bandScoreFromTargetRatio exactly (E = 0).
+ */
+export const NARROW_BAND_BUFFER: Readonly<Record<string, number>> = {
+  cervical_rot: 5,
+  cervical_lat: 5,
+  cervical_flex: 5,
+  cervical_ext: 5,
+  hip_er: 5,
+  hip_ir: 5,
+  hip_abd: 5,
+  shoulder_er: 5,
+  ankle_df: 1,
+}
+
+/** Buffer E for a joint (side keys allowed); 0 when not narrow. */
+export function narrowBuffer(jointKey: string): number {
+  return NARROW_BAND_BUFFER[jointKeyBase(jointKey)] ?? 0
+}
+
+/** 6-decimal fixed point so float noise (21.1 + 5) can never flip a cutoff; SQL numeric is exact. */
+function fx(n: number): number {
+  return Math.round(n * 1e6)
+}
+
+/** THE Base band for one joint value: option A buffer on narrow joints, else bandScoreFromTargetRatio. */
+export function bandScoreForJoint(jointKey: string, worse: number, target: number): BandScore {
+  const e = narrowBuffer(jointKey)
+  if (e === 0) return bandScoreFromTargetRatio(worse, target)
+  if (!(target > 0) || !Number.isFinite(worse)) return 1
+  const adj = fx(worse + e)
+  if (adj >= fx(target)) return 3
+  if (adj * 10 >= fx(target) * 9) return 2
+  return 1
+}
+
+/**
+ * T1 option C. Protocol weight for a joint gap: narrow joints count 0.5 until two assessments
+ * in a row (this one and the previous one) show the same band for that joint, then 1.
+ * Non-narrow joints are always 1. Internal ordering only: no user step, no copy.
+ */
+export const NARROW_GAP_WEIGHT = 0.5
+
+export function narrowGapWeight(jointKey: string, band: BandScore, previousBand: BandScore | null | undefined): number {
+  if (narrowBuffer(jointKey) === 0) return 1
+  return previousBand != null && previousBand === band ? 1 : NARROW_GAP_WEIGHT
+}
+
+/** Gap used to order the Protocol: 0 when Steady, else 1 - min(1, worse/target), times narrowGapWeight. */
+export function weightedJointGap(
+  jointKey: string,
+  worse: number,
+  target: number,
+  previousWorse?: number | null,
+): number {
+  const band = bandScoreForJoint(jointKey, worse, target)
+  if (band === 3) return 0
+  const gap = 1 - Math.min(1, Math.max(0, worse / target))
+  const prevBand = previousWorse == null || !Number.isFinite(previousWorse) ? null : bandScoreForJoint(jointKey, previousWorse, target)
+  return gap * narrowGapWeight(jointKey, band, prevBand)
+}
+
 /** Prefer worst (lowest) band among measured joints; null if none measured. */
 export function worstBandScore(scores: Array<BandScore | null | undefined>): BandScore | null {
   let worst: BandScore | null = null
@@ -196,7 +266,7 @@ export function bandForJointKey(
 
   const worse = worseSideValue(measured)
   if (worse == null) return null
-  return bandScoreFromTargetRatio(worse, target)
+  return bandScoreForJoint(base, worse, target)
 }
 
 export function bandFull(score: BandScore): string {
@@ -326,13 +396,17 @@ export const TOP_PROBLEM_AREAS_MAX = 3
  * capped at 1, same ordering rule as compute-tiers). Unscored joints (hip
  * flexion while HIP_FLEX_UNSCORED_FALLBACK is on) and unmeasured joints are
  * never included, so a top-N cut taken from this list can never contain them.
+ * T1 option C: ordered by weightedJointGap (largest first). Pass the user's previous assessment
+ * so narrow joints whose band agrees across both get full weight; without it they count 0.5.
  */
 export function scoredJointKeysWorstFirst(
   assessment: object | null | undefined,
+  previous?: object | null,
 ): string[] {
   if (!assessment) return []
   const rec = assessment as Record<string, unknown>
-  const rows: { key: string; ratio: number; order: number }[] = []
+  const prev = (previous ?? null) as Record<string, unknown> | null
+  const rows: { key: string; gap: number; order: number }[] = []
   ASSESSMENT_JOINTS.forEach((j, order) => {
     if (isUnscoredJoint(j.key)) return
     const m = measuredFor(rec, j)
@@ -345,9 +419,10 @@ export function scoredJointKeysWorstFirst(
       const onlyRight = m.left == null && m.right != null
       key = useRight || onlyRight ? j.r : j.l
     }
-    rows.push({ key, ratio: Math.min(1, Math.max(0, worse / target)), order })
+    const prevWorse = prev ? worseSideValue(measuredFor(prev, j)) : null
+    rows.push({ key, gap: weightedJointGap(j.key, worse, target, prevWorse), order })
   })
-  rows.sort((a, b) => a.ratio - b.ratio || a.order - b.order)
+  rows.sort((a, b) => b.gap - a.gap || a.order - b.order)
   return rows.map(r => r.key)
 }
 
@@ -386,9 +461,10 @@ export function topProblemAreas(
 export function topProblemAreasForAssessment(
   assessment: object | null | undefined,
   max: number = TOP_PROBLEM_AREAS_MAX,
+  previous?: object | null,
 ): string[] {
   const worst = (assessment as { worst_joints?: ReadonlyArray<string> | null } | null | undefined)?.worst_joints
-  return topProblemAreas(worst, max, scoredJointKeysWorstFirst(assessment))
+  return topProblemAreas(worst, max, scoredJointKeysWorstFirst(assessment, previous))
 }
 
 // ---------------------------------------------------------------------------
@@ -460,7 +536,7 @@ export function jointPercent(
   const worse = worseSideValue(measured)
   const raw = cappedRatioPct(worse, target)
   if (raw == null) return null
-  const b = band ?? bandScoreFromTargetRatio(worse!, target)
+  const b = band ?? bandScoreForJoint(base, worse!, target)
   return clampPercentToBand(Math.floor(raw), b)
 }
 
@@ -635,7 +711,7 @@ export function sideBandsForJoint(
   if (isUnscoredJoint(jointKey)) return { left: null, right: null }
   const target = JOINT_SCORE_TARGETS[jointKeyBase(jointKey)]
   const one = (v: number | null | undefined): BandScore | null =>
-    v == null || target == null || !Number.isFinite(Number(v)) ? null : bandScoreFromTargetRatio(Number(v), target)
+    v == null || target == null || !Number.isFinite(Number(v)) ? null : bandScoreForJoint(jointKey, Number(v), target)
   let left = one(sides.left)
   let right = one(sides.right)
   if (jointBand != null) {
@@ -667,7 +743,7 @@ export function sidePercent(jointKey: string, value: number | null | undefined, 
   const v = value == null ? null : Number(value)
   const raw = cappedRatioPct(v, target)
   if (raw == null || v == null) return null
-  const b = sideBand ?? bandScoreFromTargetRatio(v, target)
+  const b = sideBand ?? bandScoreForJoint(jointKey, v, target)
   return clampPercentToBand(Math.floor(raw), b)
 }
 

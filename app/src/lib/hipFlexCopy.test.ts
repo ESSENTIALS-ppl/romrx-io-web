@@ -382,6 +382,6 @@ describe('safe fallback: hip flexion is never judged', () => {
   it('live measure-screen chip is off for hip flexion', () => {
     expect(getScore('68', { key: 'hip_flex_l', label: 'Left', unscored: true })).toBeNull()
     expect(getScore('68', { key: 'hip_flex_r', label: 'Right' })).toBeNull()
-    expect(getScore('35', { key: 'hip_abd_l', label: 'Left' })).toBe(1) // 35 / 40 = 0.875
+    expect(getScore('30', { key: 'hip_abd_l', label: 'Left' })).toBe(1) // T1: 30 + 5 = 35 < 36
   })
 })
