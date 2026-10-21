@@ -72,7 +72,7 @@ export const STEPS_PART1: Step[] = [
     // STOP_LINE (rendered once on every step). Meter math unchanged: gravity angle since zero (see shoulderErStanding.test.ts).
     tool: 'Phone meter, held in your hand.',
     position: [
-      'Sit tall in a chair with a back, feet flat, your back against the chair. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead. Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.',
+      'Sit tall in a chair with a back, feet flat, your back against the chair. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead.',
       'Tap Start with your other hand, then hold this start position while it counts down from 5.',
     ],
     howTo: [

@@ -79,13 +79,22 @@ describe('shoulder_er meter, standing goal-post', () => {
     mount()
     expect(host.querySelector('h2')!.textContent).toBe('Shoulder External Rotation')
     expect(host.textContent).toContain('Phone meter, held in your hand.')
-    expect(host.textContent).toContain('Sit tall in a chair with a back, feet flat, your back against the chair. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead. Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.')
+    expect(host.textContent).toContain('Sit tall in a chair with a back, feet flat, your back against the chair. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead.')
     expect(host.textContent).not.toMatch(/Stand tall|Standing/)
     expect(host.textContent).toContain('Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.')
     expect(host.textContent).toContain("We don't want you hurt, so stop if anything hurts.")
     expect(host.textContent).not.toMatch(/Typical range|Source:|Gill|Vairo|85-110|40-75/)
     expect(host.querySelector('[data-range-source]')).toBeNull()
     expect(host.textContent).not.toMatch(/Shoulder Extension|lying|on your back|floor/i)
+  })
+
+  it('grip sentence shows exactly once with the meter open (Quinn Oct 21: only in meter.grip)', async () => {
+    mount()
+    if (!host.querySelector('[data-phone-meter]')) click(host.querySelector('[data-measure-btn="shoulder_er_l"]'))
+    expect(host.querySelector('[data-phone-meter]')).not.toBeNull()
+    const GRIP = 'Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.'
+    expect(host.textContent!.split(GRIP).length - 1).toBe(1)
+    expect(host.querySelector('[data-meter-grip]')!.textContent).toBe(GRIP)
   })
 
   for (const which of ['left', 'right'] as const) {

@@ -116,3 +116,12 @@ describe('shoulder ER natural hold, screen facing you: tilt tracks rotation 1:1'
     }
   })
 })
+
+import { STEPS_PART2 } from '../pages/assessmentSteps2'
+describe('neck flexion/extension copy matches the right-temple direction check (Quinn Oct 21 2026)', () => {
+  it('placement line starts with Tap Start; grip line under the meter does not', () => {
+    const s = STEPS_PART2.find(x => x.id === 'cervical_flex_ext')!
+    expect(s.position[1]).toBe('Tap Start, then hold your phone flat against the right side of your head, at your temple, with your right hand, screen facing out, top edge pointing up.')
+    expect(s.meter!.grip).toBe('Hold your phone flat against the right side of your head, at your temple, with your right hand, screen facing out, top edge pointing up.')
+  })
+})

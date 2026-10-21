@@ -10,7 +10,7 @@ export const STEPS_PART2: Step[] = [
     tool: 'Your phone. Seated in a chair.',
     position: [
       'Sit upright in a chair. Feet flat. Back straight.',
-      'Hold your phone flat against the right side of your head, at your temple, with your right hand, screen facing out, top edge pointing up.',
+      'Tap Start, then hold your phone flat against the right side of your head, at your temple, with your right hand, screen facing out, top edge pointing up.',
       'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
