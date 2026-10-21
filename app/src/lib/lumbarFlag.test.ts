@@ -32,12 +32,14 @@ describe('flag value', () => {
     const { baseLumbarRemoved } = await import('./lumbarFlag')
     expect(baseLumbarRemoved()).toBe(true)
   })
-  it('kill switch: exactly "0" brings the lumbar step back', async () => {
+  it('no kill switch (Jim Oct 21 2026 7:03 PM ET): "0" no longer brings the lumbar step back', async () => {
     vi.stubEnv('VITE_BASE_LUMBAR_REMOVED', '0')
     const { baseLumbarRemoved } = await import('./lumbarFlag')
     const { STEPS } = await import('../pages/assessmentSteps')
-    expect(baseLumbarRemoved()).toBe(false)
-    expect(STEPS.some(s => s.id === 'lumbar')).toBe(true)
+    const { STEPS_PART2 } = await import('../pages/assessmentSteps2')
+    expect(baseLumbarRemoved()).toBe(true)
+    expect(STEPS.some(s => s.id === 'lumbar')).toBe(false)
+    expect(STEPS_PART2.some(s => s.id === 'lumbar')).toBe(false)
   })
   it('netlify.toml does not override it', () => {
     const toml = readFileSync(resolve(SRC, '..', '..', 'netlify.toml'), 'utf8')

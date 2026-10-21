@@ -11,7 +11,8 @@
  * rebuild to bring the step back. Anything else (unset, "1") = ON.
  */
 export function baseLumbarRemoved(): boolean {
-  return import.meta.env.VITE_BASE_LUMBAR_REMOVED !== '0'
+  // Oct 21 2026 7:03 PM ET (Jim): permanent. The step is deleted from STEPS_PART2, so there is no kill switch.
+  return true
 }
 
 export const LUMBAR_KEYS = ['lumbar_flex', 'lumbar_ext'] as const
