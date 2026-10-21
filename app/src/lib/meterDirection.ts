@@ -10,7 +10,7 @@
  *  - 'twist': (g0 x g1).z, the in-plane turn seen from the screen. Used when the movement turns
  *    the phone within its own screen plane; independent of which way the top edge points.
  * sideFlip: the expected sign is mirrored on the right side (key ending _r).
- * Steps not listed (hip_flex, cervical_flex/ext) have no check: behavior unchanged.
+ * Steps not listed (hip_flex) have no check: behavior unchanged.
  */
 import { gravityInDevice, tiltDeltaDeg, type Quat } from './orientation'
 
@@ -29,8 +29,19 @@ const STEP_DIR: Record<string, { axis: DirAxis; left: 1 | -1; right: 1 | -1 }> =
   hip_abd: { axis: 'z', left: -1, right: -1 },
 }
 
+/**
+ * Single-field steps. Neck flexion / extension (Quinn Oct 21 2026): phone on the RIGHT temple, screen
+ * facing out, top edge up. The nod turns the phone inside its screen plane; seen from the screen
+ * (from the user's right), chin down turns it clockwise, which makes (g0 x g1).z positive.
+ */
+const FIELD_DIR: Record<string, DirectionSpec> = {
+  cervical_flex: { axis: 'twist', sign: 1 },
+  cervical_ext: { axis: 'twist', sign: -1 },
+}
+
 /** Direction spec for one meter field key (for example 'hip_ir_r'), or null when unchecked. */
 export function directionForField(key: string): DirectionSpec | null {
+  if (FIELD_DIR[key]) return FIELD_DIR[key]
   const m = /^(.*)_(l|r)$/.exec(key)
   if (!m) return null
   const d = STEP_DIR[m[1]]

@@ -10,7 +10,7 @@ export const STEPS_PART2: Step[] = [
     tool: 'Your phone. Seated in a chair.',
     position: [
       'Sit upright in a chair. Feet flat. Back straight.',
-      'Tap Start, then press your phone flat against the SIDE of your head at the temple, screen facing the wall beside you.',
+      'Hold your phone flat against the right side of your head, at your temple, with your right hand, screen facing out, top edge pointing up.',
       'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ],
     howTo: [
@@ -19,7 +19,8 @@ export const STEPS_PART2: Step[] = [
     ],
     mistake: 'Moving your whole upper body forward or backward instead of just your head and neck.',
     mistakeFix: 'Your shoulders and upper body stay still. Only your head moves. If your back starts to round or arch, stop there.',
-    meter: { grip: 'Phone flat against the side of your head at the temple, screen facing the wall beside you.' },
+    // Quinn Oct 21 2026: right temple, right hand, top edge up (enables the direction check, lib/meterDirection.ts).
+    meter: { grip: 'Hold your phone flat against the right side of your head, at your temple, with your right hand, screen facing out, top edge pointing up.' },
     // Card 14 (Jim YES Oct 20 10:52 AM ET): published Swinkels 2014 decade means, flexion 53 to 60, extension 64 to 75
     // (TYPICAL-RANGES-FOR-AVERY-20261019.md rows 10-11). Display only, never scoring. Own note per field so each shows.
     fields: [

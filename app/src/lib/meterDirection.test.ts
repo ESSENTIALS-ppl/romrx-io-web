@@ -50,6 +50,10 @@ const CASES: Case[] = [
   // hip_abd: outer thigh, screen out; leg moves out to the side about the forward axis
   { key: 'hip_abd_l', z: L_LAT, ys: [Z, neg(Z)], axis: X, rightSign: 1, deg: 40 },
   { key: 'hip_abd_r', z: R_LAT, ys: [Z, neg(Z)], axis: X, rightSign: -1, deg: 40 },
+  // cervical_flex / _ext (Quinn Oct 21): right temple, screen out (user's right = -Y), top edge up, and turned
+  // forward or back in the hand; chin down = top of head to the front = positive turn about Y
+  { key: 'cervical_flex', z: neg(Y), ys: [Z, X, neg(X), [Math.SQRT1_2, 0, Math.SQRT1_2]], axis: Y, rightSign: 1, deg: 50 },
+  { key: 'cervical_ext', z: neg(Y), ys: [Z, X, neg(X), [Math.SQRT1_2, 0, Math.SQRT1_2]], axis: Y, rightSign: -1, deg: 60 },
 ]
 
 /** Ramp from 0 to deg over 1 s, then hold 4 s; returns lock result and whether wrong-way was shown. */
@@ -85,7 +89,7 @@ describe('meter direction check', () => {
     })
   }
   it('unchecked steps keep the old behavior: either way locks', () => {
-    for (const key of ['hip_flex_l', 'hip_flex_r', 'cervical_flex', 'cervical_ext']) {
+    for (const key of ['hip_flex_l', 'hip_flex_r']) {
       expect(directionForField(key)).toBeNull()
       const q0 = fromAxes(Z, Y)
       expect(sim(q0, Y, 30, key).s.locked).toBe(true)
