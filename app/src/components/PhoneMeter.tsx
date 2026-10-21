@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Lock, Crosshair, X, Smartphone } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { averageQuats, tiltDeltaDeg, type Quat } from '../lib/orientation'
+import { gateReading, type DirectionSpec } from '../lib/meterDirection'
 import { initialLock, meterValueToUse, nextPeak, stepLock, type LockState } from '../lib/meterLock'
 import { getSensorSnapshot, latestQuat, latestRaw, recentQuats, startSensor, subscribeSensor } from '../lib/meterSensor'
 import { countdownPlan, playLockDing, playMeterTone, unlockMeterAudio } from '../lib/meterAudio'
@@ -12,7 +13,7 @@ const TICK_MS = 50
 const GO_SHOW_MS = 800
 const showDebug = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1'
 
-interface View { angle: number | null; peak: number | null; locked: boolean; lockVal: number | null; holdFrac: number | null }
+interface View { angle: number | null; peak: number | null; locked: boolean; lockVal: number | null; holdFrac: number | null; wrong?: boolean }
 
 /**
  * Inline phone meter for one angle field. Same math as the sandbox Jim tested (lib/orientation.ts
@@ -22,7 +23,7 @@ interface View { angle: number | null; peak: number | null; locked: boolean; loc
  * The movement name is the screen-reader label only (the step header shows it). Peak and the debug
  * readout show only with ?debug=1 (layout review, Oct 6).
  */
-export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, headerLabel, gripNote, lockedLine }: {
+export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, headerLabel, gripNote, lockedLine, direction }: {
   movement: string
   sideLabel: string
   grip: string
@@ -37,6 +38,8 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
   gripNote?: string
   /** Standalone ROMeter: replaces the locked status line (which mentions Use this number). */
   lockedLine?: string
+  /** Expected movement direction (lib/meterDirection). Wrong way past the margin: no lock, wrong-way message. */
+  direction?: DirectionSpec | null
 }) {
   const sensor = useSyncExternalStore(subscribeSensor, getSensorSnapshot, getSensorSnapshot)
   const q0 = useRef<Quat | null>(null)
@@ -57,9 +60,10 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
       if (!q0.current || !q) return
       const v = tiltDeltaDeg(q0.current, q)
       live.current = v
-      const st = stepLock(lock.current, v, performance.now())
+      const { wrong, lockInput } = gateReading(q0.current, q, v, direction)
+      const st = stepLock(lock.current, lockInput, performance.now())
       lock.current = st.state
-      peak.current = nextPeak(peak.current, v, st.state.locked)
+      if (!wrong) peak.current = nextPeak(peak.current, v, st.state.locked)
       if (st.justLocked) playLockDing()
       const next: View = {
         angle: Math.round(v),
@@ -67,16 +71,17 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
         locked: st.state.locked,
         lockVal: st.state.lockVal,
         holdFrac: st.holdFrac == null ? null : Math.round(st.holdFrac * 50) / 50,
+        wrong: wrong && !st.state.locked,
       }
       setView(prev => (prev.angle === next.angle && prev.peak === next.peak && prev.locked === next.locked &&
-        prev.lockVal === next.lockVal && prev.holdFrac === next.holdFrac) ? prev : next)
+        prev.lockVal === next.lockVal && prev.holdFrac === next.holdFrac && prev.wrong === next.wrong) ? prev : next)
       if (debug) {
         const r = latestRaw()
         setDbg(`tilt ${v.toFixed(1)}° · β/γ/α ${r ? `${Math.round(r.b)}/${Math.round(r.g)}/${Math.round(r.a ?? 0)}` : '--'} · samples ${getSensorSnapshot().samples} · hold ${st.holdFrac == null ? '-' : st.holdFrac.toFixed(2)}`)
       }
     }, TICK_MS)
     return () => window.clearInterval(id)
-  }, [debug])
+  }, [debug, direction?.axis, direction?.sign])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const captureZero = () => {
     const qs = recentQuats()
@@ -146,7 +151,7 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
   const shown = view.locked ? view.lockVal : view.angle
   const status = counting ? C.zeroCountdown
     : !zeroed ? C.needZero
-    : view.locked ? (lockedLine ?? C.locked) : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
+    : view.locked ? (lockedLine ?? C.locked) : view.wrong ? C.wrongWay : (view.holdFrac ?? 0) >= 0.15 ? C.holding : C.live
 
   return (
     <div data-phone-meter role="group" aria-label={movement} className={cn('rounded-card border bg-white p-4 space-y-3 transition-colors', view.locked ? 'border-2 border-meter-text shadow-md' : 'border-meter-text/20')}>
