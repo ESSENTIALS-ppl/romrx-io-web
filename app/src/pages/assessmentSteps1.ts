@@ -72,7 +72,7 @@ export const STEPS_PART1: Step[] = [
     // STOP_LINE (rendered once on every step). Meter math unchanged: gravity angle since zero (see shoulderErStanding.test.ts).
     tool: 'Your phone. Standing.',
     position: [
-      'Stand tall. Hold the phone in your fist, long edge in line with your forearm, top edge pointing forward past your fingers, screen facing up. Keep your wrist straight and your grip firm.',
+      'Stand tall. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead.',
       'Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.',
       'Tap Start with your other hand, then hold this start position while it counts down from 5.',
     ],
@@ -86,8 +86,8 @@ export const STEPS_PART1: Step[] = [
     mistake: 'Your shoulder shrugs up or your elbow drops below shoulder height.',
     mistakeFix: 'Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves.',
     // Quinn: flat along the forearm, top edge toward the hand, screen facing out to the side.
-    // Jim/Quinn Oct 21 2026 grip change: phone in the fist, top edge forward, screen up (in-hand grip). Copy only, meter math unchanged.
-    meter: { grip: 'Hold the phone in your fist, long edge in line with your forearm, top edge pointing forward past your fingers, screen facing up. Keep your wrist straight and your grip firm.' },
+    // Jim 12:58 PM Oct 21 2026: natural in-hand grip, screen facing you. Tilt math unchanged (1:1 for any rigid grip); direction check uses z, see lib/meterDirection.ts.
+    meter: { grip: 'Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.' },
     // NO typical range and NO source line (Stacy, Oct 6 8:19 PM: Vairo 2012 tested cadets lying down, not general adults
     // standing; Gill 40-75 removed). Scoring target 85 lives in JOINT_SCORE_TARGETS. riskBelow is not read by scoring or
     // display; 57 = Quinn's riskBelow for the server Protocol mirror.

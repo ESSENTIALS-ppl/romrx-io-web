@@ -22,7 +22,8 @@ export const WRONG_WAY_MARGIN_DEG = 3
 const STEP_DIR: Record<string, { axis: DirAxis; left: 1 | -1; right: 1 | -1 }> = {
   hip_er: { axis: 'z', left: -1, right: -1 },
   hip_ir: { axis: 'twist', left: -1, right: 1 },
-  shoulder_er: { axis: 'y', left: -1, right: -1 },
+  // Screen faces you, forearm forward: turning up and back tips the screen to face down (+z).
+  shoulder_er: { axis: 'z', left: 1, right: 1 },
   shoulder_flex: { axis: 'twist', left: 1, right: -1 },
   cervical_lat: { axis: 'twist', left: 1, right: -1 },
   hip_abd: { axis: 'z', left: -1, right: -1 },

@@ -7,7 +7,8 @@
 import { describe, expect, it } from 'vitest'
 import { mul, tiltDeltaDeg, type Quat } from './orientation'
 import { initialLock, stepLock } from './meterLock'
-import { directionForField, gateReading, WRONG_WAY_MARGIN_DEG } from './meterDirection'
+import { directionForField, gateReading, signedTiltDeg, WRONG_WAY_MARGIN_DEG } from './meterDirection'
+const signedTiltDegFor = (q0: Quat, q: Quat) => signedTiltDeg(q0, q, directionForField('shoulder_er_l')!)
 import { METER_COPY } from './meterCopy'
 
 type V = [number, number, number]
@@ -36,9 +37,10 @@ const CASES: Case[] = [
   // hip_ir: front of shin, screen forward; foot swings outward about the thigh axis
   { key: 'hip_ir_l', z: X, ys: [Z, neg(Z)], axis: X, rightSign: 1, deg: 32 },
   { key: 'hip_ir_r', z: X, ys: [Z, neg(Z)], axis: X, rightSign: -1, deg: 32 },
-  // shoulder_er: fist, top edge forward, screen up; forearm turns up about the side-to-side axis
-  { key: 'shoulder_er_l', z: Z, ys: [X], axis: Y, rightSign: -1, deg: 85 },
-  { key: 'shoulder_er_r', z: Z, ys: [X], axis: Y, rightSign: -1, deg: 85 },
+  // shoulder_er (Jim 12:58 PM): phone naturally in hand, screen facing you (z = backward), top edge
+  // up, or tipped toward the thumb side either way; forearm turns up and back about the side-to-side axis
+  { key: 'shoulder_er_l', z: neg(X), ys: [Z, Y, neg(Y)], axis: Y, rightSign: -1, deg: 85 },
+  { key: 'shoulder_er_r', z: neg(X), ys: [Z, Y, neg(Y)], axis: Y, rightSign: -1, deg: 85 },
   // shoulder_flex: in hand along the hanging arm, screen out to the side; arm lifts forward
   { key: 'shoulder_flex_l', z: L_LAT, ys: [Z, neg(Z)], axis: Y, rightSign: -1, deg: 140 },
   { key: 'shoulder_flex_r', z: R_LAT, ys: [Z, neg(Z)], axis: Y, rightSign: -1, deg: 140 },
@@ -94,5 +96,19 @@ describe('meter direction check', () => {
     const q0 = fromAxes(Z, L_MED)
     const q = mul(axisAngle(X, 2.5), q0)
     expect(gateReading(q0, q, tiltDeltaDeg(q0, q), directionForField('hip_er_l')).wrong).toBe(false)
+  })
+})
+
+describe('shoulder ER natural hold, screen facing you: tilt tracks rotation 1:1', () => {
+  for (const y of [Z, Y, neg(Y)]) it(`top edge ${y.join(',')}: 0, 45, 90 deg read 0, 45, 90 and the right way is positive`, () => {
+    const q0 = fromAxes(y, neg(X))
+    for (const deg of [0, 45, 90]) {
+      const q = mul(axisAngle(Y, -deg), q0)        // forearm forward -> up
+      expect(tiltDeltaDeg(q0, q)).toBeCloseTo(deg, 6)
+      expect(signedTiltDegFor(q0, q)).toBeCloseTo(deg, 6)
+      const w = mul(axisAngle(Y, deg), q0)         // forearm forward -> down (wrong way)
+      expect(tiltDeltaDeg(q0, w)).toBeCloseTo(deg, 6)
+      if (deg > 0) expect(signedTiltDegFor(q0, w)).toBeCloseTo(-deg, 6)
+    }
   })
 })
