@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { bandFull, mobilityScoreForAssessment, overallBandForAssessment } from '../lib/mobilityBands'
 import { STEPS } from './assessmentSteps'
-import { AssessmentPhases } from './AssessmentPhases'
+import { AssessmentPhases, type Phase } from './AssessmentPhases'
 import { track } from '../lib/track'
 import { loginForPackAssessment, packReturnKey, packReturnUrl } from '../lib/packReturn'
 import { Spinner } from '../components/Spinner'
@@ -26,7 +26,7 @@ export function Assessment() {
   useEffect(() => {
     if (needsPackSignIn && returnKey) navigate(loginForPackAssessment(returnKey), { replace: true })
   }, [needsPackSignIn, returnKey, navigate])
-  const [phase, setPhase] = useState<'setup' | 'measure' | 'lead' | 'done' | 'lead-done'>('setup')
+  const [phase, setPhase] = useState<Phase>('setup')
   const [stepIdx, setStepIdx] = useState(0)
   const [values, setValues] = useState<Record<string, string>>({})
   const [email, setEmail] = useState('')
@@ -86,12 +86,9 @@ export function Assessment() {
           return
         }
         track('assessment_completed_ui', { authenticated: true, measured_fields: Object.values(assessment_data).filter(v => v !== null).length })
-        setPhase('done')
-        const packUrl = packReturnUrl(returnKey)
-        setTimeout(() => {
-          if (packUrl) window.location.assign(packUrl)
-          else navigate('/onboarding/results', { replace: true })
-        }, 2000)
+        // Outro replaces the 2 s 'done' spinner (Grant Oct 21 2026). The great-job email was sent by
+        // submit-assessment before this response returned; Continue goes to results or the pack.
+        setPhase('outro')
       } catch {
         setLoading(false)
         setError('Something went wrong. Please try again.')
@@ -119,11 +116,18 @@ export function Assessment() {
       const data = await res.json()
       setLoading(false)
       if (!data.ok) { setError(data.error ?? 'Submission failed. Please try again.'); return }
+      // Lead email already sent by submit-lead-assessment before this response returned.
       setPhase('lead-done')
     } catch {
       setLoading(false)
       setError('Something went wrong. Please try again.')
     }
+  }
+
+  const handleOutroContinue = () => {
+    const packUrl = packReturnUrl(returnKey)
+    if (packUrl) window.location.assign(packUrl)
+    else navigate('/onboarding/results', { replace: true })
   }
 
   const handleLeadSubmit = (e: FormEvent) => {
@@ -154,6 +158,7 @@ export function Assessment() {
       gender={profile?.gender}
       handleNext={handleNext}
       handleLeadSubmit={handleLeadSubmit}
+      onOutroContinue={handleOutroContinue}
     />
   )
 }
