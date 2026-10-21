@@ -78,9 +78,9 @@ describe('shoulder_er meter, standing goal-post', () => {
   it('shows the title, the cue, the new grip and NO typical range or source line', () => {
     mount()
     expect(host.querySelector('h2')!.textContent).toBe('Shoulder External Rotation')
-    expect(host.textContent).toContain('Your phone. Standing.')
-    expect(host.textContent).toContain('Stand tall. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead.')
-    expect(host.textContent).toContain('Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.')
+    expect(host.textContent).toContain('Phone meter, held in your hand.')
+    expect(host.textContent).toContain('Sit tall in a chair with a back, feet flat, your back against the chair. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead. Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.')
+    expect(host.textContent).not.toMatch(/Stand tall|Standing/)
     expect(host.textContent).toContain('Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.')
     expect(host.textContent).toContain("We don't want you hurt, so stop if anything hurts.")
     expect(host.textContent).not.toMatch(/Typical range|Source:|Gill|Vairo|85-110|40-75/)

@@ -64,27 +64,26 @@ export const STEPS_PART1: Step[] = [
   },
 {
     id: 'shoulder_er',
-    // Oct 6 2026, 8:19 PM (Jim-approved, Quinn spec; Stacy PASS title, cue and stop line): STANDING goal-post shoulder ER
+    // Jim 1:00 PM Oct 21 2026: SEATED in a chair with a back (Quinn's exact seated copy, app-steps-audit.md). Was: Oct 6 8:19 PM STANDING goal-post shoulder ER
     // replaces the lying tucked-elbow step that was shown as 'Shoulder Extension'. Key shoulder_er and fields unchanged.
     title: 'Shoulder External Rotation',
     why: 'Supports overhead and pressing positions.',
     // Cue sentences are Quinn's exact words, split Setup / How to Measure like every meter step. The stop line is the shared
     // STOP_LINE (rendered once on every step). Meter math unchanged: gravity angle since zero (see shoulderErStanding.test.ts).
-    tool: 'Your phone. Standing.',
+    tool: 'Phone meter, held in your hand.',
     position: [
-      'Stand tall. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead.',
-      'Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.',
+      'Sit tall in a chair with a back, feet flat, your back against the chair. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead. Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.',
       'Tap Start with your other hand, then hold this start position while it counts down from 5.',
     ],
     howTo: [
-      'Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching.',
+      'Keep your elbow at shoulder height and in line with your shoulders. Slowly rotate your forearm up and back, like waving hello over your shoulder, until it stops on its own. Hold still until the number locks.',
       'Hold still at your limit: after 2.5 seconds the number locks and dings. Tap Use this number.',
       'Switch arms, tap Start in the start position, and repeat.',
     ],
     // Mistake line restored word for word from the pre-Oct 6 goal-post step (same arm position). The fix line is that
     // step's first sentence plus a plain-words second sentence (the old one said 'rotates'). Both pending Stacy.
-    mistake: 'Your shoulder shrugs up or your elbow drops below shoulder height.',
-    mistakeFix: 'Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves.',
+    mistake: 'Arching your back off the chair, letting your elbow drop or pull back, or bending your wrist.',
+    mistakeFix: 'Keep your back against the chair and your elbow at shoulder height. Only your forearm moves.',
     // Quinn: flat along the forearm, top edge toward the hand, screen facing out to the side.
     // Jim 12:58 PM Oct 21 2026: natural in-hand grip, screen facing you. Tilt math unchanged (1:1 for any rigid grip); direction check uses z, see lib/meterDirection.ts.
     meter: { grip: 'Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.' },
