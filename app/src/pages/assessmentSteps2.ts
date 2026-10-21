@@ -20,11 +20,12 @@ export const STEPS_PART2: Step[] = [
     mistake: 'Moving your whole upper body forward or backward instead of just your head and neck.',
     mistakeFix: 'Your shoulders and upper body stay still. Only your head moves. If your back starts to round or arch, stop there.',
     meter: { grip: 'Phone flat against the side of your head at the temple, screen facing the wall beside you.' },
-    // Card 14 (Jim YES Oct 20 10:52 AM ET): published Swinkels 2014 decade means, flexion 53 to 60, extension 64 to 75
-    // (TYPICAL-RANGES-FOR-AVERY-20261019.md rows 10-11). Display only, never scoring. Own note per field so each shows.
+    // Range reset (Jim Oct 21 2026 4:15 PM ET; replaces card 14 Swinkels 53-60 / 64-75): pooled mean +/- 1 SD, risk = mean - 2 SD,
+    // WITH Wadhwa 2024 (Grant ruling). PMIDs 23829201, 32626769, 33868830, 39677250; N 260. Flexion 50.7 (11.4), extension 67.4 (18.9).
+    // Scoring target = normalLow (mobilityBands.ts). Own note per field so each shows. Without-Wadhwa alternative is not default.
     fields: [
-      { key: 'cervical_flex', label: 'Flexion', unit: '°', normalLow: 53, normalHigh: 60, riskBelow: 35, referenceNote: 'Typical range: 53 to 60 degrees', rangeSource: 'Swinkels, 2014' },
-      { key: 'cervical_ext', label: 'Extension', unit: '°', normalLow: 64, normalHigh: 75, riskBelow: 40, referenceNote: 'Typical range: 64 to 75 degrees', rangeSource: 'Swinkels, 2014' },
+      { key: 'cervical_flex', label: 'Flexion', unit: '°', normalLow: 39, normalHigh: 62, riskBelow: 28, referenceNote: 'Typical range: 39 to 62 degrees', rangeSource: 'Pooled: Tousignant-Laflamme 2013, Wolan-Nieroda 2020, Canovas-Ambit 2021, Wadhwa 2024' },
+      { key: 'cervical_ext', label: 'Extension', unit: '°', normalLow: 48, normalHigh: 86, riskBelow: 29, referenceNote: 'Typical range: 48 to 86 degrees', rangeSource: 'Pooled: Tousignant-Laflamme 2013, Wolan-Nieroda 2020, Canovas-Ambit 2021, Wadhwa 2024' },
     ],
   },
 {
@@ -107,9 +108,10 @@ export const STEPS_PART2: Step[] = [
     mistake: 'Your heel lifts off the floor, or your knee drifts inward or outward as it drives forward.',
     mistakeFix: 'Keep your eye on your heel and your knee over your second and third toes. If your heel lifts even slightly, that try does not count. Move your foot closer to the wall and try again.',
     fields: [
-      // Typical range 6-13 cm (Quinn, TYPICAL-RANGES-FOR-AVERY-20261019.md: Konor 2012, mean 9.5 cm, SD 3.1). Display only, never scoring.
-      { key: 'ankle_df_l', label: 'Left', unit: 'cm', normalLow: 6, normalHigh: 13, riskBelow: 0, rangeSource: 'Konor et al., 2012' },
-      { key: 'ankle_df_r', label: 'Right', unit: 'cm', normalLow: 6, normalHigh: 13, riskBelow: 0, rangeSource: 'Konor et al., 2012' },
+      // Range reset (Jim Oct 21 2026): McBride 2026 (PMID 41723909), all ages, 14 subgroups pooled, N 899: 9.5 (3.4) cm.
+      // Scoring target = normalLow 6.1 (mobilityBands.ts).
+      { key: 'ankle_df_l', label: 'Left', unit: 'cm', normalLow: 6.1, normalHigh: 12.9, riskBelow: 2.6, rangeSource: 'McBride et al., 2026' },
+      { key: 'ankle_df_r', label: 'Right', unit: 'cm', normalLow: 6.1, normalHigh: 12.9, riskBelow: 2.6, rangeSource: 'McBride et al., 2026' },
     ],
   }
 ]

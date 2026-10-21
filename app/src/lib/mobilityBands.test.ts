@@ -238,14 +238,16 @@ describe('email templates in this repo', () => {
  * flexion 140, ankle 6 cm): same measured inputs, new expected %, /100 and compute-tiers
  * worst_joints. Fixture 05's boundary joint moved from ankle (17.9 cm is Steady against 6) to
  * shoulder ER L 80.5 / 90 = 0.894 (target unchanged).
+ * Re-pinned Oct 21 2026 (range reset, Jim 4:15 PM ET): same inputs against hip IR 24, neck side bend 37, neck flexion 39
+ * (also hip ER 23, shoulder flexion 141, ankle 6.1, neck extension 48). 02 LOW moves 88 to 89 (still Needs focus).
  */
 const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; score: number; band: BandScore; text: string; pct: Record<string, number>; worst: string[] }> = [
   {
-    name: '02 LOW', score: 88, band: 1, text: '88/100 \u00B7 Needs focus',
+    name: '02 LOW', score: 89, band: 1, text: '89/100 \u00B7 Needs focus',
     worst: ['lumbar_ext', 'shoulder_er_l', 'lumbar_flex', 'shoulder_er_r', 'cervical_lat_l'],
     pct: {
-      hip_er: 100, hip_ir: 84, hip_abd: 100, shoulder_er: 72, shoulder_flex: 100,
-      ankle_df: 100, lumbar_flex: 75, lumbar_ext: 64, cervical_lat: 84, cervical_flex: 92, cervical_ext: 100,
+      hip_er: 100, hip_ir: 91, hip_abd: 100, shoulder_er: 72, shoulder_flex: 100,
+      ankle_df: 100, lumbar_flex: 75, lumbar_ext: 64, cervical_lat: 86, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
       hip_er_l: 30, hip_er_r: 32, hip_ir_l: 22, hip_ir_r: 25, hip_abd_l: 55, hip_abd_r: 60,
@@ -260,7 +262,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     worst: ['shoulder_er_l', 'shoulder_er_r', 'cervical_lat_l', 'cervical_lat_r', 'cervical_flex'],
     pct: {
       hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 90, shoulder_flex: 100,
-      ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 95, cervical_flex: 99, cervical_ext: 100,
+      ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 97, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
       hip_er_l: 45, hip_er_r: 47, hip_ir_l: 44.5, hip_ir_r: 46, hip_abd_l: 81, hip_abd_r: 81.5,
@@ -291,7 +293,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     worst: ['shoulder_er_l', 'shoulder_er_r', 'cervical_lat_l', 'cervical_lat_r', 'cervical_flex'],
     pct: {
       hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 89, shoulder_flex: 100,
-      ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 95, cervical_flex: 99, cervical_ext: 100,
+      ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 97, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
       hip_er_l: 45, hip_er_r: 47, hip_ir_l: 44.5, hip_ir_r: 46, hip_abd_l: 81, hip_abd_r: 81.5,
@@ -426,13 +428,13 @@ describe('Fix A: per-joint % = floor(100 * min(1, worse / target))', () => {
   it('floor, not round (89.6 never shows as 90)', () => {
     // hip_abd target 40: 35.84 / 40 = 0.896 → 89.6 → 89
     expect(jointPercent('hip_abd', { left: 35.84, right: 40 })).toBe(89)
-    expect(jointPercent('ankle_df', { left: 5.37, right: 5.7 })).toBe(89) // 5.37 / 6 cm = 0.895
-    expect(jointPercent('ankle_df', { left: 5.4, right: 5.7 })).toBe(90)  // 5.4 / 6 cm = 0.90
-    expect(jointPercent('hip_ir', { left: 25.6, right: 27 })).toBe(98) // 25.6 / 26 = 0.985
+    expect(jointPercent('ankle_df', { left: 5.46, right: 5.7 })).toBe(89) // 5.46 / 6.1 cm = 0.895
+    expect(jointPercent('ankle_df', { left: 5.5, right: 5.7 })).toBe(90)  // 5.5 / 6.1 cm = 0.902
+    expect(jointPercent('hip_ir', { left: 23.6, right: 27 })).toBe(98) // 23.6 / 24 = 0.983
   })
   it('uses the worse side (lower of L/R) or midline, capped at 100', () => {
-    expect(jointPercent('hip_er_l', { left: 19.2, right: 29 })).toBe(66) // 19.2 / 29 = 0.662
-    expect(jointPercent('hip_er', { right: 19.2 })).toBe(66)
+    expect(jointPercent('hip_er_l', { left: 15.2, right: 29 })).toBe(66) // 15.2 / 23 = 0.661
+    expect(jointPercent('hip_er', { right: 15.2 })).toBe(66)
     expect(jointPercent('lumbar_ext', { midline: 50 })).toBe(100)
     expect(jointPercent('lumbar_ext', {})).toBeNull()
   })

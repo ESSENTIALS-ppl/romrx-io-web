@@ -33,9 +33,11 @@ export const STEPS_PART1: Step[] = [
     mistakeFix: 'Press one hand gently on your thigh to hold it still. Only the lower leg moves.',
     // Jim, Oct 6 11:36 AM: phone on the inner calf (it can slip on the shin as the foot moves inward). Stacy PASS Oct 6 11:45.
     meter: { grip: HIP_ER_PHONE_SPOT.grip },
+    // Range reset (Jim Oct 21 2026 4:15 PM ET): pooled mean +/- 1 SD, risk = mean - 2 SD. Simoneau 1998 (PMID 9742472) +
+    // Roach 1991 (PMID 1881956), N 1,743: 32.1 (9.0). range-proposal.md (Quinn). Scoring target = normalLow (mobilityBands.ts).
     fields: [
-      { key: 'hip_er_l', label: 'Left', unit: '°', normalLow: 29, normalHigh: 43, riskBelow: 40, rangeSource: 'Simoneau et al., 1998' },
-      { key: 'hip_er_r', label: 'Right', unit: '°', normalLow: 29, normalHigh: 43, riskBelow: 40, rangeSource: 'Simoneau et al., 1998' },
+      { key: 'hip_er_l', label: 'Left', unit: '°', normalLow: 23, normalHigh: 41, riskBelow: 14, rangeSource: 'Simoneau et al., 1998; Roach and Miles, 1991' },
+      { key: 'hip_er_r', label: 'Right', unit: '°', normalLow: 23, normalHigh: 41, riskBelow: 14, rangeSource: 'Simoneau et al., 1998; Roach and Miles, 1991' },
     ],
   },
 {
@@ -57,9 +59,10 @@ export const STEPS_PART1: Step[] = [
     mistake: 'One hip lifts off the chair.',
     mistakeFix: 'You must stay sitting evenly on both sides. The moment one side lifts, that is your endpoint. Record it.',
     meter: { grip: 'Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.' },
+    // Range reset (Jim Oct 21 2026): pooled Simoneau 1998 (PMID 9742472) + Roach 1991 (PMID 1881956), N 1,743: 32.0 (8.0).
     fields: [
-      { key: 'hip_ir_l', label: 'Left', unit: '°', normalLow: 26, normalHigh: 40, riskBelow: 30, rangeSource: 'Simoneau et al., 1998' },
-      { key: 'hip_ir_r', label: 'Right', unit: '°', normalLow: 26, normalHigh: 40, riskBelow: 30, rangeSource: 'Simoneau et al., 1998' },
+      { key: 'hip_ir_l', label: 'Left', unit: '°', normalLow: 24, normalHigh: 40, riskBelow: 16, rangeSource: 'Simoneau et al., 1998; Roach and Miles, 1991' },
+      { key: 'hip_ir_r', label: 'Right', unit: '°', normalLow: 24, normalHigh: 40, riskBelow: 16, rangeSource: 'Simoneau et al., 1998; Roach and Miles, 1991' },
     ],
   },
 {
@@ -116,9 +119,10 @@ export const STEPS_PART1: Step[] = [
     mistake: 'Arching your back or leaning back to get the arm higher.',
     mistakeFix: "Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear.",
     meter: { grip: 'Phone in that hand, standing on its long side, in line with your arm. Screen faces out, away from your body.' },
+    // Range reset (Jim Oct 21 2026): Gill 2020 (PMID 33046038), dominant side 159.8 (19.0), n 2,382.
     fields: [
-      { key: 'shoulder_flex_l', label: 'Left', unit: '°', normalLow: 140, normalHigh: 180, riskBelow: 120, rangeSource: 'Gill et al., 2020' },
-      { key: 'shoulder_flex_r', label: 'Right', unit: '°', normalLow: 140, normalHigh: 180, riskBelow: 120, rangeSource: 'Gill et al., 2020' },
+      { key: 'shoulder_flex_l', label: 'Left', unit: '°', normalLow: 141, normalHigh: 179, riskBelow: 122, rangeSource: 'Gill et al., 2020' },
+      { key: 'shoulder_flex_r', label: 'Right', unit: '°', normalLow: 141, normalHigh: 179, riskBelow: 122, rangeSource: 'Gill et al., 2020' },
     ],
   },
 {
@@ -138,9 +142,11 @@ export const STEPS_PART1: Step[] = [
     mistake: 'Shrugging your shoulder up to meet your ear.',
     mistakeFix: 'Keep both shoulders pressed down the whole time. Only your head moves. If your shoulder rises, that reading does not count.',
     meter: { grip: 'Phone flat on your forehead, screen facing forward.' },
+    // Range reset (Jim Oct 21 2026): pooled, WITH Wadhwa 2024 (Grant ruling). PMIDs 23829201, 32626769, 33868830, 39677250;
+    // N 260: 44.5 (7.4). Without-Wadhwa alternative: proof-20261020/range-reset-neck-no-wadhwa.patch (not default).
     fields: [
-      { key: 'cervical_lat_l', label: 'Left', unit: '°', normalLow: 38, normalHigh: 46, riskBelow: 30, rangeSource: 'Swinkels, 2014' },
-      { key: 'cervical_lat_r', label: 'Right', unit: '°', normalLow: 38, normalHigh: 46, riskBelow: 30, rangeSource: 'Swinkels, 2014' },
+      { key: 'cervical_lat_l', label: 'Left', unit: '°', normalLow: 37, normalHigh: 52, riskBelow: 30, rangeSource: 'Pooled: Tousignant-Laflamme 2013, Wolan-Nieroda 2020, Canovas-Ambit 2021, Wadhwa 2024' },
+      { key: 'cervical_lat_r', label: 'Right', unit: '°', normalLow: 37, normalHigh: 52, riskBelow: 30, rangeSource: 'Pooled: Tousignant-Laflamme 2013, Wolan-Nieroda 2020, Canovas-Ambit 2021, Wadhwa 2024' },
     ],
   }
 ]

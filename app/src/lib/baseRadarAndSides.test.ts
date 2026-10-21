@@ -126,7 +126,8 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
   it('fixture values (EXPECTED-BANDS.md)', () => {
     // Oct 6 targets: Hip Abd 81 / 81.5 is Steady against 40 (was Building against 90); the ankle
     // values are fixture 05's 17.9 / 19 cm scaled to the 6 cm target (5.37 / 5.7 cm, same ratios).
-    const f05 = { id: '05', ankle_df_l: 5.37, ankle_df_r: 5.7, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
+    // Oct 21 range reset: ankle target 6.1 cm, inputs scaled to keep the same ratios (5.46 / 5.795 cm).
+    const f05 = { id: '05', ankle_df_l: 5.46, ankle_df_r: 5.795, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
     const rows = radarSideRowsForAssessment(f05, [{ joint_key: 'ankle_df', score: 1 }, { joint_key: 'hip_abd', score: 3 }])
     const ank = rows.find(r => r.key === 'ankle_df')!
     expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([89, 95, 89])
@@ -135,14 +136,14 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
     const lf = rows.find(r => r.key === 'lumbar_flex')!
     expect([lf.midline, lf.left, lf.right]).toEqual([true, 100, 100])
     // fixture 02 Ankle DF 7 / 8.5 cm against 20 scaled to the 6 cm target (2.1 / 2.55 cm) → L 35 / R 42
-    const f02 = radarSideRowsForAssessment({ ankle_df_l: 2.1, ankle_df_r: 2.55 }).find(r => r.key === 'ankle_df')!
+    const f02 = radarSideRowsForAssessment({ ankle_df_l: 2.135, ankle_df_r: 2.6 }).find(r => r.key === 'ankle_df')!
     expect([f02.leftPct, f02.rightPct, f02.worse]).toEqual([35, 42, 35])
   })
 
   it('sidePercent: floor, capped at 100, clamped into the side band', () => {
     expect(sidePercent('hip_abd', 36, 2)).toBe(90) // 36 / 40 = 0.90
     expect(sidePercent('hip_abd', 95, 3)).toBe(100)
-    expect(sidePercent('ankle_df', 5.37, 1)).toBe(89) // 5.37 / 6 cm
+    expect(sidePercent('ankle_df', 5.46, 1)).toBe(89) // 5.46 / 6.1 cm
     expect(sidePercent('ankle_df', null, 1)).toBeNull()
   })
 

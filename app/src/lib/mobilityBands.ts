@@ -58,20 +58,26 @@ export const JOINT_SCORE_TARGETS: Record<string, number> = {
   //   No typical range shown on screen for the neck.
   //   shoulder ER 85 (Oct 6 8:19 PM, Jim-approved, Quinn): Base is back to the STANDING goal-post test (arm out at 90,
   //     elbow bent). Replaces 40 (lying tucked-elbow test, 11:45 AM). No typical range is shown on screen (Stacy).
+  // RANGE RESET (Jim Oct 21 2026 4:15 PM ET, range-proposal.md): target = pooled mean minus 1 SD = step normalLow, so the
+  //   'Typical range' text and scoring agree (fixes neck 53/64 shown vs 50/60 scored). WITH Wadhwa 2024 for the neck.
+  //   hip ER 23 / IR 24: Simoneau 1998 (PMID 9742472) + Roach 1991 (PMID 1881956). shoulder flexion 141: Gill 2020 (PMID 33046038).
+  //   ankle 6.1 cm: McBride 2026 (PMID 41723909), all ages. neck side bend 37, flexion 39, extension 48: Tousignant-Laflamme 2013
+  //   (PMID 23829201), Wolan-Nieroda 2020 (PMID 32626769), Canovas-Ambit 2021 (PMID 33868830), Wadhwa 2024 (PMID 39677250).
+  //   Unchanged: hip abduction 40, hip flexion 120 (unscored), shoulder ER 85, neck rotation 70, lumbar. 90% Building rule unchanged.
   // Mirrored in public.compute_joint_scores() and romrxbjj-v2 compute-tiers JOINT_TARGETS + submit-lead-assessment email.ts BAND_JOINTS.
-  hip_er: 29,
-  hip_ir: 26,
+  hip_er: 23,
+  hip_ir: 24,
   hip_abd: 40,
   hip_flex: 120,
   shoulder_er: 85,
-  shoulder_flex: 140,
-  ankle_df: 6,
+  shoulder_flex: 141,
+  ankle_df: 6.1,
   cervical_rot: 70,
-  cervical_lat: 38,
+  cervical_lat: 37,
   lumbar_flex: 60,
   lumbar_ext: 25,
-  cervical_flex: 50,
-  cervical_ext: 60,
+  cervical_flex: 39,
+  cervical_ext: 48,
 }
 
 /**

@@ -153,6 +153,6 @@ describe('shoulder_er copy and fields (Oct 6 8:19 PM; Stacy PASS title, cue, sto
   it('shoulder flexion is a separate step: sitting in a chair, range unchanged', () => {
     const f = STEPS.find(x => x.id === 'shoulder_flex')!
     expect(f.tool).toBe('Your phone. Sitting in a chair with a back.')
-    expect(f.fields.map(x => [x.normalLow, x.normalHigh])).toEqual([[140, 180], [140, 180]])
+    expect(f.fields.map(x => [x.normalLow, x.normalHigh])).toEqual([[141, 179], [141, 179]]) // Oct 21 range reset (Gill 2020, PMID 33046038)
   })
 })

@@ -65,10 +65,10 @@ Legend: **[STACY]** = verbatim from METER-STRINGS-STACY-PRECLEAR-20261005.md (al
 ### Ranges shown (Quinn verified; Grant: SLR no number)
 | Step | Shown | Source line |
 |---|---|---|
-| Hip ER | Typical range: 29-43° | Source: Simoneau et al., 1998 |
-| Hip IR | Typical range: 26-40° | Source: Simoneau et al., 1998 |
+| Hip ER | Typical range: 23-41° | Source: Simoneau et al., 1998; Roach and Miles, 1991 |
+| Hip IR | Typical range: 24-40° | Source: Simoneau et al., 1998; Roach and Miles, 1991 |
 | Shoulder ER | Typical range: 85-110° | Source: Vairo et al., 2012 |
-| Shoulder flexion | Typical range: 140-180° | Source: Gill et al., 2020 |
+| Shoulder flexion | Typical range: 141-179° | Source: Gill et al., 2020 |
 | Neck side bend, neck flexion, neck extension, hip abduction | no number, no source | - |
 | Straight-leg raise | no number, no source (SHOW_SLR_TYPICAL_RANGE = false; label "Saved for each leg" + "Saved for each leg, not scored." as before) | - |
 | Ankle (cm) | Best of 3, in cm (unchanged) | - |
@@ -124,7 +124,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   1. Keep your knee bent and both hips down. Slowly swing your foot INWARD, toward your other leg. Your foot moves only sideways.
   2. Stop at a firm stretch or when your thigh starts to lift off the chair. Hold still: after 2.5 seconds the number locks and chimes.
   3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
-- Range label: Typical range: 29-43° | Source line: Source: Simoneau et al., 1998
+- Range label: Typical range: 23-41° | Source line: Source: Simoneau et al., 1998; Roach and Miles, 1991
 
 #### Hip Internal Rotation (`hip_ir`)
 - Meter grip: Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.
@@ -136,7 +136,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   1. Keep your knee bent and both hips down. Slowly swing your foot OUTWARD, away from your other leg. Your foot moves only sideways.
   2. Stop at a firm stretch or when your other hip starts to lift. Hold still until the number locks and chimes.
   3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
-- Range label: Typical range: 26-40° | Source line: Source: Simoneau et al., 1998
+- Range label: Typical range: 24-40° | Source line: Source: Simoneau et al., 1998; Roach and Miles, 1991
 
 #### Shoulder External Rotation (`shoulder_er`) (STANDING goal-post; Jim-approved, Quinn spec, Oct 6 8:19 PM) - replaces the lying tucked-elbow "Shoulder Extension" step
 - Title shown to users: Shoulder External Rotation **[Stacy PASS Oct 6 8:19 PM]** (was: Shoulder Extension). Now one name everywhere: step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, ROMBot ("shoulder external rotation"); My Body / radar keep the short label "Shoulder ER" (mobilityBands.ts BASE_DISPLAY_JOINTS, unchanged). Key `shoulder_er` unchanged.
@@ -171,7 +171,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   3. Tap Use this number. Lower your arm, tap Start, and repeat on the other side.
 - Common mistake: Arching your back or leaning back to get the arm higher. **[Stacy PASS Oct 6 12:02]**
 - Fix: Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear. **[Stacy PASS Oct 6 12:02]**
-- Range label: Typical range: 140-180° | Source line: Source: Gill et al., 2020
+- Range label: Typical range: 141-179° | Source line: Source: Gill et al., 2020
 
 #### Cervical Lateral Flexion (`cervical_lat`)
 - Meter grip: Phone flat on your forehead, screen facing forward.

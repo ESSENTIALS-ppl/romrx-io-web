@@ -118,6 +118,6 @@ describe('shoulder flexion sitting: copy (Jim, Oct 6 11:54 AM; pending Stacy)', 
     for (const cue of ["Keep your back against the chair. Don't arch your back or lean back.", 'Keep your wrist straight.', "Don't bend your elbow or turn your arm out.", "Don't shrug your shoulder up to your ear."]) expect(s.mistakeFix).toContain(cue)
   })
   it('target range, keys and order unchanged', () => {
-    expect(s.fields.map(f => [f.key, f.normalLow, f.normalHigh, f.rangeSource])).toEqual([['shoulder_flex_l', 140, 180, 'Gill et al., 2020'], ['shoulder_flex_r', 140, 180, 'Gill et al., 2020']])
+    expect(s.fields.map(f => [f.key, f.normalLow, f.normalHigh, f.rangeSource])).toEqual([['shoulder_flex_l', 141, 179, 'Gill et al., 2020'], ['shoulder_flex_r', 141, 179, 'Gill et al., 2020']])
   })
 })
