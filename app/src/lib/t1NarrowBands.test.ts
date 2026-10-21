@@ -9,28 +9,40 @@ import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   JOINT_SCORE_TARGETS,
-  NARROW_BAND_BUFFER,
+  NARROW_BAND_CONFIG,
   NARROW_GAP_WEIGHT,
   bandScoreForJoint,
   bandScoreFromTargetRatio,
-  narrowBuffer,
+  isNarrowJoint,
+  jointPercent,
   narrowGapWeight,
   scoredJointKeysWorstFirst,
   weightedJointGap,
 } from './mobilityBands'
 
-const SPEC: Record<string, number> = {
-  cervical_rot: 5, cervical_lat: 5, cervical_flex: 5, cervical_ext: 5,
-  hip_er: 5, hip_ir: 5, hip_abd: 5, shoulder_er: 5, ankle_df: 1,
+// Jim 11:47 AM ET Oct 21 (narrow the 5) + Quinn t1-quinn-buffers.md 11:47:58 AM ET (Steady line only on those 5).
+const SPEC: Record<string, { steady: number; building: number }> = {
+  hip_er: { steady: 1.5, building: 0 }, hip_ir: { steady: 1.5, building: 0 }, hip_abd: { steady: 2, building: 0 },
+  cervical_flex: { steady: 2.5, building: 0 }, cervical_lat: { steady: 2, building: 0 },
+  cervical_rot: { steady: 5, building: 5 }, cervical_ext: { steady: 5, building: 5 },
+  shoulder_er: { steady: 5, building: 5 }, ankle_df: { steady: 1, building: 1 },
 }
 
-describe('T1 A: buffer table matches the spec exactly', () => {
+describe('T1 A: per-joint buffer config matches the spec exactly', () => {
   it('narrow joints and buffers', () => {
-    expect({ ...NARROW_BAND_BUFFER }).toEqual(SPEC)
+    expect(JSON.parse(JSON.stringify(NARROW_BAND_CONFIG))).toEqual(SPEC)
   })
-  it('non-narrow joints keep the old rule exactly (E = 0)', () => {
+  it('the 5 narrowed joints: Building survives (buffer smaller than the band) and Steady-line only', () => {
+    for (const k of ['hip_er', 'hip_ir', 'hip_abd', 'cervical_flex', 'cervical_lat']) {
+      const t = JOINT_SCORE_TARGETS[k]
+      expect(SPEC[k].steady).toBeLessThan(0.1 * t)
+      expect(SPEC[k].building).toBe(0)
+      expect(bandScoreForJoint(k, 0.9 * t, t)).toBe(2) // the 90% point stays Building
+    }
+  })
+  it('non-narrow joints keep the old rule exactly', () => {
     for (const k of ['shoulder_flex', 'hip_flex', 'lumbar_flex', 'lumbar_ext']) {
-      expect(narrowBuffer(k)).toBe(0)
+      expect(isNarrowJoint(k)).toBe(false)
       const t = JOINT_SCORE_TARGETS[k]
       for (const v of [0, 0.9 * t - 0.01, 0.9 * t, t - 0.01, t, t + 1]) {
         expect(bandScoreForJoint(k, v, t)).toBe(bandScoreFromTargetRatio(v, t))
@@ -40,33 +52,38 @@ describe('T1 A: buffer table matches the spec exactly', () => {
 })
 
 describe('T1 A: boundary cases at each cutoff for every narrow joint', () => {
-  for (const [joint, E] of Object.entries(SPEC)) {
+  for (const [joint, { steady: Es, building: Eb }] of Object.entries(SPEC)) {
     const t = JOINT_SCORE_TARGETS[joint]
     const b = 0.9 * t
     const d = 0.01
-    // [value, expected, label]
     const cases: Array<[number, number, string]> = [
-      [t + d, 3, 'Steady cutoff: just above target'],
-      [t, 3, 'Steady cutoff: at target'],
-      [t - E / 2, 3, 'Steady cutoff: inside buffer (better color wins)'],
-      [t - E, 3, 'Steady cutoff: at buffer edge'],
-      [t - E - d, 2, 'Steady cutoff: just below buffer'],
-      [b + d, 2, 'Building cutoff: just above 90%'],
-      [b, 2, 'Building cutoff: at 90%'],
-      [b - E / 2, 2, 'Building cutoff: inside buffer (better color wins)'],
-      [b - E, 2, 'Building cutoff: at buffer edge'],
-      [b - E - d, 1, 'Building cutoff: just below buffer'],
+      [t + d, 3, 'Steady line: just above target'],
+      [t, 3, 'Steady line: at target'],
+      [t - Es / 2, 3, 'Steady line: inside buffer (better color wins)'],
+      [t - Es, 3, 'Steady line: at buffer edge'],
+      [t - Es - d, 2, 'Steady line: just below buffer'],
+      [b + d, b + d + Es >= t ? 3 : 2, 'Building line: just above 90%'],
+      [b, b + Es >= t ? 3 : 2, 'Building line: at 90%'],
+      [b - Eb / 2, Eb > 0 ? 2 : (b - Eb / 2 + Es >= t ? 3 : 2), 'Building line: inside buffer'],
+      [b - Eb, 2, 'Building line: at buffer edge'],
+      [b - Eb - d, 1, 'Building line: just below buffer'],
     ]
-    // Where E is wider than the Building band (hip ER/IR/abd, neck flexion and side bend), the buffer swallows the
-    // upper part of Building, so the old 90% point is already Steady (Quinn: "nearly 2-color"). Expectation says so.
-    for (const [v, want0, label] of cases) {
-      const want = want0 === 2 && v + E >= t - 1e-9 ? 3 : want0
-      it(`${joint} (target ${t}, E ${E}) ${label}: ${v.toFixed(2)} -> ${want}`, () => {
+    for (const [v, want, label] of cases) {
+      it(`${joint} (target ${t}, Steady buffer ${Es}, Building buffer ${Eb}) ${label}: ${v.toFixed(2)} -> ${want}`, () => {
         expect(bandScoreForJoint(joint, v, t)).toBe(want)
         expect(bandScoreForJoint(`${joint}_l`, v, t)).toBe(want)
       })
     }
   }
+  it('a buffered Steady shows the real percent, never 100', () => {
+    expect(jointPercent('hip_er', { midline: 27.5 })).toBe(94)        // 27.5 + 1.5 = 29 Steady, real 94.8 -> 94
+    expect(jointPercent('cervical_flex', { midline: 47.5 })).toBe(95) // 47.5 + 2.5 = 50 Steady, real 95
+    expect(jointPercent('hip_er', { midline: 29 })).toBe(100)         // at target: 100
+    for (const [k, { steady }] of Object.entries(SPEC)) {
+      const t = JOINT_SCORE_TARGETS[k]
+      expect(jointPercent(k, { midline: t - steady })).toBeLessThan(100)
+    }
+  })
 })
 
 describe('T1 C: Protocol gap weight across 1 and 2 assessments', () => {

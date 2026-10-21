@@ -19,7 +19,7 @@ import {
   JOINT_SCORE_TARGETS,
   bandScoreFromTargetRatio,
   bandScoreForJoint,
-  narrowBuffer,
+  narrowBuffers,
   jointBandsForAssessment,
   jointPercent,
   overallBandForAssessment,
@@ -75,9 +75,10 @@ describe('Steady targets (range reset Oct 21): hips, shoulder flexion, ankle, ne
   ]
   for (const [joint, steady0, under0, buildingFloor0, needsFocus0] of CASES) {
     const t = JOINT_SCORE_TARGETS[joint]
-    // T1 option A (Oct 21): on narrow joints every cutoff sits E lower; shift the cases by E (0 on shoulder flexion)
-    const E = narrowBuffer(joint)
-    const [steady, under, buildingFloor, needsFocus] = [steady0, under0, buildingFloor0, needsFocus0].map(v => Math.round((v - E) * 100) / 100)
+    // T1 option A (per-joint config): Steady cases shift by the Steady buffer, Building floor / Needs focus by the Building buffer
+    const { steady: Es, building: Eb } = narrowBuffers(joint)
+    const sh = (v: number, e: number) => Math.round((v - e) * 100) / 100
+    const [steady, under, buildingFloor, needsFocus] = [sh(steady0, Es), sh(under0, Es), sh(buildingFloor0, Eb), sh(needsFocus0, Eb)]
     it(`${joint}: ${steady} → Steady, ${under} → not Steady (Building), ${needsFocus} → Needs focus`, () => {
       expect(bandScoreForJoint(joint, steady, t)).toBe(3)
       expect(bandScoreForJoint(joint, under, t)).toBe(2)
@@ -91,7 +92,9 @@ describe('Steady targets (range reset Oct 21): hips, shoulder flexion, ankle, ne
       expect(jointBandsForAssessment({ [`${joint}_l`]: steady, [`${joint}_r`]: steady + 10 }).get(joint)).toBe(3)
       expect(jointBandsForAssessment({ [`${joint}_l`]: steady + 10, [`${joint}_r`]: under }).get(joint)).toBe(2)
       // per-joint %
-      expect(jointPercent(joint, { left: steady, right: steady })).toBe(100)
+      // T1: a buffered Steady shows the real percent (never 100); at target it is 100
+      expect(jointPercent(joint, { left: steady, right: steady })).toBe(Es === 0 ? 100 : Math.floor(100 * steady / t))
+      expect(jointPercent(joint, { left: steady0, right: steady0 })).toBe(100)
       expect(jointPercent(joint, { left: under, right: steady })).toBeLessThan(100)
     })
   }
@@ -164,8 +167,8 @@ describe('hip abduction: NO typical range on screen (Jim, Oct 6)', () => {
 
   it('hip abduction is still scored live (band chip shows, no range text)', () => {
     expect(getScore('40', step.fields[0])).toBe(3)
-    expect(getScore('35', step.fields[0])).toBe(3) // T1 option A: 35 + 5 buffer reaches 40
-    expect(getScore('34', step.fields[1])).toBe(2)
+    expect(getScore('38', step.fields[0])).toBe(3) // T1 option A: 38 + 2 buffer reaches 40
+    expect(getScore('37', step.fields[1])).toBe(2)
   })
 })
 

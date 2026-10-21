@@ -17,6 +17,7 @@ import {
   BASE_DISPLAY_JOINTS,
   JOINT_SCORE_TARGETS,
   bandScoreForJoint,
+  isNarrowJoint,
   formatMeasure,
   jointBandsForAssessment,
   jointDisplayRowsForAssessment,
@@ -101,8 +102,8 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
           for (const [pct, band] of [[rr.leftPct, rr.leftBand], [rr.rightPct, rr.rightBand]] as const) {
             if (pct == null) continue
             // each side's % sits inside the band its colour shows
-            if (band === 3) expect(pct).toBe(100)
-            if (band === 2) expect(pct >= 90 && pct <= 99).toBe(true)
+            if (band === 3) expect(pct === 100 || (isNarrowJoint(j.key) && pct < 100)).toBe(true) // T1: buffered Steady = real %
+            if (band === 2) expect(isNarrowJoint(j.key) ? pct < 100 : pct >= 90 && pct <= 99).toBe(true)
             if (band === 1) expect(pct).toBeLessThanOrEqual(89)
           }
           // the worse measured side is the bar %
@@ -130,7 +131,7 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
     const f05 = { id: '05', ankle_df_l: 5.46, ankle_df_r: 5.795, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
     const rows = radarSideRowsForAssessment(f05, [{ joint_key: 'ankle_df', score: 1 }, { joint_key: 'hip_abd', score: 3 }])
     const ank = rows.find(r => r.key === 'ankle_df')!
-    expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([72, 90, 72])
+    expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([72, 78, 72]) // T1: narrow joints show the real %
     const abd = rows.find(r => r.key === 'hip_abd')!
     expect([abd.leftPct, abd.rightPct, abd.worse]).toEqual([100, 100, 100])
     const lf = rows.find(r => r.key === 'lumbar_flex')!

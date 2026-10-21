@@ -131,31 +131,44 @@ export function bandScoreFromTargetRatio(worse: number, target: number): BandSco
 }
 
 /**
- * T1 option A (Jim, Oct 21 2026 10:53 AM ET, "T1: A plus C"; spec Quinn narrow-bands-options.md).
- * Narrow joints (Building band at or under published measuring error) get a buffer E below each
- * cutoff, and a reading inside the buffer gets the better color. Stored values are never changed.
- * Same rule in public.t1_joint_band() (compute_joint_scores), compute-tiers joint_totals.ts and
- * submit-lead-assessment email.ts. Units: degrees, ankle_df in cm.
- *   Steady   if worse + E >= target
- *   Building if worse + E >= 0.9 x target
+ * T1 option A (Jim, Oct 21 2026 10:53 AM ET, "T1: A plus C"; narrowed 11:47 AM ET; buffer values Quinn
+ * t1-quinn-buffers.md 11:47:58 AM ET). PER-JOINT CONFIG: each narrow joint has a buffer at the Steady line
+ * (steady) and one at the Building line (building). A reading inside a buffer gets the better color.
+ * Stored values never change. Same table in SQL public.t1_narrow_buffer(), romrxbjj-v2
+ * supabase/functions/_shared/t1_narrow_bands.ts (compute-tiers + lead email). Units: deg, ankle_df cm.
+ *   Steady   if worse + steady >= target
+ *   Building if worse + building >= 0.9 x target
  *   else Needs focus
- * Joints not listed keep bandScoreFromTargetRatio exactly (E = 0).
+ * Joints not listed keep bandScoreFromTargetRatio exactly. A buffered Steady shows the REAL percent, never 100.
  */
-export const NARROW_BAND_BUFFER: Readonly<Record<string, number>> = {
-  cervical_rot: 5,
-  cervical_lat: 5,
-  cervical_flex: 5,
-  cervical_ext: 5,
-  hip_er: 5,
-  hip_ir: 5,
-  hip_abd: 5,
-  shoulder_er: 5,
-  ankle_df: 1,
+export const NARROW_BAND_CONFIG: Readonly<Record<string, { steady: number; building: number }>> = {
+  hip_er: { steady: 1.5, building: 0 },
+  hip_ir: { steady: 1.5, building: 0 },
+  hip_abd: { steady: 2, building: 0 },
+  cervical_flex: { steady: 2.5, building: 0 },
+  cervical_lat: { steady: 2, building: 0 },
+  cervical_rot: { steady: 5, building: 5 },
+  cervical_ext: { steady: 5, building: 5 },
+  shoulder_er: { steady: 5, building: 5 },
+  ankle_df: { steady: 1, building: 1 },
 }
 
-/** Buffer E for a joint (side keys allowed); 0 when not narrow. */
+const NO_BUFFER = { steady: 0, building: 0 }
+
+/** Per-joint buffers (side keys allowed); zeros when not narrow. */
+export function narrowBuffers(jointKey: string): { steady: number; building: number } {
+  return NARROW_BAND_CONFIG[jointKeyBase(jointKey)] ?? NO_BUFFER
+}
+
+/** True when the joint has any buffer (option C weighting applies). */
+export function isNarrowJoint(jointKey: string): boolean {
+  const b = narrowBuffers(jointKey)
+  return b.steady > 0 || b.building > 0
+}
+
+/** Steady-line buffer (kept for callers and tests). */
 export function narrowBuffer(jointKey: string): number {
-  return NARROW_BAND_BUFFER[jointKeyBase(jointKey)] ?? 0
+  return narrowBuffers(jointKey).steady
 }
 
 /** 6-decimal fixed point so float noise (21.1 + 5) can never flip a cutoff; SQL numeric is exact. */
@@ -163,14 +176,13 @@ function fx(n: number): number {
   return Math.round(n * 1e6)
 }
 
-/** THE Base band for one joint value: option A buffer on narrow joints, else bandScoreFromTargetRatio. */
+/** THE Base band for one joint value: option A buffers on narrow joints, else bandScoreFromTargetRatio. */
 export function bandScoreForJoint(jointKey: string, worse: number, target: number): BandScore {
-  const e = narrowBuffer(jointKey)
-  if (e === 0) return bandScoreFromTargetRatio(worse, target)
+  if (!isNarrowJoint(jointKey)) return bandScoreFromTargetRatio(worse, target)
   if (!(target > 0) || !Number.isFinite(worse)) return 1
-  const adj = fx(worse + e)
-  if (adj >= fx(target)) return 3
-  if (adj * 10 >= fx(target) * 9) return 2
+  const b = narrowBuffers(jointKey)
+  if (fx(worse + b.steady) >= fx(target)) return 3
+  if (fx(worse + b.building) * 10 >= fx(target) * 9) return 2
   return 1
 }
 
@@ -182,7 +194,7 @@ export function bandScoreForJoint(jointKey: string, worse: number, target: numbe
 export const NARROW_GAP_WEIGHT = 0.5
 
 export function narrowGapWeight(jointKey: string, band: BandScore, previousBand: BandScore | null | undefined): number {
-  if (narrowBuffer(jointKey) === 0) return 1
+  if (!isNarrowJoint(jointKey)) return 1
   return previousBand != null && previousBand === band ? 1 : NARROW_GAP_WEIGHT
 }
 
@@ -494,6 +506,18 @@ export const BAND_PERCENT_RANGE: Record<BandScore, { min: number; max: number }>
   3: { min: 100, max: 100 },
 }
 
+/**
+ * T1 (Jim 11:47 AM ET Oct 21): a Steady reached only through the buffer shows the REAL percent (floor, under 100),
+ * never 100. On narrow joints every per-joint / per-side % is the real floor percent (capped at 100), so a better
+ * side can never show a lower % than the worse side (a clamped Building 90 next to a real buffered Steady 83).
+ * Non-narrow joints and the /100 clamp into the band range exactly as before, except a buffered Steady /100.
+ */
+export function displayPercent(rawFloor: number, band: BandScore, narrow = false): number {
+  if (narrow) return Math.max(0, Math.min(100, rawFloor))
+  if (band === 3 && rawFloor < 100) return Math.max(0, rawFloor)
+  return clampPercentToBand(rawFloor, band)
+}
+
 /** Clamp a 0..100 number into the band's range (used per joint AND for /100). */
 export function clampPercentToBand(pct: number, band: BandScore): number {
   if (band === 3) return 100
@@ -537,7 +561,7 @@ export function jointPercent(
   const raw = cappedRatioPct(worse, target)
   if (raw == null) return null
   const b = band ?? bandScoreForJoint(base, worse!, target)
-  return clampPercentToBand(Math.floor(raw), b)
+  return displayPercent(Math.floor(raw), b, isNarrowJoint(jointKey))
 }
 
 function measuredFor(rec: Record<string, unknown>, j: { l?: string; r?: string; single?: string }) {
@@ -588,7 +612,7 @@ export function mobilityScoreForAssessment(
   if (n === 0) return 100
   const s = Math.floor(sum / n)
   const band = overallBandForAssessment(assessment, jointScores) ?? 3
-  return clampPercentToBand(s, band)
+  return displayPercent(s, band)
 }
 
 /**
@@ -744,7 +768,7 @@ export function sidePercent(jointKey: string, value: number | null | undefined, 
   const raw = cappedRatioPct(v, target)
   if (raw == null || v == null) return null
   const b = sideBand ?? bandScoreForJoint(jointKey, v, target)
-  return clampPercentToBand(Math.floor(raw), b)
+  return displayPercent(Math.floor(raw), b, isNarrowJoint(jointKey))
 }
 
 export interface RadarSideRow {
