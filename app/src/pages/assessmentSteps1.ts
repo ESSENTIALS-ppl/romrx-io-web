@@ -77,7 +77,6 @@ export const STEPS_PART1: Step[] = [
     ],
     howTo: [
       'Keep your elbow at shoulder height and in line with your shoulders. Slowly rotate your forearm up and back, like waving hello over your shoulder, until it stops on its own. Hold still until the number locks.',
-      'Hold still at your limit: after 2.5 seconds the number locks and dings. Tap Use this number.',
       'Switch arms, tap Start in the start position, and repeat.',
     ],
     // Mistake line restored word for word from the pre-Oct 6 goal-post step (same arm position). The fix line is that
