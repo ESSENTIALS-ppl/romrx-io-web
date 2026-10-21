@@ -358,7 +358,7 @@ describe('mobilityScoreForAssessment: one shared /100 number', () => {
     const rows = [...jointBandsForAssessment(a)].map(([joint_key, score]) => ({ joint_key, score }))
     expect(Object.fromEntries(jointPercentsForAssessment(a, rows))).toEqual(pct)
     expect(mobilityScoreForAssessment(a, rows)).toBe(mobilityScoreForAssessment(a))
-    expect(topProblemAreas(worst)).toHaveLength(3)
+    { const t = topProblemAreas(worst); expect(t.some(k => k.startsWith('lumbar'))).toBe(false); expect(t.length).toBe(Math.min(3, new Set(worst.filter((k: string) => !k.startsWith('lumbar')).map((k: string) => k.replace(/_[lr]$/, ''))).size)) } // lumbar never ranked (Grant Oct 21 2026 7:10 PM)
   })
   it('nothing measured → 100 (matches the Steady fallback every surface uses)', () => {
     expect(mobilityScoreForAssessment({})).toBe(100)
@@ -586,5 +586,14 @@ describe('Fix A: no Base surface uses the elite OPTIMAL table or the old deducti
     for (const f of ['MyBody.tsx', 'MyProtocol.tsx']) {
       expect(read(join(SRC, 'pages', f))).toMatch(/mobilityScoreForAssessment\(assessment, jointScores\)/)
     }
+  })
+})
+
+describe('lumbar never ranked (Grant Oct 21 2026 7:10 PM)', () => {
+  it('saved lumbar values stay out of top problem areas and rankProblemJoints', async () => {
+    const { topProblemAreasForAssessment, rankProblemJoints } = await import('./mobilityBands')
+    const a = { lumbar_flex: 5, lumbar_ext: 2, ankle_df_l: 3, ankle_df_r: 3, worst_joints: ['lumbar_ext', 'lumbar_flex', 'ankle_df_l'] }
+    expect(topProblemAreasForAssessment(a).some(k => k.startsWith('lumbar'))).toBe(false)
+    expect(rankProblemJoints(a, [{ key: 'lumbar_ext' }, { key: 'ankle_df' }]).map(r => r.key)).toEqual(['ankle_df'])
   })
 })

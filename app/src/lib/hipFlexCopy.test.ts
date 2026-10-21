@@ -347,7 +347,7 @@ describe('safe fallback: hip flexion is never judged', () => {
 
     it('fewer than 3 scored joints: returns only those, never hip', () => {
       const a = { hip_flex_l: 5, hip_flex_r: 5, ankle_df_l: 10, ankle_df_r: 12, lumbar_ext: 20, worst_joints: ['hip_flex_l', 'hip_flex_r', 'ankle_df_l'] }
-      expect(topProblemAreasForAssessment(a)).toEqual(['ankle_df_l', 'lumbar_ext'])
+      expect(topProblemAreasForAssessment(a)).toEqual(['ankle_df_l']) // lumbar never ranked (Grant Oct 21 2026 7:10 PM)
       expect(topProblemAreasForAssessment({ hip_flex_l: 5, hip_flex_r: 5, worst_joints: ['hip_flex_l'] })).toEqual([])
       expect(topProblemAreasForAssessment({ hip_flex_l: 5, ankle_df_r: 9, worst_joints: ['hip_flex_l'] })).toEqual(['ankle_df_r'])
       expect(topProblemAreasForAssessment(null)).toEqual([])

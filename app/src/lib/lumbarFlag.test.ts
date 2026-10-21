@@ -87,9 +87,9 @@ describe('My Body wiring', () => {
   it('bar never prints a fake 0 for null pct when flag OFF it renders exactly as before (pct ?? 0)', () => {
     expect(page).toMatch(/const pct = row\.pct \?\? 0/)
   })
-  it('flag ON: lumbar rows replaced by "Low back: not measured"; unmeasured lumbar radar axes dropped', async () => {
-    expect(page).toMatch(/hideLumbar = lumbarOff && lumbarNotMeasured\(assessment\)/)
-    expect(page).toMatch(/!\(lumbarOff && isLumbarKey\(r\.key\) && !r\.measured\)/)
+  it('lumbar rows replaced by "Low back: not measured" for ALL users; lumbar radar axes dropped (Grant Oct 21 2026 7:10 PM)', async () => {
+    expect(page).toMatch(/const hideLumbar = lumbarOff\n/)
+    expect(page).toMatch(/!\(lumbarOff && isLumbarKey\(r\.key\)\)\)/)
     expect(page).toMatch(/\{LOW_BACK_NOT_MEASURED\}/)
     const { LOW_BACK_NOT_MEASURED } = await import('./lumbarFlag')
     expect(LOW_BACK_NOT_MEASURED).toBe('Low back: not measured')

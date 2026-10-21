@@ -1,3 +1,4 @@
+import { isLumbarKey } from './lumbarFlag'
 /**
  * Locked Base mobility band labels — keep in sync with ROMBot CBase
  * (romrxbjj-v2 supabase/functions/ai-chat/handler.js) AND with
@@ -459,6 +460,7 @@ export function topProblemAreas(
     if (!k) continue
     const base = jointKeyBase(k)
     if (isUnscoredJoint(base)) continue
+    if (isLumbarKey(base)) continue // Grant Oct 21 2026 7:10 PM: low back never ranked (saved values kept)
     if (seen.has(base)) continue
     seen.add(base)
     out.push(k)
@@ -834,7 +836,7 @@ export function rankProblemJoints<T extends { key: string; asymmetry?: number; s
   const order = topProblemAreasForAssessment(assessment, max).map(jointKeyBase)
   const idx = (k: string) => { const i = order.indexOf(jointKeyBase(k)); return i === -1 ? Number.POSITIVE_INFINITY : i }
   return rows
-    .filter(r => !isUnscoredJoint(r.key))
+    .filter(r => !isUnscoredJoint(r.key) && !isLumbarKey(jointKeyBase(r.key)))
     .slice()
     .sort((a, b) => {
       const ia = idx(a.key), ib = idx(b.key)
