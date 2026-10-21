@@ -341,8 +341,8 @@ describe('safe fallback: hip flexion is never judged', () => {
     it('no persisted worst_joints at all: ranked from the scored joints, hip excluded first', () => {
       const a = { ...base, hip_flex_l: 0, hip_flex_r: 0, ankle_df_l: 3, shoulder_er_r: 17.8, hip_ir_r: 17 } // shoulder ER 17.8 / 40 = 44.5%, ankle 3 / 6 cm = 50%, hip IR 17 / 26 = 65%
       expect(scoredJointKeysWorstFirst(a).some(k => k.startsWith('hip_flex'))).toBe(false)
-      expect(topProblemAreasForAssessment({ ...a, worst_joints: null })).toEqual(['shoulder_er_r', 'ankle_df_l', 'hip_ir_r'])
-      expect(topProblemAreasForAssessment({ ...a, worst_joints: [] })).toEqual(['shoulder_er_r', 'ankle_df_l', 'hip_ir_r'])
+      expect(topProblemAreasForAssessment({ ...a, worst_joints: null })).toEqual(['ankle_df_l', 'shoulder_er_r', 'hip_ir_r']) // T1 C: shoulder ER (still narrow) gap x0.5 on 1 assessment
+      expect(topProblemAreasForAssessment({ ...a, worst_joints: [] })).toEqual(['ankle_df_l', 'shoulder_er_r', 'hip_ir_r']) // T1 C: shoulder ER (still narrow) gap x0.5 on 1 assessment
     })
 
     it('fewer than 3 scored joints: returns only those, never hip', () => {

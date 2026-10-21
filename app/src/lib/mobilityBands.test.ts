@@ -267,20 +267,20 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     },
   },
   {
-    // T1 (narrowed Oct 21): boundary values kept Building: shoulder ER L 71.9 (+5 = 76.9 >= 76.5, real 84%),
-    // side bend L 35.9 (+2 = 37.9 < 38, real 94%), neck flexion 47.4 (+2.5 = 49.9 < 50, real 94%). Narrow joints show the real %.
-    name: '03 MID/BOUNDARY', score: 97, band: 2, text: '97/100 \u00B7 Building',
+    // T1 rebased on the range reset (Jim 4:38 PM Oct 21): shoulder ER is still narrow: L 71.9 (+5 = 76.9 >= 76.5) is
+    // Building and shows the real 84%. Neck side bend / flexion are reset moves (no buffer): 36.2 / 37 = 97%, 49.5 / 39 = Steady.
+    name: '03 MID/BOUNDARY', score: 98, band: 2, text: '98/100 \u00B7 Building',
     worst: ['shoulder_er_l', 'shoulder_er_r', 'cervical_lat_l', 'cervical_lat_r', 'cervical_flex'],
     pct: {
-      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 90, shoulder_flex: 100,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 84, shoulder_flex: 100,
       ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 97, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
       hip_er_l: 45, hip_er_r: 47, hip_ir_l: 44.5, hip_ir_r: 46, hip_abd_l: 81, hip_abd_r: 81.5,
       hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 71.9, shoulder_er_r: 80.3,   // T1: 76.9 - 5 buffer (rescaled to target 85, was 36.2 / 37.8 vs 40)
       shoulder_flex_l: 170, shoulder_flex_r: 172, ankle_df_l: 18.0, ankle_df_r: 19.0,
-      lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 35.9, cervical_lat_r: 37.2,   // T1: 35.9 + 2 Steady buffer = 37.9 < 38, still Building
-      cervical_flex: 47.4, cervical_ext: 62,   // T1: 47.4 + 2.5 = 49.9 < 50, still Building
+      lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 36.2, cervical_lat_r: 37.2,   // reset target 37 (no T1 buffer on the reset moves, Jim 4:38 PM Oct 21)
+      cervical_flex: 49.5, cervical_ext: 62,
     },
   },
   {
@@ -304,15 +304,15 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     worst: ['shoulder_er_l', 'shoulder_er_r', 'cervical_lat_l', 'cervical_lat_r', 'cervical_flex'],
     // T1 option A (Oct 21): shoulder ER L 71.1 + 5 = 76.1 < 76.5 → Needs focus, raw 71.1 / 85 = 83.6 → 83.
     pct: {
-      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 89, shoulder_flex: 100,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 83, shoulder_flex: 100,
       ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 97, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
       hip_er_l: 45, hip_er_r: 47, hip_ir_l: 44.5, hip_ir_r: 46, hip_abd_l: 81, hip_abd_r: 81.5,
       hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 71.1, shoulder_er_r: 80.3,   // T1: 76.1 - 5 buffer (rescaled to target 85, was 35.8 / 37.8 vs 40)
       shoulder_flex_l: 170, shoulder_flex_r: 172, ankle_df_l: 18.0, ankle_df_r: 19.0,
-      lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 35.9, cervical_lat_r: 37.2,   // T1: 35.9 + 2 Steady buffer = 37.9 < 38, still Building
-      cervical_flex: 47.4, cervical_ext: 62,   // T1: 47.4 + 2.5 = 49.9 < 50, still Building
+      lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 36.2, cervical_lat_r: 37.2,   // reset target 37 (no T1 buffer on the reset moves, Jim 4:38 PM Oct 21)
+      cervical_flex: 49.5, cervical_ext: 62,
     },
   },
 ]

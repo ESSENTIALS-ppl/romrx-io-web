@@ -20,34 +20,45 @@ import {
   weightedJointGap,
 } from './mobilityBands'
 
-// Jim 11:47 AM ET Oct 21 (narrow the 5) + Quinn t1-quinn-buffers.md 11:47:58 AM ET (Steady line only on those 5).
+// Jim 11:47 AM ET Oct 21 (narrow) + Quinn t1-quinn-buffers.md 11:47:58 AM ET, then Jim 4:38 PM ET Oct 21
+// "Drop the T1 buffers on the reset moves": only the joints the range reset did NOT change keep a buffer.
 const SPEC: Record<string, { steady: number; building: number }> = {
-  hip_er: { steady: 1.5, building: 0 }, hip_ir: { steady: 1.5, building: 0 }, hip_abd: { steady: 2, building: 0 },
-  cervical_flex: { steady: 2.5, building: 0 }, cervical_lat: { steady: 2, building: 0 },
-  cervical_rot: { steady: 5, building: 5 }, cervical_ext: { steady: 5, building: 5 },
-  shoulder_er: { steady: 5, building: 5 }, ankle_df: { steady: 1, building: 1 },
+  hip_abd: { steady: 2, building: 0 },
+  cervical_rot: { steady: 5, building: 5 },
+  shoulder_er: { steady: 5, building: 5 },
 }
+const RESET_JOINTS = ['cervical_lat', 'cervical_flex', 'cervical_ext', 'hip_er', 'hip_ir', 'shoulder_flex', 'ankle_df']
 
 describe('T1 A: per-joint buffer config matches the spec exactly', () => {
   it('narrow joints and buffers', () => {
     expect(JSON.parse(JSON.stringify(NARROW_BAND_CONFIG))).toEqual(SPEC)
   })
-  it('the 5 narrowed joints: Building survives (buffer smaller than the band) and Steady-line only', () => {
-    for (const k of ['hip_er', 'hip_ir', 'hip_abd', 'cervical_flex', 'cervical_lat']) {
-      const t = JOINT_SCORE_TARGETS[k]
-      expect(SPEC[k].steady).toBeLessThan(0.1 * t)
-      expect(SPEC[k].building).toBe(0)
-      expect(bandScoreForJoint(k, 0.9 * t, t)).toBe(2) // the 90% point stays Building
-    }
+  it('hip abduction: Building survives (buffer smaller than the band) and Steady-line only', () => {
+    const t = JOINT_SCORE_TARGETS.hip_abd
+    expect(SPEC.hip_abd.steady).toBeLessThan(0.1 * t)
+    expect(SPEC.hip_abd.building).toBe(0)
+    expect(bandScoreForJoint('hip_abd', 0.9 * t, t)).toBe(2)
   })
-  it('non-narrow joints keep the old rule exactly', () => {
-    for (const k of ['shoulder_flex', 'hip_flex', 'lumbar_flex', 'lumbar_ext']) {
+  it('reset moves (Jim 4:38 PM) and other non-narrow joints keep the plain 100% / 90% rule exactly', () => {
+    for (const k of [...RESET_JOINTS, 'hip_flex', 'lumbar_flex', 'lumbar_ext']) {
       expect(isNarrowJoint(k)).toBe(false)
+      expect(isNarrowJoint(`${k}_l`)).toBe(false)
       const t = JOINT_SCORE_TARGETS[k]
       for (const v of [0, 0.9 * t - 0.01, 0.9 * t, t - 0.01, t, t + 1]) {
         expect(bandScoreForJoint(k, v, t)).toBe(bandScoreFromTargetRatio(v, t))
       }
     }
+  })
+})
+
+describe('90%-edge rounding fix: exactly 90% is Building on every joint (matches SQL numeric)', () => {
+  it('reset moves at exactly 0.9 x target', () => {
+    expect(bandScoreForJoint('cervical_lat', 33.3, 37)).toBe(2)   // was Needs focus in JS float (0.8999...)
+    expect(bandScoreForJoint('cervical_lat_l', 33.3, 37)).toBe(2)
+    expect(bandScoreForJoint('hip_ir', 21.6, 24)).toBe(2)
+    expect(bandScoreForJoint('shoulder_flex', 126.9, 141)).toBe(2)
+    expect(bandScoreForJoint('ankle_df', 5.49, 6.1)).toBe(2)
+    expect(bandScoreForJoint('cervical_lat', 33.29, 37)).toBe(1)
   })
 })
 
@@ -76,9 +87,9 @@ describe('T1 A: boundary cases at each cutoff for every narrow joint', () => {
     }
   }
   it('a buffered Steady shows the real percent, never 100', () => {
-    expect(jointPercent('hip_er', { midline: 27.5 })).toBe(94)        // 27.5 + 1.5 = 29 Steady, real 94.8 -> 94
-    expect(jointPercent('cervical_flex', { midline: 47.5 })).toBe(95) // 47.5 + 2.5 = 50 Steady, real 95
-    expect(jointPercent('hip_er', { midline: 29 })).toBe(100)         // at target: 100
+    expect(jointPercent('hip_abd', { left: 39, right: 41 })).toBe(97)   // 39 + 2 = 41 Steady, real 97.5 -> 97
+    expect(jointPercent('shoulder_er', { left: 80, right: 85 })).toBe(94) // 80 + 5 = 85 Steady, real 94.1 -> 94
+    expect(jointPercent('hip_abd', { left: 40, right: 40 })).toBe(100)  // at target: 100
     for (const [k, { steady }] of Object.entries(SPEC)) {
       const t = JOINT_SCORE_TARGETS[k]
       expect(jointPercent(k, { midline: t - steady })).toBeLessThan(100)
@@ -89,25 +100,27 @@ describe('T1 A: boundary cases at each cutoff for every narrow joint', () => {
 describe('T1 C: Protocol gap weight across 1 and 2 assessments', () => {
   it('weight table', () => {
     expect(NARROW_GAP_WEIGHT).toBe(0.5)
-    expect(narrowGapWeight('hip_er', 2, null)).toBe(0.5)      // 1 assessment
-    expect(narrowGapWeight('hip_er', 2, 2)).toBe(1)           // 2 agreeing
-    expect(narrowGapWeight('hip_er', 2, 1)).toBe(0.5)         // 2 disagreeing
+    expect(narrowGapWeight('shoulder_er', 2, null)).toBe(0.5) // 1 assessment
+    expect(narrowGapWeight('shoulder_er', 2, 2)).toBe(1)      // 2 agreeing
+    expect(narrowGapWeight('shoulder_er', 2, 1)).toBe(0.5)    // 2 disagreeing
+    expect(narrowGapWeight('hip_er', 2, null)).toBe(1)        // reset move: no longer narrow
     expect(narrowGapWeight('shoulder_flex', 2, null)).toBe(1) // not narrow
   })
-  it('weighted gap values (ankle 4 cm, target 6)', () => {
-    const g = 1 - 4 / 6
-    expect(weightedJointGap('ankle_df', 4, 6)).toBeCloseTo(g * 0.5, 12)        // 1 assessment
-    expect(weightedJointGap('ankle_df', 4, 6, 4.2)).toBeCloseTo(g, 12)         // 2 agreeing (both Needs focus)
-    expect(weightedJointGap('ankle_df', 4, 6, 5.5)).toBeCloseTo(g * 0.5, 12)   // 2 disagreeing (prev Steady)
-    expect(weightedJointGap('ankle_df', 5.2, 6)).toBe(0)                       // Steady via buffer: no gap
-    expect(weightedJointGap('shoulder_flex', 120, 140)).toBeCloseTo(1 - 120 / 140, 12)
+  it('weighted gap values (shoulder ER 60, target 85)', () => {
+    const g = 1 - 60 / 85
+    expect(weightedJointGap('shoulder_er', 60, 85)).toBeCloseTo(g * 0.5, 12)       // 1 assessment
+    expect(weightedJointGap('shoulder_er', 60, 85, 62)).toBeCloseTo(g, 12)         // 2 agreeing (both Needs focus)
+    expect(weightedJointGap('shoulder_er', 60, 85, 84)).toBeCloseTo(g * 0.5, 12)   // 2 disagreeing (prev Steady)
+    expect(weightedJointGap('shoulder_er', 81, 85)).toBe(0)                        // Steady via buffer: no gap
+    expect(weightedJointGap('ankle_df', 4, 6.1)).toBeCloseTo(1 - 4 / 6.1, 12)      // reset move: full weight
+    expect(weightedJointGap('shoulder_flex', 120, 141)).toBeCloseTo(1 - 120 / 141, 12)
   })
   it('ordering: a narrow gap ranks below a similar non-narrow gap until confirmed', () => {
-    // shoulder_flex 112/140 = gap 0.20 (Needs focus); ankle 3.6/6 = gap 0.40, x0.5 = 0.20 unconfirmed -> tie, ord breaks
-    const cur = { shoulder_flex_l: 110, shoulder_flex_r: 120, ankle_df_l: 3.6, ankle_df_r: 4 }
+    // shoulder_flex 112.8/141 = gap 0.20 (Needs focus); shoulder ER 51/85 = gap 0.40, x0.5 = 0.20 unconfirmed -> tie, order breaks
+    const cur = { shoulder_flex_l: 112.8, shoulder_flex_r: 120, shoulder_er_l: 51, shoulder_er_r: 55 }
     expect(scoredJointKeysWorstFirst(cur)[0]).toBe('shoulder_flex_l')
-    expect(scoredJointKeysWorstFirst(cur, { shoulder_flex_l: 110, shoulder_flex_r: 120, ankle_df_l: 3.5, ankle_df_r: 3.9 })[0]).toBe('ankle_df_l')
-    expect(scoredJointKeysWorstFirst(cur, { shoulder_flex_l: 110, shoulder_flex_r: 120, ankle_df_l: 5.5, ankle_df_r: 6 })[0]).toBe('shoulder_flex_l')
+    expect(scoredJointKeysWorstFirst(cur, { ...cur, shoulder_er_l: 50 })[0]).toBe('shoulder_er_l')
+    expect(scoredJointKeysWorstFirst(cur, { ...cur, shoulder_er_l: 84, shoulder_er_r: 85 })[0]).toBe('shoulder_flex_l')
   })
 })
 

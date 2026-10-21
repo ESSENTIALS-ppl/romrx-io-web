@@ -131,7 +131,7 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
     const f05 = { id: '05', ankle_df_l: 5.46, ankle_df_r: 5.795, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
     const rows = radarSideRowsForAssessment(f05, [{ joint_key: 'ankle_df', score: 1 }, { joint_key: 'hip_abd', score: 3 }])
     const ank = rows.find(r => r.key === 'ankle_df')!
-    expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([72, 78, 72]) // T1: narrow joints show the real %
+    expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([89, 95, 89]) // ankle is a reset move: no T1 buffer, clamped % as before
     const abd = rows.find(r => r.key === 'hip_abd')!
     expect([abd.leftPct, abd.rightPct, abd.worse]).toEqual([100, 100, 100])
     const lf = rows.find(r => r.key === 'lumbar_flex')!
@@ -252,7 +252,7 @@ describe('My Protocol Left/Right colours follow Base bands', () => {
   })
 
   it('fixture 05 Ankle DF scaled to the 6 cm target: L 5.37 red (Needs focus = card), R 5.7 yellow (Building)', () => {
-    expect(sideBandsForJoint('ankle_df', { left: 4.37, right: 4.7 }, 1)).toEqual({ left: 1, right: 2 }) // T1: minus the 1 cm buffer
+    expect(sideBandsForJoint('ankle_df', { left: 5.37, right: 5.7 }, 1)).toEqual({ left: 1, right: 2 }) // reset move: no T1 buffer (target 6.1: 5.37 = 88%, 5.7 = 93%)
   })
 
   it('MyProtocol.tsx: no riskBelow/normalMin/normalMax left; sides use the shared helper; target from JOINT_SCORE_TARGETS', () => {

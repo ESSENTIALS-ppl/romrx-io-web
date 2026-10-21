@@ -142,15 +142,12 @@ export function bandScoreFromTargetRatio(worse: number, target: number): BandSco
  * Joints not listed keep bandScoreFromTargetRatio exactly. A buffered Steady shows the REAL percent, never 100.
  */
 export const NARROW_BAND_CONFIG: Readonly<Record<string, { steady: number; building: number }>> = {
-  hip_er: { steady: 1.5, building: 0 },
-  hip_ir: { steady: 1.5, building: 0 },
+  // Jim Oct 21 4:38 PM ET (via Grant 4:56 PM): "Drop the T1 buffers on the reset moves." Hip ER, hip IR,
+  // neck side bend, neck flexion, neck extension, ankle and shoulder flexion now use the range reset
+  // targets with NO buffer. Only the joints that were not reset keep their T1 buffer.
   hip_abd: { steady: 2, building: 0 },
-  cervical_flex: { steady: 2.5, building: 0 },
-  cervical_lat: { steady: 2, building: 0 },
   cervical_rot: { steady: 5, building: 5 },
-  cervical_ext: { steady: 5, building: 5 },
   shoulder_er: { steady: 5, building: 5 },
-  ankle_df: { steady: 1, building: 1 },
 }
 
 const NO_BUFFER = { steady: 0, building: 0 }
@@ -176,9 +173,10 @@ function fx(n: number): number {
   return Math.round(n * 1e6)
 }
 
-/** THE Base band for one joint value: option A buffers on narrow joints, else bandScoreFromTargetRatio. */
+/** THE Base band for one joint value: option A buffers on narrow joints (zero elsewhere), fixed-point compare. */
 export function bandScoreForJoint(jointKey: string, worse: number, target: number): BandScore {
-  if (!isNarrowJoint(jointKey)) return bandScoreFromTargetRatio(worse, target)
+  // 90%-edge rounding fix (T1): EVERY joint compares in 6-decimal fixed point so JS float noise
+  // (e.g. 21.6 / 24) can never disagree with SQL numeric. Non-narrow joints use zero buffers.
   if (!(target > 0) || !Number.isFinite(worse)) return 1
   const b = narrowBuffers(jointKey)
   if (fx(worse + b.steady) >= fx(target)) return 3
