@@ -1,3 +1,4 @@
+import { StepVideo } from '../components/StepVideo'
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import { Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { SETUP_STEPS } from './assessmentMeta'
@@ -33,6 +34,9 @@ if (phase === 'setup') {
             <h1 className="font-display font-bold text-cobalt text-2xl">ROM Self-Assessment</h1>
             <p className="text-sm text-slate-500 mt-1">Approximately 15 minutes using the ROMeter. Equipment needed: your phone, a chair, a wall, and a tape measure or ruler.</p>
           </div>
+
+          {/* Intro video (Grant Oct 21 2026): /videos/intro.mp4, hidden if missing (components/StepVideo). */}
+          <StepVideo stepId="intro" title="ROM Self-Assessment intro" />
 
           <div className="card p-6 space-y-4">
             <p className="text-sm font-semibold text-cobalt-ink">Before you start:</p>

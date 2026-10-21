@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { StepVideo } from '../components/StepVideo'
-import { stepVideo, VIDEO_STEP_IDS } from './stepVideo'
+import { SCREEN_VIDEO_IDS, stepVideo, VIDEO_STEP_IDS } from './stepVideo'
 import { STEPS } from '../pages/assessmentSteps'
 import { STEPS_PART1 } from '../pages/assessmentSteps1'
 import { STEPS_PART2 } from '../pages/assessmentSteps2'
@@ -17,7 +17,7 @@ afterEach(() => { act(() => root?.unmount()); host?.remove() })
 describe('step video slots', () => {
   it('every slot id is a real step id', () => {
     const ids = new Set([...STEPS, ...STEPS_PART1, ...STEPS_PART2].map(s => s.id))
-    for (const id of VIDEO_STEP_IDS) expect(ids.has(id), id).toBe(true)
+    for (const id of VIDEO_STEP_IDS) if (!(SCREEN_VIDEO_IDS as readonly string[]).includes(id)) expect(ids.has(id), id).toBe(true)
   })
   it('paths are /videos/<step id>.mp4 and .jpg; unknown ids have no slot', () => {
     expect(stepVideo('hip_er')).toEqual({ src: '/videos/hip_er.mp4', poster: '/videos/hip_er.jpg' })
@@ -48,6 +48,10 @@ describe('step video slots', () => {
     act(() => { host.querySelector('[data-step-video-probe]')!.dispatchEvent(new Event('load')) })
     act(() => { host.querySelector('video')!.dispatchEvent(new Event('error')) })
     expect(host.querySelector('[data-step-video]')).toBeNull()
+  })
+  it('intro and outro have slots at /videos/intro.mp4 and /videos/outro.mp4', () => {
+    expect(stepVideo('intro')).toEqual({ src: '/videos/intro.mp4', poster: '/videos/intro.jpg' })
+    expect(stepVideo('outro')).toEqual({ src: '/videos/outro.mp4', poster: '/videos/outro.jpg' })
   })
   it('a step with no slot renders nothing', () => {
     mount('lumbar')

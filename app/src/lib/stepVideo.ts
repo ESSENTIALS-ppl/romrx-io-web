@@ -3,7 +3,9 @@
  * site root (Netlify publish = "."): /videos/<step_id>.mp4 and /videos/<step_id>.jpg (poster). Frame 1:1,
  * 720x720. A slot shows only once its poster loads; a missing poster or a video error hides it.
  */
-export const VIDEO_STEP_IDS = ['hip_er', 'hip_ir', 'shoulder_er', 'shoulder_flex', 'cervical_lat', 'cervical_flex_ext', 'hip_flex', 'hip_abd', 'ankle_df'] as const
+export const VIDEO_STEP_IDS = ['intro', 'outro', 'hip_er', 'hip_ir', 'shoulder_er', 'shoulder_flex', 'cervical_lat', 'cervical_flex_ext', 'hip_flex', 'hip_abd', 'ankle_df'] as const
+/** Non-step slots: intro (start screen) and outro (after the last test). */
+export const SCREEN_VIDEO_IDS = ['intro', 'outro'] as const
 export type VideoStepId = typeof VIDEO_STEP_IDS[number]
 export const VIDEO_BASE = '/videos'
 
