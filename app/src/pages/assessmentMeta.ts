@@ -1,4 +1,4 @@
-import { JOINT_SCORE_TARGETS, bandScoreFromTargetRatio, isUnscoredJoint, jointKeyBase, type BandScore } from '../lib/mobilityBands'
+import { JOINT_SCORE_TARGETS, bandScoreForJoint, isUnscoredJoint, jointKeyBase, type BandScore } from '../lib/mobilityBands'
 
 export interface Field {
   key: string
@@ -60,6 +60,6 @@ export function getScore(val: string, field: Field): BandScore | null {
   if (field.unscored || isUnscoredJoint(field.key)) return null
   const target = JOINT_SCORE_TARGETS[jointKeyBase(field.key)]
   if (target == null) return null
-  return bandScoreFromTargetRatio(n, target)
+  return bandScoreForJoint(field.key, n, target)
 }
 
