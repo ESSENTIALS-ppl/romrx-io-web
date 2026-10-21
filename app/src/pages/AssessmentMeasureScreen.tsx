@@ -1,4 +1,5 @@
 import { directionForField } from '../lib/meterDirection'
+import { StepVideo } from '../components/StepVideo'
 import { Loader2, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, AlertTriangle, SkipForward } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { STEPS } from './assessmentSteps'
@@ -96,6 +97,9 @@ export function AssessmentMeasureScreen(p: {
               <span className="text-base">📐</span>
               <span className="font-medium">{step.tool}</span>
             </div>
+
+            {/* Demo video slot: /videos/<step id>.mp4, hidden when there is no file (lib/stepVideo.ts). */}
+            <StepVideo stepId={step.id} title={step.title} />
 
             {/* Setup */}
             <div>
