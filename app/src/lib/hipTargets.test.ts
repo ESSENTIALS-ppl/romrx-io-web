@@ -18,6 +18,8 @@ import { describe, expect, it } from 'vitest'
 import {
   JOINT_SCORE_TARGETS,
   bandScoreFromTargetRatio,
+  bandScoreForJoint,
+  narrowBuffer,
   jointBandsForAssessment,
   jointPercent,
   overallBandForAssessment,
@@ -68,13 +70,16 @@ describe('Steady targets (Oct 6): hips, shoulder flexion, ankle, neck', () => {
     ['shoulder_er', 85, 84, 76.5, 76],
     ['cervical_lat', 38, 37.5, 34.5, 34], // 0.90 x 38 = 34.2, off the 0.5 grid
   ]
-  for (const [joint, steady, under, buildingFloor, needsFocus] of CASES) {
+  for (const [joint, steady0, under0, buildingFloor0, needsFocus0] of CASES) {
     const t = JOINT_SCORE_TARGETS[joint]
+    // T1 option A (Oct 21): on narrow joints every cutoff sits E lower; shift the cases by E (0 on shoulder flexion)
+    const E = narrowBuffer(joint)
+    const [steady, under, buildingFloor, needsFocus] = [steady0, under0, buildingFloor0, needsFocus0].map(v => Math.round((v - E) * 100) / 100)
     it(`${joint}: ${steady} → Steady, ${under} → not Steady (Building), ${needsFocus} → Needs focus`, () => {
-      expect(bandScoreFromTargetRatio(steady, t)).toBe(3)
-      expect(bandScoreFromTargetRatio(under, t)).toBe(2)
-      expect(bandScoreFromTargetRatio(buildingFloor, t)).toBe(2)
-      expect(bandScoreFromTargetRatio(needsFocus, t)).toBe(1)
+      expect(bandScoreForJoint(joint, steady, t)).toBe(3)
+      expect(bandScoreForJoint(joint, under, t)).toBe(2)
+      expect(bandScoreForJoint(joint, buildingFloor, t)).toBe(2)
+      expect(bandScoreForJoint(joint, needsFocus, t)).toBe(1)
       // live measure-screen chip, per side
       expect(getScore(String(steady), { key: `${joint}_l`, label: 'Left' })).toBe(3)
       expect(getScore(String(under), { key: `${joint}_r`, label: 'Right' })).toBe(2)
@@ -137,7 +142,8 @@ describe('hip abduction: NO typical range on screen (Jim, Oct 6)', () => {
 
   it('hip abduction is still scored live (band chip shows, no range text)', () => {
     expect(getScore('40', step.fields[0])).toBe(3)
-    expect(getScore('39', step.fields[1])).toBe(2)
+    expect(getScore('35', step.fields[0])).toBe(3) // T1 option A: 35 + 5 buffer reaches 40
+    expect(getScore('34', step.fields[1])).toBe(2)
   })
 })
 
@@ -161,6 +167,7 @@ describe('neck: NO typical range on screen (Jim, Oct 6)', () => {
   it('side bend is still scored live against 38', () => {
     const lat = STEPS.find(s => s.id === 'cervical_lat')!
     expect(getScore('38', lat.fields[0])).toBe(3)
-    expect(getScore('37', lat.fields[1])).toBe(2)
+    expect(getScore('33', lat.fields[0])).toBe(3) // T1 option A: 33 + 5 buffer reaches 38
+    expect(getScore('32', lat.fields[1])).toBe(2)
   })
 })
