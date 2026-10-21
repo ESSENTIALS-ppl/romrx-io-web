@@ -24,7 +24,7 @@ describe('step video slots', () => {
     expect(stepVideo('cervical_flex_ext')!.src).toBe('/videos/cervical_flex_ext.mp4')
     expect(stepVideo('lumbar')).toBeNull()
   })
-  it('hidden until the poster loads, then a 4:5 video with controls, no autoplay, preload none', () => {
+  it('hidden until the poster loads, then a 1:1 square video with controls, no autoplay, preload none', () => {
     mount('shoulder_er')
     expect(host.querySelector('video')).toBeNull()
     expect(host.querySelector('[data-step-video]')!.className).toBe('hidden')
@@ -35,7 +35,8 @@ describe('step video slots', () => {
     expect(v.hasAttribute('controls')).toBe(true)
     expect(v.hasAttribute('autoplay')).toBe(false)
     expect(v.getAttribute('preload')).toBe('none')
-    expect(v.className).toContain('aspect-[4/5]')
+    expect(v.className).toContain('aspect-square')
+    expect(v.className).not.toContain('aspect-[4/5]')
   })
   it('missing file: poster error removes the slot entirely', () => {
     mount('hip_ir')
