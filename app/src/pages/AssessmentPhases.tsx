@@ -5,7 +5,7 @@ import { SETUP_STEPS } from './assessmentMeta'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
 import { track } from '../lib/track'
 
-type Phase = 'setup' | 'measure' | 'lead' | 'done' | 'lead-done'
+export type Phase = 'setup' | 'measure' | 'lead' | 'done' | 'lead-done' | 'outro'
 
 export function AssessmentPhases(p: {
   phase: Phase
@@ -23,6 +23,8 @@ export function AssessmentPhases(p: {
   handleNext: () => void
   handleLeadSubmit: (e: FormEvent) => void
   gender?: string | null
+  /** Outro Continue (signed-in): results or the pack URL. Called only from the outro screen. */
+  onOutroContinue?: () => void
 }) {
   const { phase, stepIdx, values, email, fullName, loading, error } = p
 
@@ -89,15 +91,40 @@ if (phase === 'setup') {
     )
   }
 
+  // Outro, signed-in (Grant Oct 21 2026). Replaces the 2 s 'done' spinner. Shown only AFTER submit-assessment
+  // returned ok, and that edge awaits the great-job email before it replies. The video hides itself if
+  // /videos/outro.mp4 is missing or fails; Continue sits outside it and always shows.
+  if (phase === 'outro') {
+    return (
+      <div className="min-h-screen bg-surface py-8 px-4" data-outro>
+        <div className="max-w-lg mx-auto space-y-5">
+          <StepVideo stepId="outro" title="Assessment complete" />
+          <button type="button" onClick={() => p.onOutroContinue?.()} data-outro-continue className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
+            Continue <ChevronRight size={18} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Signed-out lead: 'Check your email' is reached only after submit-lead-assessment returned ok, and that
+  // edge awaits the results email before it replies. Outro video sits on this screen (Grant Oct 21 2026);
+  // hidden on error, Continue always shows.
   if (phase === 'lead-done') {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-center space-y-4 px-4 max-w-sm">
-          <div className="w-16 h-16 bg-cobalt-light rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 size={32} className="text-cobalt" fill="currentColor" strokeWidth={0} />
+      <div className="min-h-screen bg-surface py-8 px-4" data-outro data-lead-done>
+        <div className="max-w-lg mx-auto space-y-5">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 bg-cobalt-light rounded-full flex items-center justify-center mx-auto">
+              <CheckCircle2 size={32} className="text-cobalt" fill="currentColor" strokeWidth={0} />
+            </div>
+            <h2 className="font-display font-bold text-xl text-cobalt-ink">Check your email!</h2>
+            <p className="text-sm text-slate-500">We sent your Personal Readiness Profile and a link to unlock your full dashboard to <strong>{email}</strong>.</p>
           </div>
-          <h2 className="font-display font-bold text-xl text-cobalt-ink">Check your email!</h2>
-          <p className="text-sm text-slate-500">We sent your Personal Readiness Profile and a link to unlock your full dashboard to <strong>{email}</strong>.</p>
+          <StepVideo stepId="outro" title="Assessment complete" />
+          <a href="/" data-outro-continue className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
+            Continue <ChevronRight size={18} />
+          </a>
         </div>
       </div>
     )
