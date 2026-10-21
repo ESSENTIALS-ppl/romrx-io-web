@@ -47,15 +47,14 @@ export interface JointScoreRow {
  *   else → 1 Needs focus
  */
 export const JOINT_SCORE_TARGETS: Record<string, number> = {
-  // Steady targets changed by Jim's decisions of Oct 6 2026 (sources: ledger/ROMRX-ASSESSMENT-STUDY-REFERENCE.md):
-  //   hip ER 29 / hip IR 26 (was 45 / 45): seated rotation reads Steady once inside the typical range,
-  //     Simoneau et al. 1998 mean minus 1 SD (Quinn option B1).
-  //   hip abduction 40 (was 90): Svenningsen 1989 adult value; no typical range shown on screen.
-  //   shoulder flexion 140 (was 180): Gill et al. 2020, mean minus 1 SD (about 141).
-  //   ankle knee-to-wall 6 cm (was 20): mean minus 1 SD, Konor 2012 / McBride 2026; no range shown.
-  //   neck rotation 70 (was 80): Swinkels & Swinkels-Meewisse 2014 (Spine, PMID 24573069), mean minus 1 SD for ages 20-49.
-  //   neck side bend 38 (was 45): same paper, 20-29 mean minus 1 SD (46 - 7.5 / 45 - 7.5). Neck flexion 50 / extension 60 unchanged.
-  //   No typical range shown on screen for the neck.
+  // Sources (range-proposal.md, Oct 21 2026; pooled mean minus 1 SD, WITH Wadhwa 2024 for the neck):
+  //   hip ER / hip IR: Simoneau 1998 (PMID 9742472) + Roach 1991 (PMID 1881956).
+  //   hip abduction 40: Oct 6 value, not in range-proposal.md (no position-matched paper); no typical range shown.
+  //   shoulder flexion: Gill 2020 (PMID 33046038).
+  //   ankle knee-to-wall: McBride 2026 (PMID 41723909), all ages.
+  //   neck side bend / flexion / extension: Tousignant-Laflamme 2013 (PMID 23829201), Wolan-Nieroda 2020
+  //     (PMID 32626769), Canovas-Ambit 2021 (PMID 33868830), Wadhwa 2024 (PMID 39677250).
+  //   neck rotation 70: Oct 6 value, not in range-proposal.md.
   //   shoulder ER 85 (Oct 6 8:19 PM, Jim-approved, Quinn): Base is back to the STANDING goal-post test (arm out at 90,
   //     elbow bent). Replaces 40 (lying tucked-elbow test, 11:45 AM). No typical range is shown on screen (Stacy).
   // RANGE RESET (Jim Oct 21 2026 4:15 PM ET, range-proposal.md): target = pooled mean minus 1 SD = step normalLow, so the
