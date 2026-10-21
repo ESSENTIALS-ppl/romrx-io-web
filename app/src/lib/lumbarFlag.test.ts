@@ -96,3 +96,23 @@ describe('My Body wiring', () => {
     expect(LOW_BACK_NOT_MEASURED).toBe('Low back: not measured')
   })
 })
+
+describe('after 20261021223000_lumbar_null_saved (Jim Oct 21 2026 7:24 PM): no lumbar data anywhere', () => {
+  it('assessment with lumbar NULL and no lumbar joint_scores rows: score, band, ranking clean; My Body shows only the not-measured line', async () => {
+    const m = await import('./mobilityBands')
+    const a = { ...OTHER, lumbar_flex: null, lumbar_ext: null, worst_joints: ['lumbar_ext', 'ankle_df_l', 'shoulder_er_l'] }
+    const rows = [...m.jointBandsForAssessment(OTHER)].filter(([k]) => !k.startsWith('lumbar')).map(([joint_key, score]) => ({ joint_key, score }))
+    expect(m.mobilityScoreForAssessment(a, rows)).toBe(m.mobilityScoreForAssessment(OTHER))
+    expect(m.overallBandForAssessment(a, rows)).toBe(m.overallBandForAssessment(OTHER))
+    expect(m.overallBandFromJointScores(rows)).toBe(m.overallBandForAssessment(OTHER))
+    expect(m.topProblemAreasForAssessment(a).some(k => k.startsWith('lumbar'))).toBe(false)
+    expect(m.rankProblemJoints(a, [{ key: 'lumbar_ext' }, { key: 'ankle_df' }]).some(r => r.key.startsWith('lumbar'))).toBe(false)
+    for (const r of m.jointDisplayRowsForAssessment(a, rows).filter(x => x.key.startsWith('lumbar'))) { expect(r.pct).toBeNull(); expect(r.band).toBeNull() }
+    const { lumbarNotMeasured, baseLumbarRemoved } = await import('./lumbarFlag')
+    expect(lumbarNotMeasured(a)).toBe(true)
+    expect(baseLumbarRemoved()).toBe(true)
+    const page = readFileSync(join(SRC, 'pages', 'MyBody.tsx'), 'utf8')
+    expect(page).toMatch(/const hideLumbar = lumbarOff\n/)
+    expect(page).toMatch(/\{hideLumbar && <p[^>]*data-low-back-not-measured>\{LOW_BACK_NOT_MEASURED\}<\/p>\}/)
+  })
+})
