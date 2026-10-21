@@ -197,10 +197,10 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 
 #### Hip Flexion (Straight-Leg Raise) (`hip_flex`)
 Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this step. Title, why, tool, per-leg fields and range unchanged.
-- Meter grip: Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
+- Meter grip: Phone flat on top of your mid-thigh. It stays there the whole lift. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]**
 - Setup:
   1. Lie flat on your back, legs straight out, knees touching the floor. **[Stacy PASS Oct 6 12:07]**
-  2. Place your phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
+  2. Place your phone flat on top of your thigh, midway between your hip and knee. It stays on that spot the whole time you lift your leg. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]**
   3. Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:07]**
 - How to Measure:
   1. Lift one leg and keep it straight until you can't anymore. **[Stacy PASS Oct 6 12:07]**
@@ -254,7 +254,7 @@ Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this
 | 4 | Shoulder Flexion | Left (shoulder_flex_l, °), Right (shoulder_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone in your hand, long edge along your arm, screen facing out to the side. |
 | 5 | Cervical Lateral Flexion | Left (cervical_lat_l, °), Right (cervical_lat_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on your forehead, screen facing forward.  |
 | 6 | Cervical Flexion + Extension | Flexion (cervical_flex, °), Extension (cervical_ext, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat against the side of your head at the temple, screen facing the wall beside you.  |
-| 7 | Hip Flexion (Straight-Leg Raise) | Left leg (hip_flex_l, °), Right leg (hip_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.  |
+| 7 | Hip Flexion (Straight-Leg Raise) | Left leg (hip_flex_l, °), Right leg (hip_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on top of your mid-thigh. It stays there the whole lift.  |
 | 8 | Hip Abduction | Left (hip_abd_l, °), Right (hip_abd_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the front of your thigh, screen facing forward, long edge along the thigh.  |
 | 9 | Lumbar Flexion + Extension | Flexion (lumbar_flex, °), Extension (lumbar_ext, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Typed box only | (none) |
 | 10 | Ankle Dorsiflexion (Knee-to-Wall, cm) | Left (ankle_df_l, cm), Right (ankle_df_r, cm) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Typed box only | (none) |
@@ -513,7 +513,7 @@ Meter: YES, grip line: Phone flat against the side of your head at the temple, s
 
 ## Hip Flexion (Straight-Leg Raise) (`hip_flex`)
 
-Meter: YES, grip line: Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** (was: Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.)
+Meter: YES, grip line: Phone flat on top of your mid-thigh. It stays there the whole lift. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]** (Oct 6 line: Phone on your mid-thigh.) (was: Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.)
 
 Current copy below is Jim's Oct 6 12:07 PM decision (no hand, no low back). The Old lines are history.
 
@@ -531,7 +531,7 @@ Current copy below is Jim's Oct 6 12:07 PM decision (no hand, no low back). The 
 **New (Jim, Oct 6 12:07 PM):**
 
 1. Lie flat on your back, legs straight out, knees touching the floor. **[Stacy PASS Oct 6 12:07]**
-2. Place your phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
+2. Place your phone flat on top of your thigh, midway between your hip and knee. It stays on that spot the whole time you lift your leg. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]**
 3. Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:07]**
 
 ### How to Measure

@@ -49,10 +49,11 @@ export const HIP_FLEX_STEP = {
   tool: 'Your phone. Lying on the floor.',
   /** One-line grip shown in the in-app phone meter. */
   // Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this step. Stacy PASS Oct 6 12:07 (all 9 lines).
-  meterGrip: 'Phone on your mid-thigh.',
+  // Jim, Oct 21 6:09 PM (option a): phone flat on top of the mid-thigh, stays there through the whole straight-leg lift. Needs Stacy PASS + Quinn sign-off.
+  meterGrip: 'Phone flat on top of your mid-thigh. It stays there the whole lift.',
   position: [
     'Lie flat on your back, legs straight out, the backs of your knees resting on the floor.',
-    'Place your phone on your mid-thigh.',
+    'Place your phone flat on top of your thigh, midway between your hip and knee. It stays on that spot the whole time you lift your leg.',
     'Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
   ],
   howTo: [
