@@ -44,9 +44,10 @@ const CASES: Case[] = [
   // shoulder_flex: in hand along the hanging arm, screen out to the side; arm lifts forward
   { key: 'shoulder_flex_l', z: L_LAT, ys: [Z, neg(Z)], axis: Y, rightSign: -1, deg: 140 },
   { key: 'shoulder_flex_r', z: R_LAT, ys: [Z, neg(Z)], axis: Y, rightSign: -1, deg: 140 },
-  // cervical_lat: forehead, screen forward; head tilts toward the named shoulder about the forward axis
-  { key: 'cervical_lat_l', z: X, ys: [Z, neg(Z)], axis: X, rightSign: -1, deg: 40 },
-  { key: 'cervical_lat_r', z: X, ys: [Z, neg(Z)], axis: X, rightSign: 1, deg: 40 },
+  // cervical_lat (Jim 1:13 PM): left tilt with the phone on the RIGHT side of the head (screen out = -Y), right tilt with
+  // it on the LEFT (+Y); top edge up or turned forward/back in the hand. Tilt toward the left shoulder = -angle about X.
+  { key: 'cervical_lat_l', z: neg(Y), ys: [Z, X, neg(X)], axis: X, rightSign: -1, deg: 40 },
+  { key: 'cervical_lat_r', z: Y, ys: [Z, X, neg(X)], axis: X, rightSign: 1, deg: 40 },
   // hip_abd: outer thigh, screen out; leg moves out to the side about the forward axis
   { key: 'hip_abd_l', z: L_LAT, ys: [Z, neg(Z)], axis: X, rightSign: 1, deg: 40 },
   { key: 'hip_abd_r', z: R_LAT, ys: [Z, neg(Z)], axis: X, rightSign: -1, deg: 40 },
@@ -123,5 +124,28 @@ describe('neck flexion/extension copy matches the right-temple direction check (
     const s = STEPS_PART2.find(x => x.id === 'cervical_flex_ext')!
     expect(s.position[1]).toBe('Tap Start, then hold your phone flat against the right side of your head, at your temple, with your right hand, screen facing out, top edge pointing up.')
     expect(s.meter!.grip).toBe('Hold your phone flat against the right side of your head, at your temple, with your right hand, screen facing out, top edge pointing up.')
+  })
+})
+
+describe('neck side bend, phone on the side away from the tilt: 1:1 and sign on both sides (Quinn 1:13 PM)', () => {
+  for (const [key, z, dir] of [['cervical_lat_l', neg(Y), -1], ['cervical_lat_r', Y, 1]] as const) {
+    it(`${key}: 0, 20, 40 read 0, 20, 40; right way signed +, wrong way signed -`, () => {
+      const spec = directionForField(key)!
+      expect(spec).toEqual({ axis: 'z', sign: -1 })
+      const q0 = fromAxes(Z, z as V)
+      for (const deg of [0, 20, 40]) {
+        const q = mul(axisAngle(X, dir * deg), q0), w = mul(axisAngle(X, -dir * deg), q0)
+        expect(tiltDeltaDeg(q0, q)).toBeCloseTo(deg, 6)
+        expect(signedTiltDeg(q0, q, spec)).toBeCloseTo(deg, 6)
+        if (deg > 0) expect(signedTiltDeg(q0, w, spec)).toBeCloseTo(-deg, 6)
+      }
+    })
+  }
+  it('step order: Left field first, and the copy starts with the left tilt, phone on the right', async () => {
+    const { STEPS_PART1 } = await import('../pages/assessmentSteps1')
+    const s = STEPS_PART1.find(x => x.id === 'cervical_lat')!
+    expect(s.fields.map(f => f.key)).toEqual(['cervical_lat_l', 'cervical_lat_r'])
+    expect(s.position[1]).toMatch(/^For the left tilt, hold the back of the phone flat against the RIGHT side of your head/)
+    expect(s.meter!.grip).toBe('Back of the phone flat against the side of your head, just above your ear, on the side away from the tilt.')
   })
 })

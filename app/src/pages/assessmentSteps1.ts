@@ -124,19 +124,22 @@ export const STEPS_PART1: Step[] = [
     id: 'cervical_lat',
     title: 'Cervical Lateral Flexion',
     why: 'Shows how far you can tilt your head toward each shoulder.',
-    tool: 'Your phone. Seated in a chair.',
+    // Jim 1:13 PM Oct 21 2026, Quinn's exact copy: phone flat on the side of the head AWAY from the tilt, just above the
+    // ear, same-side hand. Left tilt first (phone on the right), then switch sides, re-Start, tilt right. Direction check:
+    // lib/meterDirection.ts (z, -1 on both sides; the phone switching sides is what flips the world direction).
+    tool: 'Phone meter, held flat against the side of your head.',
     position: [
-      'Sit upright in a chair. Feet flat. Back straight.',
-      'Tap Start, then press your phone flat against your FOREHEAD, screen facing forward, away from your face.',
-      'Look straight ahead. Hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
+      'Sit tall in a chair, feet flat, shoulders down and level, nose pointing forward.',
+      'For the left tilt, hold the back of the phone flat against the RIGHT side of your head, just above your ear, with your right hand. Top edge points up, screen facing out.',
+      'Tap Start, then hold this start position while it counts down from 5.',
     ],
     howTo: [
-      'Nose points forward and chin stays level. Tilt your ear toward your left shoulder as far as it will go. Shoulders down, body still. Hold still until the number locks and dings.',
-      'Tap Use this number. Then tap Start the same way and tilt toward your right shoulder.',
+      'Nose points forward and chin stays level. Slowly tilt your left ear toward your left shoulder until it stops on its own. Keep the phone pressed flat. Hold still until the number locks and dings.',
+      'Tap Use this number. Move the phone to the LEFT side of your head, just above your ear, with your left hand. Sit back up straight, tap Start, hold for the countdown, then tilt your right ear toward your right shoulder.',
     ],
-    mistake: 'Shrugging your shoulder up to meet your ear.',
-    mistakeFix: 'Keep both shoulders pressed down the whole time. Only your head moves. If your shoulder rises, that reading does not count.',
-    meter: { grip: 'Phone flat on your forehead, screen facing forward.' },
+    mistake: 'Turning your face, lifting your shoulder toward your ear, leaning your body, or letting the phone slide or tip.',
+    mistakeFix: 'Nose forward, shoulders down, body still, phone pressed flat. Only your head tilts.',
+    meter: { grip: 'Back of the phone flat against the side of your head, just above your ear, on the side away from the tilt.' },
     fields: [
       { key: 'cervical_lat_l', label: 'Left', unit: '°', normalLow: 38, normalHigh: 46, riskBelow: 30, rangeSource: 'Swinkels, 2014' },
       { key: 'cervical_lat_r', label: 'Right', unit: '°', normalLow: 38, normalHigh: 46, riskBelow: 30, rangeSource: 'Swinkels, 2014' },

@@ -25,7 +25,8 @@ const STEP_DIR: Record<string, { axis: DirAxis; left: 1 | -1; right: 1 | -1 }> =
   // Screen faces you, forearm forward: turning up and back tips the screen to face down (+z).
   shoulder_er: { axis: 'z', left: 1, right: 1 },
   shoulder_flex: { axis: 'twist', left: 1, right: -1 },
-  cervical_lat: { axis: 'twist', left: 1, right: -1 },
+  // Phone on the side of the head away from the tilt, screen out: the tilt tips the screen to face up on both sides.
+  cervical_lat: { axis: 'z', left: -1, right: -1 },
   hip_abd: { axis: 'z', left: -1, right: -1 },
 }
 
