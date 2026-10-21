@@ -74,15 +74,15 @@ export const STEPS_PART2: Step[] = [
     tool: 'Type this one in for now. Use any level you have to read the angle. Standing + Floor.',  // Stacy PASS, Oct 5 11:32 PM
     position: [
       'Bending forward (Flexion) is standing. Bending back (Extension) is on the floor face down.',
-      'Bend forward (Flexion) setup: Stand straight, feet shoulder-width apart. Hold your phone at your side, screen facing away. Set your level to 0 while you stand straight.',
-      'Bend back (Extension) setup: Lie face down on the floor. Place one hand under your shoulder for the press-up. Hold your phone at your side with your other hand, screen facing away. Set your level to 0 while you lie flat.',
+      'Bend forward (Flexion) setup: Stand straight, feet shoulder-width apart. Hold your phone flat against your breastbone with both hands, top edge pointing up, screen facing out. Set your level to 0 while you stand straight.',
+      'Bend back (Extension) setup: Lie face down on the floor with your hands under your shoulders. Rest your phone flat on your upper back, between your shoulder blades, screen facing up. If it slides, ask someone to hold it there. Set your level to 0 while you lie flat.',
     ],
     howTo: [
       'Bend forward (Flexion): Keep your legs straight. Slowly bend forward with your back flat. Stop when you feel a strong stretch in the back of your legs. Note the angle at that point.',
-      'Bend back (Extension): Press up on one arm to lift your chest, keeping your hips flat on the floor. Note the angle at your end range.',
+      'Bend back (Extension): Press up with both arms to lift your chest, keeping your hips flat on the floor. Note the angle at the highest point.',
     ],
     mistake: 'Rounding your back to get lower when bending forward, or letting your hips lift off the floor during the press-up.',
-    mistakeFix: 'When bending forward, the stretch in the back of your legs is your true stopping point. When bending back, your hips stay flat on the floor the entire time - only your chest rises.',
+    mistakeFix: 'When bending forward, stop when you feel a strong stretch in the back of your legs. When bending back, your hips stay flat on the floor the whole time. Only your chest rises.',
     fields: [
       { key: 'lumbar_flex', label: 'Flexion', unit: '°', normalLow: 40, normalHigh: 80, riskBelow: 40 },
       { key: 'lumbar_ext', label: 'Extension', unit: '°', normalLow: 20, normalHigh: 30, riskBelow: 15 },
