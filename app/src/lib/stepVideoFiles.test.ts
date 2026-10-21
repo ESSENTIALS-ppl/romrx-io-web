@@ -1,11 +1,11 @@
-/** Assessment video files (Oct 21 2026): every slot has a file and poster except hip_flex (reshoot Oct 22, slot stays hidden). */
+/** Assessment video files (Oct 21 2026): every slot has a file and poster except hip_flex and shoulder_er (reshoot list, slots stay hidden). */
 import { describe, expect, it } from 'vitest'
 import { existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { VIDEO_STEP_IDS } from './stepVideo'
 
 const dir = resolve(__dirname, '../../../videos')
-const PENDING = ['hip_flex']
+const PENDING = ['hip_flex', 'shoulder_er']
 
 describe('assessment video files', () => {
   for (const id of VIDEO_STEP_IDS) {
