@@ -4,8 +4,8 @@
  *    hip ER 29 and hip IR 26, replacing 45.
  *  - Standing hip abduction is scored against 40, replacing 90, and shows NO typical range on screen.
  *  - Shoulder flexion 140, replacing 180 (Gill et al. 2020, mean minus 1 SD).
- *  - Ankle knee-to-wall 6 cm, replacing 20 (mean minus 1 SD, Konor 2012 / McBride 2026), no range shown.
- *  - Neck rotation 70 (was 80) and neck side bend 38 (was 45): Swinkels & Swinkels-Meewisse 2014, Spine, PMID 24573069
+ *  - Ankle knee-to-wall 6 cm, replacing 20 (Oct 6 value; range reset Oct 21 2026 sets 6.1 cm, McBride 2026, PMID 41723909).
+ *  - Neck rotation 70 (was 80): Oct 6 value, Swinkels & Swinkels-Meewisse 2014, Spine, PMID 24573069 (rotation not in the Oct 21 reset). Neck side bend now 37 (range reset Oct 21 2026, pooled PMIDs 23829201, 32626769, 33868830, 39677250).
  *    (rotation mean minus 1 SD for ages 20-49; side bend 20-29 mean minus 1 SD). Neck flexion 50 / extension 60 unchanged.
  *    No typical range on screen for the neck.
  *  - Shoulder ER 85 (Oct 6 8:19 PM, Jim-approved, Quinn): standing goal-post test. Replaces 40 (lying tucked-elbow test,
@@ -111,11 +111,11 @@ describe('Steady targets (range reset Oct 21): hips, shoulder flexion, ankle, ne
     expect(bandScoreFromTargetRatio(27, JOINT_SCORE_TARGETS.hip_ir)).toBe(3)
     expect(bandScoreFromTargetRatio(45, JOINT_SCORE_TARGETS.hip_abd)).toBe(3)
     expect(bandScoreFromTargetRatio(160, JOINT_SCORE_TARGETS.shoulder_flex)).toBe(3) // Gill 2020 average adult
-    expect(bandScoreFromTargetRatio(9.5, JOINT_SCORE_TARGETS.ankle_df)).toBe(3)       // Konor 2012 average adult
+    expect(bandScoreFromTargetRatio(9.5, JOINT_SCORE_TARGETS.ankle_df)).toBe(3)       // McBride 2026 pooled mean 9.5 cm
     expect(bandScoreFromTargetRatio(85, JOINT_SCORE_TARGETS.shoulder_er)).toBe(3)     // standing goal-post target 85
     expect(bandScoreFromTargetRatio(75, JOINT_SCORE_TARGETS.shoulder_er)).toBe(1)     // a top-of-range tucked-elbow reading is not Steady at 85
     expect(bandScoreFromTargetRatio(71, JOINT_SCORE_TARGETS.cervical_rot)).toBe(3)    // Swinkels 2014 50-59 mean rotation
-    expect(bandScoreFromTargetRatio(38, JOINT_SCORE_TARGETS.cervical_lat)).toBe(3)    // Swinkels 2014 50-59 mean side bend
+    expect(bandScoreFromTargetRatio(38, JOINT_SCORE_TARGETS.cervical_lat)).toBe(3)    // just above the side bend target 37 (range reset Oct 21 2026)
   })
 
   // Neck flexion / extension are single (midline) fields. Scoring target now equals the step normalLow (fixes 53/64 shown vs 50/60 scored).
