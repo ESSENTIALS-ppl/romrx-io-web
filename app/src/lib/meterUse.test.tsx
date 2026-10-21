@@ -588,4 +588,27 @@ describe('phone meter in the Base measure screen', () => {
     click(btn('Use this number'))
     expect(calls).toEqual([['shoulder_er_l', '31']])
   })
+
+  it('stiff joint (Quinn 1:08 PM): max 3 deg offers 3 after 10 s, needs a tap', async () => {
+    const calls = mount(SER)
+    await turnOn(); startNow()
+    for (let t = 0; t < 10500; t += 50) { feed(Math.min(3, t / 1000)); act(() => { vi.advanceTimersByTime(50) }) }
+    expect(isLocked()).toBe(false)
+    expect($('[data-meter-number]')!.textContent).toBe('3°')
+    expect($('[data-meter-status]')!.textContent).toBe('Highest reading shown. Tap Use this number to save it.')
+    expect(calls).toEqual([])
+    click(btn('Use this number'))
+    expect(calls).toEqual([['shoulder_er_l', '3']])
+  })
+
+  it('Skip still works while the fallback offer is showing: clears both sides, saves nothing from the offer', async () => {
+    const calls = mount(SER)
+    await turnOn(); startNow()
+    for (let t = 0; t < 10500; t += 50) { feed(Math.floor(t / 50) % 2 ? 26 : 20); act(() => { vi.advanceTimersByTime(50) }) }
+    expect(btn('Use this number')).toBeDefined()
+    click(btn('Skip'))
+    expect(calls).toContainEqual(['shoulder_er_l', ''])
+    expect(calls).toContainEqual(['shoulder_er_r', ''])
+    expect(calls.some(([, v]) => v === '26')).toBe(false)
+  })
 })

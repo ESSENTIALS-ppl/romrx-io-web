@@ -68,10 +68,13 @@ export const isWrongWay = (signedDeg: number) => signedDeg < -WRONG_WAY_MARGIN_D
 /**
  * What the meter loop feeds the lock. Wrong way past the margin: NaN (clears the hold window, so
  * no lock) and wrong=true (status shows METER_COPY.wrongWay). Otherwise the unsigned tilt, exactly
- * as before. No spec: always the unsigned tilt (unchanged behavior).
+ * as before. No spec: always the unsigned tilt (unchanged behavior). fallbackInput feeds
+ * lib/meterFallback: the right-way reading only (never a wrong-way value).
  */
-export function gateReading(q0: Quat, q: Quat, tilt: number, spec?: DirectionSpec | null): { wrong: boolean; lockInput: number } {
-  if (!spec) return { wrong: false, lockInput: tilt }
-  const wrong = isWrongWay(signedTiltDeg(q0, q, spec))
-  return { wrong, lockInput: wrong ? NaN : tilt }
+export function gateReading(q0: Quat, q: Quat, tilt: number, spec?: DirectionSpec | null): { wrong: boolean; lockInput: number; fallbackInput: number } {
+  if (!spec) return { wrong: false, lockInput: tilt, fallbackInput: tilt }
+  const signed = signedTiltDeg(q0, q, spec)
+  const wrong = isWrongWay(signed)
+  // Fallback only ever sees the right-way part: a small wrong-way wobble counts as 0, past the margin as NaN.
+  return { wrong, lockInput: wrong ? NaN : tilt, fallbackInput: wrong ? NaN : Math.max(0, signed) }
 }

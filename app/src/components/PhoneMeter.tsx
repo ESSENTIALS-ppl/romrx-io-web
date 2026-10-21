@@ -63,10 +63,10 @@ export function PhoneMeter({ movement, sideLabel, grip, notice, onUse, onClose, 
       if (!q0.current || !q) return
       const v = tiltDeltaDeg(q0.current, q)
       live.current = v
-      const { wrong, lockInput } = gateReading(q0.current, q, v, direction)
+      const { wrong, lockInput, fallbackInput } = gateReading(q0.current, q, v, direction)
       const st = stepLock(lock.current, lockInput, performance.now())
       lock.current = st.state
-      const f = stepFallback(fb.current, lockInput, performance.now(), st.state.locked)
+      const f = stepFallback(fb.current, fallbackInput, performance.now(), st.state.locked)
       fb.current = f.state
       offer.current = f.offer
       if (!wrong) peak.current = nextPeak(peak.current, v, st.state.locked)
