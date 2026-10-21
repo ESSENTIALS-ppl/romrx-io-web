@@ -53,6 +53,14 @@ describe('step video slots', () => {
     expect(stepVideo('intro')).toEqual({ src: '/videos/intro.mp4', poster: '/videos/intro.jpg' })
     expect(stepVideo('outro')).toEqual({ src: '/videos/outro.mp4', poster: '/videos/outro.jpg' })
   })
+  it('changing step remounts the slot: a step with no file stays hidden after a step whose video showed', () => {
+    mount('hip_er')
+    act(() => { host.querySelector('[data-step-video-probe]')!.dispatchEvent(new Event('load')) })
+    expect(host.querySelector('video')).not.toBeNull()
+    act(() => { root.render(createElement(StepVideo, { key: 'hip_flex', stepId: 'hip_flex', title: 'T' })) })
+    expect(host.querySelector('video')).toBeNull()
+    expect(host.querySelector('[data-step-video]')!.className).toBe('hidden')
+  })
   it('a step with no slot renders nothing', () => {
     mount('lumbar')
     expect(host.innerHTML).toBe('')

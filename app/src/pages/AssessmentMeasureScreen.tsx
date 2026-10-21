@@ -99,7 +99,7 @@ export function AssessmentMeasureScreen(p: {
             </div>
 
             {/* Demo video slot: /videos/<step id>.mp4, hidden when there is no file (lib/stepVideo.ts). */}
-            <StepVideo stepId={step.id} title={step.title} />
+            <StepVideo key={step.id} stepId={step.id} title={step.title} />
 
             {/* Setup */}
             <div>
