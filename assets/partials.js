@@ -187,7 +187,7 @@ const RX_UNIVERSE = ({ here, headline = false }) => {
         <div class="rx-universe-grid">${html}</div>
         <p class="rx-fine rx-center rx-uni-foot">${RX_PACK_COPY.footnote}</p>
         ${RX_PACK_COPY.affil.map(t => `<p class="rx-fine rx-center rx-uni-foot">${t}</p>`).join('')}
-        <p class="rx-uni-tag">One ROM assessment. Every sport your body plays.</p>
+        <p class="rx-uni-tag">One ROM assessment. Every way you move.</p>
       </div>
     </section>
   `;
