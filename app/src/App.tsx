@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { ROMood } from './pages/ROMood'
 import { Layout } from './components/Layout'
 import { PageViewTracker } from './components/PageViewTracker'
 import { ConsentBanner } from './components/ConsentBanner'
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/signup/:sport" element={<SignupSportRedirect />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/confirm" element={<AuthConfirm />} />
+        <Route path="/onboarding/mood" element={<ROMood />} />
         <Route path="/onboarding/assessment" element={<Assessment />} />
         <Route path="/onboarding/results" element={<ResultsPreview />} />
         <Route path="/unlock/:token" element={<Unlock />} />
