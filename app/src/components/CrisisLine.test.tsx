@@ -78,8 +78,12 @@ describe('single source', () => {
     const src = readFileSync(resolve(__dirname, 'CrisisLine.tsx'), 'utf8')
     for (const w of ['Having a really hard time', 'Samaritans', 'not a crisis service', 'emergency number', 'Need to talk']) expect(src).not.toContain(w)
   })
+  it('legal: no 30-day or encrypted-backups claim (Free plan)', () => {
+    const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
+    expect(html).not.toMatch(/encrypted backups|up to 30 days/)
+  })
   it('legal: backup line sits right before the 7A crisis line', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
-    expect(html).toContain('<p>When you delete your check-ins or your account, we remove them from our live systems right away. Copies may stay in our encrypted backups for up to 30 days, then they are deleted automatically.</p>\n        <p>ROMRx does not monitor your check-ins and cannot respond to emergencies.')
+    expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them.</p>\n        <p>ROMRx does not monitor your check-ins and cannot respond to emergencies.')
   })
 })

@@ -45,3 +45,7 @@ Both tables cascade from `auth.users` (on delete cascade). Confirm 0 rows in eac
 ## After any restore
 
 After any database restore, re-run every mood check-in and account deletion made since that backup was taken, then confirm with Reid that those rows are gone. (Stacy rule, Oct 26, 2026.)
+
+Make no exports or dumps of mood rows. If one is ever made, erase it in the same pass as any later deletion. (Stacy rule, Oct 26, 2026.)
+
+Plan note: the deletion wording in Settings (romoodCopy.ts deleteConfirm) and /legal 7A is written for the Supabase Free plan (no daily backups, no PITR). If the plan ever moves to Pro or higher, this wording must change before the move (use the 30-day line in stacy-pass-romood-5b007ed.md).

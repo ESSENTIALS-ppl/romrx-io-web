@@ -79,7 +79,7 @@ export const ROMOOD_SETTINGS_COPY = {
   turnOff: 'Turn off saving',
   turnOn: 'Turn on saving',
   deleteButton: 'Delete my mood check-ins',
-  deleteConfirm: 'Delete all your saved mood check-ins? This cannot be undone. Deleted check-ins may stay in our encrypted backups for up to 30 days, then they are removed automatically. We do not use them.',
+  deleteConfirm: 'Delete all your saved mood check-ins? This cannot be undone. We delete them from our database right away. ROMRx does not keep backup copies.',
   offerDelete: 'Saving is off. Do you also want to delete the mood check-ins you already saved?',
   yesDelete: 'Yes, delete them',
   keep: 'Keep them',
