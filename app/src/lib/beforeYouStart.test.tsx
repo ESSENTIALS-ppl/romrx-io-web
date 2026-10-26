@@ -51,6 +51,23 @@ describe('Before you start (Jim, Oct 6 12:16 PM)', () => {
   })
 })
 
+describe('intro video slot on the setup screen (Grant Oct 21 2026)', () => {
+  it('sits between the title block and the Before you start card; the retest line is unchanged', () => {
+    act(() => root.render(createElement(AssessmentPhases, {
+      phase: 'setup', stepIdx: 0, values: {}, email: '', fullName: '', loading: false, error: '',
+      setPhase: noop, setStepIdx: noop, setEmail: noop, setFullName: noop, handleChange: noop, handleNext: noop, handleLeadSubmit: noop,
+    } as never)))
+    const slot = host.querySelector('[data-step-video="intro"]')!
+    expect(slot).not.toBeNull()
+    const h1 = host.querySelector('h1')!
+    const card = [...host.querySelectorAll('p')].find(p => p.textContent === 'Before you start:')!
+    expect(h1.compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(slot.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(host.textContent).toContain("You can skip any measurement you can't do and retest later.")
+    expect(host.textContent).toContain("I'm ready - Start assessment")
+  })
+})
+
 describe('sound words (Jim, Oct 6 12:16 PM)', () => {
   it('no GO / Go! and no chime anywhere in step, setup or meter copy', () => {
     const all: string[] = [METHOD_LINE, HIP_FLEX_STEP.tool, ...HIP_FLEX_STEP.position, ...HIP_FLEX_STEP.howTo]

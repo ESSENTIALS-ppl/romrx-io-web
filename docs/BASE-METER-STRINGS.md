@@ -65,10 +65,10 @@ Legend: **[STACY]** = verbatim from METER-STRINGS-STACY-PRECLEAR-20261005.md (al
 ### Ranges shown (Quinn verified; Grant: SLR no number)
 | Step | Shown | Source line |
 |---|---|---|
-| Hip ER | Typical range: 29-43° | Source: Simoneau et al., 1998 |
-| Hip IR | Typical range: 26-40° | Source: Simoneau et al., 1998 |
+| Hip ER | Typical range: 23-41° | Source: Simoneau et al., 1998; Roach and Miles, 1991 |
+| Hip IR | Typical range: 24-40° | Source: Simoneau et al., 1998; Roach and Miles, 1991 |
 | Shoulder ER | Typical range: 85-110° | Source: Vairo et al., 2012 |
-| Shoulder flexion | Typical range: 140-180° | Source: Gill et al., 2020 |
+| Shoulder flexion | Typical range: 141-179° | Source: Gill et al., 2020 |
 | Neck side bend, neck flexion, neck extension, hip abduction | no number, no source | - |
 | Straight-leg raise | no number, no source (SHOW_SLR_TYPICAL_RANGE = false; label "Saved for each leg" + "Saved for each leg, not scored." as before) | - |
 | Ankle (cm) | Best of 3, in cm (unchanged) | - |
@@ -124,7 +124,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   1. Keep your knee bent and both hips down. Slowly swing your foot INWARD, toward your other leg. Your foot moves only sideways.
   2. Stop at a firm stretch or when your thigh starts to lift off the chair. Hold still: after 2.5 seconds the number locks and chimes.
   3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
-- Range label: Typical range: 29-43° | Source line: Source: Simoneau et al., 1998
+- Range label: Typical range: 23-41° | Source line: Source: Simoneau et al., 1998; Roach and Miles, 1991
 
 #### Hip Internal Rotation (`hip_ir`)
 - Meter grip: Phone flat on the front of your shin, just below the knee. Screen faces forward, long edge along the shin.
@@ -136,7 +136,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   1. Keep your knee bent and both hips down. Slowly swing your foot OUTWARD, away from your other leg. Your foot moves only sideways.
   2. Stop at a firm stretch or when your other hip starts to lift. Hold still until the number locks and chimes.
   3. Tap Use this number. Return to center, tap Start, and repeat with the other leg.
-- Range label: Typical range: 26-40° | Source line: Source: Simoneau et al., 1998
+- Range label: Typical range: 24-40° | Source line: Source: Simoneau et al., 1998; Roach and Miles, 1991
 
 #### Shoulder External Rotation (`shoulder_er`) (STANDING goal-post; Jim-approved, Quinn spec, Oct 6 8:19 PM) - replaces the lying tucked-elbow "Shoulder Extension" step
 - Title shown to users: Shoulder External Rotation **[Stacy PASS Oct 6 8:19 PM]** (was: Shoulder Extension). Now one name everywhere: step header, MyProtocol.tsx:128, ResultsPreview.tsx:44, ROMBot ("shoulder external rotation"); My Body / radar keep the short label "Shoulder ER" (mobilityBands.ts BASE_DISPLAY_JOINTS, unchanged). Key `shoulder_er` unchanged.
@@ -171,7 +171,7 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
   3. Tap Use this number. Lower your arm, tap Start, and repeat on the other side.
 - Common mistake: Arching your back or leaning back to get the arm higher. **[Stacy PASS Oct 6 12:02]**
 - Fix: Keep your back against the chair. Don't arch your back or lean back. Keep your wrist straight. Don't bend your elbow or turn your arm out. Don't shrug your shoulder up to your ear. **[Stacy PASS Oct 6 12:02]**
-- Range label: Typical range: 140-180° | Source line: Source: Gill et al., 2020
+- Range label: Typical range: 141-179° | Source line: Source: Gill et al., 2020
 
 #### Cervical Lateral Flexion (`cervical_lat`)
 - Meter grip: Phone flat on your forehead, screen facing forward.
@@ -197,10 +197,10 @@ Range labels are display only: scoring still uses JOINT_SCORE_TARGETS (unchanged
 
 #### Hip Flexion (Straight-Leg Raise) (`hip_flex`)
 Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this step. Title, why, tool, per-leg fields and range unchanged.
-- Meter grip: Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
+- Meter grip: Phone flat on top of your mid-thigh. It stays there the whole lift. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]**
 - Setup:
   1. Lie flat on your back, legs straight out, knees touching the floor. **[Stacy PASS Oct 6 12:07]**
-  2. Place your phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
+  2. Place your phone flat on top of your thigh, midway between your hip and knee. It stays on that spot the whole time you lift your leg. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]**
   3. Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:07]**
 - How to Measure:
   1. Lift one leg and keep it straight until you can't anymore. **[Stacy PASS Oct 6 12:07]**
@@ -254,7 +254,7 @@ Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this
 | 4 | Shoulder Flexion | Left (shoulder_flex_l, °), Right (shoulder_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone in your hand, long edge along your arm, screen facing out to the side. |
 | 5 | Cervical Lateral Flexion | Left (cervical_lat_l, °), Right (cervical_lat_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on your forehead, screen facing forward.  |
 | 6 | Cervical Flexion + Extension | Flexion (cervical_flex, °), Extension (cervical_ext, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat against the side of your head at the temple, screen facing the wall beside you.  |
-| 7 | Hip Flexion (Straight-Leg Raise) | Left leg (hip_flex_l, °), Right leg (hip_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.  |
+| 7 | Hip Flexion (Straight-Leg Raise) | Left leg (hip_flex_l, °), Right leg (hip_flex_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on top of your mid-thigh. It stays there the whole lift.  |
 | 8 | Hip Abduction | Left (hip_abd_l, °), Right (hip_abd_r, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Phone meter (Measure with phone) + typed box | Phone flat on the front of your thigh, screen facing forward, long edge along the thigh.  |
 | 9 | Lumbar Flexion + Extension | Flexion (lumbar_flex, °), Extension (lumbar_ext, °) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Typed box only | (none) |
 | 10 | Ankle Dorsiflexion (Knee-to-Wall, cm) | Left (ankle_df_l, cm), Right (ankle_df_r, cm) | Typed box (number read from Measure app Level / Simple Inclinometer, or a tape for ankle) | Typed box only | (none) |
@@ -513,7 +513,7 @@ Meter: YES, grip line: Phone flat against the side of your head at the temple, s
 
 ## Hip Flexion (Straight-Leg Raise) (`hip_flex`)
 
-Meter: YES, grip line: Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** (was: Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.)
+Meter: YES, grip line: Phone flat on top of your mid-thigh. It stays there the whole lift. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]** (Oct 6 line: Phone on your mid-thigh.) (was: Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out.)
 
 Current copy below is Jim's Oct 6 12:07 PM decision (no hand, no low back). The Old lines are history.
 
@@ -531,7 +531,7 @@ Current copy below is Jim's Oct 6 12:07 PM decision (no hand, no low back). The 
 **New (Jim, Oct 6 12:07 PM):**
 
 1. Lie flat on your back, legs straight out, knees touching the floor. **[Stacy PASS Oct 6 12:07]**
-2. Place your phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]**
+2. Place your phone flat on top of your thigh, midway between your hip and knee. It stays on that spot the whole time you lift your leg. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]**
 3. Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:07]**
 
 ### How to Measure
@@ -891,14 +891,14 @@ All in `app/src/lib/hipFlexCopy.ts`, HIP_FLEX_STEP (the step in assessmentSteps2
 | Field | Was | Now |
 |---|---|---|
 | Setup 1 (position[0]) | Lie flat on your back on the floor with both legs straight. | Lie flat on your back, legs straight out, knees touching the floor. **[Stacy PASS Oct 6 12:07]** |
-| Setup 2 (position[1]) | Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward. | Place your phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** |
+| Setup 2 (position[1]) | Hold your phone flat against the outer side of your thigh (the surface facing away from your other leg), midway between your hip and your knee. Screen faces outward. | Place your phone flat on top of your thigh, midway between your hip and knee. It stays on that spot the whole time you lift your leg. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]** |
 | Setup 3 (position[2]) | (same) | Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end. **[Stacy PASS Oct 6 12:07]** |
 | How to Measure 1 (howTo[0]) | Keep the test knee completely straight, kneecap pointing at the ceiling. Raise that leg straight up, not out, as high as you can without bending the knee, and keep your other leg flat on the floor. | Lift one leg and keep it straight until you can't anymore. **[Stacy PASS Oct 6 12:07]** |
 | How to Measure 2 (howTo[1]) | Keep the phone aligned with your thigh as it rises. Stop when you feel a firm stretch behind the thigh, or sooner when your low back presses down onto your hand. Stop if you feel sharp pain. Hold still until the number locks and chimes. | Pause for 2.5 seconds so the meter can lock in the range. **[Stacy PASS Oct 6 12:07]** |
 | How to Measure 3 (howTo[2]) | (same) | Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number. **[Stacy PASS Oct 6 12:07]** |
 | Common mistake (mistake) | Bending the knee as the leg rises, letting the other leg lift, or letting your low back press down or your hips tilt as you go higher. | Your hips start coming up, or you shift in any other way. **[Stacy PASS Oct 6 12:07]** |
 | Fix (mistakeFix) | Keep the test leg straight and the other leg flat on the floor. Stop at a firm stretch, not at pain. Stop sooner when your low back presses down onto your hand. If your hips tilt or your knee bends, redo the lift and read the number again. | Keep your hips down and your body still. If you shift, redo the lift. **[Stacy PASS Oct 6 12:07]** |
-| Meter grip (meterGrip) | Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out. | Phone on your mid-thigh. **[Stacy PASS Oct 6 12:07]** |
+| Meter grip (meterGrip) | Phone flat on the outer side of your thigh, midway between hip and knee, screen facing out. | Phone flat on top of your mid-thigh. It stays there the whole lift. **[NEW Jim Oct 21 6:09 PM, needs Stacy PASS + Quinn sign-off]** |
 
 Removed with these fields: both SLR safety lines ("Stop if you feel sharp pain." in How to Measure 2, "Stop at a firm stretch, not at pain." in the Fix). No other SLR copy, overlay or tooltip in app/src mentions a hand, the low back or "presses down". Test: hipFlexCopy.test.ts fails if "hand", "low back" or "press down" appears in any HIP_FLEX_STEP string.
 

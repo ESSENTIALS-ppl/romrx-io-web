@@ -32,12 +32,14 @@ describe('flag value', () => {
     const { baseLumbarRemoved } = await import('./lumbarFlag')
     expect(baseLumbarRemoved()).toBe(true)
   })
-  it('kill switch: exactly "0" brings the lumbar step back', async () => {
+  it('no kill switch (Jim Oct 21 2026 7:03 PM ET): "0" no longer brings the lumbar step back', async () => {
     vi.stubEnv('VITE_BASE_LUMBAR_REMOVED', '0')
     const { baseLumbarRemoved } = await import('./lumbarFlag')
     const { STEPS } = await import('../pages/assessmentSteps')
-    expect(baseLumbarRemoved()).toBe(false)
-    expect(STEPS.some(s => s.id === 'lumbar')).toBe(true)
+    const { STEPS_PART2 } = await import('../pages/assessmentSteps2')
+    expect(baseLumbarRemoved()).toBe(true)
+    expect(STEPS.some(s => s.id === 'lumbar')).toBe(false)
+    expect(STEPS_PART2.some(s => s.id === 'lumbar')).toBe(false)
   })
   it('netlify.toml does not override it', () => {
     const toml = readFileSync(resolve(SRC, '..', '..', 'netlify.toml'), 'utf8')
@@ -54,8 +56,9 @@ describe('scoring with no lumbar (null, never 0)', () => {
     expect(m.overallBandForAssessment(withNulls)).toBe(m.overallBandForAssessment(OTHER))
     expect(m.scoredJointKeysWorstFirst(withNulls)).toEqual(m.scoredJointKeysWorstFirst(OTHER))
     expect(m.scoredJointKeysWorstFirst(withNulls).some(k => k.startsWith('lumbar'))).toBe(false)
-    // and a real 0 would have been different (proves null is not treated as 0)
-    expect(m.mobilityScoreForAssessment({ ...OTHER, lumbar_flex: 0, lumbar_ext: 0 })).toBeLessThan(m.mobilityScoreForAssessment(OTHER))
+    // Lumbar is out of the /100 and overall band (Grant Oct 21 2026 7:20 PM): even a saved 0 does not change them
+    expect(m.mobilityScoreForAssessment({ ...OTHER, lumbar_flex: 0, lumbar_ext: 0 })).toBe(m.mobilityScoreForAssessment(OTHER))
+    expect(m.overallBandForAssessment({ ...OTHER, lumbar_flex: 0, lumbar_ext: 0 })).toBe(m.overallBandForAssessment(OTHER))
   })
   it('unmeasured lumbar rows carry pct null and no band (mobilityBands no longer fakes 0)', async () => {
     const m = await import('./mobilityBands')
@@ -85,11 +88,31 @@ describe('My Body wiring', () => {
   it('bar never prints a fake 0 for null pct when flag OFF it renders exactly as before (pct ?? 0)', () => {
     expect(page).toMatch(/const pct = row\.pct \?\? 0/)
   })
-  it('flag ON: lumbar rows replaced by "Low back: not measured"; unmeasured lumbar radar axes dropped', async () => {
-    expect(page).toMatch(/hideLumbar = lumbarOff && lumbarNotMeasured\(assessment\)/)
-    expect(page).toMatch(/!\(lumbarOff && isLumbarKey\(r\.key\) && !r\.measured\)/)
+  it('lumbar rows replaced by "Low back: not measured" for ALL users; lumbar radar axes dropped (Grant Oct 21 2026 7:10 PM)', async () => {
+    expect(page).toMatch(/const hideLumbar = lumbarOff\n/)
+    expect(page).toMatch(/!\(lumbarOff && isLumbarKey\(r\.key\)\)\)/)
     expect(page).toMatch(/\{LOW_BACK_NOT_MEASURED\}/)
     const { LOW_BACK_NOT_MEASURED } = await import('./lumbarFlag')
     expect(LOW_BACK_NOT_MEASURED).toBe('Low back: not measured')
+  })
+})
+
+describe('after 20261021223000_lumbar_null_saved (Jim Oct 21 2026 7:24 PM): no lumbar data anywhere', () => {
+  it('assessment with lumbar NULL and no lumbar joint_scores rows: score, band, ranking clean; My Body shows only the not-measured line', async () => {
+    const m = await import('./mobilityBands')
+    const a = { ...OTHER, lumbar_flex: null, lumbar_ext: null, worst_joints: ['lumbar_ext', 'ankle_df_l', 'shoulder_er_l'] }
+    const rows = [...m.jointBandsForAssessment(OTHER)].filter(([k]) => !k.startsWith('lumbar')).map(([joint_key, score]) => ({ joint_key, score }))
+    expect(m.mobilityScoreForAssessment(a, rows)).toBe(m.mobilityScoreForAssessment(OTHER))
+    expect(m.overallBandForAssessment(a, rows)).toBe(m.overallBandForAssessment(OTHER))
+    expect(m.overallBandFromJointScores(rows)).toBe(m.overallBandForAssessment(OTHER))
+    expect(m.topProblemAreasForAssessment(a).some(k => k.startsWith('lumbar'))).toBe(false)
+    expect(m.rankProblemJoints(a, [{ key: 'lumbar_ext' }, { key: 'ankle_df' }]).some(r => r.key.startsWith('lumbar'))).toBe(false)
+    for (const r of m.jointDisplayRowsForAssessment(a, rows).filter(x => x.key.startsWith('lumbar'))) { expect(r.pct).toBeNull(); expect(r.band).toBeNull() }
+    const { lumbarNotMeasured, baseLumbarRemoved } = await import('./lumbarFlag')
+    expect(lumbarNotMeasured(a)).toBe(true)
+    expect(baseLumbarRemoved()).toBe(true)
+    const page = readFileSync(join(SRC, 'pages', 'MyBody.tsx'), 'utf8')
+    expect(page).toMatch(/const hideLumbar = lumbarOff\n/)
+    expect(page).toMatch(/\{hideLumbar && <p[^>]*data-low-back-not-measured>\{LOW_BACK_NOT_MEASURED\}<\/p>\}/)
   })
 })

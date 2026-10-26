@@ -1,3 +1,4 @@
+import { isLumbarKey } from './lumbarFlag'
 /**
  * Locked Base mobility band labels — keep in sync with ROMBot CBase
  * (romrxbjj-v2 supabase/functions/ai-chat/handler.js) AND with
@@ -47,31 +48,36 @@ export interface JointScoreRow {
  *   else → 1 Needs focus
  */
 export const JOINT_SCORE_TARGETS: Record<string, number> = {
-  // Steady targets changed by Jim's decisions of Oct 6 2026 (sources: ledger/ROMRX-ASSESSMENT-STUDY-REFERENCE.md):
-  //   hip ER 29 / hip IR 26 (was 45 / 45): seated rotation reads Steady once inside the typical range,
-  //     Simoneau et al. 1998 mean minus 1 SD (Quinn option B1).
-  //   hip abduction 40 (was 90): Svenningsen 1989 adult value; no typical range shown on screen.
-  //   shoulder flexion 140 (was 180): Gill et al. 2020, mean minus 1 SD (about 141).
-  //   ankle knee-to-wall 6 cm (was 20): mean minus 1 SD, Konor 2012 / McBride 2026; no range shown.
-  //   neck rotation 70 (was 80): Swinkels & Swinkels-Meewisse 2014 (Spine, PMID 24573069), mean minus 1 SD for ages 20-49.
-  //   neck side bend 38 (was 45): same paper, 20-29 mean minus 1 SD (46 - 7.5 / 45 - 7.5). Neck flexion 50 / extension 60 unchanged.
-  //   No typical range shown on screen for the neck.
+  // Sources (range-proposal.md, Oct 21 2026; pooled mean minus 1 SD, WITH Wadhwa 2024 for the neck):
+  //   hip ER / hip IR: Simoneau 1998 (PMID 9742472) + Roach 1991 (PMID 1881956).
+  //   hip abduction 40: Oct 6 value, not in range-proposal.md (no position-matched paper); no typical range shown.
+  //   shoulder flexion: Gill 2020 (PMID 33046038).
+  //   ankle knee-to-wall: McBride 2026 (PMID 41723909), all ages.
+  //   neck side bend / flexion / extension: Tousignant-Laflamme 2013 (PMID 23829201), Wolan-Nieroda 2020
+  //     (PMID 32626769), Canovas-Ambit 2021 (PMID 33868830), Wadhwa 2024 (PMID 39677250).
+  //   neck rotation 70: Oct 6 value, not in range-proposal.md.
   //   shoulder ER 85 (Oct 6 8:19 PM, Jim-approved, Quinn): Base is back to the STANDING goal-post test (arm out at 90,
   //     elbow bent). Replaces 40 (lying tucked-elbow test, 11:45 AM). No typical range is shown on screen (Stacy).
+  // RANGE RESET (Jim Oct 21 2026 4:15 PM ET, range-proposal.md): target = pooled mean minus 1 SD = step normalLow, so the
+  //   'Typical range' text and scoring agree (fixes neck 53/64 shown vs 50/60 scored). WITH Wadhwa 2024 for the neck.
+  //   hip ER 23 / IR 24: Simoneau 1998 (PMID 9742472) + Roach 1991 (PMID 1881956). shoulder flexion 141: Gill 2020 (PMID 33046038).
+  //   ankle 6.1 cm: McBride 2026 (PMID 41723909), all ages. neck side bend 37, flexion 39, extension 48: Tousignant-Laflamme 2013
+  //   (PMID 23829201), Wolan-Nieroda 2020 (PMID 32626769), Canovas-Ambit 2021 (PMID 33868830), Wadhwa 2024 (PMID 39677250).
+  //   Unchanged: hip abduction 40, hip flexion 120 (unscored), shoulder ER 85, neck rotation 70, lumbar. 90% Building rule unchanged.
   // Mirrored in public.compute_joint_scores() and romrxbjj-v2 compute-tiers JOINT_TARGETS + submit-lead-assessment email.ts BAND_JOINTS.
-  hip_er: 29,
-  hip_ir: 26,
+  hip_er: 23,
+  hip_ir: 24,
   hip_abd: 40,
   hip_flex: 120,
   shoulder_er: 85,
-  shoulder_flex: 140,
-  ankle_df: 6,
+  shoulder_flex: 141,
+  ankle_df: 6.1,
   cervical_rot: 70,
-  cervical_lat: 38,
+  cervical_lat: 37,
   lumbar_flex: 60,
   lumbar_ext: 25,
-  cervical_flex: 50,
-  cervical_ext: 60,
+  cervical_flex: 39,
+  cervical_ext: 48,
 }
 
 /**
@@ -125,6 +131,86 @@ export function bandScoreFromTargetRatio(worse: number, target: number): BandSco
   return 1
 }
 
+/**
+ * T1 option A (Jim, Oct 21 2026 10:53 AM ET, "T1: A plus C"; narrowed 11:47 AM ET; buffer values Quinn
+ * t1-quinn-buffers.md 11:47:58 AM ET). PER-JOINT CONFIG: each narrow joint has a buffer at the Steady line
+ * (steady) and one at the Building line (building). A reading inside a buffer gets the better color.
+ * Stored values never change. Same table in SQL public.t1_narrow_buffer(), romrxbjj-v2
+ * supabase/functions/_shared/t1_narrow_bands.ts (compute-tiers + lead email). Units: deg, ankle_df cm.
+ *   Steady   if worse + steady >= target
+ *   Building if worse + building >= 0.9 x target
+ *   else Needs focus
+ * Joints not listed keep bandScoreFromTargetRatio exactly. A buffered Steady shows the REAL percent, never 100.
+ */
+export const NARROW_BAND_CONFIG: Readonly<Record<string, { steady: number; building: number }>> = {
+  // Jim Oct 21 4:38 PM ET (via Grant 4:56 PM): "Drop the T1 buffers on the reset moves." Hip ER, hip IR,
+  // neck side bend, neck flexion, neck extension, ankle and shoulder flexion now use the range reset
+  // targets with NO buffer. Only the joints that were not reset keep their T1 buffer.
+  hip_abd: { steady: 2, building: 0 },
+  cervical_rot: { steady: 5, building: 5 },
+  shoulder_er: { steady: 5, building: 5 },
+}
+
+const NO_BUFFER = { steady: 0, building: 0 }
+
+/** Per-joint buffers (side keys allowed); zeros when not narrow. */
+export function narrowBuffers(jointKey: string): { steady: number; building: number } {
+  return NARROW_BAND_CONFIG[jointKeyBase(jointKey)] ?? NO_BUFFER
+}
+
+/** True when the joint has any buffer (option C weighting applies). */
+export function isNarrowJoint(jointKey: string): boolean {
+  const b = narrowBuffers(jointKey)
+  return b.steady > 0 || b.building > 0
+}
+
+/** Steady-line buffer (kept for callers and tests). */
+export function narrowBuffer(jointKey: string): number {
+  return narrowBuffers(jointKey).steady
+}
+
+/** 6-decimal fixed point so float noise (21.1 + 5) can never flip a cutoff; SQL numeric is exact. */
+function fx(n: number): number {
+  return Math.round(n * 1e6)
+}
+
+/** THE Base band for one joint value: option A buffers on narrow joints (zero elsewhere), fixed-point compare. */
+export function bandScoreForJoint(jointKey: string, worse: number, target: number): BandScore {
+  // 90%-edge rounding fix (T1): EVERY joint compares in 6-decimal fixed point so JS float noise
+  // (e.g. 21.6 / 24) can never disagree with SQL numeric. Non-narrow joints use zero buffers.
+  if (!(target > 0) || !Number.isFinite(worse)) return 1
+  const b = narrowBuffers(jointKey)
+  if (fx(worse + b.steady) >= fx(target)) return 3
+  if (fx(worse + b.building) * 10 >= fx(target) * 9) return 2
+  return 1
+}
+
+/**
+ * T1 option C. Protocol weight for a joint gap: narrow joints count 0.5 until two assessments
+ * in a row (this one and the previous one) show the same band for that joint, then 1.
+ * Non-narrow joints are always 1. Internal ordering only: no user step, no copy.
+ */
+export const NARROW_GAP_WEIGHT = 0.5
+
+export function narrowGapWeight(jointKey: string, band: BandScore, previousBand: BandScore | null | undefined): number {
+  if (!isNarrowJoint(jointKey)) return 1
+  return previousBand != null && previousBand === band ? 1 : NARROW_GAP_WEIGHT
+}
+
+/** Gap used to order the Protocol: 0 when Steady, else 1 - min(1, worse/target), times narrowGapWeight. */
+export function weightedJointGap(
+  jointKey: string,
+  worse: number,
+  target: number,
+  previousWorse?: number | null,
+): number {
+  const band = bandScoreForJoint(jointKey, worse, target)
+  if (band === 3) return 0
+  const gap = 1 - Math.min(1, Math.max(0, worse / target))
+  const prevBand = previousWorse == null || !Number.isFinite(previousWorse) ? null : bandScoreForJoint(jointKey, previousWorse, target)
+  return gap * narrowGapWeight(jointKey, band, prevBand)
+}
+
 /** Prefer worst (lowest) band among measured joints; null if none measured. */
 export function worstBandScore(scores: Array<BandScore | null | undefined>): BandScore | null {
   let worst: BandScore | null = null
@@ -167,7 +253,7 @@ export function overallBandFromJointScores(
   for (const row of rows ?? []) {
     const b = bandScoreFromJointScore(row.score)
     const k = normalizeJointScoreKey(row)
-    if (b != null && !(k && isUnscoredJoint(k))) bands.push(b)
+    if (b != null && !(k && (isUnscoredJoint(k) || isLumbarKey(k)))) bands.push(b) // Grant Oct 21 2026 7:20 PM: lumbar out of the overall
   }
   return worstBandScore(bands)
 }
@@ -191,7 +277,7 @@ export function bandForJointKey(
 
   const worse = worseSideValue(measured)
   if (worse == null) return null
-  return bandScoreFromTargetRatio(worse, target)
+  return bandScoreForJoint(base, worse, target)
 }
 
 export function bandFull(score: BandScore): string {
@@ -309,7 +395,8 @@ export function overallBandForAssessment(
   assessment: object | null | undefined,
   jointScores?: JointScoreRow[] | null,
 ): BandScore | null {
-  return worstBandScore([...jointBandsForAssessment(assessment, jointScores).values()])
+  // Grant Oct 21 2026 7:20 PM: lumbar out of the overall: lumbar bands are still computed per joint for saved values but never count here.
+  return worstBandScore([...jointBandsForAssessment(assessment, jointScores).entries()].filter(([k]) => !isLumbarKey(k)).map(([, b]) => b))
 }
 
 /** Copy says "top three problem areas" — never show more than this. */
@@ -321,13 +408,17 @@ export const TOP_PROBLEM_AREAS_MAX = 3
  * capped at 1, same ordering rule as compute-tiers). Unscored joints (hip
  * flexion while HIP_FLEX_UNSCORED_FALLBACK is on) and unmeasured joints are
  * never included, so a top-N cut taken from this list can never contain them.
+ * T1 option C: ordered by weightedJointGap (largest first). Pass the user's previous assessment
+ * so narrow joints whose band agrees across both get full weight; without it they count 0.5.
  */
 export function scoredJointKeysWorstFirst(
   assessment: object | null | undefined,
+  previous?: object | null,
 ): string[] {
   if (!assessment) return []
   const rec = assessment as Record<string, unknown>
-  const rows: { key: string; ratio: number; order: number }[] = []
+  const prev = (previous ?? null) as Record<string, unknown> | null
+  const rows: { key: string; gap: number; order: number }[] = []
   ASSESSMENT_JOINTS.forEach((j, order) => {
     if (isUnscoredJoint(j.key)) return
     const m = measuredFor(rec, j)
@@ -340,9 +431,10 @@ export function scoredJointKeysWorstFirst(
       const onlyRight = m.left == null && m.right != null
       key = useRight || onlyRight ? j.r : j.l
     }
-    rows.push({ key, ratio: Math.min(1, Math.max(0, worse / target)), order })
+    const prevWorse = prev ? worseSideValue(measuredFor(prev, j)) : null
+    rows.push({ key, gap: weightedJointGap(j.key, worse, target, prevWorse), order })
   })
-  rows.sort((a, b) => a.ratio - b.ratio || a.order - b.order)
+  rows.sort((a, b) => b.gap - a.gap || a.order - b.order)
   return rows.map(r => r.key)
 }
 
@@ -369,6 +461,7 @@ export function topProblemAreas(
     if (!k) continue
     const base = jointKeyBase(k)
     if (isUnscoredJoint(base)) continue
+    if (isLumbarKey(base)) continue // Grant Oct 21 2026 7:10 PM: low back never ranked (saved values kept)
     if (seen.has(base)) continue
     seen.add(base)
     out.push(k)
@@ -381,9 +474,10 @@ export function topProblemAreas(
 export function topProblemAreasForAssessment(
   assessment: object | null | undefined,
   max: number = TOP_PROBLEM_AREAS_MAX,
+  previous?: object | null,
 ): string[] {
   const worst = (assessment as { worst_joints?: ReadonlyArray<string> | null } | null | undefined)?.worst_joints
-  return topProblemAreas(worst, max, scoredJointKeysWorstFirst(assessment))
+  return topProblemAreas(worst, max, scoredJointKeysWorstFirst(assessment, previous))
 }
 
 // ---------------------------------------------------------------------------
@@ -411,6 +505,18 @@ export const BAND_PERCENT_RANGE: Record<BandScore, { min: number; max: number }>
   1: { min: 0, max: 89 },
   2: { min: 90, max: 99 },
   3: { min: 100, max: 100 },
+}
+
+/**
+ * T1 (Jim 11:47 AM ET Oct 21): a Steady reached only through the buffer shows the REAL percent (floor, under 100),
+ * never 100. On narrow joints every per-joint / per-side % is the real floor percent (capped at 100), so a better
+ * side can never show a lower % than the worse side (a clamped Building 90 next to a real buffered Steady 83).
+ * Non-narrow joints and the /100 clamp into the band range exactly as before, except a buffered Steady /100.
+ */
+export function displayPercent(rawFloor: number, band: BandScore, narrow = false): number {
+  if (narrow) return Math.max(0, Math.min(100, rawFloor))
+  if (band === 3 && rawFloor < 100) return Math.max(0, rawFloor)
+  return clampPercentToBand(rawFloor, band)
 }
 
 /** Clamp a 0..100 number into the band's range (used per joint AND for /100). */
@@ -455,8 +561,8 @@ export function jointPercent(
   const worse = worseSideValue(measured)
   const raw = cappedRatioPct(worse, target)
   if (raw == null) return null
-  const b = band ?? bandScoreFromTargetRatio(worse!, target)
-  return clampPercentToBand(Math.floor(raw), b)
+  const b = band ?? bandScoreForJoint(base, worse!, target)
+  return displayPercent(Math.floor(raw), b, isNarrowJoint(jointKey))
 }
 
 function measuredFor(rec: Record<string, unknown>, j: { l?: string; r?: string; single?: string }) {
@@ -499,6 +605,7 @@ export function mobilityScoreForAssessment(
   let n = 0
   for (const j of ASSESSMENT_JOINTS) {
     if (isUnscoredJoint(j.key)) continue
+    if (isLumbarKey(j.key)) continue // Grant Oct 21 2026 7:20 PM: lumbar out of the overall /100
     const p = cappedRatioPct(worseSideValue(measuredFor(rec, j)), JOINT_SCORE_TARGETS[j.key])
     if (p == null) continue
     sum += p
@@ -507,7 +614,7 @@ export function mobilityScoreForAssessment(
   if (n === 0) return 100
   const s = Math.floor(sum / n)
   const band = overallBandForAssessment(assessment, jointScores) ?? 3
-  return clampPercentToBand(s, band)
+  return displayPercent(s, band)
 }
 
 /**
@@ -630,7 +737,7 @@ export function sideBandsForJoint(
   if (isUnscoredJoint(jointKey)) return { left: null, right: null }
   const target = JOINT_SCORE_TARGETS[jointKeyBase(jointKey)]
   const one = (v: number | null | undefined): BandScore | null =>
-    v == null || target == null || !Number.isFinite(Number(v)) ? null : bandScoreFromTargetRatio(Number(v), target)
+    v == null || target == null || !Number.isFinite(Number(v)) ? null : bandScoreForJoint(jointKey, Number(v), target)
   let left = one(sides.left)
   let right = one(sides.right)
   if (jointBand != null) {
@@ -662,8 +769,8 @@ export function sidePercent(jointKey: string, value: number | null | undefined, 
   const v = value == null ? null : Number(value)
   const raw = cappedRatioPct(v, target)
   if (raw == null || v == null) return null
-  const b = sideBand ?? bandScoreFromTargetRatio(v, target)
-  return clampPercentToBand(Math.floor(raw), b)
+  const b = sideBand ?? bandScoreForJoint(jointKey, v, target)
+  return displayPercent(Math.floor(raw), b, isNarrowJoint(jointKey))
 }
 
 export interface RadarSideRow {
@@ -731,7 +838,7 @@ export function rankProblemJoints<T extends { key: string; asymmetry?: number; s
   const order = topProblemAreasForAssessment(assessment, max).map(jointKeyBase)
   const idx = (k: string) => { const i = order.indexOf(jointKeyBase(k)); return i === -1 ? Number.POSITIVE_INFINITY : i }
   return rows
-    .filter(r => !isUnscoredJoint(r.key))
+    .filter(r => !isUnscoredJoint(r.key) && !isLumbarKey(jointKeyBase(r.key)))
     .slice()
     .sort((a, b) => {
       const ia = idx(a.key), ib = idx(b.key)
