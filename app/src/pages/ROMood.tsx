@@ -1,3 +1,4 @@
+import { CrisisLine } from '../components/CrisisLine'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -72,6 +73,7 @@ export function ROMood({ saveEnabled, onDone, onBack, onNavigate }: Props) {
           <button type="button" className="btn-secondary" onClick={skip} data-testid="romood-skip">{C.skip}</button>
         </div>
         <button type="button" className="btn-primary w-full" onClick={next} disabled={busy} data-testid="romood-next">{C.next}</button>
+        <CrisisLine />
       </div>
     </div>
   )
