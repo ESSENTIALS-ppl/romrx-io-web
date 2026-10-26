@@ -76,18 +76,18 @@ describe('hip flexion copy (Stacy rules)', () => {
   })
   it("Jim's SLR copy, exact (Oct 6 12:07 PM decision; Stacy PASS Oct 6 12:07)", () => {
     expect(HIP_FLEX_STEP.position).toEqual([
-      'Lie flat on your back, legs straight out, knees touching the floor.',
-      'Place your phone on your mid-thigh.',
+      'Lie flat on your back, legs straight out, the backs of your knees resting on the floor.',
+      'Place your phone flat on top of your thigh, midway between your hip and knee. It stays on that spot the whole time you lift your leg.',
       'Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
     ])
     expect(HIP_FLEX_STEP.howTo).toEqual([
-      "Lift one leg and keep it straight until you can't anymore.",
+      "Slowly lift one leg, keeping the knee straight, until you can't go higher without bending the knee or lifting your hips.",
       'Pause for 2.5 seconds so the meter can lock in the range.',
       'Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.',
     ])
-    expect(HIP_FLEX_STEP.mistake).toBe('Your hips start coming up, or you shift in any other way.')
-    expect(HIP_FLEX_STEP.mistakeFix).toBe('Keep your hips down and your body still. If you shift, redo the lift.')
-    expect(HIP_FLEX_STEP.meterGrip).toBe('Phone on your mid-thigh.')
+    expect(HIP_FLEX_STEP.mistake).toBe('Your other leg lifts, your knee bends, or your hips come up.')
+    expect(HIP_FLEX_STEP.mistakeFix).toBe('Keep your other leg flat on the floor, your knee straight and your hips down. If any of these change, redo the lift.')
+    expect(HIP_FLEX_STEP.meterGrip).toBe('Phone flat on top of your mid-thigh. It stays there the whole lift.')
     // Kept unchanged
     expect(HIP_FLEX_STEP.why).toBe('You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.')
     expect(HIP_FLEX_STEP.tool).toBe('Your phone. Lying on the floor.')
@@ -341,13 +341,13 @@ describe('safe fallback: hip flexion is never judged', () => {
     it('no persisted worst_joints at all: ranked from the scored joints, hip excluded first', () => {
       const a = { ...base, hip_flex_l: 0, hip_flex_r: 0, ankle_df_l: 3, shoulder_er_r: 17.8, hip_ir_r: 17 } // shoulder ER 17.8 / 40 = 44.5%, ankle 3 / 6 cm = 50%, hip IR 17 / 26 = 65%
       expect(scoredJointKeysWorstFirst(a).some(k => k.startsWith('hip_flex'))).toBe(false)
-      expect(topProblemAreasForAssessment({ ...a, worst_joints: null })).toEqual(['shoulder_er_r', 'ankle_df_l', 'hip_ir_r'])
-      expect(topProblemAreasForAssessment({ ...a, worst_joints: [] })).toEqual(['shoulder_er_r', 'ankle_df_l', 'hip_ir_r'])
+      expect(topProblemAreasForAssessment({ ...a, worst_joints: null })).toEqual(['ankle_df_l', 'shoulder_er_r', 'hip_ir_r']) // T1 C: shoulder ER (still narrow) gap x0.5 on 1 assessment
+      expect(topProblemAreasForAssessment({ ...a, worst_joints: [] })).toEqual(['ankle_df_l', 'shoulder_er_r', 'hip_ir_r']) // T1 C: shoulder ER (still narrow) gap x0.5 on 1 assessment
     })
 
     it('fewer than 3 scored joints: returns only those, never hip', () => {
       const a = { hip_flex_l: 5, hip_flex_r: 5, ankle_df_l: 10, ankle_df_r: 12, lumbar_ext: 20, worst_joints: ['hip_flex_l', 'hip_flex_r', 'ankle_df_l'] }
-      expect(topProblemAreasForAssessment(a)).toEqual(['ankle_df_l', 'lumbar_ext'])
+      expect(topProblemAreasForAssessment(a)).toEqual(['ankle_df_l']) // lumbar never ranked (Grant Oct 21 2026 7:10 PM)
       expect(topProblemAreasForAssessment({ hip_flex_l: 5, hip_flex_r: 5, worst_joints: ['hip_flex_l'] })).toEqual([])
       expect(topProblemAreasForAssessment({ hip_flex_l: 5, ankle_df_r: 9, worst_joints: ['hip_flex_l'] })).toEqual(['ankle_df_r'])
       expect(topProblemAreasForAssessment(null)).toEqual([])
@@ -382,6 +382,6 @@ describe('safe fallback: hip flexion is never judged', () => {
   it('live measure-screen chip is off for hip flexion', () => {
     expect(getScore('68', { key: 'hip_flex_l', label: 'Left', unscored: true })).toBeNull()
     expect(getScore('68', { key: 'hip_flex_r', label: 'Right' })).toBeNull()
-    expect(getScore('35', { key: 'hip_abd_l', label: 'Left' })).toBe(1) // 35 / 40 = 0.875
+    expect(getScore('30', { key: 'hip_abd_l', label: 'Left' })).toBe(1) // T1: 30 + 5 = 35 < 36
   })
 })

@@ -154,7 +154,7 @@ describe('hip_ir: phone still on the front of the shin (unchanged)', () => {
     expect(ir.tool).not.toMatch(/same phone spot/i)
     expect(ir.position).toEqual([
       'Stay in the same chair and the same position.',
-      'Keep your phone flat on the front of your shin, just below the knee, screen facing forward.',
+      'Keep your phone flat on the front of your shin, just below the knee, screen facing forward. Press the phone flat against your leg with your hand the whole time.',
       'Before each leg, tap Start and hold your shin straight up and down while it counts down from 5.',
     ])
   })

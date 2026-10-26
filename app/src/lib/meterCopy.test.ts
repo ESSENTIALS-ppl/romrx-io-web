@@ -58,12 +58,8 @@ describe('phone meter copy', () => {
   it('no step at all (including the typed low-back step) names another app', () => {
     for (const s of STEPS) expect([s.tool, ...s.position, ...s.howTo, s.mistakeFix].join(' '), s.id).not.toMatch(/Simple Inclinometer|Measure app|Measure -> Level|\bLevel\b/)
   })
-  it('live low-back step (flag OFF path): Stacy-passed lines, verbatim (Oct 5 11:32 PM)', () => {
-    const all = (STEPS_PART2.find(s => s.id === 'lumbar'))!
-    expect(all.tool).toBe('Type this one in for now. Use any level you have to read the angle. Standing + Floor.')
-    const text = [...all.position, ...all.howTo].join(' ')
-    for (const t of ['Set your level to 0 while you stand straight.', 'Set your level to 0 while you lie flat.', 'Note the angle at that point.', 'Note the angle at your end range.']) expect(text).toContain(t)
-    expect(text).not.toMatch(/\bzero\b|Read the number/i)
+  it('low-back step is gone from the step list (Jim Oct 21 2026 7:03 PM ET)', () => {
+    expect(STEPS_PART2.some(s => s.id === 'lumbar')).toBe(false)
   })
   it('step header is Stacy\'s pre-cleared "Your measurements"; setup tip no longer repeats the countdown (Option A covers it)', () => {
     expect(MEASUREMENTS_HEADER).toBe('Your measurements')

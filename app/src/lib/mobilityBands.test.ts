@@ -22,6 +22,9 @@ import {
   bandFull,
   bandMapFromJointScores,
   bandScoreFromTargetRatio,
+  bandScoreForJoint,
+  narrowBuffers,
+  isNarrowJoint,
   clampPercentToBand,
   jointPercent,
   jointPercentsForAssessment,
@@ -44,10 +47,11 @@ const read = (p: string) => readFileSync(p, 'utf8')
 const EXACT = ['Needs focus', 'Building', 'Steady']
 const GYR = /\b(green|yellow|red|at[ _-]?risk|elite|restricted)\b/i
 
-/** Replica of public.compute_joint_scores() CASE (the DB truth). */
-function sqlScore(worse: number, target: number): BandScore {
-  if (worse / target >= 1.0) return 3
-  if (worse / target >= 0.9) return 2
+/** Replica of public.compute_joint_scores() CASE (the DB truth), T1 option A: buffer E on narrow joints. */
+function sqlScore(worse: number, target: number, joint = ''): BandScore {
+  const b = narrowBuffers(joint)
+  if (Math.round((worse + b.steady) * 1e6) >= Math.round(target * 1e6)) return 3
+  if (Math.round((worse + b.building) * 1e6) * 10 >= Math.round(target * 1e6) * 9) return 2
   return 1
 }
 
@@ -84,15 +88,17 @@ describe('boundaries: same measurement → same band on every surface', () => {
     if (!def) continue
     // Hip flexion is never banded (HIP_FLEX_UNSCORED_FALLBACK); see hipFlexCopy.test.ts.
     if (isUnscoredJoint(joint)) continue
+    // T1 option A (per-joint config): the Steady line sits Es lower and the Building line Eb lower.
+    const { steady: Es, building: Eb } = narrowBuffers(joint)
     const cases: Array<[number, BandScore]> = [
       [0, 1], // low
-      [0.9 * target - EPS, 1],
-      [0.9 * target, 2], // exact boundary
-      [0.9 * target + EPS, 2],
-      [0.95 * target, 2], // mid
-      [target - EPS, 2],
-      [target, 3], // exact boundary
-      [target + EPS, 3],
+      [0.9 * target - Eb - EPS, 1],
+      [0.9 * target - Eb, 2], // exact boundary
+      [0.9 * target - Eb + EPS, 2],
+      [Math.max(0.9 * target - Eb, Math.min(0.95 * target - Eb, target - Es - EPS)), 2], // mid
+      [target - Es - EPS, 2],
+      [target - Es, 3], // exact boundary
+      [target - Es + EPS, 3],
       [2 * target, 3], // high
     ]
     for (const [v, expected] of cases) {
@@ -101,12 +107,15 @@ describe('boundaries: same measurement → same band on every surface', () => {
         const a: Record<string, number | null> = {}
         if (def.single) a[def.single] = v
         else { a[def.l!] = v; a[def.r!] = v + 5 } // worse side drives the band
-        const rows: JointScoreRow[] = [{ joint_key: joint, score: sqlScore(v, target) }]
+        const rows: JointScoreRow[] = [{ joint_key: joint, score: sqlScore(v, target, joint) }]
 
-        expect(bandScoreFromTargetRatio(v, target)).toBe(expected)
-        expect(sqlScore(v, target)).toBe(expected)
+        expect(bandScoreForJoint(joint, v, target)).toBe(expected)
+        if (!isNarrowJoint(joint)) expect(bandScoreFromTargetRatio(v, target)).toBe(expected)
+        expect(sqlScore(v, target, joint)).toBe(expected)
         const s = surfaces(a, rows)
-        for (const [name, b] of Object.entries(s)) expect([name, b]).toEqual([name, expected])
+        // Lumbar is out of the overall (Grant Oct 21 2026 7:20 PM): a lumbar-only assessment has no overall band.
+        const overallExpected = joint.startsWith('lumbar') ? null : expected
+        for (const [name, b] of Object.entries(s)) expect([name, b]).toEqual([name, overallExpected])
         // Joint chip / bar / name colour (My Body) and My Protocol card chip
         expect(jointBandsForAssessment(a, rows).get(joint)).toBe(expected)
         expect(jointBandsForAssessment(a).get(joint)).toBe(expected)
@@ -129,15 +138,17 @@ describe('fixture 01 regression (cloned from real Sep 8 app result)', () => {
   const rows: JointScoreRow[] = [
     // re-scored with the Oct 6 targets (hip ER 29, IR 26, abduction 40, shoulder flexion 140, ankle 6 cm):
     // hip_abd 38/40 → 2, hip_ir 36/26 → 3, ankle_df 10.8/6 → 3, shoulder_flex 162/140 → 3; neck side bend 40/38 → 3 (was 40/45 → 1); shoulder ER 76/85 → 1 (standing goal-post target 85, Oct 6 8:19 PM; was 76/40 → 3)
-    ['ankle_df', 3], ['cervical_ext', 3], ['cervical_flex', 3], ['cervical_lat', 3], ['hip_abd', 2],
+    // T1 option A (Oct 21): hip_abd 38 + 5 >= 40 → 3; shoulder ER 76 + 5 = 81 >= 76.5 → 2 (was 1).
+    ['ankle_df', 3], ['cervical_ext', 3], ['cervical_flex', 3], ['cervical_lat', 3], ['hip_abd', 3],
     ['hip_er', 3], ['hip_flex', 2], ['hip_ir', 3], ['lumbar_ext', 3], ['lumbar_flex', 3],
-    ['shoulder_er', 1], ['shoulder_flex', 3],
+    ['shoulder_er', 2], ['shoulder_flex', 3],
   ].map(([joint_key, score]) => ({ joint_key: joint_key as string, score: score as number }))
 
   it('My Body and My Protocol show the same band', () => {
     const s = surfaces(a, rows)
     // Shoulder ER target 85 (Oct 6 8:19 PM): 76/85 = 0.89 is Needs focus, so the worst joint is shoulder ER, on every surface
-    expect(new Set(Object.values(s))).toEqual(new Set([1]))
+    // T1 option A: 76 sits inside the 5 deg buffer under the Building cutoff 76.5, so it is Building on every surface
+    expect(new Set(Object.values(s))).toEqual(new Set([2]))
   })
   it('persisted rows agree with the client formula', () => {
     const fromRows = bandMapFromJointScores(rows)
@@ -238,14 +249,16 @@ describe('email templates in this repo', () => {
  * flexion 140, ankle 6 cm): same measured inputs, new expected %, /100 and compute-tiers
  * worst_joints. Fixture 05's boundary joint moved from ankle (17.9 cm is Steady against 6) to
  * shoulder ER L 80.5 / 90 = 0.894 (target unchanged).
+ * Re-pinned Oct 21 2026 (range reset, Jim 4:15 PM ET): same inputs against hip IR 24, neck side bend 37, neck flexion 39
+ * (also hip ER 23, shoulder flexion 141, ankle 6.1, neck extension 48). 02 LOW moves 88 to 89 (still Needs focus).
  */
 const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; score: number; band: BandScore; text: string; pct: Record<string, number>; worst: string[] }> = [
   {
-    name: '02 LOW', score: 88, band: 1, text: '88/100 \u00B7 Needs focus',
+    name: '02 LOW', score: 89, band: 1, text: '89/100 \u00B7 Needs focus',
     worst: ['lumbar_ext', 'shoulder_er_l', 'lumbar_flex', 'shoulder_er_r', 'cervical_lat_l'],
     pct: {
-      hip_er: 100, hip_ir: 84, hip_abd: 100, shoulder_er: 72, shoulder_flex: 100,
-      ankle_df: 100, lumbar_flex: 75, lumbar_ext: 64, cervical_lat: 84, cervical_flex: 92, cervical_ext: 100,
+      hip_er: 100, hip_ir: 91, hip_abd: 100, shoulder_er: 72, shoulder_flex: 100,
+      ankle_df: 100, lumbar_flex: 75, lumbar_ext: 64, cervical_lat: 86, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
       hip_er_l: 30, hip_er_r: 32, hip_ir_l: 22, hip_ir_r: 25, hip_abd_l: 55, hip_abd_r: 60,
@@ -256,17 +269,19 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     },
   },
   {
+    // T1 rebased on the range reset (Jim 4:38 PM Oct 21): shoulder ER is still narrow: L 71.9 (+5 = 76.9 >= 76.5) is
+    // Building and shows the real 84%. Neck side bend / flexion are reset moves (no buffer): 36.2 / 37 = 97%, 49.5 / 39 = Steady.
     name: '03 MID/BOUNDARY', score: 98, band: 2, text: '98/100 \u00B7 Building',
     worst: ['shoulder_er_l', 'shoulder_er_r', 'cervical_lat_l', 'cervical_lat_r', 'cervical_flex'],
     pct: {
-      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 90, shoulder_flex: 100,
-      ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 95, cervical_flex: 99, cervical_ext: 100,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 84, shoulder_flex: 100,
+      ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 97, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
       hip_er_l: 45, hip_er_r: 47, hip_ir_l: 44.5, hip_ir_r: 46, hip_abd_l: 81, hip_abd_r: 81.5,
-      hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 76.9, shoulder_er_r: 80.3,   // rescaled to target 85 (was 36.2 / 37.8 vs 40)
+      hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 71.9, shoulder_er_r: 80.3,   // T1: 76.9 - 5 buffer (rescaled to target 85, was 36.2 / 37.8 vs 40)
       shoulder_flex_l: 170, shoulder_flex_r: 172, ankle_df_l: 18.0, ankle_df_r: 19.0,
-      lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 36.2, cervical_lat_r: 37.2,   // rescaled to the Oct 6 neck side-bend target 38 (was 43 / 44 vs 45)
+      lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 36.2, cervical_lat_r: 37.2,   // reset target 37 (no T1 buffer on the reset moves, Jim 4:38 PM Oct 21)
       cervical_flex: 49.5, cervical_ext: 62,
     },
   },
@@ -289,15 +304,16 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     // raw mean is 98 but the overall band is Needs focus, so /100 clamps to 89.
     name: '05 BOUNDARY <0.90', score: 89, band: 1, text: '89/100 \u00B7 Needs focus',
     worst: ['shoulder_er_l', 'shoulder_er_r', 'cervical_lat_l', 'cervical_lat_r', 'cervical_flex'],
+    // T1 option A (Oct 21): shoulder ER L 71.1 + 5 = 76.1 < 76.5 → Needs focus, raw 71.1 / 85 = 83.6 → 83.
     pct: {
-      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 89, shoulder_flex: 100,
-      ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 95, cervical_flex: 99, cervical_ext: 100,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 83, shoulder_flex: 100,
+      ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 97, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
       hip_er_l: 45, hip_er_r: 47, hip_ir_l: 44.5, hip_ir_r: 46, hip_abd_l: 81, hip_abd_r: 81.5,
-      hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 76.1, shoulder_er_r: 80.3,   // rescaled to target 85 (was 35.8 / 37.8 vs 40)
+      hip_flex_l: 120.5, hip_flex_r: 122, shoulder_er_l: 71.1, shoulder_er_r: 80.3,   // T1: 76.1 - 5 buffer (rescaled to target 85, was 35.8 / 37.8 vs 40)
       shoulder_flex_l: 170, shoulder_flex_r: 172, ankle_df_l: 18.0, ankle_df_r: 19.0,
-      lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 36.2, cervical_lat_r: 37.2,   // rescaled to the Oct 6 neck side-bend target 38 (was 43 / 44 vs 45)
+      lumbar_flex: 60.5, lumbar_ext: 25, cervical_lat_l: 36.2, cervical_lat_r: 37.2,   // reset target 37 (no T1 buffer on the reset moves, Jim 4:38 PM Oct 21)
       cervical_flex: 49.5, cervical_ext: 62,
     },
   },
@@ -344,7 +360,7 @@ describe('mobilityScoreForAssessment: one shared /100 number', () => {
     const rows = [...jointBandsForAssessment(a)].map(([joint_key, score]) => ({ joint_key, score }))
     expect(Object.fromEntries(jointPercentsForAssessment(a, rows))).toEqual(pct)
     expect(mobilityScoreForAssessment(a, rows)).toBe(mobilityScoreForAssessment(a))
-    expect(topProblemAreas(worst)).toHaveLength(3)
+    { const t = topProblemAreas(worst); expect(t.some(k => k.startsWith('lumbar'))).toBe(false); expect(t.length).toBe(Math.min(3, new Set(worst.filter((k: string) => !k.startsWith('lumbar')).map((k: string) => k.replace(/_[lr]$/, ''))).size)) } // lumbar never ranked (Grant Oct 21 2026 7:10 PM)
   })
   it('nothing measured → 100 (matches the Steady fallback every surface uses)', () => {
     expect(mobilityScoreForAssessment({})).toBe(100)
@@ -407,6 +423,9 @@ describe('My Protocol cards: "#N Problem area" (Base only)', () => {
 // ---------------------------------------------------------------------------
 
 const RANGE_OK = (v: number, b: BandScore) => v >= BAND_PERCENT_RANGE[b].min && v <= BAND_PERCENT_RANGE[b].max
+// T1 (Jim 11:47 AM ET Oct 21): a Steady reached only through a narrow-joint buffer shows its REAL percent (under 100)
+// and every narrow-joint % is the real floor percent (checked against the raw formula below)
+const RANGE_OK_T1 = (v: number, b: BandScore, narrow: boolean) => narrow ? v >= 0 && v <= 100 && (b === 3 || v < 100) : RANGE_OK(v, b)
 
 describe('Fix A: band ranges', () => {
   it('Needs focus 0..89, Building 90..99, Steady 100', () => {
@@ -426,23 +445,29 @@ describe('Fix A: per-joint % = floor(100 * min(1, worse / target))', () => {
   it('floor, not round (89.6 never shows as 90)', () => {
     // hip_abd target 40: 35.84 / 40 = 0.896 → 89.6 → 89
     expect(jointPercent('hip_abd', { left: 35.84, right: 40 })).toBe(89)
-    expect(jointPercent('ankle_df', { left: 5.37, right: 5.7 })).toBe(89) // 5.37 / 6 cm = 0.895
-    expect(jointPercent('ankle_df', { left: 5.4, right: 5.7 })).toBe(90)  // 5.4 / 6 cm = 0.90
-    expect(jointPercent('hip_ir', { left: 25.6, right: 27 })).toBe(98) // 25.6 / 26 = 0.985
+    expect(jointPercent('ankle_df', { left: 5.46, right: 5.7 })).toBe(89) // 5.46 / 6.1 cm = 0.895
+    expect(jointPercent('ankle_df', { left: 5.5, right: 5.7 })).toBe(90)  // 5.5 / 6.1 cm = 0.902
+    expect(jointPercent('hip_ir', { left: 23.6, right: 27 })).toBe(98) // 23.6 / 24 = 0.983
   })
   it('uses the worse side (lower of L/R) or midline, capped at 100', () => {
-    expect(jointPercent('hip_er_l', { left: 19.2, right: 29 })).toBe(66) // 19.2 / 29 = 0.662
-    expect(jointPercent('hip_er', { right: 19.2 })).toBe(66)
+    expect(jointPercent('hip_er_l', { left: 15.2, right: 29 })).toBe(66) // 15.2 / 23 = 0.661
+    expect(jointPercent('hip_er', { right: 15.2 })).toBe(66)
     expect(jointPercent('lumbar_ext', { midline: 50 })).toBe(100)
     expect(jointPercent('lumbar_ext', {})).toBeNull()
   })
   it('exact boundaries: 0.90 → 90, 1.00 → 100, just under 1.00 → 99', () => {
     for (const [joint, target] of Object.entries(JOINT_SCORE_TARGETS)) {
       if (isUnscoredJoint(joint)) continue
-      expect([joint, jointPercent(joint, { midline: 0.9 * target })]).toEqual([joint, 90])
+      // T1 option A (per-joint config): Steady line Es lower, Building line Eb lower; buffered Steady = real %
+      const { steady: Es, building: Eb } = narrowBuffers(joint)
+      const fl = (v: number) => Math.floor(100 * v / target)
+      const narrow = isNarrowJoint(joint)
+      // narrow joints: the real floor percent everywhere; others: clamped into the band range as before
+      expect([joint, jointPercent(joint, { midline: 0.9 * target - Eb })]).toEqual([joint, narrow ? fl(0.9 * target - Eb) : 90])
       expect([joint, jointPercent(joint, { midline: target })]).toEqual([joint, 100])
-      expect([joint, jointPercent(joint, { midline: target - 0.01 })]).toEqual([joint, 99])
-      expect([joint, jointPercent(joint, { midline: 0.9 * target - 0.01 })]).toEqual([joint, 89])
+      expect([joint, jointPercent(joint, { midline: target - Es })]).toEqual([joint, narrow ? fl(target - Es) : 100])
+      expect([joint, jointPercent(joint, { midline: target - Es - 0.01 })]).toEqual([joint, narrow ? fl(target - Es - 0.01) : 99])
+      expect([joint, jointPercent(joint, { midline: 0.9 * target - Eb - 0.01 })]).toEqual([joint, Math.min(89, fl(0.9 * target - Eb - 0.01))])
     }
   })
 })
@@ -486,7 +511,7 @@ describe('Fix A: generated assessments never contradict the band (per joint and 
       for (const j of ASSESSMENT_JOINTS) {
         const l = j.l ? a[j.l] : null, r = j.r ? a[j.r] : null, m = j.single ? a[j.single] : null
         const worse = m ?? (l != null && r != null ? Math.min(l, r) : (l ?? r))
-        if (worse != null) rows.push({ joint_key: j.key, score: sqlScore(worse, JOINT_SCORE_TARGETS[j.key]) })
+        if (worse != null) rows.push({ joint_key: j.key, score: sqlScore(worse, JOINT_SCORE_TARGETS[j.key], j.key) })
       }
       for (const withRows of [false, true]) {
         const rs = withRows ? rows : undefined
@@ -496,7 +521,7 @@ describe('Fix A: generated assessments never contradict the band (per joint and 
         for (const [k, p] of pcts) {
           const b = bands.get(k)!
           checkedJoints++
-          if (!RANGE_OK(p, b)) throw new Error(`joint ${k} ${p}% contradicts ${BAND_FULL[b]} in ${JSON.stringify(a)}`)
+          if (!RANGE_OK_T1(p, b, isNarrowJoint(k))) throw new Error(`joint ${k} ${p}% contradicts ${BAND_FULL[b]} in ${JSON.stringify(a)}`)
           // the raw floor formula agrees with the band on its own (the clamp is only a guard)
           const def = ASSESSMENT_JOINTS.find(j => j.key === k)!
           const raw = jointPercent(k, { left: def.l ? a[def.l] : null, right: def.r ? a[def.r] : null, midline: def.single ? a[def.single] : null }, null)!
@@ -507,7 +532,9 @@ describe('Fix A: generated assessments never contradict the band (per joint and 
         if (overall == null) { expect(score).toBe(100); continue }
         seen.add(overall)
         expect(overall).toBe(worstBandScore([...bands.values()]))
-        if (!RANGE_OK(score, overall)) throw new Error(`/100 ${score} contradicts ${BAND_FULL[overall]} in ${JSON.stringify(a)}`)
+        // T1: an overall Steady reached through a narrow-joint buffer shows the real /100 (under 100), never 100
+        const okScore = RANGE_OK(score, overall) || (overall === 3 && score < 100 && [...pcts].some(([k, p]) => isNarrowJoint(k) && p < 100))
+        if (!okScore) throw new Error(`/100 ${score} contradicts ${BAND_FULL[overall]} in ${JSON.stringify(a)}`)
         // /100 never exceeds 89 when any joint is Needs focus, and every surface string agrees
         expect(formatScoreBand(score, overall)).toMatch(new RegExp(`^${score}/100 \u00B7 ${BAND_FULL[overall]}$`))
       }
@@ -561,5 +588,14 @@ describe('Fix A: no Base surface uses the elite OPTIMAL table or the old deducti
     for (const f of ['MyBody.tsx', 'MyProtocol.tsx']) {
       expect(read(join(SRC, 'pages', f))).toMatch(/mobilityScoreForAssessment\(assessment, jointScores\)/)
     }
+  })
+})
+
+describe('lumbar never ranked (Grant Oct 21 2026 7:10 PM)', () => {
+  it('saved lumbar values stay out of top problem areas and rankProblemJoints', async () => {
+    const { topProblemAreasForAssessment, rankProblemJoints } = await import('./mobilityBands')
+    const a = { lumbar_flex: 5, lumbar_ext: 2, ankle_df_l: 3, ankle_df_r: 3, worst_joints: ['lumbar_ext', 'lumbar_flex', 'ankle_df_l'] }
+    expect(topProblemAreasForAssessment(a).some(k => k.startsWith('lumbar'))).toBe(false)
+    expect(rankProblemJoints(a, [{ key: 'lumbar_ext' }, { key: 'ankle_df' }]).map(r => r.key)).toEqual(['ankle_df'])
   })
 })

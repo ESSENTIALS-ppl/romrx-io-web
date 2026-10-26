@@ -132,17 +132,19 @@ describe('shoulder_er copy and fields (Oct 6 8:19 PM; Stacy PASS title, cue, sto
     expect(s.fields.map(f => f.key)).toEqual(['shoulder_er_l', 'shoulder_er_r'])
   })
   it("Quinn's cue, word for word, in order (Setup 1-2, then How to Measure 1)", () => {
-    expect(s.position[0]).toBe('Stand tall. Hold the phone along your forearm like a ruler, wrist straight.')
-    expect(s.position[1]).toBe('Raise your arm out to the side, elbow at shoulder height and bent like a goal post, forearm pointing straight ahead.')
-    expect(s.position[2]).toBe('Tap Start with your other hand, then hold this start position while it counts down from 5.')
-    expect(s.howTo[0]).toBe('Rotate your hand up and back as far as it goes, keeping your elbow at shoulder height and your back from arching.')
+    expect(s.position[0]).toBe('Sit tall in a chair with a back, feet flat, your back against the chair. Raise your arm out to the side to shoulder height and bend your elbow to a right angle, forearm pointing straight ahead.')
+    expect(s.position[1]).toBe('Tap Start with your other hand, then hold this start position while it counts down from 5.')
+    expect(s.howTo).toHaveLength(2)                     // Quinn Oct 21: 'Hold still at your limit...' dropped
+    expect(s.howTo[1]).toBe('Switch arms, tap Start in the start position, and repeat.')
+    expect(s.howTo[0]).toBe('Keep your elbow at shoulder height and in line with your shoulders. Slowly rotate your forearm up and back, like waving hello over your shoulder, until it stops on its own. Hold still until the number locks.')
   })
-  it('standing, phone flat along the forearm, screen out to the side; nothing left from the lying step', () => {
+  it('seated in a chair with a back (Jim 1:00 PM Oct 21), natural in-hand grip; nothing left from the lying step', () => {
     const text = [s.tool, ...s.position, ...s.howTo, s.mistake, s.mistakeFix, s.meter!.grip].join(' ')
-    expect(s.tool).toBe('Your phone. Standing.')
-    expect(s.meter!.grip).toBe('Phone flat along your forearm, top edge toward your hand, screen facing out to the side. Wrist straight.')
+    expect(s.tool).toBe('Phone meter, held in your hand.')
+    expect(s.mistake).toBe('Arching your back off the chair, letting your elbow drop or pull back, or bending your wrist.')
+    expect(s.meter!.grip).toBe('Hold the phone naturally in your hand, screen facing you. Keep your wrist straight and your grip firm.')
     expect(text).not.toMatch(/lying|on your back|floor|ceiling|tucked|screen facing your head|Extension/i)
-    expect(s.mistakeFix).toBe('Keep your shoulder pressed down and your elbow at the same height the whole time. Only your forearm moves.')
+    expect(s.mistakeFix).toBe('Keep your back against the chair and your elbow at shoulder height. Only your forearm moves.')
   })
   it('NO typical range and NO source on this step (Stacy, Oct 6 8:19 PM); scoring target 85 elsewhere', () => {
     for (const f of s.fields) {
@@ -153,6 +155,6 @@ describe('shoulder_er copy and fields (Oct 6 8:19 PM; Stacy PASS title, cue, sto
   it('shoulder flexion is a separate step: sitting in a chair, range unchanged', () => {
     const f = STEPS.find(x => x.id === 'shoulder_flex')!
     expect(f.tool).toBe('Your phone. Sitting in a chair with a back.')
-    expect(f.fields.map(x => [x.normalLow, x.normalHigh])).toEqual([[140, 180], [140, 180]])
+    expect(f.fields.map(x => [x.normalLow, x.normalHigh])).toEqual([[141, 179], [141, 179]]) // Oct 21 range reset (Gill 2020, PMID 33046038)
   })
 })

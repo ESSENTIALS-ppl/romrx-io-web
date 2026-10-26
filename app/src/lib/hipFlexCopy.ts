@@ -49,19 +49,20 @@ export const HIP_FLEX_STEP = {
   tool: 'Your phone. Lying on the floor.',
   /** One-line grip shown in the in-app phone meter. */
   // Jim, Oct 6 12:07 PM (decided): every hand / low back reference removed from this step. Stacy PASS Oct 6 12:07 (all 9 lines).
-  meterGrip: 'Phone on your mid-thigh.',
+  // Jim, Oct 21 6:09 PM (option a): phone flat on top of the mid-thigh, stays there through the whole straight-leg lift. Needs Stacy PASS + Quinn sign-off.
+  meterGrip: 'Phone flat on top of your mid-thigh. It stays there the whole lift.',
   position: [
-    'Lie flat on your back, legs straight out, knees touching the floor.',
-    'Place your phone on your mid-thigh.',
+    'Lie flat on your back, legs straight out, the backs of your knees resting on the floor.',
+    'Place your phone flat on top of your thigh, midway between your hip and knee. It stays on that spot the whole time you lift your leg.',
     'Tap Start, then keep your leg flat on the ground and hold still while it counts down from 5 with a soft beep each second. It zeroes at the end.',
   ],
   howTo: [
-    "Lift one leg and keep it straight until you can't anymore.",
+    "Slowly lift one leg, keeping the knee straight, until you can't go higher without bending the knee or lifting your hips.",
     'Pause for 2.5 seconds so the meter can lock in the range.',
     'Tap Use this number for this leg. Lower the leg slowly. Tap Start again and repeat with the other leg. Each leg gets its own number.',
   ],
-  mistake: 'Your hips start coming up, or you shift in any other way.',
-  mistakeFix: 'Keep your hips down and your body still. If you shift, redo the lift.',
+  mistake: 'Your other leg lifts, your knee bends, or your hips come up.',
+  mistakeFix: 'Keep your other leg flat on the floor, your knee straight and your hips down. If any of these change, redo the lift.',
 } as const
 
 /** Added to the "why" line ONLY when the user's sex is known (male or female). */

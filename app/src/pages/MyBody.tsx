@@ -1,4 +1,4 @@
-import { LOW_BACK_NOT_MEASURED, baseLumbarRemoved, isLumbarKey, lumbarNotMeasured } from '../lib/lumbarFlag'
+import { LOW_BACK_NOT_MEASURED, baseLumbarRemoved, isLumbarKey } from '../lib/lumbarFlag'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -167,11 +167,12 @@ export function MyBody() {
   // Low-back flag ON (lib/lumbarFlag.ts): an unmeasured lumbar axis is left out (never drawn at 0).
   const lumbarOff = baseLumbarRemoved()
   const radarRows = radarSideRowsForAssessment(assessment, jointScores).filter(r => !r.unscored)
-    .filter(r => !(lumbarOff && isLumbarKey(r.key) && !r.measured))
+    .filter(r => !(lumbarOff && isLumbarKey(r.key))) // Grant Oct 21 2026 7:10 PM: no lumbar axis for anyone
   const prs = mobilityScoreForAssessment(assessment, jointScores)
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
   const allJointRows = jointDisplayRowsForAssessment(assessment, jointScores)
-  const hideLumbar = lumbarOff && lumbarNotMeasured(assessment)
+  // Grant Oct 21 2026 7:10 PM: 'Low back: not measured' for ALL users; old saved lumbar values stay in the data, bars hidden.
+  const hideLumbar = lumbarOff
   const jointRows = hideLumbar ? allJointRows.filter(r => !isLumbarKey(r.key)) : allJointRows
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreasForAssessment(assessment)

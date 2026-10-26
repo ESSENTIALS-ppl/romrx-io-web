@@ -1,3 +1,5 @@
+import { directionForField } from '../lib/meterDirection'
+import { StepVideo } from '../components/StepVideo'
 import { Loader2, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, AlertTriangle, SkipForward } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { STEPS } from './assessmentSteps'
@@ -96,6 +98,9 @@ export function AssessmentMeasureScreen(p: {
               <span className="font-medium">{step.tool}</span>
             </div>
 
+            {/* Demo video slot: /videos/<step id>.mp4, hidden when there is no file (lib/stepVideo.ts). */}
+            <StepVideo key={step.id} stepId={step.id} title={step.title} />
+
             {/* Setup */}
             <div>
               <p className="text-xs font-bold text-cobalt-ink uppercase tracking-wide mb-2">Setup</p>
@@ -178,7 +183,7 @@ export function AssessmentMeasureScreen(p: {
                       upNext={canMeter(f) && !isActive && activeKey != null && v === ''}
                       hideRange={isRangeNote(f) && f.key !== rangeKey} />
                     {isActive && step.meter && (
-                      <PhoneMeter key={`${stepIdx}-${f.key}`} movement={step.title} sideLabel={f.label} grip={step.meter.grip}
+                      <PhoneMeter key={`${stepIdx}-${f.key}`} movement={step.title} sideLabel={f.label} grip={step.meter.grip} direction={directionForField(f.key)}
                         notice={active?.notice}
                         onUse={deg => useFromMeter(f, deg)} onClose={() => setActive({ step: stepIdx, key: null })} />
                     )}

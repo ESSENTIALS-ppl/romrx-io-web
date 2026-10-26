@@ -16,7 +16,8 @@ import {
   BAND_TONE,
   BASE_DISPLAY_JOINTS,
   JOINT_SCORE_TARGETS,
-  bandScoreFromTargetRatio,
+  bandScoreForJoint,
+  isNarrowJoint,
   formatMeasure,
   jointBandsForAssessment,
   jointDisplayRowsForAssessment,
@@ -101,8 +102,8 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
           for (const [pct, band] of [[rr.leftPct, rr.leftBand], [rr.rightPct, rr.rightBand]] as const) {
             if (pct == null) continue
             // each side's % sits inside the band its colour shows
-            if (band === 3) expect(pct).toBe(100)
-            if (band === 2) expect(pct >= 90 && pct <= 99).toBe(true)
+            if (band === 3) expect(pct === 100 || (isNarrowJoint(j.key) && pct < 100)).toBe(true) // T1: buffered Steady = real %
+            if (band === 2) expect(isNarrowJoint(j.key) ? pct < 100 : pct >= 90 && pct <= 99).toBe(true)
             if (band === 1) expect(pct).toBeLessThanOrEqual(89)
           }
           // the worse measured side is the bar %
@@ -126,23 +127,24 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
   it('fixture values (EXPECTED-BANDS.md)', () => {
     // Oct 6 targets: Hip Abd 81 / 81.5 is Steady against 40 (was Building against 90); the ankle
     // values are fixture 05's 17.9 / 19 cm scaled to the 6 cm target (5.37 / 5.7 cm, same ratios).
-    const f05 = { id: '05', ankle_df_l: 5.37, ankle_df_r: 5.7, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
+    // Oct 21 range reset: ankle target 6.1 cm, inputs scaled to keep the same ratios (5.46 / 5.795 cm).
+    const f05 = { id: '05', ankle_df_l: 5.46, ankle_df_r: 5.795, hip_abd_l: 81, hip_abd_r: 81.5, lumbar_flex: 60.5 }
     const rows = radarSideRowsForAssessment(f05, [{ joint_key: 'ankle_df', score: 1 }, { joint_key: 'hip_abd', score: 3 }])
     const ank = rows.find(r => r.key === 'ankle_df')!
-    expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([89, 95, 89])
+    expect([ank.leftPct, ank.rightPct, ank.worse]).toEqual([89, 95, 89]) // ankle is a reset move: no T1 buffer, clamped % as before
     const abd = rows.find(r => r.key === 'hip_abd')!
     expect([abd.leftPct, abd.rightPct, abd.worse]).toEqual([100, 100, 100])
     const lf = rows.find(r => r.key === 'lumbar_flex')!
     expect([lf.midline, lf.left, lf.right]).toEqual([true, 100, 100])
     // fixture 02 Ankle DF 7 / 8.5 cm against 20 scaled to the 6 cm target (2.1 / 2.55 cm) → L 35 / R 42
-    const f02 = radarSideRowsForAssessment({ ankle_df_l: 2.1, ankle_df_r: 2.55 }).find(r => r.key === 'ankle_df')!
+    const f02 = radarSideRowsForAssessment({ ankle_df_l: 2.135, ankle_df_r: 2.6 }).find(r => r.key === 'ankle_df')!
     expect([f02.leftPct, f02.rightPct, f02.worse]).toEqual([35, 42, 35])
   })
 
   it('sidePercent: floor, capped at 100, clamped into the side band', () => {
     expect(sidePercent('hip_abd', 36, 2)).toBe(90) // 36 / 40 = 0.90
     expect(sidePercent('hip_abd', 95, 3)).toBe(100)
-    expect(sidePercent('ankle_df', 5.37, 1)).toBe(89) // 5.37 / 6 cm
+    expect(sidePercent('ankle_df', 5.46, 1)).toBe(89) // 5.46 / 6.1 cm
     expect(sidePercent('ankle_df', null, 1)).toBeNull()
   })
 
@@ -221,10 +223,10 @@ describe('My Protocol Left/Right colours follow Base bands', () => {
       const t = JOINT_SCORE_TARGETS[j.key]
       const L = Math.round(t * (0.5 + r() * 0.7) * 10) / 10
       const R = Math.round(t * (0.5 + r() * 0.7) * 10) / 10
-      const card = bandScoreFromTargetRatio(Math.min(L, R), t)
+      const card = bandScoreForJoint(j.key, Math.min(L, R), t)
       const sides = sideBandsForJoint(j.key, { left: L, right: R }, card)
-      expect(sides.left).toBe(bandScoreFromTargetRatio(L, t))
-      expect(sides.right).toBe(bandScoreFromTargetRatio(R, t))
+      expect(sides.left).toBe(bandScoreForJoint(j.key, L, t))
+      expect(sides.right).toBe(bandScoreForJoint(j.key, R, t))
     }
   })
 
@@ -243,14 +245,14 @@ describe('My Protocol Left/Right colours follow Base bands', () => {
   })
 
   it('Hip Abd L 36 on a Building card is yellow, not cobalt (fixture 03 scaled to the Oct 6 target of 40)', () => {
-    const s = sideBandsForJoint('hip_abd', { left: 36, right: 36.2 }, 2)
+    const s = sideBandsForJoint('hip_abd', { left: 31, right: 31.2 }, 2) // T1: 36 / 36.2 minus the 5 deg buffer
     expect(s).toEqual({ left: 2, right: 2 })
     expect(valueToneClass(s.left)).toBe(BAND_TONE[2].color)
     expect(valueToneClass(s.left)).not.toMatch(/cobalt/)
   })
 
   it('fixture 05 Ankle DF scaled to the 6 cm target: L 5.37 red (Needs focus = card), R 5.7 yellow (Building)', () => {
-    expect(sideBandsForJoint('ankle_df', { left: 5.37, right: 5.7 }, 1)).toEqual({ left: 1, right: 2 })
+    expect(sideBandsForJoint('ankle_df', { left: 5.37, right: 5.7 }, 1)).toEqual({ left: 1, right: 2 }) // reset move: no T1 buffer (target 6.1: 5.37 = 88%, 5.7 = 93%)
   })
 
   it('MyProtocol.tsx: no riskBelow/normalMin/normalMax left; sides use the shared helper; target from JOINT_SCORE_TARGETS', () => {
