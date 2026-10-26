@@ -26,7 +26,7 @@ let mockSession: { user: { id: string } } | null = { user: { id: 'u1' } }
 vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ session: mockSession, loading: false }) }))
 
 import { ROMood } from '../pages/ROMood'
-import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY, RETENTION_LINES } from './romoodCopy'
+import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY, RETENTION_LINES, ROMOOD_MYBODY_COPY } from './romoodCopy'
 import { MoodSettings } from '../components/MoodSettings'
 import { energyFromPoint, needlePoint } from '../components/DialMoodInput'
 import { AssessmentPhases } from '../pages/AssessmentPhases'
@@ -233,7 +233,7 @@ describe('ROMood plain words (no clinical terms)', () => {
   const BANNED = /\b(depress\w*|anxious|anxiety|panic\w*|stress\w*|burn-?out|mental health|well-?being|mood disorder|disorder\w*|symptom\w*|sad|gloomy|upset|psycholog\w*|clinical|therap\w*|diagnos\w*|condition\w*)\b/i
   const collect = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(collect) : []
   it('no banned term in any ROMood copy, word, description or readout', () => {
-    const all = [...collect(ROMOOD_COPY), ...collect(ROMOOD_PLACEHOLDERS), ...collect(ROMOOD_SETTINGS_COPY), ...collect(RETENTION_LINES), ...FEELING_WORDS.flatMap(w => [w.word, w.description])]
+    const all = [...collect(ROMOOD_COPY), ...collect(ROMOOD_PLACEHOLDERS), ...collect(ROMOOD_SETTINGS_COPY), ...collect(RETENTION_LINES), ...collect(ROMOOD_MYBODY_COPY), ...FEELING_WORDS.flatMap(w => [w.word, w.description])]
     const hits = all.filter(s => BANNED.test(s)); expect(hits).toEqual([])
     expect(FEELING_WORDS).toHaveLength(16)
   })

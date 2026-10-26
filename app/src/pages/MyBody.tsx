@@ -8,6 +8,7 @@ import { EmptyState } from '../components/EmptyState'
 import { Spinner } from '../components/Spinner'
 import { BaseRadar } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { MoodAverageCard, MoodScoreDivider, HalfDial } from '../components/MoodAverageCard'
 import { HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexLegsDiffer } from '../lib/hipFlexCopy'
 import {
   bandFull,
@@ -208,13 +209,17 @@ export function MyBody() {
         subtitle={`Assessed ${new Date(assessment.assessed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
       />
 
-      {/* Mobility band */}
-      <div className={cn('rounded-card border p-4', tier.bg, 'border-cobalt/10')}>
-        <div className="flex items-center gap-4">
-          <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
-            <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
-            <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
-          </div>
+      {/* ROMood average: visually separate, never feeds the body score (Stacy conditions). */}
+      <MoodAverageCard userId={user?.id} />
+      <MoodScoreDivider />
+
+      {/* Mobility band: half-dial restyle of the former 64px circle, same prs data */}
+      <div className={cn('rounded-card border p-4', tier.bg, 'border-cobalt/10')} data-testid="body-score-card">
+        <div className={cn("relative", tier.color)} data-testid="body-score-gauge">
+          <HalfDial value={prs} color="currentColor" testid="body-score-dial" label={`Body score ${prs} out of 100`} />
+          <p className={cn('text-center font-display font-bold text-2xl leading-none -mt-1', tier.color)}><span data-testid="body-score-value">{prs}</span><span className="text-sm">/100</span></p>
+        </div>
+        <div className={cn('flex items-center gap-4 mt-2', tier.color)}>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
               <TrendingUp size={13} className={tier.color} />

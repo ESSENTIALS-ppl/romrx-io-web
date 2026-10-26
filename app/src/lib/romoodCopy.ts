@@ -118,3 +118,25 @@ export const FEELING_WORDS: readonly FeelingWord[] = [
   { word: 'Relaxed', description: 'Loose and unhurried.', quadrant: 'low_pleasant' },
   { word: 'Mellow', description: 'Soft, easy, and low-key.', quadrant: 'low_pleasant' },
 ]
+
+/** My Body mood average (Jim approved layout Oct 26; Stacy conditions stacy-romood-mybody-average-20261026.md).
+ * OPEN for Jim: label = nearest word vs broad area; window = all time vs recent. */
+export type MoodAverageLabel = 'word' | 'area'
+export type MoodAverageWindow = 'all_time' | 'recent'
+export const ROMOOD_MYBODY_CONFIG = {
+  averageLabel: 'word' as MoodAverageLabel,
+  averageWindow: 'all_time' as MoodAverageWindow,
+  recentDays: 84,
+}
+export const ROMOOD_MYBODY_COPY = {
+  title: 'Your average mood',
+  separate: 'Separate from your body score',
+  reflection: 'For your own reflection. Not medical advice.',
+  divider: 'Mood is not part of your body score',
+  emptyTitle: 'Do a ROMood check to start your mood average',
+  emptyCta: 'Start ROMood check',
+  windowAllTime: 'Your average so far',
+  windowRecent: 'Last 12 weeks',
+  window12Months: 'Last 12 months',
+  basedOn: (n: number) => `Based on ${n} check-in${n === 1 ? '' : 's'}`,
+}

@@ -146,3 +146,23 @@ export async function trackMoodSkipped(withUserId = ROMOOD_PLACEHOLDERS.Q11_skip
     })
   } catch { /* analytics must never break the app */ }
 }
+
+export type MoodAverage = { energy: number; pleasantness: number; count: number }
+/** Pure average from the user's live rows. Never stored or cached, so a delete always recomputes it (Stacy cond. 4/5). */
+export function computeMoodAverage(rows: { energy: number; pleasantness: number; created_at?: string }[], since: Date | null = null): MoodAverage | null {
+  const r = since ? rows.filter(x => !x.created_at || new Date(x.created_at) >= since) : rows
+  if (r.length === 0) return null
+  const avg = (k: 'energy' | 'pleasantness') => Math.round(r.reduce((s, x) => s + x[k], 0) / r.length)
+  return { energy: avg('energy'), pleasantness: avg('pleasantness'), count: r.length }
+}
+/** Effective window start: the stricter of the display window and the retention cutoff. Label follows it. */
+export function moodAverageSince(window: 'all_time' | 'recent', recentDays: number, retention: RetentionMode, now = new Date()): Date | null {
+  const cands = [retentionCutoff(retention, now), window === 'recent' ? new Date(now.getTime() - recentDays * 86400000) : null].filter((d): d is Date => !!d)
+  return cands.length ? new Date(Math.max(...cands.map(d => d.getTime()))) : null
+}
+/** Reads the signed-in user's own rows (RLS). No analytics or Meta call anywhere on this path. */
+export async function fetchMoodRows(userId: string): Promise<{ energy: number; pleasantness: number; created_at: string }[]> {
+  const { data, error } = await (await db()).from('mood_entries').select('energy, pleasantness, created_at').eq('user_id', userId)
+  if (error || !data) return []
+  return data as { energy: number; pleasantness: number; created_at: string }[]
+}
