@@ -2,7 +2,14 @@
 
 Scope: privacy@romrx.io requests that touch ROMood. Tables: `public.mood_entries`, `public.mood_settings`.
 Nothing here has been run. Migrations are not applied. Whoever runs exports must confirm this
-checklist (Stacy fix 4, [VERIFY]).
+checklist (Stacy fix 4).
+
+## Owners and flow (Stacy pass 97101d6)
+1. Intake: Stacy receives the request at privacy@romrx.io, checks the requester's identity, and drafts the response.
+2. Approve: Jim approves the action.
+3. Execute: Avery runs the SQL below.
+4. Verify: Reid verifies the result (export complete, or 0 rows left for a delete).
+5. Confirm: Stacy confirms to the requester within 30 days of the request (stricter than RCW 19.373.040's 45 days; matches /legal Section 4). For an email mood-only delete, the confirmation says the mood_settings row (opt-in and off times) is kept with the account.
 
 ## Export (access request)
 Add both tables to the export checklist, keyed by the user's auth id:
@@ -26,9 +33,9 @@ update public.mood_settings set saving_on = false, turned_off_at = now() where u
 Both tables cascade from `auth.users` (on delete cascade). Confirm 0 rows in each after deletion.
 
 ## Notes
-- Skip events (`product_events.event = 'romood_skipped'`) carry no user id by default (Q11), so they are not personal data for a request.
+- Skip events are not sent at all (Q11, Grant Oct 26: live RLS rejects no-id rows), so there is nothing to export.
 - Mood is consumer health data under Washington MHMDA (RCW 19.373): access and deletion rights apply (Stacy pass).
-- Retention: Jim locked "at least two assessment cycles". Stacy wording pending; no auto-delete job exists.
+- Retention: see the Retention section below (Stacy ruling Oct 26). No auto-delete job exists.
 
 ## Retention (Stacy ruling Oct 26, Jim's call)
 - Config: `ROMOOD_PLACEHOLDERS.retention` (app) and `public.romood_purge_expired(mode)` (migration 20261026233000, not applied, not scheduled).

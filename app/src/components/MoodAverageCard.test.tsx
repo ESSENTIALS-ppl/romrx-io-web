@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 vi.mock('../lib/supabase', () => ({ supabase: {} }))
 const track = vi.fn()
 vi.mock('../lib/track', () => ({ track: (...a: unknown[]) => track(...a), trackPageView: () => {} }))
-import { MoodAverageCard, halfDialPoint } from './MoodAverageCard'
+import { MoodAverageCard, MoodScoreDivider, halfDialPoint } from './MoodAverageCard'
 import { computeMoodAverage, moodAverageSince } from '../lib/romood'
 import { ROMOOD_MYBODY_CONFIG, ROMOOD_MYBODY_COPY } from '../lib/romoodCopy'
 
@@ -22,11 +22,17 @@ async function mount(props: Parameters<typeof MoodAverageCard>[0]) {
 const q = (id: string) => host.querySelector(`[data-testid="${id}"]`)
 
 describe('My Body mood average', () => {
-  it('flag OFF: empty state only, never loads rows', async () => {
+  it('flag OFF: card and divider are hidden entirely (no empty-state promise), rows never load', async () => {
     const load = vi.fn(async () => [{ energy: 90, pleasantness: 90, created_at: '2026-10-01' }])
     await mount({ userId: 'u', saveEnabled: false, loadRows: load })
-    expect(q('mood-average-empty')).toBeTruthy(); expect(q('mood-average-gauge')).toBeNull(); expect(load).not.toHaveBeenCalled()
+    expect(q('mood-average')).toBeNull(); expect(q('mood-average-empty')).toBeNull(); expect(load).not.toHaveBeenCalled()
+    act(() => root!.render(createElement(MoodScoreDivider as unknown as (p: { saveEnabled?: boolean }) => null, { saveEnabled: false }))); expect(q('mood-divider')).toBeNull()
+    act(() => root!.render(createElement(MoodScoreDivider as unknown as (p: { saveEnabled?: boolean }) => null, { saveEnabled: true }))); expect(q('mood-divider')!.textContent).toBe('Mood is not part of your body score')
+  })
+  it('flag ON shows the reflection line and a visible Energy caption on the dial', async () => {
+    await mount({ userId: 'u', saveEnabled: true, loadRows: async () => [{ energy: 40, pleasantness: 60, created_at: '2026-10-01' }] })
     expect(q('mood-average-reflection')!.textContent).toBe('For your own reflection. Not medical advice.')
+    expect(q('mood-average-dial-caption')!.textContent).toBe('Energy')
   })
   it('flag ON with rows: gauge, word, count; no analytics', async () => {
     const load = vi.fn(async () => [{ energy: 80, pleasantness: 80, created_at: '2026-10-01' }, { energy: 60, pleasantness: 80, created_at: '2026-10-02' }])

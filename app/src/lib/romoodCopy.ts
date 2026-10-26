@@ -19,11 +19,9 @@ export const ROMOOD_PLACEHOLDERS = {
   Q5_instruction: 'Drag the needle for energy. Slide the bar for how you feel. Tap the word to change it.',
   /** Q6 step label. 'flow' = real position in the actual flow (Grant Oct 26): setup, ROMood, then each
    * measure step, so ROMood shows "2 of N". A fixed string overrides; null hides either one. */
-  Q6_stepLabel: { counter: 'flow' as 'flow' | string | null, eyebrow: 'Assessment step 1' as string | null },
+  Q6_stepLabel: { counter: 'flow' as 'flow' | string | null, eyebrow: 'flow' as 'flow' | string | null },
   /** Q8 slider switch points, 0 to 100 scale. Readout switches below `low` and above `high`; `mid` splits quadrants (mid counts as the lower side). */
   Q8_sliderSwitch: { low: 40, high: 60, mid: 50 },
-  /** Q9 what happens when the user turns mood saving off in Settings. 'offer' = ask if they want to delete (build default). 'auto' = delete automatically. */
-  Q9_turnOff: 'offer' as 'offer' | 'auto',
   /** Q11 is the "skipped" event tied to the account? Default false: no user id, no anon id, no session id. */
   Q11_skipEventWithUserId: false,
   /** Mood input visual (Jim is weighing alternatives to bubbles). Key into MOOD_INPUTS in components/moodInput. */
@@ -141,3 +139,6 @@ export const ROMOOD_MYBODY_COPY = {
   window12Months: 'Last 12 months',
   basedOn: (n: number) => `Based on ${n} check-in${n === 1 ? '' : 's'}`,
 }
+
+/** DECIDED (Jim, Oct 26): turning saving off OFFERS to delete past check-ins. No longer a placeholder. */
+export const ROMOOD_TURN_OFF_BEHAVIOR: 'offer' | 'auto' = 'offer'

@@ -46,7 +46,8 @@ export function MoodAverageCard({ userId, saveEnabled = romoodSaveEnabled(), loa
   }, [live, userId, loadRows, averageWindow, recentDays, retention])
 
   const windowLabel = retention === '12_months' ? C.window12Months : retention === 'rolling_12_weeks' || averageWindow === 'recent' ? C.windowRecent : C.windowAllTime
-  const show = live && loaded && avg
+  if (!live) return null // Stacy MUST FIX C: no card (no empty-state promise) while saving is off
+  const show = loaded && avg
   const name = show ? (averageLabel === 'word' ? nearestWord(avg.energy, avg.pleasantness).word : QUADRANT_NAMES[quadrantFor(avg.energy, avg.pleasantness)]) : ''
   return (
     <section className="rounded-card border border-slate-200 bg-white p-4 text-center" data-testid="mood-average" aria-label={C.title}>
@@ -57,6 +58,7 @@ export function MoodAverageCard({ userId, saveEnabled = romoodSaveEnabled(), loa
       {show ? (
         <div data-testid="mood-average-gauge">
           <HalfDial value={avg.energy} color={MOOD_COLOR} testid="mood-average-dial" label={`${C.title}: ${name}. ${ROMOOD_COPY.energy.label}: ${ROMOOD_COPY.energy.readout[readoutIndex(avg.energy)]}. ${ROMOOD_COPY.pleasantness.label}: ${ROMOOD_COPY.pleasantness.readout[readoutIndex(avg.pleasantness)]}`} />
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 -mt-1" data-testid="mood-average-dial-caption">{ROMOOD_COPY.energy.label}</p>
           <p className="text-xl font-bold text-slate-900" data-testid="mood-average-name">{name}</p>
           <p className="text-xs text-slate-500">{ROMOOD_COPY.energy.label}: {ROMOOD_COPY.energy.readout[readoutIndex(avg.energy)]}</p>
           <p className="text-xs text-slate-600">{ROMOOD_COPY.pleasantness.label}: {ROMOOD_COPY.pleasantness.readout[readoutIndex(avg.pleasantness)]}</p>
@@ -68,6 +70,7 @@ export function MoodAverageCard({ userId, saveEnabled = romoodSaveEnabled(), loa
   )
 }
 
-export function MoodScoreDivider() {
+export function MoodScoreDivider({ saveEnabled = romoodSaveEnabled() }: { saveEnabled?: boolean } = {}) {
+  if (!saveEnabled) return null
   return <p className="text-center text-[11px] text-slate-500" role="separator" aria-label={C.divider} data-testid="mood-divider">{C.divider}</p>
 }

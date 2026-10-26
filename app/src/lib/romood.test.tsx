@@ -26,7 +26,7 @@ let mockSession: { user: { id: string } } | null = { user: { id: 'u1' } }
 vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ session: mockSession, loading: false }) }))
 
 import { ROMood } from '../pages/ROMood'
-import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY, RETENTION_LINES, ROMOOD_MYBODY_COPY } from './romoodCopy'
+import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY, RETENTION_LINES, ROMOOD_MYBODY_COPY, ROMOOD_TURN_OFF_BEHAVIOR } from './romoodCopy'
 import { MoodSettings } from '../components/MoodSettings'
 import { energyFromPoint, needlePoint } from '../components/DialMoodInput'
 import { AssessmentPhases } from '../pages/AssessmentPhases'
@@ -65,18 +65,22 @@ describe('ROMood logic', () => {
     for (const w of FEELING_WORDS) { const p = positionFor(w); expect(quadrantFor(p.energy, p.pleasantness)).toBe(w.quadrant) }
   })
   it('save gate needs opt-in, sign-in and flag', () => {
-    expect(shouldSaveMood({ optIn: false, signedIn: true, saveEnabled: true })).toBe(false)
-    expect(shouldSaveMood({ optIn: true, signedIn: false, saveEnabled: true })).toBe(false)
-    expect(shouldSaveMood({ optIn: true, signedIn: true, saveEnabled: false })).toBe(false)
-    expect(shouldSaveMood({ optIn: true, signedIn: true, saveEnabled: true })).toBe(true)
+    const t = '2026-10-26T22:00:00.000Z'
+    expect(shouldSaveMood({ optIn: false, signedIn: true, saveEnabled: true, optedInAt: t })).toBe(false)
+    expect(shouldSaveMood({ optIn: true, signedIn: false, saveEnabled: true, optedInAt: t })).toBe(false)
+    expect(shouldSaveMood({ optIn: true, signedIn: true, saveEnabled: false, optedInAt: t })).toBe(false)
+    expect(shouldSaveMood({ optIn: true, signedIn: true, saveEnabled: true, optedInAt: t })).toBe(true)
+  })
+  it('opt-in time is REQUIRED: missing, null, empty or junk blocks saving', () => {
+    for (const v of [undefined, null, '', 'not a date']) expect(shouldSaveMood({ optIn: true, signedIn: true, saveEnabled: true, optedInAt: v as string | null })).toBe(false)
   })
   it('Q8 switch points', () => { expect([readoutIndex(39), readoutIndex(40), readoutIndex(60), readoutIndex(61)]).toEqual([0, 1, 1, 2]); expect(quadrantFor(50, 50)).toBe('low_unpleasant') })
-  it('Q9 and Q11 defaults', () => { expect(ROMOOD_PLACEHOLDERS.Q9_turnOff).toBe('offer'); expect(ROMOOD_PLACEHOLDERS.Q11_skipEventWithUserId).toBe(false) })
+  it('Q9 decided offer, Q11 default', () => { expect(ROMOOD_TURN_OFF_BEHAVIOR).toBe('offer'); expect('Q9_turnOff' in ROMOOD_PLACEHOLDERS).toBe(false); expect(ROMOOD_PLACEHOLDERS.Q11_skipEventWithUserId).toBe(false) })
   it('Q6 counter shows the real flow count', async () => {
     const { romoodStepCounter } = await import('./romood'); const { STEPS } = await import('../pages/assessmentSteps')
     expect(ROMOOD_PLACEHOLDERS.Q6_stepLabel.counter).toBe('flow')
     expect(romoodStepCounter('flow', 9)).toBe('2 of 11'); expect(romoodStepCounter('3 of 4', 9)).toBe('3 of 4'); expect(romoodStepCounter(null, 9)).toBeNull()
-    mount(true); expect(q('romood-counter').textContent).toBe(`2 of ${STEPS.length + 2}`)
+    mount(true); expect(q('romood-counter').textContent).toBe(`2 of ${STEPS.length + 2}`); expect(q('romood-eyebrow').textContent).toBe('Assessment step 2')
   })
   it('save flag defaults OFF', () => {
     expect(romoodSaveEnabled({})).toBe(false)
@@ -171,6 +175,27 @@ describe('Settings > ROMood check-ins', () => {
     expect(upsert.mock.calls[0][0]).toMatchObject({ user_id: 'u1', saving_on: false })
     expect(del).not.toHaveBeenCalled(); expect(q('mood-dialog').textContent).toContain(ROMOOD_SETTINGS_COPY.offerDelete)
     await click(q('mood-dialog-no')); expect(del).not.toHaveBeenCalled()
+  })
+  it('turning saving ON shows full opt-in text, Privacy link and an UNTICKED box; records real tick time only after ticking', async () => {
+    mountS(true); await flush()
+    await click(q('mood-toggle')); await flush()
+    expect(upsert).not.toHaveBeenCalled()
+    const panel = q('mood-optin-panel')
+    expect(panel.textContent).toBe(ROMOOD_COPY.optInBefore + ROMOOD_COPY.optInLink + ROMOOD_COPY.optInAfter + ROMOOD_SETTINGS_COPY.turnOn + ROMOOD_SETTINGS_COPY.cancel)
+    expect(q('mood-settings-privacy').getAttribute('href')).toBe('/legal#privacy')
+    const box = q('mood-settings-optin') as HTMLInputElement; expect(box.checked).toBe(false)
+    expect((q('mood-optin-confirm') as HTMLButtonElement).disabled).toBe(true)
+    await click(q('mood-optin-confirm')); expect(upsert).not.toHaveBeenCalled()
+    const before = Date.now(); await click(box); const after = Date.now()
+    await click(q('mood-optin-confirm')); await flush()
+    const row = upsert.mock.calls[0][0] as { saving_on: boolean; opted_in_at: string }
+    expect(row.saving_on).toBe(true)
+    const at = Date.parse(row.opted_in_at); expect(at).toBeGreaterThanOrEqual(before); expect(at).toBeLessThanOrEqual(after)
+    expect(q('mood-saving-state').textContent).toBe(ROMOOD_SETTINGS_COPY.savingOn)
+  })
+  it('cancelling the opt-in panel records nothing', async () => {
+    mountS(true); await flush(); await click(q('mood-toggle')); await click(q('mood-optin-cancel'))
+    expect(upsert).not.toHaveBeenCalled(); expect(q('mood-optin-panel')).toBeNull()
   })
   it("Q9 'auto' deletes on turn-off", async () => {
     settingsRow = { saving_on: true, opted_in_at: '2026-10-26T22:00:00Z' }

@@ -80,8 +80,8 @@ export type MoodEntryInput = {
 }
 
 /** Pure gate for the Next button (Stacy req 1 and 2, fix 6: needs a real tick time). */
-export function shouldSaveMood(opts: { optIn: boolean; signedIn: boolean; saveEnabled: boolean; optedInAt?: string | null }): boolean {
-  const hasTick = opts.optedInAt === undefined ? true : !!opts.optedInAt
+export function shouldSaveMood(opts: { optIn: boolean; signedIn: boolean; saveEnabled: boolean; optedInAt: string | null }): boolean {
+  const hasTick = isValidTickTime(opts.optedInAt) // Stacy pass 97101d6: tick time is required
   return opts.optIn && opts.signedIn && opts.saveEnabled && hasTick
 }
 
@@ -140,6 +140,9 @@ export async function trackMoodSkipped(): Promise<void> { /* intentionally sends
 
 /** Real step position for the Q6 counter: setup (1), ROMood (2), then each measure step. */
 export const ROMOOD_FLOW_POSITION = 2
+export function romoodStepEyebrow(eyebrow: string | null): string | null {
+  return eyebrow === 'flow' ? `Assessment step ${ROMOOD_FLOW_POSITION}` : eyebrow
+}
 export function romoodStepCounter(counter: string | null, measureSteps: number): string | null {
   if (counter !== 'flow') return counter
   return `${ROMOOD_FLOW_POSITION} of ${2 + measureSteps}`
