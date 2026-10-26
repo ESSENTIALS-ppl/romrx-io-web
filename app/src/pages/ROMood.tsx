@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { ROMOOD_COPY as C } from '../lib/romoodCopy'
-import { romoodSaveEnabled, saveMoodEntry, setMoodSaving, shouldSaveMood, trackMoodSkipped } from '../lib/romood'
+import { romoodSaveEnabled, saveMoodEntry, setMoodSaving, shouldSaveMood, trackMoodSkipped, romoodStepCounter } from '../lib/romood'
+import { STEPS } from './assessmentSteps'
 import { MoodInput, type MoodValue } from '../components/MoodInput'
 
 type Props = {
@@ -18,6 +19,7 @@ export function ROMood({ saveEnabled, onDone, onBack, onNavigate }: Props) {
   const navigate = useNavigate()
   const location = useLocation()
   const { session } = useAuth()
+  const counter = romoodStepCounter(C.counter, STEPS.length)
   const [mood, setMood] = useState<MoodValue>({ energy: 50, pleasantness: 50, word: null })
   const [optIn, setOptIn] = useState(false) // Stacy req 1: unchecked by default
   const [optedInAt, setOptedInAt] = useState<string | null>(null) // real tick time (Stacy fix 6)
@@ -30,7 +32,7 @@ export function ROMood({ saveEnabled, onDone, onBack, onNavigate }: Props) {
   const canSave = shouldSaveMood({ optIn, signedIn: !!session?.user, saveEnabled: flag, optedInAt })
 
   const skip = () => {
-    // Stacy req 2: saves nothing. Event has no mood values and, by default (Q11), no user id.
+    // Stacy req 2: saves nothing. Skip event disabled (Q11, Grant Oct 26): live RLS rejects no-id rows.
     void trackMoodSkipped()
     done()
   }
@@ -47,7 +49,7 @@ export function ROMood({ saveEnabled, onDone, onBack, onNavigate }: Props) {
   return (
     <div className="min-h-screen bg-cobalt-ink py-10 px-4" data-testid="romood-screen">
       <div className="max-w-lg mx-auto bg-white rounded-2xl p-5 space-y-4">
-        {C.counter && <p className="text-sm text-slate-500" data-testid="romood-counter">{C.counter}</p>}
+        {counter && <p className="text-sm text-slate-500" data-testid="romood-counter">{counter}</p>}
         {C.eyebrow && <p className="text-xs font-semibold text-slate-600">{C.eyebrow}</p>}
         <h1 className="text-2xl font-bold text-cobalt-ink">{C.heading}</h1>
         {C.nutritionLine && <p className="text-sm" data-testid="romood-nutrition">{C.nutritionLine}</p>}

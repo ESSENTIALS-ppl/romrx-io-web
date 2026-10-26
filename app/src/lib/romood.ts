@@ -131,20 +131,18 @@ export async function deleteAllMoodEntries(userId: string): Promise<{ ok: boolea
 }
 
 /**
- * Q11 / Stacy fix 7: the skip event. Default carries no user id, no anon id and no session id,
- * so it only counts that a skip happened. No mood values ever.
+ * Q11 skip event: DISABLED (Grant Oct 26). Live product_events RLS (read-only check, project cqzvqzwwevnflinxgnpp):
+ * the authenticated insert policy requires user_id = auth.uid(), so a no-id row from a signed-in user is rejected.
+ * Rule: if no-id rows are rejected, send no skip event at all and never add a user id. No-op on purpose.
  */
-export async function trackMoodSkipped(withUserId = ROMOOD_PLACEHOLDERS.Q11_skipEventWithUserId): Promise<void> {
-  try {
-    let userId: string | null = null
-    if (withUserId) {
-      const { data } = await (await db()).auth.getSession()
-      userId = data.session?.user?.id ?? null
-    }
-    await (await db()).from('product_events').insert({
-      user_id: userId, anon_id: null, session_id: null, event: 'romood_skipped', props: {}, sport: null, source: 'web', path: null,
-    })
-  } catch { /* analytics must never break the app */ }
+export const ROMOOD_SKIP_EVENT_ENABLED = false
+export async function trackMoodSkipped(): Promise<void> { /* intentionally sends nothing */ }
+
+/** Real step position for the Q6 counter: setup (1), ROMood (2), then each measure step. */
+export const ROMOOD_FLOW_POSITION = 2
+export function romoodStepCounter(counter: string | null, measureSteps: number): string | null {
+  if (counter !== 'flow') return counter
+  return `${ROMOOD_FLOW_POSITION} of ${2 + measureSteps}`
 }
 
 export type MoodAverage = { energy: number; pleasantness: number; count: number }

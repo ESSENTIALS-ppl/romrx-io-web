@@ -72,6 +72,12 @@ describe('ROMood logic', () => {
   })
   it('Q8 switch points', () => { expect([readoutIndex(39), readoutIndex(40), readoutIndex(60), readoutIndex(61)]).toEqual([0, 1, 1, 2]); expect(quadrantFor(50, 50)).toBe('low_unpleasant') })
   it('Q9 and Q11 defaults', () => { expect(ROMOOD_PLACEHOLDERS.Q9_turnOff).toBe('offer'); expect(ROMOOD_PLACEHOLDERS.Q11_skipEventWithUserId).toBe(false) })
+  it('Q6 counter shows the real flow count', async () => {
+    const { romoodStepCounter } = await import('./romood'); const { STEPS } = await import('../pages/assessmentSteps')
+    expect(ROMOOD_PLACEHOLDERS.Q6_stepLabel.counter).toBe('flow')
+    expect(romoodStepCounter('flow', 9)).toBe('2 of 11'); expect(romoodStepCounter('3 of 4', 9)).toBe('3 of 4'); expect(romoodStepCounter(null, 9)).toBeNull()
+    mount(true); expect(q('romood-counter').textContent).toBe(`2 of ${STEPS.length + 2}`)
+  })
   it('save flag defaults OFF', () => {
     expect(romoodSaveEnabled({})).toBe(false)
     expect(romoodSaveEnabled({ VITE_ROMOOD_SAVE: 'on' })).toBe(true)
@@ -86,8 +92,7 @@ describe('ROMood screen', () => {
     const nav = mount(true); await click(q('romood-optin')); await click(q('romood-skip'))
     expect(insert).not.toHaveBeenCalled(); expect(upsert).not.toHaveBeenCalled(); expect(nav).toHaveBeenCalled()
     await act(async () => { await Promise.resolve() })
-    expect(eventInsert).toHaveBeenCalledTimes(1)
-    expect(eventInsert.mock.calls[0][0]).toMatchObject({ event: 'romood_skipped', user_id: null, anon_id: null, session_id: null, props: {} })
+    expect(eventInsert).not.toHaveBeenCalled() // skip event disabled: live RLS rejects no-id rows (Grant Oct 26)
   })
   it('Next with box ticked but save flag OFF saves nothing', async () => { mount(false); await click(q('romood-optin')); await click(q('romood-next')); expect(insert).not.toHaveBeenCalled() })
   it('Next with box ticked, signed in, flag ON saves one entry', async () => {

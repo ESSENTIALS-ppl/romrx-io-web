@@ -17,8 +17,9 @@ export const ROMOOD_PLACEHOLDERS = {
   Q4_buttons: { back: 'Back', skip: 'Skip mood check', next: 'Next' },
   /** Q5 instruction line. PLACEHOLDER for input B (dial), Jim Oct 26. Spec rev 5 bubbles line was 'Tap a bubble or move the sliders.' */
   Q5_instruction: 'Drag the needle for energy. Slide the bar for how you feel. Tap the word to change it.',
-  /** Q6 step label (spec rev 5 screen 3: counter plus eyebrow). null hides either one. */
-  Q6_stepLabel: { counter: '3 of 4' as string | null, eyebrow: 'Assessment step 1' as string | null },
+  /** Q6 step label. 'flow' = real position in the actual flow (Grant Oct 26): setup, ROMood, then each
+   * measure step, so ROMood shows "2 of N". A fixed string overrides; null hides either one. */
+  Q6_stepLabel: { counter: 'flow' as 'flow' | string | null, eyebrow: 'Assessment step 1' as string | null },
   /** Q8 slider switch points, 0 to 100 scale. Readout switches below `low` and above `high`; `mid` splits quadrants (mid counts as the lower side). */
   Q8_sliderSwitch: { low: 40, high: 60, mid: 50 },
   /** Q9 what happens when the user turns mood saving off in Settings. 'offer' = ask if they want to delete (build default). 'auto' = delete automatically. */
