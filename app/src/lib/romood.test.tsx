@@ -26,7 +26,7 @@ let mockSession: { user: { id: string } } | null = { user: { id: 'u1' } }
 vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ session: mockSession, loading: false }) }))
 
 import { ROMood } from '../pages/ROMood'
-import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY } from './romoodCopy'
+import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY, RETENTION_LINES } from './romoodCopy'
 import { MoodSettings } from '../components/MoodSettings'
 import { energyFromPoint, needlePoint } from '../components/DialMoodInput'
 import { AssessmentPhases } from '../pages/AssessmentPhases'
@@ -50,8 +50,8 @@ describe('ROMood copy (spec rev 5)', () => {
     expect(ROMOOD_COPY.encouragement).toBe("No matter where you're starting today, we're in this together.")
     expect(ROMOOD_COPY.optInBefore + ROMOOD_COPY.optInLink + ROMOOD_COPY.optInAfter).toBe('Save my mood check-ins so ROMRx can show me patterns over time, including how I feel on days I do or miss my Dailee protocol. I can turn this off or delete them anytime. See the Privacy Policy.')
     expect(FEELING_WORDS).toHaveLength(16)
-    expect(FEELING_WORDS.find(w => w.word === 'Upset')?.description).toBe('Heated, and hard to settle.')
-    expect(FEELING_WORDS.find(w => w.word === 'Anxious')?.description).toBe('Wired, and on edge.')
+    expect(FEELING_WORDS.find(w => w.word === 'Riled')?.description).toBe('Heated, and hard to settle.')
+    expect(FEELING_WORDS.find(w => w.word === 'Wired')?.description).toBe('Buzzing, and on edge.')
   })
   it('no em dashes, no banned words, no diagnose/predict/screen claims', () => {
     const all = JSON.stringify(ROMOOD_COPY) + JSON.stringify(FEELING_WORDS) + JSON.stringify(ROMOOD_SETTINGS_COPY) + JSON.stringify(ROMOOD_PLACEHOLDERS)
@@ -226,5 +226,25 @@ describe('Retention and Dailee link', () => {
   it('Dailee link OFF by default even with saving on', () => {
     expect(romoodDaileeLinkEnabled({ saveEnabled: true })).toBe(false)
     expect(romoodDaileeLinkEnabled({ saveEnabled: false, daileeFlag: true })).toBe(false)
+  })
+})
+
+describe('ROMood plain words (no clinical terms)', () => {
+  const BANNED = /\b(depress\w*|anxious|anxiety|panic\w*|stress\w*|burn-?out|mental health|well-?being|mood disorder|disorder\w*|symptom\w*|sad|gloomy|upset|psycholog\w*|clinical|therap\w*|diagnos\w*|condition\w*)\b/i
+  const collect = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(collect) : []
+  it('no banned term in any ROMood copy, word, description or readout', () => {
+    const all = [...collect(ROMOOD_COPY), ...collect(ROMOOD_PLACEHOLDERS), ...collect(ROMOOD_SETTINGS_COPY), ...collect(RETENTION_LINES), ...FEELING_WORDS.flatMap(w => [w.word, w.description])]
+    const hits = all.filter(s => BANNED.test(s)); expect(hits).toEqual([])
+    expect(FEELING_WORDS).toHaveLength(16)
+  })
+  it('no banned term in rendered screen or screen-reader labels', () => {
+    mount(true)
+    const aria = [...host.querySelectorAll('[aria-label],[aria-valuetext]')].map(e => (e.getAttribute('aria-label') ?? '') + ' ' + (e.getAttribute('aria-valuetext') ?? ''))
+    expect([host.textContent ?? '', ...aria].filter(s => BANNED.test(s))).toEqual([])
+  })
+  it('DB word check list matches the app words', async () => {
+    const fs = await import('node:fs'); const sql = fs.readFileSync(__dirname + '/../../../supabase/migrations/20261026220000_romood_mood_entries.sql', 'utf8')
+    for (const w of FEELING_WORDS) expect(sql).toContain(`'${w.word}'`)
+    expect(BANNED.test(sql.replace(/--.*$/gm, ''))).toBe(false)
   })
 })

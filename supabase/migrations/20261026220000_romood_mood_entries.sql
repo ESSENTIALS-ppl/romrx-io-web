@@ -17,8 +17,8 @@ create table if not exists public.mood_entries (
   energy        smallint not null check (energy between 0 and 100),
   pleasantness  smallint not null check (pleasantness between 0 and 100),
   word          text check (word is null or word in (
-                  'Upset','Anxious','Angry','Tense','Excited','Elated','Happy','Lively',
-                  'Sad','Gloomy','Tired','Bored','Calm','Content','Relaxed','Mellow')),
+                  'Riled','Wired','Angry','Tense','Excited','Upbeat','Happy','Lively',
+                  'Low','Flat','Drained','Bored','Calm','Content','Relaxed','Mellow')),
   quadrant      text not null check (quadrant in ('high_unpleasant','high_pleasant','low_unpleasant','low_pleasant')),
   context       text not null default 'onboarding' check (context in ('onboarding')),
   opted_in      boolean not null check (opted_in = true),
