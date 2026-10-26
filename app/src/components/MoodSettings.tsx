@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from 'react'
 import { SectionCard } from './SectionCard'
-import { ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY as S } from '../lib/romoodCopy'
+import { RETENTION_LINES, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY as S } from '../lib/romoodCopy'
 import { deleteAllMoodEntries, getMoodSaving, romoodSaveEnabled, setMoodSaving } from '../lib/romood'
 
 type Props = { userId?: string | null; saveEnabled?: boolean; turnOffBehavior?: 'offer' | 'auto' }
@@ -50,7 +50,7 @@ export function MoodSettings({ userId, saveEnabled, turnOffBehavior = ROMOOD_PLA
     <SectionCard title={S.title}>
       <div className="space-y-3 text-sm" data-testid="mood-settings">
         <p data-testid="mood-saving-state">{savingOn ? S.savingOn : S.savingOff}</p>
-        {ROMOOD_PLACEHOLDERS.retentionLine && <p className="text-xs text-slate-500">{ROMOOD_PLACEHOLDERS.retentionLine}</p>}
+        <p className="text-xs text-slate-500" data-testid="mood-retention">{RETENTION_LINES[ROMOOD_PLACEHOLDERS.retention]}</p>
         <div className="flex flex-wrap gap-2">
           <button type="button" className="btn-secondary" disabled={busy} onClick={toggle} data-testid="mood-toggle">{savingOn ? S.turnOff : S.turnOn}</button>
           <button type="button" className="btn-secondary" disabled={busy} onClick={() => setDialog('confirmDelete')} data-testid="mood-delete">{S.deleteButton}</button>

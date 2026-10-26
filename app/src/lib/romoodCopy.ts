@@ -15,8 +15,8 @@ export const ROMOOD_PLACEHOLDERS = {
   Q3_nutritionLine: 'ROMRx also covers nutrition and hydration.' as string | null,
   /** Q4 button labels (spec rev 5 screen 3, PROPOSED DRAFT). */
   Q4_buttons: { back: 'Back', skip: 'Skip mood check', next: 'Next' },
-  /** Q5 instruction line (spec rev 5 screen 3, PROPOSED DRAFT). */
-  Q5_instruction: 'Tap a bubble or move the sliders.',
+  /** Q5 instruction line. PLACEHOLDER for input B (dial), Jim Oct 26. Spec rev 5 bubbles line was 'Tap a bubble or move the sliders.' */
+  Q5_instruction: 'Drag the needle for energy. Slide the bar for how you feel. Tap the word to change it.',
   /** Q6 step label (spec rev 5 screen 3: counter plus eyebrow). null hides either one. */
   Q6_stepLabel: { counter: '3 of 4' as string | null, eyebrow: 'Assessment step 1' as string | null },
   /** Q8 slider switch points, 0 to 100 scale. Readout switches below `low` and above `high`; `mid` splits quadrants (mid counts as the lower side). */
@@ -26,10 +26,26 @@ export const ROMOOD_PLACEHOLDERS = {
   /** Q11 is the "skipped" event tied to the account? Default false: no user id, no anon id, no session id. */
   Q11_skipEventWithUserId: false,
   /** Mood input visual (Jim is weighing alternatives to bubbles). Key into MOOD_INPUTS in components/moodInput. */
-  inputVisual: 'bubbles' as 'bubbles',
-  /** Retention wording: STACY drafting (due about 7:30 PM ET Oct 26). Not shown until filled. */
-  retentionLine: null as string | null,
+  /** Mood input visual. Jim picked option B, the ROMeter dial (Oct 26). 'bubbles' kept as a fallback. */
+  inputVisual: 'dial' as 'dial' | 'bubbles',
+  /** Dial readout: when the user only drags, show the nearest feeling word as a suggestion. It is NOT stored
+   * unless the user taps it and picks a word (stored word = null otherwise). Jim/Stacy to confirm. */
+  dialSuggestWord: true,
+  /** RETENTION (Jim's call, Stacy options A/B/C, Oct 26 6:40 PM ET). Default A, Stacy's recommendation.
+   * User delete ALWAYS overrides retention in every option. */
+  retention: 'until_delete' as RetentionMode,
+  /** Mood-to-Dailee day linking. OFF until the new opt-in text AND the /legal 7A text are live. */
+  daileeLinkEnabled: false,
 } as const
+
+export type RetentionMode = 'until_delete' | '12_months' | 'rolling_12_weeks'
+
+/** Retention lines per option (Stacy draft, stacy-romood-retention-20261026.md). Shown in Settings. */
+export const RETENTION_LINES: Record<RetentionMode, string> = {
+  until_delete: 'We keep your check-ins until you delete them or your account. You can delete them at any time.',
+  '12_months': 'We keep each check-in for 12 months, then delete it. You can delete it sooner at any time.',
+  rolling_12_weeks: 'We keep each check-in for 12 weeks, then delete it. You can delete it sooner at any time.',
+}
 
 const P = ROMOOD_PLACEHOLDERS
 
@@ -45,7 +61,8 @@ export const ROMOOD_COPY = {
   pleasantness: { label: 'Pleasantness', low: 'Unpleasant', high: 'Pleasant', readout: ['Leaning unpleasant', 'In the middle', 'Leaning pleasant'] },
   gridLabel: 'Feeling words',
   encouragement: "No matter where you're starting today, we're in this together.",
-  optInBefore: 'Save my mood check-ins so ROMRx can show me patterns over time. See the ',
+  /** PLACEHOLDER: Stacy's proposed opt-in text (Oct 26, adds the Dailee purpose). Needs a spec revision; copy owner Grant. */
+  optInBefore: 'Save my mood check-ins so ROMRx can show me patterns over time, including how I feel on days I do or miss my Dailee protocol. I can turn this off or delete them anytime. See the ',
   optInLink: 'Privacy Policy',
   optInAfter: '.',
   back: P.Q4_buttons.back,

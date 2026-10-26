@@ -5,6 +5,7 @@
  */
 import { ROMOOD_COPY as C, FEELING_WORDS, QUADRANT_NAMES, ROMOOD_PLACEHOLDERS, type FeelingWord, type Quadrant } from '../lib/romoodCopy'
 import { positionFor, quadrantFor, readoutIndex } from '../lib/romood'
+import { DialMoodInput } from './DialMoodInput'
 
 export type MoodValue = { energy: number; pleasantness: number; word: FeelingWord | null }
 export type MoodInputProps = { value: MoodValue; onChange: (v: MoodValue) => void }
@@ -42,7 +43,7 @@ export function BubbleMoodInput({ value, onChange }: MoodInputProps) {
   )
 }
 
-export const MOOD_INPUTS = { bubbles: BubbleMoodInput } as const
+export const MOOD_INPUTS = { dial: DialMoodInput, bubbles: BubbleMoodInput } as const
 
 export function MoodInput(props: MoodInputProps) {
   const Visual = MOOD_INPUTS[ROMOOD_PLACEHOLDERS.inputVisual]

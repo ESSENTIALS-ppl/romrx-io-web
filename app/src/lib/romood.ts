@@ -10,7 +10,31 @@
  */
 // Supabase is loaded lazily so screens that embed ROMood do not need a client at import time.
 const db = async () => (await import('./supabase')).supabase
-import { FEELING_WORDS, ROMOOD_PLACEHOLDERS, type FeelingWord, type Quadrant } from './romoodCopy'
+import { FEELING_WORDS, ROMOOD_PLACEHOLDERS, type FeelingWord, type Quadrant, type RetentionMode } from './romoodCopy'
+
+/** Mood-to-Dailee linking gate. OFF in code until the new opt-in text and /legal 7A text are live. */
+export function romoodDaileeLinkEnabled(opts: { saveEnabled: boolean; daileeFlag?: boolean }): boolean {
+  return opts.saveEnabled && (opts.daileeFlag ?? ROMOOD_PLACEHOLDERS.daileeLinkEnabled)
+}
+
+/** Cut-off date for the chosen retention mode; null means keep until the user deletes. */
+export function retentionCutoff(mode: RetentionMode, now: Date = new Date()): Date | null {
+  if (mode === 'until_delete') return null
+  const d = new Date(now)
+  if (mode === '12_months') d.setUTCMonth(d.getUTCMonth() - 12)
+  else d.setUTCDate(d.getUTCDate() - 84)
+  return d
+}
+
+/** Nearest feeling word to a dial/bar position (suggestion only). */
+export function nearestWord(energy: number, pleasantness: number): FeelingWord {
+  let best = FEELING_WORDS[0]; let bd = Infinity
+  for (const w of FEELING_WORDS) {
+    const p = positionFor(w); const d = (p.energy - energy) ** 2 + (p.pleasantness - pleasantness) ** 2
+    if (d < bd) { bd = d; best = w }
+  }
+  return best
+}
 
 export const ROMOOD_CONTEXT_ONBOARDING = 'onboarding'
 const SW = ROMOOD_PLACEHOLDERS.Q8_sliderSwitch

@@ -29,3 +29,8 @@ Both tables cascade from `auth.users` (on delete cascade). Confirm 0 rows in eac
 - Skip events (`product_events.event = 'romood_skipped'`) carry no user id by default (Q11), so they are not personal data for a request.
 - Mood is consumer health data under Washington MHMDA (RCW 19.373): access and deletion rights apply (Stacy pass).
 - Retention: Jim locked "at least two assessment cycles". Stacy wording pending; no auto-delete job exists.
+
+## Retention (Stacy ruling Oct 26, Jim's call)
+- Config: `ROMOOD_PLACEHOLDERS.retention` (app) and `public.romood_purge_expired(mode)` (migration 20261026233000, not applied, not scheduled).
+- A `until_delete` (default, Stacy recommended), B `12_months`, C `rolling_12_weeks`. User delete always overrides.
+- Mood-to-Dailee linking is OFF (`daileeLinkEnabled: false`) until the new opt-in text and /legal 7A text are live.

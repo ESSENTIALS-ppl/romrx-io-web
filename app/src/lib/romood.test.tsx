@@ -28,8 +28,9 @@ vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ session: mockSession, loa
 import { ROMood } from '../pages/ROMood'
 import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY } from './romoodCopy'
 import { MoodSettings } from '../components/MoodSettings'
+import { energyFromPoint, needlePoint } from '../components/DialMoodInput'
 import { AssessmentPhases } from '../pages/AssessmentPhases'
-import { quadrantFor, positionFor, shouldSaveMood, romoodSaveEnabled, saveMoodEntry, readoutIndex } from './romood'
+import { quadrantFor, positionFor, shouldSaveMood, romoodSaveEnabled, saveMoodEntry, readoutIndex, retentionCutoff, romoodDaileeLinkEnabled } from './romood'
 import { META_FORBIDDEN_KEYS } from './metaAttribution'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -47,7 +48,7 @@ const click = async (el: HTMLElement) => { await act(async () => { el.click() })
 describe('ROMood copy (spec rev 5)', () => {
   it('exact lines', () => {
     expect(ROMOOD_COPY.encouragement).toBe("No matter where you're starting today, we're in this together.")
-    expect(ROMOOD_COPY.optInBefore + ROMOOD_COPY.optInLink + ROMOOD_COPY.optInAfter).toBe('Save my mood check-ins so ROMRx can show me patterns over time. See the Privacy Policy.')
+    expect(ROMOOD_COPY.optInBefore + ROMOOD_COPY.optInLink + ROMOOD_COPY.optInAfter).toBe('Save my mood check-ins so ROMRx can show me patterns over time, including how I feel on days I do or miss my Dailee protocol. I can turn this off or delete them anytime. See the Privacy Policy.')
     expect(FEELING_WORDS).toHaveLength(16)
     expect(FEELING_WORDS.find(w => w.word === 'Upset')?.description).toBe('Heated, and hard to settle.')
     expect(FEELING_WORDS.find(w => w.word === 'Anxious')?.description).toBe('Wired, and on edge.')
@@ -91,8 +92,9 @@ describe('ROMood screen', () => {
   it('Next with box ticked but save flag OFF saves nothing', async () => { mount(false); await click(q('romood-optin')); await click(q('romood-next')); expect(insert).not.toHaveBeenCalled() })
   it('Next with box ticked, signed in, flag ON saves one entry', async () => {
     mount(true)
-    const calm = [...host.querySelectorAll('button')].find(b => b.textContent === 'Calm')!
-    await click(calm); expect(q('romood-description').textContent).toBe('Steady and unruffled.')
+    await click(q('mood-word')); expect(q('mood-picker')).toBeTruthy()
+    const calm = [...q('mood-picker').querySelectorAll('button')].find(b => b.textContent === 'Calm')!
+    await click(calm); expect(q('romood-description').textContent).toContain('Steady and unruffled.')
     await click(q('romood-optin')); await click(q('romood-next'))
     expect(insert).toHaveBeenCalledTimes(1)
     expect(insert.mock.calls[0][0]).toMatchObject({ user_id: 'u1', word: 'Calm', quadrant: 'low_pleasant', context: 'onboarding', opted_in: true })
@@ -114,7 +116,7 @@ describe('ROMood screen', () => {
     mount(true)
     expect(q('romood-question').textContent).toBe('How are you feeling right now?')
     expect(q('romood-nutrition').textContent).toBe(ROMOOD_PLACEHOLDERS.Q3_nutritionLine)
-    expect(q('mood-input').getAttribute('data-visual')).toBe('bubbles')
+    expect(q('mood-input').getAttribute('data-visual')).toBe('dial')
   })
   it('signed out: never saves', async () => { mockSession = null; mount(true); await click(q('romood-optin')); await click(q('romood-next')); expect(insert).not.toHaveBeenCalled() })
 })
@@ -180,5 +182,49 @@ describe('mood_settings migration', () => {
     expect(sql).toMatch(/s\.saving_on = true/)
     expect(sql).toMatch(/enable row level security/)
     expect(sql).toMatch(/on delete cascade/)
+  })
+})
+
+describe('Input B: ROMeter dial', () => {
+  it('dial is a keyboard slider with screen-reader values; bar has values too', async () => {
+    mount(true)
+    const dial = q('mood-dial')
+    expect(dial.getAttribute('role')).toBe('slider'); expect(dial.getAttribute('tabindex')).toBe('0')
+    expect(dial.getAttribute('aria-valuenow')).toBe('50')
+    await act(async () => { dial.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true })) })
+    expect(dial.getAttribute('aria-valuenow')).toBe('100'); expect(dial.getAttribute('aria-valuetext')).toBe('Energy: Leaning high')
+    await act(async () => { dial.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true })) })
+    expect(dial.getAttribute('aria-valuenow')).toBe('90')
+    expect(q('mood-bar').getAttribute('aria-valuetext')).toBe('Pleasantness: In the middle')
+  })
+  it('caption and word sit outside the SVG, so the needle cannot cover them', () => {
+    mount(true)
+    expect(q('mood-dial').contains(q('mood-energy-caption'))).toBe(false)
+    expect(q('mood-dial').contains(q('mood-word'))).toBe(false)
+  })
+  it('dragged-only check-in stores word null, energy/pleasantness 0-100', async () => {
+    mount(true)
+    await act(async () => { q('mood-dial').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true })) })
+    await click(q('romood-optin')); await click(q('romood-next'))
+    expect(insert.mock.calls[0][0]).toMatchObject({ energy: 0, pleasantness: 50, word: null })
+  })
+  it('needle geometry and pointer mapping', () => {
+    expect(energyFromPoint(30, 150)).toBe(0); expect(energyFromPoint(270, 150)).toBe(100); expect(energyFromPoint(150, 30)).toBe(50)
+    expect(needlePoint(50).x).toBeCloseTo(150)
+  })
+  it('Q5 placeholder is the dial line', () => { expect(ROMOOD_PLACEHOLDERS.Q5_instruction).toBe('Drag the needle for energy. Slide the bar for how you feel. Tap the word to change it.') })
+})
+
+describe('Retention and Dailee link', () => {
+  it('retention default until_delete; cutoffs for other modes', () => {
+    expect(ROMOOD_PLACEHOLDERS.retention).toBe('until_delete')
+    const now = new Date('2026-10-26T00:00:00Z')
+    expect(retentionCutoff('until_delete', now)).toBeNull()
+    expect(retentionCutoff('12_months', now)?.toISOString()).toBe('2025-10-26T00:00:00.000Z')
+    expect(retentionCutoff('rolling_12_weeks', now)?.toISOString()).toBe('2026-08-03T00:00:00.000Z')
+  })
+  it('Dailee link OFF by default even with saving on', () => {
+    expect(romoodDaileeLinkEnabled({ saveEnabled: true })).toBe(false)
+    expect(romoodDaileeLinkEnabled({ saveEnabled: false, daileeFlag: true })).toBe(false)
   })
 })
