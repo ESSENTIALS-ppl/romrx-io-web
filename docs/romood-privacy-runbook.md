@@ -41,3 +41,7 @@ Both tables cascade from `auth.users` (on delete cascade). Confirm 0 rows in eac
 - Config: `ROMOOD_PLACEHOLDERS.retention` (app) and `public.romood_purge_expired(mode)` (migration 20261026233000, not applied, not scheduled).
 - A `until_delete` (default, Stacy recommended), B `12_months`, C `rolling_12_weeks`. User delete always overrides.
 - Mood-to-Dailee linking is OFF (`daileeLinkEnabled: false`) until the new opt-in text and /legal 7A text are live.
+
+## After any restore
+
+After any database restore, re-run every mood check-in and account deletion made since that backup was taken, then confirm with Reid that those rows are gone. (Stacy rule, Oct 26, 2026.)
