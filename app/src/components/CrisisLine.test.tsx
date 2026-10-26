@@ -67,3 +67,19 @@ describe('legal.html crisis lines', () => {
     expect(html.indexOf('ROMRx is not a crisis service.')).toBeLessThan(html.indexOf('3A. Training risk'))
   })
 })
+
+import { CRISIS_LINE_PARTS, CRISIS_HELP_US_PARTS, CRISIS_HELP_UK_PARTS, CRISIS_HELP_ELSE_PARTS } from '../lib/crisisCopy'
+describe('single source', () => {
+  it('link parts join to the full strings', () => {
+    expect(CRISIS_LINE_PARTS.join('')).toBe(CRISIS_SCREEN_LINE)
+    expect([CRISIS_HELP_US_PARTS, CRISIS_HELP_UK_PARTS, CRISIS_HELP_ELSE_PARTS].map(p => p.join(''))).toEqual(CRISIS_HELP_ITEMS)
+  })
+  it('CrisisLine.tsx holds no copy of its own', () => {
+    const src = readFileSync(resolve(__dirname, 'CrisisLine.tsx'), 'utf8')
+    for (const w of ['Having a really hard time', 'Samaritans', 'not a crisis service', 'emergency number', 'Need to talk']) expect(src).not.toContain(w)
+  })
+  it('legal: backup line sits right before the 7A crisis line', () => {
+    const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
+    expect(html).toContain('<p>When you delete your check-ins or your account, we remove them from our live systems right away. Copies may stay in our encrypted backups for up to 30 days, then they are deleted automatically.</p>\n        <p>ROMRx does not monitor your check-ins and cannot respond to emergencies.')
+  })
+})

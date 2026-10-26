@@ -60,8 +60,8 @@ export const ROMOOD_COPY = {
   pleasantness: { label: 'Pleasantness', low: 'Unpleasant', high: 'Pleasant', readout: ['Leaning unpleasant', 'In the middle', 'Leaning pleasant'] },
   gridLabel: 'Feeling words',
   encouragement: "No matter where you're starting today, we're in this together.",
-  /** PLACEHOLDER: Stacy's proposed opt-in text (Oct 26, adds the Dailee purpose). Needs a spec revision; copy owner Grant. */
-  optInBefore: 'Save my mood check-ins so ROMRx can show me patterns over time, including how I feel on days I do or miss my Dailee protocol. I can turn this off or delete them anytime. See the ',
+  /** Opt-in text (Stacy pass 5b007ed, Oct 26). Single source for the ROMood screen and the Settings re-enable flow. No Dailee purpose until linking exists and gets its own consent. */
+  optInBefore: 'Save my mood check-ins so ROMRx can show me how my mood changes over time. I can turn this off or delete them anytime. See the ',
   optInLink: 'Privacy Policy',
   optInAfter: '.',
   back: P.Q4_buttons.back,
@@ -79,7 +79,7 @@ export const ROMOOD_SETTINGS_COPY = {
   turnOff: 'Turn off saving',
   turnOn: 'Turn on saving',
   deleteButton: 'Delete my mood check-ins',
-  deleteConfirm: 'Delete all your saved mood check-ins? This cannot be undone.',
+  deleteConfirm: 'Delete all your saved mood check-ins? This cannot be undone. Deleted check-ins may stay in our encrypted backups for up to 30 days, then they are removed automatically. We do not use them.',
   offerDelete: 'Saving is off. Do you also want to delete the mood check-ins you already saved?',
   yesDelete: 'Yes, delete them',
   keep: 'Keep them',

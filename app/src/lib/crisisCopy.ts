@@ -10,3 +10,9 @@ export const CRISIS_HELP_ITEMS = [
   'Anywhere else: find a helpline at findahelpline.com.',
 ]
 export const CRISIS_HELP_DANGER = 'If you are in danger, call 911 (US), 999 (UK), 112 (Ireland and the EU), or your local emergency number.'
+
+// Link splits. Each joins back to the full string above (tests check this), so wording lives in one place.
+export const CRISIS_LINE_PARTS = ['Having a really hard time? In the US, you can ', 'call', ' or ', 'text', ' ', '988', ' anytime, free and confidential. In the UK or Ireland, call Samaritans free on ', '116 123', '. Elsewhere, ', 'find a helpline', '. If you are in danger, call your local emergency number.'] as const
+export const CRISIS_HELP_US_PARTS = ['US: ', 'call', ' or ', 'text 988', ', or chat at ', '988lifeline.org', '. Veterans, call 988 and press 1, or text 838255. En español, llame al 988 y oprima 2, o envíe AYUDA al 988.'] as const
+export const CRISIS_HELP_UK_PARTS = ['UK and Ireland: call Samaritans free on ', '116 123', ', any time.'] as const
+export const CRISIS_HELP_ELSE_PARTS = ['Anywhere else: find a helpline at ', 'findahelpline.com', '.'] as const
