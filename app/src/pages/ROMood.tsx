@@ -1,93 +1,60 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { ROMOOD_COPY as C, FEELING_WORDS, QUADRANT_NAMES, type FeelingWord, type Quadrant } from '../lib/romoodCopy'
-import { positionFor, quadrantFor, readoutIndex, romoodSaveEnabled, saveMoodEntry, shouldSaveMood } from '../lib/romood'
-import { track } from '../lib/track'
-
-const GRID: Quadrant[][] = [
-  ['high_unpleasant', 'high_pleasant'],
-  ['low_unpleasant', 'low_pleasant'],
-]
+import { ROMOOD_COPY as C } from '../lib/romoodCopy'
+import { romoodSaveEnabled, saveMoodEntry, setMoodSaving, shouldSaveMood, trackMoodSkipped } from '../lib/romood'
+import { MoodInput, type MoodValue } from '../components/MoodInput'
 
 type Props = {
   /** Injected for tests; defaults to the env flag (OFF until the /legal mood line is live). */
   saveEnabled?: boolean
+  /** Embedded in the assessment flow: called after Skip or Next. Standalone route navigates instead. */
+  onDone?: () => void
+  onBack?: () => void
   onNavigate?: (to: string) => void
 }
 
-export function ROMood({ saveEnabled, onNavigate }: Props) {
+export function ROMood({ saveEnabled, onDone, onBack, onNavigate }: Props) {
   const navigate = useNavigate()
   const location = useLocation()
   const { session } = useAuth()
-  const [energy, setEnergy] = useState(50)
-  const [pleasantness, setPleasantness] = useState(50)
-  const [word, setWord] = useState<FeelingWord | null>(null)
+  const [mood, setMood] = useState<MoodValue>({ energy: 50, pleasantness: 50, word: null })
   const [optIn, setOptIn] = useState(false) // Stacy req 1: unchecked by default
-  const [optedInAt, setOptedInAt] = useState<string | null>(null)
+  const [optedInAt, setOptedInAt] = useState<string | null>(null) // real tick time (Stacy fix 6)
   const [busy, setBusy] = useState(false)
 
-  const go = (to: string) => (onNavigate ? onNavigate(to) : navigate(to))
-  const back = () => (onNavigate ? onNavigate('back') : navigate(-1))
   const nextUrl = `/onboarding/assessment${location.search}`
-  const activeQuadrant = quadrantFor(energy, pleasantness)
-  const canSave = shouldSaveMood({ optIn, signedIn: !!session?.user, saveEnabled: saveEnabled ?? romoodSaveEnabled() })
-
-  const pick = (w: FeelingWord) => {
-    const p = positionFor(w)
-    setWord(w); setEnergy(p.energy); setPleasantness(p.pleasantness)
-  }
-  const slide = (which: 'e' | 'p', v: number) => {
-    if (which === 'e') setEnergy(v); else setPleasantness(v)
-    setWord(null)
-  }
+  const done = () => (onDone ? onDone() : onNavigate ? onNavigate(nextUrl) : navigate(nextUrl))
+  const back = () => (onBack ? onBack() : onNavigate ? onNavigate('back') : navigate(-1))
+  const flag = saveEnabled ?? romoodSaveEnabled()
+  const canSave = shouldSaveMood({ optIn, signedIn: !!session?.user, saveEnabled: flag, optedInAt })
 
   const skip = () => {
-    // Stacy req 2: saves nothing. Non-personal event only (no mood values, no word).
-    track('romood_skipped')
-    go(nextUrl)
+    // Stacy req 2: saves nothing. Event has no mood values and, by default (Q11), no user id.
+    void trackMoodSkipped()
+    done()
   }
   const next = async () => {
-    if (canSave && session?.user) {
+    if (canSave && session?.user && optedInAt) {
       setBusy(true)
-      await saveMoodEntry(session.user.id, { energy, pleasantness, word: word?.word ?? null, optedInAt: optedInAt ?? new Date().toISOString() })
+      const s = await setMoodSaving(session.user.id, true, optedInAt)
+      if (s.ok) await saveMoodEntry(session.user.id, { energy: mood.energy, pleasantness: mood.pleasantness, word: mood.word?.word ?? null, optedInAt })
       setBusy(false)
     }
-    go(nextUrl)
+    done()
   }
 
   return (
-    <div className="min-h-screen bg-cobalt-ink py-10 px-4">
+    <div className="min-h-screen bg-cobalt-ink py-10 px-4" data-testid="romood-screen">
       <div className="max-w-lg mx-auto bg-white rounded-2xl p-5 space-y-4">
-        <p className="text-sm text-slate-500" data-testid="romood-counter">{C.counter}</p>
-        <p className="text-xs font-semibold text-slate-600">{C.eyebrow}</p>
+        {C.counter && <p className="text-sm text-slate-500" data-testid="romood-counter">{C.counter}</p>}
+        {C.eyebrow && <p className="text-xs font-semibold text-slate-600">{C.eyebrow}</p>}
         <h1 className="text-2xl font-bold text-cobalt-ink">{C.heading}</h1>
-        <p>{C.question}</p>
+        {C.nutritionLine && <p className="text-sm" data-testid="romood-nutrition">{C.nutritionLine}</p>}
+        <p data-testid="romood-question">{C.question}</p>
         <p className="text-sm font-semibold">{C.instruction}</p>
 
-        {([['e', C.energy, energy], ['p', C.pleasantness, pleasantness]] as const).map(([k, s, v]) => (
-          <div key={k}>
-            <label className="text-sm font-medium" htmlFor={`romood-${k}`}>{s.label}</label>
-            <input id={`romood-${k}`} type="range" min={0} max={100} value={v} className="w-full"
-              aria-valuetext={s.readout[readoutIndex(v)]}
-              onChange={e => slide(k, Number(e.target.value))} />
-            <div className="flex justify-between text-xs text-slate-500"><span>{s.low}</span><span>{s.readout[readoutIndex(v)]}</span><span>{s.high}</span></div>
-          </div>
-        ))}
-
-        <div role="group" aria-label={C.gridLabel} className="grid grid-cols-2 gap-2 bg-cobalt-ink rounded-xl p-2">
-          {GRID.flat().map(q => (
-            <div key={q} role="group" aria-label={QUADRANT_NAMES[q]}
-              className={`grid grid-cols-2 gap-1 rounded-lg p-1 ${activeQuadrant === q ? 'ring-2 ring-white' : ''}`}>
-              {FEELING_WORDS.filter(w => w.quadrant === q).map(w => (
-                <button key={w.word} type="button" aria-pressed={word?.word === w.word}
-                  onClick={() => pick(w)}
-                  className="rounded-full aspect-square text-xs font-semibold bg-white/80">{w.word}</button>
-              ))}
-            </div>
-          ))}
-        </div>
-        {word && <p className="text-sm" data-testid="romood-description">{word.description}</p>}
+        <MoodInput value={mood} onChange={setMood} />
 
         <p className="text-sm">{C.encouragement}</p>
 

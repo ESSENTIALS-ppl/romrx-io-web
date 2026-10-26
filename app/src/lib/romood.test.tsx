@@ -7,20 +7,34 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const insert = vi.fn(async (_row: Record<string, unknown>) => ({ error: null as null }))
-vi.mock('./supabase', () => ({ supabase: { from: () => ({ insert, delete: () => ({ eq: async () => ({ error: null }) }) }) } }))
+const eventInsert = vi.fn(async (_row: Record<string, unknown>) => ({ error: null as null }))
+const upsert = vi.fn(async (_row: Record<string, unknown>, _o?: unknown) => ({ error: null as null }))
+const del = vi.fn(async (_c: string, _v: string) => ({ error: null as null }))
+let settingsRow: { saving_on: boolean; opted_in_at: string | null } | null = null
+vi.mock('./supabase', () => ({ supabase: {
+  auth: { getSession: async () => ({ data: { session: { user: { id: 'u1' } } } }) },
+  from: (t: string) => ({
+    insert: t === 'product_events' ? eventInsert : insert,
+    upsert,
+    delete: () => ({ eq: del }),
+    select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: settingsRow, error: null }) }) }),
+  }),
+} }))
 const track = vi.fn()
 vi.mock('./track', () => ({ track: (...a: unknown[]) => track(...a), trackPageView: () => {} }))
 let mockSession: { user: { id: string } } | null = { user: { id: 'u1' } }
 vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ session: mockSession, loading: false }) }))
 
 import { ROMood } from '../pages/ROMood'
-import { ROMOOD_COPY, FEELING_WORDS } from './romoodCopy'
-import { quadrantFor, positionFor, shouldSaveMood, romoodSaveEnabled } from './romood'
+import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY } from './romoodCopy'
+import { MoodSettings } from '../components/MoodSettings'
+import { AssessmentPhases } from '../pages/AssessmentPhases'
+import { quadrantFor, positionFor, shouldSaveMood, romoodSaveEnabled, saveMoodEntry, readoutIndex } from './romood'
 import { META_FORBIDDEN_KEYS } from './metaAttribution'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 let host: HTMLDivElement; let root: Root
-beforeEach(() => { host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host); insert.mockClear(); track.mockClear(); mockSession = { user: { id: 'u1' } } })
+beforeEach(() => { host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host); insert.mockClear(); eventInsert.mockClear(); upsert.mockClear(); del.mockClear(); settingsRow = null; track.mockClear(); mockSession = { user: { id: 'u1' } } })
 afterEach(() => { act(() => root.unmount()); host.remove() })
 
 function mount(saveEnabled: boolean, nav = vi.fn<(to: string) => void>()) {
@@ -39,7 +53,7 @@ describe('ROMood copy (spec rev 5)', () => {
     expect(FEELING_WORDS.find(w => w.word === 'Anxious')?.description).toBe('Wired, and on edge.')
   })
   it('no em dashes, no banned words, no diagnose/predict/screen claims', () => {
-    const all = JSON.stringify(ROMOOD_COPY) + JSON.stringify(FEELING_WORDS)
+    const all = JSON.stringify(ROMOOD_COPY) + JSON.stringify(FEELING_WORDS) + JSON.stringify(ROMOOD_SETTINGS_COPY) + JSON.stringify(ROMOOD_PLACEHOLDERS)
     expect(all).not.toMatch(/\u2014/)
     expect(all).not.toMatch(/\b(normal|required|limited|tight|injury|risk|prevent|improve|proven|diagnos\w*|predict\w*|screen\w*)\b/i)
   })
@@ -55,6 +69,8 @@ describe('ROMood logic', () => {
     expect(shouldSaveMood({ optIn: true, signedIn: true, saveEnabled: false })).toBe(false)
     expect(shouldSaveMood({ optIn: true, signedIn: true, saveEnabled: true })).toBe(true)
   })
+  it('Q8 switch points', () => { expect([readoutIndex(39), readoutIndex(40), readoutIndex(60), readoutIndex(61)]).toEqual([0, 1, 1, 2]); expect(quadrantFor(50, 50)).toBe('low_unpleasant') })
+  it('Q9 and Q11 defaults', () => { expect(ROMOOD_PLACEHOLDERS.Q9_turnOff).toBe('offer'); expect(ROMOOD_PLACEHOLDERS.Q11_skipEventWithUserId).toBe(false) })
   it('save flag defaults OFF', () => {
     expect(romoodSaveEnabled({})).toBe(false)
     expect(romoodSaveEnabled({ VITE_ROMOOD_SAVE: 'on' })).toBe(true)
@@ -67,7 +83,10 @@ describe('ROMood screen', () => {
   it('Next with box unticked saves nothing', async () => { const nav = mount(true); await click(q('romood-next')); expect(insert).not.toHaveBeenCalled(); expect(nav).toHaveBeenCalledWith('/onboarding/assessment') })
   it('Skip saves nothing even when ticked, and tracks no mood values', async () => {
     const nav = mount(true); await click(q('romood-optin')); await click(q('romood-skip'))
-    expect(insert).not.toHaveBeenCalled(); expect(track).toHaveBeenCalledWith('romood_skipped'); expect(nav).toHaveBeenCalled()
+    expect(insert).not.toHaveBeenCalled(); expect(upsert).not.toHaveBeenCalled(); expect(nav).toHaveBeenCalled()
+    await act(async () => { await Promise.resolve() })
+    expect(eventInsert).toHaveBeenCalledTimes(1)
+    expect(eventInsert.mock.calls[0][0]).toMatchObject({ event: 'romood_skipped', user_id: null, anon_id: null, session_id: null, props: {} })
   })
   it('Next with box ticked but save flag OFF saves nothing', async () => { mount(false); await click(q('romood-optin')); await click(q('romood-next')); expect(insert).not.toHaveBeenCalled() })
   it('Next with box ticked, signed in, flag ON saves one entry', async () => {
@@ -77,6 +96,25 @@ describe('ROMood screen', () => {
     await click(q('romood-optin')); await click(q('romood-next'))
     expect(insert).toHaveBeenCalledTimes(1)
     expect(insert.mock.calls[0][0]).toMatchObject({ user_id: 'u1', word: 'Calm', quadrant: 'low_pleasant', context: 'onboarding', opted_in: true })
+    const tick = insert.mock.calls[0][0].opted_in_at as string
+    expect(upsert.mock.calls[0][0]).toMatchObject({ user_id: 'u1', saving_on: true, opted_in_at: tick })
+  })
+  it('opt-in time is the real tick time, not the Next time', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-10-26T22:00:00Z'))
+    mount(true); await click(q('romood-optin'))
+    vi.setSystemTime(new Date('2026-10-26T22:03:00Z')); await click(q('romood-next'))
+    vi.useRealTimers()
+    expect(insert.mock.calls[0][0].opted_in_at).toBe('2026-10-26T22:00:00.000Z')
+  })
+  it('saveMoodEntry refuses without a real tick time (no now() fallback)', async () => {
+    expect((await saveMoodEntry('u1', { energy: 50, pleasantness: 50, word: null, optedInAt: '' })).ok).toBe(false)
+    expect(insert).not.toHaveBeenCalled()
+  })
+  it('shows the locked lead-in and the Q3 placeholder', () => {
+    mount(true)
+    expect(q('romood-question').textContent).toBe('How are you feeling right now?')
+    expect(q('romood-nutrition').textContent).toBe(ROMOOD_PLACEHOLDERS.Q3_nutritionLine)
+    expect(q('mood-input').getAttribute('data-visual')).toBe('bubbles')
   })
   it('signed out: never saves', async () => { mockSession = null; mount(true); await click(q('romood-optin')); await click(q('romood-next')); expect(insert).not.toHaveBeenCalled() })
 })
@@ -89,5 +127,58 @@ describe('mood_entries migration', () => {
     expect(sql).toMatch(/for delete to authenticated/)
     expect(sql).not.toMatch(/for update/)
     expect(sql).not.toMatch(/assessments?\s*\(/i)
+  })
+})
+
+describe('ROMood placement', () => {
+  it('Start after the intro video goes to the mood check, then mood Next goes to measure', async () => {
+    const setPhase = vi.fn()
+    const base = { stepIdx: 0, values: {}, email: '', fullName: '', loading: false, error: '', setPhase, setStepIdx: vi.fn(), setEmail: vi.fn(), setFullName: vi.fn(), handleChange: vi.fn(), handleNext: vi.fn(), handleLeadSubmit: vi.fn() }
+    act(() => root.render(createElement(MemoryRouter, null, createElement(AssessmentPhases, { ...base, phase: 'setup' }))))
+    const start = [...host.querySelectorAll('button')].find(b => /Start assessment/.test(b.textContent ?? ''))!
+    await click(start); expect(setPhase).toHaveBeenCalledWith('mood')
+    await act(async () => { root.render(createElement(MemoryRouter, null, createElement(AssessmentPhases, { ...base, phase: 'mood' }))) })
+    for (let i = 0; i < 20 && !q('romood-screen'); i++) await act(async () => { await new Promise(r => setTimeout(r, 10)) })
+    expect(q('romood-screen')).toBeTruthy()
+    await click(q('romood-next')); expect(setPhase).toHaveBeenLastCalledWith('measure')
+  })
+})
+
+describe('Settings > ROMood check-ins', () => {
+  const mountS = (saveEnabled: boolean, turnOffBehavior?: 'offer' | 'auto') =>
+    act(() => root.render(createElement(MoodSettings, { userId: 'u1', saveEnabled, turnOffBehavior })))
+  const flush = () => act(async () => { await Promise.resolve(); await Promise.resolve() })
+  it('hidden while the save flag is OFF', () => { mountS(false); expect(q('mood-settings')).toBeNull() })
+  it('delete asks to confirm, cancel deletes nothing, confirm deletes own rows', async () => {
+    mountS(true); await flush()
+    await click(q('mood-delete')); expect(q('mood-dialog').textContent).toContain(ROMOOD_SETTINGS_COPY.deleteConfirm)
+    await click(q('mood-dialog-no')); expect(del).not.toHaveBeenCalled()
+    await click(q('mood-delete')); await click(q('mood-dialog-yes'))
+    expect(del).toHaveBeenCalledWith('user_id', 'u1'); expect(q('mood-msg').textContent).toBe(ROMOOD_SETTINGS_COPY.deleted)
+  })
+  it('turning saving off offers delete (Q9 offer) and does not auto-delete', async () => {
+    settingsRow = { saving_on: true, opted_in_at: '2026-10-26T22:00:00Z' }
+    mountS(true); await flush()
+    expect(q('mood-saving-state').textContent).toBe(ROMOOD_SETTINGS_COPY.savingOn)
+    await click(q('mood-toggle')); await flush()
+    expect(upsert.mock.calls[0][0]).toMatchObject({ user_id: 'u1', saving_on: false })
+    expect(del).not.toHaveBeenCalled(); expect(q('mood-dialog').textContent).toContain(ROMOOD_SETTINGS_COPY.offerDelete)
+    await click(q('mood-dialog-no')); expect(del).not.toHaveBeenCalled()
+  })
+  it("Q9 'auto' deletes on turn-off", async () => {
+    settingsRow = { saving_on: true, opted_in_at: '2026-10-26T22:00:00Z' }
+    mountS(true, 'auto'); await flush(); await click(q('mood-toggle')); await flush()
+    expect(del).toHaveBeenCalledWith('user_id', 'u1')
+  })
+})
+
+describe('mood_settings migration', () => {
+  const sql = readFileSync(resolve(__dirname, '../../../supabase/migrations/20261026230000_romood_mood_settings.sql'), 'utf8')
+  it('no now() default on opt-in time; inserts need saving_on; RLS on', () => {
+    expect(sql).toMatch(/opted_in_at\s+timestamptz,/)
+    expect(sql).not.toMatch(/^\s*opted_in_at\s+timestamptz[^\n]*default/m)
+    expect(sql).toMatch(/s\.saving_on = true/)
+    expect(sql).toMatch(/enable row level security/)
+    expect(sql).toMatch(/on delete cascade/)
   })
 })
