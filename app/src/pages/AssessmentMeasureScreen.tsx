@@ -82,7 +82,7 @@ export function AssessmentMeasureScreen(p: {
             <div className="h-full bg-cobalt rounded-full transition-all duration-500"
               style={{ width: `${progress + (100 / totalMeasureSteps)}%` }} />
           </div>
-          <span className="text-xs text-slate-500 whitespace-nowrap">Step {stepIdx + 1 + STEPS_BEFORE_MEASURE} of {totalMeasureSteps + STEPS_BEFORE_MEASURE}</span>
+          <span className="text-xs text-slate-500 whitespace-nowrap" data-testid="flow-counter">Step {stepIdx + 1 + STEPS_BEFORE_MEASURE} of {totalMeasureSteps + STEPS_BEFORE_MEASURE}</span>
         </div>
 
         {/* Joint card */}

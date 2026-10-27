@@ -2,6 +2,7 @@ import { StepVideo } from '../components/StepVideo'
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import { Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { SETUP_STEPS } from './assessmentMeta'
+import { STEPS } from './assessmentSteps'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
 import { track } from '../lib/track'
 import { lazy, Suspense } from 'react'
@@ -35,6 +36,10 @@ if (phase === 'setup') {
     return (
       <div className="min-h-screen bg-surface py-8 px-4">
         <div className="max-w-lg mx-auto space-y-5">
+          {/* Whole-flow counter (Jim Oct 26 8:12 PM ET): setup is Step 1 of STEPS.length + 2. Same style as the measure screen counter. */}
+          <div className="flex justify-end">
+            <span className="text-xs text-slate-500 whitespace-nowrap" data-testid="flow-counter">Step 1 of {STEPS.length + 2}</span>
+          </div>
           <div className="text-center">
             <h1 className="font-display font-bold text-cobalt text-2xl">ROM Self-Assessment</h1>
             <p className="text-sm text-slate-500 mt-1">Approximately 15 minutes using the ROMeter. Equipment needed: your phone, a chair, a wall, and a tape measure or ruler.</p>
