@@ -41,5 +41,6 @@ ok(!/Readiness Profile/.test(uni), '/universe says Protocol, never Profile');
 for (const f of ['bjj.html', 'bodybuilding.html']) {
   ok(readFileSync(join(root, f), 'utf8').includes('<span class="rx-beta">Beta · Sport pack starting mid-February 2027. We\'ll email you when it opens.</span>'), f + ': Stacy beta badge kept');
 }
+ok(C.betaStatus === 'Opens mid-February 2027', "betaStatus is Stacy's exact text 'Opens mid-February 2027'");
 if (fails) { console.error(`\n${fails} failed`); process.exit(1); }
 console.log('\nuniverse-cards: all passed');

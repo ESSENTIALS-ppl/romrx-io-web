@@ -121,7 +121,7 @@ window.RX_PACK_SITES = RX_PACK_SITES;
 const RX_PACK_COPY = {
   buttonLabel: 'Visit the website',   // every pack card button, all 9 packs
   comingStatus: 'COMING SOON',
-  betaStatus: 'Beta now', // STACY TO CLEAR (2026-10-26): was 'Beta testing starting January 2027'; beta is running now, so no date on the chip
+  betaStatus: 'Opens mid-February 2027', // Stacy's exact text (2026-10-27, stacy-pack-date-fix-20261027.md follow-up 2); was 'February 15, 2027' (92d9929), which broke her no-exact-date rule; 'Beta now' would read as the pack being open today
   priceLine: '$149 a year, stacks on Base',
   footnote: 'Pack prices are planned for 2027 and may change before launch. Packs need a Base account and a card on file, renew yearly until you cancel, and end if you cancel Base. For adults 18 and older. Full terms are shown at checkout.',
   disclaimer: 'ROMRx shares educational information about range of motion. It is not medical advice and does not diagnose, treat or cure any condition.',

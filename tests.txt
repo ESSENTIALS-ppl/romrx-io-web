@@ -129,3 +129,8 @@ deno: not rerun (backend repo untouched)
 vitest flag off: 58 files, 1025 passed, 4 skipped
 VITE_ROMOOD_SAVE=on vitest: 58 files, 1025 passed, 4 skipped
 npm run build: passed
+
+== Update 20261027 (round 6: Vera 4ce5852 gaps G1 to G9, Stacy betaStatus fix) ==
+vitest flag off: 58 files, 1025 passed, 4 skipped
+VITE_ROMOOD_SAVE=on vitest: 58 files, 1025 passed, 4 skipped
+npm run build: passed; root npm test: card-line OK; node scripts/universe-cards-unit.mjs: all passed
