@@ -1,4 +1,6 @@
 # ROMood daily: copy Stacy still needs to write (feat/romood-daily)
+
+**Update Oct 26 2026, 8:45 PM ET: DONE. All 5 strings below are replaced with Stacy-final text (commit on feat/romood-daily); the drafts below are kept for history only.**
 Every string still marked STACY-COPY-PENDING is in app/src/lib/romoodCopy.ts, in `ROMOOD_QUICK_COPY`. They appear on the quick check-in screen at /dashboard/mood (app/src/pages/QuickMood.tsx). The UI shows the text after the `STACY-COPY-PENDING: ` prefix. Today romoodDaily.test.tsx:149 checks that these 5 strings DO carry the prefix. When Stacy's text arrives, replace the strings and change that test to check they don't.
 
 | Key (line) | When it shows | Draft |

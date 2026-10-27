@@ -37,5 +37,8 @@ Note: plain `tsc` at the root checks nothing (references only). Use `tsc -b`.
 - Confirm the email window choice (previous assessment vs. a fixed number of days).
 - The lead email (submit-lead-assessment) is not changed.
 - Data retention period is still Jim's call. Counsel should confirm Resend as a processor. Check open/click tracking on the romrx.io domain (RESEND-NOTES.md).
-- The 5 quick-screen strings need Stacy's copy (COPY-NEEDED.md).
+- The 5 quick-screen strings: DONE, Stacy-final 8:45 PM.
 - The cf8c333 tsc -b failure: the fix ecffd26 is only on this branch.
+
+- Email mood stays OFF (ROMOOD_EMAIL_MOOD unset) until tracking is confirmed off for romrx.io in Resend (Stacy 8:44 PM).
+- Quick-screen copy is now Stacy-final (8:45 PM); no STACY-COPY-PENDING markers remain in app/src.

@@ -144,9 +144,14 @@ describe('wiring and copy rules', () => {
     const mb = readFileSync(resolve(__dirname, '../pages/MyBody.tsx'), 'utf8')
     expect(mb).toContain('to="/dashboard/mood"')
   })
-  it('placeholders are marked, no em dashes, no clinical words, no coach', () => {
+  it('final Stacy copy, no placeholder marker, no em dashes, no clinical words, no coach', () => {
     const all = Object.values(Q).join(' ')
-    for (const k of ['notSaved', 'tickToSave', 'saved', 'capReached', 'saveFailed'] as const) expect(Q[k]).toMatch(/^STACY-COPY-PENDING: /)
+    expect(Q.notSaved).toBe("Saving check-ins isn't turned on yet, so this one won't be saved.")
+    expect(Q.tickToSave).toBe('To save this check-in, tick the box below.')
+    expect(Q.saved).toBe('Check-in saved.')
+    expect(Q.capReached).toBe("You've saved 4 check-ins today. You can check in again tomorrow.")
+    expect(Q.saveFailed).toBe("We couldn't save this check-in. Please try again.")
+    expect(all).not.toMatch(/STACY-COPY-PENDING/)
     expect(all).not.toMatch(/\u2014/)
     expect(all).not.toMatch(/depress|anxiety|disorder|diagnos|symptom|therap|clinical|mental health|coach/i)
   })
