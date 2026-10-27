@@ -3,11 +3,11 @@ Written Mon Oct 26 2026, about 8:50 PM ET. Replaces the cf8c333 plan, which is W
 
 ## The pair
 - Frontend: repo ESSENTIALS-ppl/romrx-io-web, branch **feat/romood-daily** (worktree /workspace/romood-daily), based on cf8c333 (base 88079f5, live site tree). Code head **c8412bb**; docs-only commits sit above it, so the branch tip is whatever `git rev-parse --short HEAD` prints in Step 0 (the report names it).
-- Backend: repo ESSENTIALS-ppl/romrxbjj-v2, branch **feat/romood-daily-email**, head **fbd65a0** (7bc1bd0 plus the '1 time' fix; use `git rev-parse --short HEAD` in the report for the final value), based on origin/main 3043f41 (byte-identical to live submit-assessment v38). Worktree /workspace/romood-daily-backend.
+- Backend: repo ESSENTIALS-ppl/romrxbjj-v2, branch **feat/romood-daily-email**, head **b382db9** (fbd65a0 plus a comment-only credit fix; fbd65a0 was 7bc1bd0 plus the '1 time' fix), based on origin/main 3043f41 (byte-identical to live submit-assessment v38). Worktree /workspace/romood-daily-backend.
 - Frontend commits: ecffd26 (tsc fix), b2c367b (migration 4 + revert), ee40b98 (quick check-in, consent version, 7A, deletion lines), the copy-swap c8412bb, and docs. Plus everything from the ROMood history in cf8c333's ancestry.
 
 ## Step 0 (required right before any push; ABORT on any failure and tell Grant)
-1. `cd /workspace/romood-daily && git status --short` must be empty; `git rev-parse --short HEAD` must match the report; `git -C /workspace/romood-daily-backend rev-parse --short HEAD` must print the backend head named in the report (fbd65a0 or later, expect 7 deno tests).
+1. `cd /workspace/romood-daily && git status --short` must be empty; `git rev-parse --short HEAD` must match the report; `git -C /workspace/romood-daily-backend rev-parse --short HEAD` must print the backend head named in the report (exactly b382db9, expect 7 deno tests).
 2. `cd /workspace/romood-daily/app && npx vitest run` (expect 58 files, 998 passed, 4 skipped) and again with `VITE_ROMOOD_SAVE=on`.
 3. `npm run build` (runs `tsc -b && vite build`, local dist only; expect exit 0).
 4. deno: `cd /tmp/dchk && ~/.deno/bin/deno check --node-modules-dir=auto /workspace/romood-daily-backend/supabase/functions/submit-assessment/index.ts` and `deno test --node-modules-dir=auto --allow-read .../mood_block.test.ts` (expect 7 passed).
@@ -33,7 +33,7 @@ Not tested against real Postgres (no test DB was allowed). Apply 4 first on a br
 1. Gates green. Step 0 passes. Credits checked; Grant told.
 2. Push frontend feat/romood-daily to origin (new branch, no rewrite of history). Push backend feat/romood-daily-email to romrxbjj-v2 (new branch only; do not merge or touch main yet).
 3. Apply migrations 1, 2, 3, 4 in order.
-4. Deploy ONLY the submit-assessment function, from the backend branch feat/romood-daily-email (fbd65a0): `supabase functions deploy submit-assessment --project-ref cqzvqzwwevnflinxgnpp`. Never a bulk deploy (no `deploy` without a name, no --all). NEVER deploy or create create-checkout-session or stripe-webhook. With ROMOOD_EMAIL_MOOD unset the email is byte-for-byte the v38 email (the block returns an empty string); confirm by one test submission only if Jim approves.
+4. Deploy ONLY the submit-assessment function, from the backend branch feat/romood-daily-email (b382db9): `supabase functions deploy submit-assessment --project-ref cqzvqzwwevnflinxgnpp`. Never a bulk deploy (no `deploy` without a name, no --all). NEVER deploy or create create-checkout-session or stripe-webhook. With ROMOOD_EMAIL_MOOD unset the email is byte-for-byte the v38 email (the block returns an empty string); confirm by one test submission only if Jim approves.
 5. **ROMOOD_EMAIL_MOOD secret stays UNSET** (absence confirmed in Step 0 item 5) until Jim confirms tracking is off for romrx.io in Resend (Stacy 8:44 PM). Setting it to "on" later is a separate go.
 6. Netlify draft deploy from the pushed frontend branch (no --prod). Reid checks the draft: the flow (Step 1 to 11 of 11, "Assessment step 2" eyebrow on ROMood), crisis line, /legal 7A new paragraph and deletion line, My Body "Quick ROMood check" button, /dashboard/mood (protected, redirects when signed out), cap and not-saved messages, and that saving is off.
 7. Merge both branches to main, then publish that same Netlify draft to production. Merge the backend only after the function check passes.
