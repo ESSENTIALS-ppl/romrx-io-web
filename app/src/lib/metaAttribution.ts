@@ -215,8 +215,11 @@ function ensurePixelLoaded(): boolean {
   return true
 }
 
-/** Property keys never sent to Meta (matched anywhere in the key, case-insensitive). 'mood' added Oct 19 2026 (ROMood). */
-export const META_FORBIDDEN_KEYS = /rom|score|protocol|joint|health|assessment|tier|soreness|injury|fuel|weight|height|mood/i
+/** Property keys never sent to Meta (matched anywhere in the key, case-insensitive). 'mood' added Oct 19 2026 (ROMood).
+ * Oct 26 2026 (Stacy): every ROMood field name too: energy, pleasantness, word, quadrant, opted_in / optedIn (opted_in_at),
+ * saving_on / savingOn, turned_off / turnedOff. Bare generic columns (id, user_id, created_at, updated_at, context) are not
+ * listed; they carry no mood value on their own. */
+export const META_FORBIDDEN_KEYS = /rom|score|protocol|joint|health|assessment|tier|soreness|injury|fuel|weight|height|mood|energy|pleasant|word|quadrant|opted_?in|saving_?on|turned_?off/i
 
 export function stripForbidden(props: Record<string, unknown> | undefined): Record<string, unknown> {
   if (!props) return {}
