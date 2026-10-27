@@ -17,11 +17,11 @@ Written Mon Oct 26 2026, about 8:50 PM ET. Replaces the cf8c333 plan, which is W
 6. Last run is in /workspace/romood-daily/tests.txt.
 
 ## Gates (all must be green before the go)
-- Stacy: PASS. /workspace/beta-launch/proof-20261020/stacy-romood-live-gate-20261027.md items 1 to 4 (footer word for word in mood_block.ts:42, save-on PASS with conditions, email-on PASS) plus the 7:42 AM addendum: migration 5 OK (her migration conditions now cover migrations 1 to 5) for launch (server-side consent stamping recommended before public launch, not a blocker).
+- Stacy: PASS. /workspace/beta-launch/proof-20261020/stacy-romood-live-gate-20261027.md items 1 to 4 (footer word for word in mood_block.ts:42, save-on PASS with conditions, email-on PASS) cover migrations 1-4; migration 5 is covered by her OK in the 7:42:09 AM addendum (same file, line 17, OK text on line 18), with server-side consent stamping recommended before public launch, not a blocker.
 - Quinn: PASS on 5ad2c1c/b382db9 (/workspace/beta-launch/proof-20261020/quinn-signoff-romood-5ad2c1c-b382db9.md). Quinn needs no re-sign, per Grant's decision: the later commits are logic (migration 5 and a settings gate) plus the footer, and the only new user copy is the footer, which is Stacy's legal text word for word. Vera checked the later commits for copy.
 - Vera: VERIFIED b830fa6/5af19bf (/workspace/vera-verdicts/vera-romood-final-b830fa6-5af19bf-20261027.md) and d9bbb11/5af19bf (/workspace/vera-verdicts/vera-romood-final-d9bbb11-5af19bf-20261027.md); this commit applies her d9bbb11 plan fixes and needs her re-verify.
-- Netlify: Jim checks the credit balance in the Netlify dashboard before the tap; last readings about 15 credits per publish.
-- Resend: Rechecked by Grant at 8:02 AM ET on Oct 27, 2026 via read-only API: open and click tracking OFF on romrx.io, romrxbjj.com and romrxbodybuilding.com. Monthly limit 50,000 with no daily cap (RESEND-READONLY-20261026.md L6, L7).
+- Netlify: Jim confirms the Netlify credit balance as part of his packaged yes. Last readings: about 15 credits per publish.
+- Resend: Rechecked by Grant via read-only API at 08:02 EDT on Oct 27, 2026, re-run 08:07 EDT: open and click tracking OFF on romrx.io, romrxbjj.com and romrxbodybuilding.com (/workspace/romood-reports/RESEND-TRACKING-RECHECK-20261027-0802.txt). Monthly limit 50,000 with no daily cap (RESEND-READONLY-20261026.md L6, L7).
 
 ## Approved decisions
 - Mood window in the email: since the later of the user's previous assessment or their opt-in tick time. Confirmed in code: mood_block.ts moodWindowStart() (line 29) returns the later of the two; buildMoodBlockForUser (line 59) uses it, bounded above by the current assessment time.
@@ -37,7 +37,7 @@ Revert order: **5, 4, 3, 2, 1**, by hand. They sit outside supabase/migrations, 
 Tested on a local schema-only copy of prod (romrx_schemacopy): /workspace/romood-reports/ROMOOD-SCHEMACOPY-RETEST-3d08ba7-20261027.md, 147/147 PASS (main 70, race test, addendum 15, migration 5 cases 61), reverts 5 to 1 leave 0 diff. Real prod behavior is confirmed only after apply.
 
 ## Order of operations (only after Jim's typed go; STOP and report on any failure)
-1. Step 0 gates. Step 0 passes. Jim has checked the Netlify credit balance. Push frontend feat/romood-daily and backend feat/romood-daily-email to GitHub as new branches only (no history rewrite, no merge to main yet). Revert: delete the two remote branches.
+1. Step 0 gates. Step 0 passes. Jim confirms the Netlify credit balance as part of his packaged yes. Push frontend feat/romood-daily and backend feat/romood-daily-email to GitHub as new branches only (no history rewrite, no merge to main yet). Revert: delete the two remote branches.
 2. Apply migrations 1, 2, 3, 4, 5 in order, from /workspace/romood-daily/supabase/migrations (the frontend repo, not the backend repo).
 3. Deploy ONLY the submit-assessment function, from the backend branch feat/romood-daily-email at exactly 5af19bf: `supabase functions deploy submit-assessment --project-ref cqzvqzwwevnflinxgnpp`. Never a bulk deploy (no `deploy` without a name, no --all). NEVER deploy or create create-checkout-session or stripe-webhook. ROMOOD_EMAIL_MOOD is still unset here, so the email is the v38 email (the block returns an empty string).
 4. TRUNCATE grants fix: apply /workspace/romood-reports/PROD-TRUNCATE-GRANTS-FIX-20261027.sql. Revert: /workspace/romood-reports/PROD-TRUNCATE-GRANTS-REVERT-20261027.sql. Expect the authenticated TRUNCATE count on public tables to be 0 afterwards (44 before).

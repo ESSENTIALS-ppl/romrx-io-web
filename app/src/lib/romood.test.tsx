@@ -295,8 +295,9 @@ describe('mood_settings migration', () => {
   it('PUSH-PLAN applies Vera d9bbb11 fixes: expected role-drop denial, gates refreshed, no duplicates', () => {
     const plan = readFileSync(resolve(__dirname, '../../../PUSH-PLAN.md'), 'utf8')
     expect(plan).toContain('that is EXPECTED: stop and report, and try no workaround')
-    expect(plan).toContain('Jim checks the credit balance in the Netlify dashboard before the tap; last readings about 15 credits per publish')
-    expect(plan).toContain('Rechecked by Grant at 8:02 AM ET on Oct 27, 2026 via read-only API')
+    expect(plan.split('Jim confirms the Netlify credit balance as part of his packaged yes.').length).toBe(3)
+    expect(plan).toContain('RESEND-TRACKING-RECHECK-20261027-0802.txt')
+    expect(plan).not.toContain('now cover migrations 1 to 5')
     expect(plan).not.toContain('nothing over its limit')
     expect(plan).not.toContain('Resend: Resend:')
     expect(plan.split('credits to Grant and Jim.').length).toBe(2)
