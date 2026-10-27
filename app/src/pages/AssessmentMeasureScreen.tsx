@@ -22,7 +22,7 @@ export function AssessmentMeasureScreen(p: {
   values: Record<string, string>
   loading: boolean
   error: string
-  setPhase: (ph: 'setup' | 'measure' | 'lead' | 'done' | 'lead-done') => void
+  setPhase: (ph: 'setup' | 'mood' | 'measure' | 'lead' | 'done' | 'lead-done') => void
   setStepIdx: Dispatch<SetStateAction<number>>
   handleChange: (key: string, val: string) => void
   handleNext: () => void
