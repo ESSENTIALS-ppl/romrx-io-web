@@ -12,7 +12,6 @@ import { cn } from '../lib/cn'
 import { MoodAverageCard, MoodScoreDivider, HalfDial } from '../components/MoodAverageCard'
 import { HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexLegsDiffer } from '../lib/hipFlexCopy'
 import {
-  bandFull,
   bandChip,
   jointBandsForAssessment,
   jointKeyBase,
@@ -23,7 +22,6 @@ import {
   mobilityScoreForAssessment,
   overallBandForAssessment,
   topProblemAreasForAssessment,
-  BAND_DESC,
   BAND_TONE,
   BAND_LEGEND,
   type BandScore,
@@ -69,17 +67,6 @@ function computeStreak(sessionDates: string[]): number {
     cursor.setDate(cursor.getDate() - 1)
   }
   return count
-}
-
-function getBandTier(band: BandScore) {
-  const tone = BAND_TONE[band]
-  return {
-    label: bandFull(band),
-    color: tone.color,
-    bg: tone.bg,
-    ring: tone.ring,
-    desc: BAND_DESC[band],
-  }
 }
 
 // Base radar + Joint Breakdown use the SAME rows (lib/mobilityBands):
@@ -178,7 +165,6 @@ export function MyBody() {
   const jointRows = hideLumbar ? allJointRows.filter(r => !isLumbarKey(r.key)) : allJointRows
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreasForAssessment(assessment)
-  const tier = getBandTier(overallBand)
 
   // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
   const previousAssessment = assessments.length > 1 ? assessments[1] : null
@@ -215,32 +201,30 @@ export function MyBody() {
       <MoodAverageCard userId={user?.id} />
       <MoodScoreDivider />
 
-      {/* Mobility band: half-dial restyle of the former 64px circle, same prs data */}
-      <div className={cn('rounded-card border p-4', tier.bg, 'border-cobalt/10')} data-testid="body-score-card">
-        <div className={cn("relative", tier.color)} data-testid="body-score-gauge">
-          <HalfDial value={prs} color="currentColor" testid="body-score-dial" label={`Body score ${prs} out of 100`} />
-          <p className={cn('text-center font-display font-bold text-2xl leading-none -mt-1', tier.color)}><span data-testid="body-score-value">{prs}</span><span className="text-sm">/100</span></p>
+      {/* Mobility band: approved Oct 26 concept mockup (white card, red to yellow to blue dial, dark text).
+          The band tone lives only in the chips below, never as a card tint or solid dial color. */}
+      <div className="rounded-card border border-slate-200 bg-white p-4 text-center" data-testid="body-score-card">
+        <div className="flex justify-between items-center text-left">
+          <span className="text-xs font-bold tracking-wider uppercase text-cobalt">Mobility band</span>
+          <span className="text-[10px] text-slate-500">Body score</span>
         </div>
-        <div className={cn('flex items-center gap-4 mt-2', tier.color)}>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-              <TrendingUp size={13} className={tier.color} />
-              <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
-              {prsDelta != null && previousDateStr && (
-                <span className={cn(
-                  'text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
-                  prsDelta > 0 ? 'bg-green-50 text-green-700' : prsDelta < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500'
-                )}>
-                  {prsDelta > 0 ? '▲' : prsDelta < 0 ? '▼' : '-'} {prsDelta > 0 ? '+' : ''}{prsDelta} vs {previousDateStr}
-                </span>
-              )}
-            </div>
-            <p className={cn('text-lg font-bold leading-tight', tier.color)}>{formatScoreBand(prs, overallBand)}</p>
-            <p className="text-xs text-slate-500 mt-0.5">Retest every 6 weeks to track progress</p>
-          </div>
+        <div className="relative" data-testid="body-score-gauge">
+          <HalfDial value={prs} gradient="body" testid="body-score-dial" label={`Body score ${prs} out of 100`} />
+          <p className="text-xl font-bold leading-tight text-slate-900 -mt-1" data-testid="body-score-band">{formatScoreBand(prs, overallBand)}</p>
+        </div>
+        <div className="mt-1">
+          {prsDelta != null && previousDateStr && (
+            <span className={cn(
+              'inline-block mb-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-full',
+              prsDelta > 0 ? 'bg-green-50 text-green-700' : prsDelta < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500'
+            )}>
+              {prsDelta > 0 ? '▲' : prsDelta < 0 ? '▼' : '-'} {prsDelta > 0 ? '+' : ''}{prsDelta} vs {previousDateStr}
+            </span>
+          )}
+          <p className="text-xs text-slate-500">Retest every 6 weeks to track progress</p>
         </div>
         {/* Band legend: always show Needs focus · Building · Steady */}
-        <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-cobalt/10">
+        <div className="flex flex-wrap justify-center gap-1.5 mt-3">
           {BAND_LEGEND.map(entry => (
             <span
               key={entry.score}

@@ -159,19 +159,21 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
     expect(code).not.toMatch(/OPTIMAL|optimal|elite/i)
   })
 
-  it('BaseRadar.tsx: Steady target circle, gap tint, 90% ring, Left solid / Right dashed, worse-side band dots', () => {
+  it('BaseRadar.tsx: Steady target circle (3 3 dash), grey 90% ring, Left solid / Right dashed, worse-side hit circles', () => {
     const s = read(join(SRC, 'components', 'BaseRadar.tsx'))
     expect(s).toMatch(/data-ring="steady-target"/)
     expect(s).toMatch(/>Steady target</)
     expect(s).toMatch(/data-ring="building-90"/)
     expect(s).toMatch(/const ringR = R \* radius\(BUILDING_RING_PCT\)/)
     expect(s).toMatch(/radius = radarRadius/)
-    expect(s).toMatch(/points=\{polygon\(worse\)\} fill="#ffffff"/)
+    expect(s).toMatch(/TARGET_DASH = '3 3'/)
     expect(s).toMatch(/data-series="left"/)
     expect(s).toMatch(/data-series="right"/)
     expect(s).toMatch(/strokeDasharray=\{RIGHT_DASH\}/)
     expect(s).toMatch(/point\(i, n, r\.worse\)/)
-    expect(s).toMatch(/BAND_HEX\[r\.band\]/)
+    // Oct 27 (Jim, approved mockup): no gap tint, no coloured band dots, no always-on spokes
+    expect(s).not.toMatch(/GAP_TINT|Gap to target|>90%</)
+    expect(s).not.toMatch(/fill=\{r\.band != null \? BAND_HEX/)
     expect(s).toMatch(/Left \{fmt\(act\.leftPct\)\} · Right \{fmt\(act\.rightPct\)\}/)
     expect(s).not.toMatch(/\u2014/)
   })
@@ -345,5 +347,28 @@ describe('2026-09-29 cosmetics: asymmetry rounding, Ankle DF unit, band label co
     // Values keep their band colour (#83); only the indicator follows the radar.
     expect(p).toMatch(/valueToneClass\(sideBands\.left\)/)
     expect(p).toMatch(/valueToneClass\(sideBands\.right\)/)
+  })
+})
+
+describe('radar matches the approved Oct 26 mockup (Jim P1 Oct 27)', () => {
+  it('rendered SVG: no tint, no 90% text, no spokes at rest, no visible dots, dash 3 3, text-only Steady label, legend without Gap', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { createElement } = await import('react')
+    const { BaseRadar } = await import('../components/BaseRadar')
+    const a = { hip_er_l: 21, hip_er_r: 35, hip_ir_l: 16, hip_ir_r: 30, hip_abd_l: 30, hip_abd_r: 40, hip_flex_l: 118, hip_flex_r: 120, shoulder_er_l: 66, shoulder_er_r: 72, shoulder_flex_l: 140, shoulder_flex_r: 172, ankle_df_l: 4.6, ankle_df_r: 5.4, lumbar_flex: 45, lumbar_ext: 24, cervical_lat_l: 32, cervical_lat_r: 36, cervical_flex: 36, cervical_ext: 40 }
+    const html = renderToStaticMarkup(createElement(BaseRadar, { rows: radarSideRowsForAssessment(a) }))
+    expect(html).not.toMatch(/rgba\(239, 68, 68/)            // pink gap shading
+    expect(html).not.toContain('Gap to target')
+    expect(html).not.toMatch(/>90%</)
+    expect(html).toContain('data-ring="building-90"')          // grey ring stays
+    expect(html).not.toMatch(/<line[^>]*stroke="#e2e8f0"/)     // no always-on spokes
+    expect(html).not.toContain('data-spoke="active"')
+    expect(html).not.toMatch(/<circle[^>]*r="4"/)             // no visible coloured dots
+    expect((html.match(/<circle[^>]*r="7"[^>]*fill="transparent"/g) || []).length).toBeGreaterThan(0) // hover still works
+    expect(html).toMatch(/data-ring="steady-target"[^>]*|stroke-dasharray="3 3"[^>]*data-ring="steady-target"/)
+    expect(html).toMatch(/stroke-dasharray="3 3"/)
+    expect(html).toMatch(/data-label="steady-target"><text/)   // label is text only (no sample line)
+    const legend = html.slice(html.indexOf('data-radar-legend'))
+    expect(legend).toMatch(/Left[\s\S]*Right[\s\S]*Steady target/)
   })
 })

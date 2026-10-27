@@ -7,7 +7,8 @@ import { readFileSync } from 'node:fs'
 vi.mock('../lib/supabase', () => ({ supabase: {} }))
 const track = vi.fn()
 vi.mock('../lib/track', () => ({ track: (...a: unknown[]) => track(...a), trackPageView: () => {} }))
-import { MoodAverageCard, MoodScoreDivider, halfDialPoint } from './MoodAverageCard'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MoodAverageCard, MoodScoreDivider, HalfDial, halfDialPoint } from './MoodAverageCard'
 import { computeMoodAverage, moodAverageSince } from '../lib/romood'
 import { ROMOOD_MYBODY_CONFIG, ROMOOD_MYBODY_COPY } from '../lib/romoodCopy'
 
@@ -29,10 +30,13 @@ describe('My Body mood average', () => {
     act(() => root!.render(createElement(MoodScoreDivider as unknown as (p: { saveEnabled?: boolean }) => null, { saveEnabled: false }))); expect(q('mood-divider')).toBeNull()
     act(() => root!.render(createElement(MoodScoreDivider as unknown as (p: { saveEnabled?: boolean }) => null, { saveEnabled: true }))); expect(q('mood-divider')!.textContent).toBe('Mood is not part of your body score')
   })
-  it('flag ON shows the reflection line and a visible Energy caption on the dial', async () => {
+  it('flag ON shows the reflection line; the stray ENERGY caption under the dial is gone (Jim Oct 27, mockup)', async () => {
     await mount({ userId: 'u', saveEnabled: true, loadRows: async () => [{ energy: 40, pleasantness: 60, created_at: '2026-10-01' }] })
     expect(q('mood-average-reflection')!.textContent).toBe('For your own reflection. Not medical advice.')
-    expect(q('mood-average-dial-caption')!.textContent).toBe('Energy')
+    expect(q('mood-average-dial-caption')).toBeNull()
+    expect(host.textContent).not.toMatch(/ENERGY/)
+    expect(host.textContent).toMatch(/Energy: \w/)   // the readout line stays
+    expect(q('mood-average-dial')!.getAttribute('aria-label')).toContain('Energy:')
   })
   it('flag ON with rows: gauge, word, count; no analytics', async () => {
     const load = vi.fn(async () => [{ energy: 80, pleasantness: 80, created_at: '2026-10-01' }, { energy: 60, pleasantness: 80, created_at: '2026-10-02' }])
@@ -46,8 +50,34 @@ describe('My Body mood average', () => {
     expect(q('mood-average-empty')).toBeTruthy()
   })
   it('no red or alarm colors in the mood card', async () => {
-    await mount({ userId: 'u', saveEnabled: true, loadRows: async () => [{ energy: 0, pleasantness: 0, created_at: '2026-10-01' }] })
+    await mount({ userId: 'u', saveEnabled: true, loadRows: async () => [{ energy: 5, pleasantness: 0, created_at: '2026-10-01' }] })
     expect(host.innerHTML).not.toMatch(/red|#e[0-9a-f]{2}4|danger|alert/i)
+  })
+  it('title reads "ROMood average" exactly as the mockup header (not "Your average mood")', async () => {
+    expect(ROMOOD_MYBODY_COPY.title).toBe('ROMood average')
+    await mount({ userId: 'u', saveEnabled: true, loadRows: async () => [{ energy: 40, pleasantness: 60, created_at: '2026-10-01' }] })
+    expect(host.textContent).toContain('ROMood average'); expect(host.textContent).not.toContain('Your average mood')
+    expect(q('mood-average')!.getAttribute('aria-label')).toBe('ROMood average')
+  })
+  it('mood dial is a calm slate to cyan gradient with 11 ticks, never a solid fill (mockup)', async () => {
+    await mount({ userId: 'u', saveEnabled: true, loadRows: async () => [{ energy: 72, pleasantness: 60, created_at: '2026-10-01' }] })
+    const svg = q('mood-average-dial')!
+    expect(svg.getAttribute('data-gradient')).toBe('mood')
+    const stops = [...svg.querySelectorAll('linearGradient stop')].map(s => [s.getAttribute('offset'), s.getAttribute('stop-color')])
+    expect(stops).toEqual([['0', '#94A3B8'], ['1', '#38E8FF']])
+    const fill = svg.querySelector('[data-dial-fill]')!
+    expect(fill.getAttribute('stroke')).toMatch(/^url\(#.+\)$/)
+    expect(svg.querySelectorAll('[data-dial-tick]').length).toBe(11)
+  })
+  it('body dial is the red to yellow to blue gradient on a white card, not a band-tinted card (mockup)', () => {
+    const body = renderToStaticMarkup(createElement(HalfDial, { value: 84, gradient: 'body', testid: 'body-score-dial', label: 'Body score 84 out of 100' }))
+    expect(body).toMatch(/offset="0" stop-color="#DC2626"/); expect(body).toMatch(/offset="0.5" stop-color="#EAB308"/); expect(body).toMatch(/offset="1" stop-color="#1D4ED8"/)
+    expect(body).toMatch(/stroke="url\(#body-score-dial-grad\)"/); expect(body).not.toContain('currentColor')
+    expect((body.match(/data-dial-tick/g) || []).length).toBe(11)
+    const mb = readFileSync(__dirname + '/../pages/MyBody.tsx', 'utf8')
+    const card = mb.slice(mb.indexOf('data-testid="body-score-card"') - 120, mb.indexOf('data-testid="body-score-card"') + 40)
+    expect(card).toContain('bg-white'); expect(card).not.toMatch(/tier\./)
+    expect(mb).toContain('gradient="body"'); expect(mb).not.toMatch(/getBandTier|tier\.(bg|color)/)
   })
   it('pure average, window and retention', () => {
     expect(computeMoodAverage([])).toBeNull()

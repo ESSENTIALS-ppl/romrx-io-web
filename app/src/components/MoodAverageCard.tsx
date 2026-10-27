@@ -8,20 +8,36 @@ export function halfDialPoint(v: number, r = 80, cx = 100, cy = 100) {
   const a = Math.PI * (1 - Math.max(0, Math.min(100, v)) / 100)
   return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) }
 }
-export function HalfDial({ value, color, label, testid }: { value: number; color: string; label: string; testid: string }) {
-  const end = halfDialPoint(value, 80); const tip = halfDialPoint(value, 62)
+// Approved Oct 26 concept mockup (mybody-mood-gauge): body dial runs red to yellow to blue, mood dial a calm slate to cyan.
+// Stops are fixed per dial. The gradient spans the FILLED arc (SVG objectBoundingBox), exactly like the mockup.
+// The mood stops contain no red or alarm color on purpose (Stacy cond. 2: calm palette only).
+export const DIAL_GRADIENTS = {
+  body: [[0, '#DC2626'], [0.5, '#EAB308'], [1, '#1D4ED8']],
+  mood: [[0, '#94A3B8'], [1, '#38E8FF']],
+} as const
+const DIAL_TICKS = Array.from({ length: 11 }, (_, i) => i * 10)
+
+export function HalfDial({ value, gradient, label, testid }: { value: number; gradient: keyof typeof DIAL_GRADIENTS; label: string; testid: string }) {
+  const end = halfDialPoint(value, 80); const tip = halfDialPoint(value, 66)
+  const gid = `${testid}-grad`
   return (
-    <svg viewBox="0 0 200 112" className="w-full max-w-[240px] mx-auto" role="img" aria-label={label} data-testid={testid} data-value={value}>
+    <svg viewBox="0 0 200 112" className="w-full max-w-[240px] mx-auto" role="img" aria-label={label} data-testid={testid} data-value={value} data-gradient={gradient}>
+      <defs>
+        <linearGradient id={gid} x1="0" x2="1">
+          {DIAL_GRADIENTS[gradient].map(([o, c]) => <stop key={o} offset={o} stopColor={c} />)}
+        </linearGradient>
+      </defs>
       <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#E2E8F0" strokeWidth="14" strokeLinecap="round" />
-      {value > 0 && <path d={`M20 100 A80 80 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`} fill="none" stroke={color} strokeWidth="14" strokeLinecap="round" />}
+      {value > 0 && <path d={`M20 100 A80 80 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`} fill="none" stroke={`url(#${gid})`} strokeWidth="14" strokeLinecap="round" data-dial-fill />}
+      {DIAL_TICKS.map(t => {
+        const o = halfDialPoint(t, 70); const i = halfDialPoint(t, 63)
+        return <line key={t} x1={o.x.toFixed(1)} y1={o.y.toFixed(1)} x2={i.x.toFixed(1)} y2={i.y.toFixed(1)} stroke="#CBD5E1" strokeWidth="1.5" data-dial-tick />
+      })}
       <line x1="100" y1="100" x2={tip.x.toFixed(2)} y2={tip.y.toFixed(2)} stroke="#0F172A" strokeWidth="3" strokeLinecap="round" />
       <circle cx="100" cy="100" r="6" fill="#0F172A" />
     </svg>
   )
 }
-
-// Calm, non-alarm palette only: no red or danger colors for low mood (Stacy cond. 2).
-const MOOD_COLOR = '#38BDF8'
 
 export function MoodEmpty() {
   return (
@@ -57,9 +73,8 @@ export function MoodAverageCard({ userId, saveEnabled = romoodSaveEnabled(), loa
       </div>
       {show ? (
         <div data-testid="mood-average-gauge">
-          <HalfDial value={avg.energy} color={MOOD_COLOR} testid="mood-average-dial" label={`${C.title}: ${name}. ${ROMOOD_COPY.energy.label}: ${ROMOOD_COPY.energy.readout[readoutIndex(avg.energy)]}. ${ROMOOD_COPY.pleasantness.label}: ${ROMOOD_COPY.pleasantness.readout[readoutIndex(avg.pleasantness)]}`} />
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 -mt-1" data-testid="mood-average-dial-caption">{ROMOOD_COPY.energy.label}</p>
-          <p className="text-xl font-bold text-slate-900" data-testid="mood-average-name">{name}</p>
+          <HalfDial value={avg.energy} gradient="mood" testid="mood-average-dial" label={`${C.title}: ${name}. ${ROMOOD_COPY.energy.label}: ${ROMOOD_COPY.energy.readout[readoutIndex(avg.energy)]}. ${ROMOOD_COPY.pleasantness.label}: ${ROMOOD_COPY.pleasantness.readout[readoutIndex(avg.pleasantness)]}`} />
+          <p className="text-xl font-bold text-slate-900 -mt-1" data-testid="mood-average-name">{name}</p>
           <p className="text-xs text-slate-500">{ROMOOD_COPY.energy.label}: {ROMOOD_COPY.energy.readout[readoutIndex(avg.energy)]}</p>
           <p className="text-xs text-slate-600">{ROMOOD_COPY.pleasantness.label}: {ROMOOD_COPY.pleasantness.readout[readoutIndex(avg.pleasantness)]}</p>
           <p className="text-xs text-slate-700 mt-1"><span className="font-semibold">{windowLabel}</span> · {C.basedOn(avg.count)}</p>

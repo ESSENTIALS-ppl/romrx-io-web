@@ -128,7 +128,7 @@ export const ROMOOD_MYBODY_CONFIG = {
   recentDays: 84,
 }
 export const ROMOOD_MYBODY_COPY = {
-  title: 'Your average mood',
+  title: 'ROMood average',
   separate: 'Separate from your body score',
   reflection: 'For your own reflection. Not medical advice.',
   divider: 'Mood is not part of your body score',
