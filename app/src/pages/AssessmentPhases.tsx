@@ -2,10 +2,14 @@ import { StepVideo } from '../components/StepVideo'
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import { Loader2, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { SETUP_STEPS } from './assessmentMeta'
+import { STEPS } from './assessmentSteps'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
 import { track } from '../lib/track'
+import { lazy, Suspense } from 'react'
+// Lazy so the setup/measure screens do not load the auth client just for ROMood.
+const ROMood = lazy(() => import('./ROMood').then(m => ({ default: m.ROMood })))
 
-export type Phase = 'setup' | 'measure' | 'lead' | 'done' | 'lead-done' | 'outro'
+export type Phase = 'setup' | 'mood' | 'measure' | 'lead' | 'done' | 'lead-done' | 'outro'
 
 export function AssessmentPhases(p: {
   phase: Phase
@@ -32,6 +36,10 @@ if (phase === 'setup') {
     return (
       <div className="min-h-screen bg-surface py-8 px-4">
         <div className="max-w-lg mx-auto space-y-5">
+          {/* Whole-flow counter (Jim Oct 26 8:12 PM ET): setup is Step 1 of STEPS.length + 2. Same style as the measure screen counter. */}
+          <div className="flex justify-end">
+            <span className="text-xs text-slate-500 whitespace-nowrap" data-testid="flow-counter">Step 1 of {STEPS.length + 2}</span>
+          </div>
           <div className="text-center">
             <h1 className="font-display font-bold text-cobalt text-2xl">ROM Self-Assessment</h1>
             <p className="text-sm text-slate-500 mt-1">Approximately 15 minutes using the ROMeter. Equipment needed: your phone, a chair, a wall, and a tape measure or ruler.</p>
@@ -54,13 +62,18 @@ if (phase === 'setup') {
             ))}
           </div>
 
-          <button onClick={() => { track('assessment_started'); p.setPhase('measure') }} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
+          <button onClick={() => { track('assessment_started'); p.setPhase('mood') }} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
             I'm ready - Start assessment <ChevronRight size={18} />
           </button>
           <p className="text-center text-xs text-slate-500">You can skip any measurement you can't do and retest later.</p>
         </div>
       </div>
     )
+  }
+
+  // ROMood check: the very next step after the welcome (intro) video (Jim, Oct 26 2026 6:36 PM ET).
+  if (phase === 'mood') {
+    return <Suspense fallback={null}><ROMood onBack={() => p.setPhase('setup')} onDone={() => p.setPhase('measure')} /></Suspense>
   }
 
   if (phase === 'lead') {

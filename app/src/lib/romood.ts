@@ -1,0 +1,186 @@
+/**
+ * ROMood logic and storage (spec rev 5, Section 3; Stacy locked mood-data requirements 1 to 6;
+ * Stacy pass at 8c61152, fixes 1, 2, 4, 6, 7).
+ *
+ * Saving is OFF by default. Stacy req 5: no mood entry (and no mood setting) is stored until the /legal
+ * Privacy Policy mood line, incl. 7A Washington consumer health data, is live. Turn on with
+ * VITE_ROMOOD_SAVE=on only after that line is live and both ROMood migrations are applied (Jim's go).
+ *
+ * Mood is never sent to Meta ('mood' is in META_FORBIDDEN_KEYS) and never feeds scoring (req 3).
+ */
+// Supabase is loaded lazily so screens that embed ROMood do not need a client at import time.
+const db = async () => (await import('./supabase')).supabase
+import { FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_CONSENT_VERSION, type FeelingWord, type Quadrant, type RetentionMode } from './romoodCopy'
+
+/** Mood-to-Dailee linking gate. OFF in code until the new opt-in text and /legal 7A text are live. */
+export function romoodDaileeLinkEnabled(opts: { saveEnabled: boolean; daileeFlag?: boolean }): boolean {
+  return opts.saveEnabled && (opts.daileeFlag ?? ROMOOD_PLACEHOLDERS.daileeLinkEnabled)
+}
+
+/** Cut-off date for the chosen retention mode; null means keep until the user deletes. */
+export function retentionCutoff(mode: RetentionMode, now: Date = new Date()): Date | null {
+  if (mode === 'until_delete') return null
+  const d = new Date(now)
+  if (mode === '12_months') d.setUTCMonth(d.getUTCMonth() - 12)
+  else d.setUTCDate(d.getUTCDate() - 84)
+  return d
+}
+
+/** Nearest feeling word to a dial/bar position (suggestion only). */
+export function nearestWord(energy: number, pleasantness: number): FeelingWord {
+  let best = FEELING_WORDS[0]; let bd = Infinity
+  for (const w of FEELING_WORDS) {
+    const p = positionFor(w); const d = (p.energy - energy) ** 2 + (p.pleasantness - pleasantness) ** 2
+    if (d < bd) { bd = d; best = w }
+  }
+  return best
+}
+
+export const ROMOOD_CONTEXT_ONBOARDING = 'onboarding'
+/** Quick check-in from My Body (/dashboard/mood). Allowed by migration 20261027000000. */
+export const ROMOOD_CONTEXT_QUICK = 'quick'
+export type MoodContext = typeof ROMOOD_CONTEXT_ONBOARDING | typeof ROMOOD_CONTEXT_QUICK
+/** SQLSTATE raised by the daily cap trigger (migration 20261027000000). */
+export const ROMOOD_DAILY_CAP_CODE = 'RM429'
+export const ROMOOD_DAILY_CAP = 4
+const SW = ROMOOD_PLACEHOLDERS.Q8_sliderSwitch
+
+export function romoodSaveEnabled(env: Record<string, unknown> = import.meta.env): boolean {
+  return env.VITE_ROMOOD_SAVE === 'on'
+}
+
+/** 0 to 100 slider. Readout index: 0 leaning low, 1 middle, 2 leaning high. Switch points are Q8. */
+export function readoutIndex(v: number): 0 | 1 | 2 {
+  if (v < SW.low) return 0
+  if (v > SW.high) return 2
+  return 1
+}
+
+/** Quadrant from slider values. Exactly mid counts as the lower/unpleasant side (Q8). */
+export function quadrantFor(energy: number, pleasantness: number): Quadrant {
+  const hi = energy > SW.mid
+  const pl = pleasantness > SW.mid
+  if (hi) return pl ? 'high_pleasant' : 'high_unpleasant'
+  return pl ? 'low_pleasant' : 'low_unpleasant'
+}
+
+/** Slider position for a bubble tap: centre of a 2x2 cell inside its quadrant, in grid order. */
+export function positionFor(word: FeelingWord): { energy: number; pleasantness: number } {
+  const inQuad = FEELING_WORDS.filter(w => w.quadrant === word.quadrant)
+  const i = inQuad.findIndex(w => w.word === word.word)
+  const row = Math.floor(i / 2)
+  const col = i % 2
+  const hi = word.quadrant.startsWith('high')
+  const pl = word.quadrant.endsWith('_pleasant')
+  const energy = hi ? (row === 0 ? 90 : 70) : (row === 0 ? 30 : 10)
+  const pleasantness = pl ? (col === 0 ? 70 : 90) : (col === 0 ? 10 : 30)
+  return { energy, pleasantness }
+}
+
+export type MoodEntryInput = {
+  energy: number
+  pleasantness: number
+  word: string | null
+  /** The real time the user ticked the opt-in box. Required; there is no fallback (Stacy fix 6). */
+  optedInAt: string
+}
+
+/** Pure gate for the Next button (Stacy req 1 and 2, fix 6: needs a real tick time). */
+export function shouldSaveMood(opts: { optIn: boolean; signedIn: boolean; saveEnabled: boolean; optedInAt: string | null }): boolean {
+  const hasTick = isValidTickTime(opts.optedInAt) // Stacy pass 97101d6: tick time is required
+  return opts.optIn && opts.signedIn && opts.saveEnabled && hasTick
+}
+
+export function isValidTickTime(t: unknown): t is string {
+  return typeof t === 'string' && t.length > 0 && !Number.isNaN(Date.parse(t))
+}
+
+/** Stores the user's saving choice (Stacy fix 2). Opt-in time is the real tick time, never now(). */
+export async function setMoodSaving(userId: string, on: boolean, tickTime: string): Promise<{ ok: boolean }> {
+  if (!isValidTickTime(tickTime)) return { ok: false }
+  const row: Record<string, unknown> = on
+    ? { user_id: userId, saving_on: true, opted_in_at: tickTime, turned_off_at: null, consent_version: ROMOOD_CONSENT_VERSION }
+    : { user_id: userId, saving_on: false, turned_off_at: tickTime }
+  const { error } = await (await db()).from('mood_settings').upsert(row, { onConflict: 'user_id' })
+  return { ok: !error }
+}
+
+export async function getMoodSaving(userId: string): Promise<{ savingOn: boolean; optedInAt: string | null; consentVersion: string | null } | null> {
+  const { data, error } = await (await db()).from('mood_settings').select('saving_on, opted_in_at, consent_version').eq('user_id', userId).maybeSingle()
+  if (error) return null
+  const d = data as { saving_on: boolean; opted_in_at: string | null; consent_version?: string | null } | null
+  return { savingOn: !!d?.saving_on, optedInAt: d?.opted_in_at ?? null, consentVersion: d?.consent_version ?? null }
+}
+
+/** True when saving is on under the CURRENT opt-in text with a valid tick time (re-consent rule). */
+export function hasCurrentConsent(s: { savingOn: boolean; optedInAt: string | null; consentVersion: string | null } | null): boolean {
+  return !!s && s.savingOn && isValidTickTime(s.optedInAt) && s.consentVersion === ROMOOD_CONSENT_VERSION
+}
+
+/** Detects the daily cap trigger error from a PostgREST error object. */
+export function isDailyCapError(err: { code?: string; message?: string } | null | undefined): boolean {
+  return !!err && (err.code === ROMOOD_DAILY_CAP_CODE || /romood_daily_cap/.test(err.message ?? ''))
+}
+
+export async function saveMoodEntry(userId: string, input: MoodEntryInput, context: MoodContext = ROMOOD_CONTEXT_ONBOARDING): Promise<{ ok: boolean; capped?: boolean }> {
+  if (!isValidTickTime(input.optedInAt)) return { ok: false }
+  const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)))
+  const energy = clamp(input.energy)
+  const pleasantness = clamp(input.pleasantness)
+  const { error } = await (await db()).from('mood_entries').insert({
+    user_id: userId,
+    energy,
+    pleasantness,
+    word: input.word,
+    quadrant: quadrantFor(energy, pleasantness),
+    context,
+    opted_in: true,
+    opted_in_at: input.optedInAt,
+  })
+  if (error) return { ok: false, capped: isDailyCapError(error) }
+  return { ok: true }
+}
+
+/** Stacy req 4 / fix 1: the user can delete their mood entries. RLS limits this to their own rows. */
+export async function deleteAllMoodEntries(userId: string): Promise<{ ok: boolean }> {
+  const { error } = await (await db()).from('mood_entries').delete().eq('user_id', userId)
+  return { ok: !error }
+}
+
+/**
+ * Q11 skip event: DISABLED (Grant Oct 26). Live product_events RLS (read-only check, project cqzvqzwwevnflinxgnpp):
+ * the authenticated insert policy requires user_id = auth.uid(), so a no-id row from a signed-in user is rejected.
+ * Rule: if no-id rows are rejected, send no skip event at all and never add a user id. No-op on purpose.
+ */
+export const ROMOOD_SKIP_EVENT_ENABLED = false
+export async function trackMoodSkipped(): Promise<void> { /* intentionally sends nothing */ }
+
+/** Real step position for the Q6 counter: setup (1), ROMood (2), then each measure step. */
+export const ROMOOD_FLOW_POSITION = 2
+export function romoodStepEyebrow(eyebrow: string | null): string | null {
+  return eyebrow === 'flow' ? `Assessment step ${ROMOOD_FLOW_POSITION}` : eyebrow
+}
+export function romoodStepCounter(counter: string | null, measureSteps: number): string | null {
+  if (counter !== 'flow') return counter
+  return `Step ${ROMOOD_FLOW_POSITION} of ${2 + measureSteps}`
+}
+
+export type MoodAverage = { energy: number; pleasantness: number; count: number }
+/** Pure average from the user's live rows. Never stored or cached, so a delete always recomputes it (Stacy cond. 4/5). */
+export function computeMoodAverage(rows: { energy: number; pleasantness: number; created_at?: string }[], since: Date | null = null): MoodAverage | null {
+  const r = since ? rows.filter(x => !x.created_at || new Date(x.created_at) >= since) : rows
+  if (r.length === 0) return null
+  const avg = (k: 'energy' | 'pleasantness') => Math.round(r.reduce((s, x) => s + x[k], 0) / r.length)
+  return { energy: avg('energy'), pleasantness: avg('pleasantness'), count: r.length }
+}
+/** Effective window start: the stricter of the display window and the retention cutoff. Label follows it. */
+export function moodAverageSince(window: 'all_time' | 'recent', recentDays: number, retention: RetentionMode, now = new Date()): Date | null {
+  const cands = [retentionCutoff(retention, now), window === 'recent' ? new Date(now.getTime() - recentDays * 86400000) : null].filter((d): d is Date => !!d)
+  return cands.length ? new Date(Math.max(...cands.map(d => d.getTime()))) : null
+}
+/** Reads the signed-in user's own rows (RLS). No analytics or Meta call anywhere on this path. */
+export async function fetchMoodRows(userId: string): Promise<{ energy: number; pleasantness: number; created_at: string }[]> {
+  const { data, error } = await (await db()).from('mood_entries').select('energy, pleasantness, created_at').eq('user_id', userId)
+  if (error || !data) return []
+  return data as { energy: number; pleasantness: number; created_at: string }[]
+}

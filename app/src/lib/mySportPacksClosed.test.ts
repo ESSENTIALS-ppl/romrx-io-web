@@ -11,9 +11,10 @@ describe('My Sport: packs closed during beta (Oct 12 batch)', () => {
     expect(src).not.toMatch(/SPORT_PRICE_IDS/)
   })
   it('shows the Stacy-cleared lines (R8/R9)', () => {
-    expect(src).toContain('Coming January 2027')
+    expect(src).toContain('Coming {PACK_LAUNCH_DATE}')
+    expect(src).not.toContain('January 2027')
     expect(src).toContain('{PACKS_CLOSED_MESSAGE}')
-    expect(src).toContain('ROMBot, and sport packs when they open in January 2027.')
+    expect(src).toContain('ROMBot, and sport packs when they open in {PACK_LAUNCH_DATE}. {PACK_EMAIL_LINE}')
     expect(src).not.toMatch(/at checkout after beta/)
     expect(src).not.toMatch(/>\s*Add \{/)
   })

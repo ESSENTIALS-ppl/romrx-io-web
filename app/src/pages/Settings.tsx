@@ -9,6 +9,8 @@ import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
 import { FeedbackWidget } from '../components/FeedbackWidget'
 import { AdsMeasurementSettings } from '../components/AdsMeasurementSettings'
+import { MoodSettings } from '../components/MoodSettings'
+import { CrisisHelp } from '../components/CrisisLine'
 import { cn } from '../lib/cn'
 import {
   fetchCancelStatus, openCancelFlow, CANCEL_BUTTON_LABEL, CANCEL_BASE_CASCADE_NOTE, type CancelStatus,
@@ -658,6 +660,10 @@ export function Settings() {
 
         {/* ── ADS MEASUREMENT (consent log, Legal 2026-09-24) ─────── */}
         <AdsMeasurementSettings userId={user?.id} />
+
+        {/* ROMood check-ins: delete + turn saving off (Stacy pass 8c61152). Hidden while saving flag is OFF. */}
+        <MoodSettings userId={user?.id} />
+        <div className="rounded-card bg-white border border-slate-200 p-4"><CrisisHelp /></div>
 
         {/* ── DANGER ZONE ────────────────────────────────────────── */}
         <SectionCard title="Danger zone">

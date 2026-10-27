@@ -1,0 +1,136 @@
+# feat/romood-daily tests, Mon Oct 26 2026 08:43 PM EDT
+frontend head ee40b98; backend feat/romood-daily-email 7bc1bd0
+
+== vitest, flag OFF (default)
+ Test Files  58 passed (58)
+      Tests  998 passed | 4 skipped (1002)
+
+== vitest, VITE_ROMOOD_SAVE=on
+ Test Files  58 passed (58)
+      Tests  998 passed | 4 skipped (1002)
+
+== tsc --noEmit -p tsconfig.app.json
+exit=0
+== tsc -b (npm run build typecheck)
+exit=0
+== same tsc -p tsconfig.app.json at cf8c333 (for reference)
+src/pages/AssessmentMeasureScreen.tsx(229,125): error TS2345: Argument of type '"mood"' is not assignable to parameter of type '"lead" | "setup" | "measure" | "done" | "lead-done"'.
+
+== deno check submit-assessment/index.ts
+exit=0
+== deno test mood_block.test.ts
+gate: env flag, saving on, valid tick, current consent all required ... ok (515µs)
+summary: count and rounded averages; empty is null ... ok (457µs)
+window: later of previous assessment and opt-in tick ... ok (60µs)
+block: Stacy text verbatim, numbers only, no words, omitted at 0 ... ok (124µs)
+buildMoodBlockForUser: scoped to the user, averages only, omitted when gated off ... ok (374µs)
+index.ts: mood never in subject, tags, URLs or events ... ok (1ms)
+ok | 6 passed | 0 failed (8ms)
+
+
+# Rerun after Stacy quick copy, Mon Oct 26 2026 08:45 PM EDT
+== vitest, flag OFF
+ Test Files  58 passed (58)
+      Tests  998 passed | 4 skipped (1002)
+== vitest, VITE_ROMOOD_SAVE=on
+ Test Files  58 passed (58)
+      Tests  998 passed | 4 skipped (1002)
+== tsc -b
+exit=0
+== npm run build (local dist only, no deploy)
+
+> romrx-io-app@0.1.0 build
+> tsc -b && vite build
+
+vite v8.1.3 building client environment for production...
+[2K
+transforming...✓ 1911 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.89 kB │ gzip:   0.47 kB
+dist/assets/index-imfs2koU.css   38.54 kB │ gzip:   7.36 kB
+dist/assets/index-DOSeABse.js   736.19 kB │ gzip: 212.74 kB
+
+[INEFFECTIVE_DYNAMIC_IMPORT] src/lib/supabase.ts is dynamically imported by src/lib/romood.ts but also statically imported by src/components/FeedbackWidget.tsx, src/components/TermsReacceptGate.tsx, src/hooks/useAuth.ts, src/hooks/useProfile.ts, src/lib/authRedirect.ts, ..., dynamic import will not move module into another chunk.
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[INEFFECTIVE_DYNAMIC_IMPORT] src/pages/ROMood.tsx is dynamically imported by src/pages/AssessmentPhases.tsx but also statically imported by src/App.tsx, dynamic import will not move module into another chunk.
+
+✓ built in 2.52s
+build exit=0
+== deno check/test
+check exit=0
+ok | 6 passed | 0 failed (21ms)
+DONE
+
+
+
+
+# Final rerun (legal.html:131 Stacy Addendum 2 line, cap trigger created_at := now(), CrisisLine test narrowed), Mon Oct 26 2026 08:58 PM EDT
+== vitest, flag OFF
+ Test Files  58 passed (58)
+      Tests  998 passed | 4 skipped (1002)
+== vitest, VITE_ROMOOD_SAVE=on
+ Test Files  58 passed (58)
+      Tests  998 passed | 4 skipped (1002)
+== tsc -b
+exit=0
+== npm run build (local dist only)
+build exit=0
+dist/index.html                   0.89 kB │ gzip:   0.47 kB
+dist/assets/index-imfs2koU.css   38.54 kB │ gzip:   7.36 kB
+dist/assets/index-DOSeABse.js   736.19 kB │ gzip: 212.74 kB
+✓ built in 972ms
+== backend deno (HEAD fbd65a0)
+deno check exit=0
+gate: env flag, saving on, valid tick, current consent all required ... ok (458µs)
+summary: count and rounded averages; empty is null ... ok (346µs)
+window: later of previous assessment and opt-in tick ... ok (46µs)
+block: Stacy text verbatim, numbers only, no words, omitted at 0 ... ok (96µs)
+block: count 1 reads '1 time', 2 reads '2 times' ... ok (42µs)
+buildMoodBlockForUser: scoped to the user, averages only, omitted when gated off ... ok (285µs)
+index.ts: mood never in subject, tags, URLs or events ... ok (841µs)
+ok | 7 passed | 0 failed (6ms)
+
+== Update Tue Oct 27 2026 06:29 AM EDT: grants hardening + mood_settings updated_at trigger + reverts README + PUSH-PLAN source line (LOCAL ONLY)
+vitest, flag OFF: Test Files 58 passed (58); Tests 1003 passed | 4 skipped (1007)
+vitest, VITE_ROMOOD_SAVE=on: Test Files 58 passed (58); Tests 1003 passed | 4 skipped (1007)
+tsc -b: exit=0
+npm run build (tsc -b && vite build): exit=0
+deno: not rerun (backend repo untouched)
+Schema-copy test run (ROMOOD-SCHEMACOPY-TEST-20261027.sql, 70 assertions): SKIPPED. Jim said no test DB of any kind. Static check only; see the report to Grant.
+
+== Update Tue Oct 27 2026 07:36 AM EDT: Vera 5af19bf gaps A and B (migration 5 consent policy, MoodSettings re-consent display) (LOCAL ONLY)
+vitest, flag OFF: Test Files 58 passed (58) Tests 1021 passed | 4 skipped (1025)
+vitest, VITE_ROMOOD_SAVE=on: Test Files 58 passed (58) Tests 1021 passed | 4 skipped (1025)
+tsc -b: exit=0
+npm run build (tsc -b && vite build): exit=0
+deno (backend 5af19bf, temp copies only): plain 'deno check index.ts' exit 1 (npm:openai types, root package.json manual node_modules mode, same on v38); 'deno check --node-modules-dir=auto' exit 0; 'deno bundle --node-modules-dir=auto' exit 0 (63 modules, 793.98KB); deno bundle with root package.json removed exit 0.
+SQL tests against a database: NOT run (no DB connection). Migration 5 is checked by SQL-text tests only.
+
+== Update Tue Oct 27 2026 08:38 AM EDT: T14 pack-date port 6b78eca + PUSH-PLAN repin and T14 site deploys (LOCAL ONLY)
+vitest, flag OFF: Test Files 58 passed (58) Tests 1025 passed | 4 skipped (1029)
+vitest, VITE_ROMOOD_SAVE=on: Test Files 58 passed (58) Tests 1025 passed | 4 skipped (1029)
+npm run build (tsc -b && vite build): exit=0
+root npm test (header, cards, gpc, card-line): exit=0
+deno: not rerun (backend repo untouched)
+
+== Update Tue Oct 27 2026 08:42 AM EDT: PUSH-PLAN Step 5b drops yoga (2 T14 sites, 3 publishes, about 45 credits), draft pins 78249bf and ac1c045 (LOCAL ONLY)
+vitest, flag OFF: Test Files 58 passed (58) Tests 1025 passed | 4 skipped (1029)
+vitest, VITE_ROMOOD_SAVE=on: Test Files 58 passed (58) Tests 1025 passed | 4 skipped (1029)
+npm run build (tsc -b && vite build): exit=0
+deno: not rerun (backend repo untouched)
+
+== Update 20261027 (round 5 repin: step 1 pushes romood, romrxbjj, romrxbodybuilding branches) ==
+vitest flag off: 58 files, 1025 passed, 4 skipped
+VITE_ROMOOD_SAVE=on vitest: 58 files, 1025 passed, 4 skipped
+npm run build: passed
+
+== Update 20261027 (round 6: Vera 4ce5852 gaps G1 to G9, Stacy betaStatus fix) ==
+vitest flag off: 58 files, 1025 passed, 4 skipped
+VITE_ROMOOD_SAVE=on vitest: 58 files, 1025 passed, 4 skipped
+npm run build: passed; root npm test: card-line OK; node scripts/universe-cards-unit.mjs: all passed
