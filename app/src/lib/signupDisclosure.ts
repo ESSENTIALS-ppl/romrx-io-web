@@ -18,10 +18,11 @@ export function sportPackName(add: string | null | undefined): string | null {
 export function signupDisclosure(add: string | null | undefined): string {
   const pack = sportPackName(add)
   const { base, pack: packPrice } = SIGNUP_PRICES_USD
+  // STACY TO CLEAR (2026-10-26): packs are not charged Jan 1, 2027; they open mid-February 2027.
   const charge = pack
-    ? `$${base} per year for Base plus $${packPrice} per year for ${pack}`
-    : `$${base} per year`
-  return `Free through December 31, 2026. Then ${charge}, charged to your card on January 1, 2027 and every year after until you cancel. Cancel online anytime in Settings. Canceling ends your access right away. Cancel before January 1, 2027 and you pay nothing.`
+    ? `$${base} per year for Base, charged to your card on January 1, 2027 and every year after until you cancel. ${pack} is $${packPrice} per year. Sport packs open mid-February 2027. We'll email you when they open.`
+    : `$${base} per year, charged to your card on January 1, 2027 and every year after until you cancel.`
+  return `Free through December 31, 2026. Then ${charge} Cancel online anytime in Settings. Canceling ends your access right away. Cancel before January 1, 2027 and you pay nothing.`
 }
 
 /** Last sentence(s) of the signup terms checkbox label (Legal ruling, Sep 29, 2026; updated for Jim decision (c): cancel ends access immediately). One constant so it changes in one place. */

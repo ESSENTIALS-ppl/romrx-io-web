@@ -26,7 +26,7 @@ export function Unlock() {
     ;(async () => {
       try {
         if (isSportSlug) {
-          // Packs locked until January 2027 (VITE_PACKS_OPEN off by default): never start a pack checkout or collect a card.
+          // Packs locked until mid-February 2027 (PACK-LAUNCH-DATE) (VITE_PACKS_OPEN off by default): never start a pack checkout or collect a card.
           if (import.meta.env.VITE_PACKS_OPEN !== 'on') { setPacksLocked(true); setStatus('error'); return }
           // Existing convenience path - handle as sport unlock
           const priceId = SPORT_PRICE_IDS[token] ?? null

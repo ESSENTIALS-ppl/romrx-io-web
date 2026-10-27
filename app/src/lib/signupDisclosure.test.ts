@@ -3,7 +3,7 @@ import { signupDisclosure, sportPackName, SIGNUP_TERMS_SALES_SENTENCE, SIGNUP_PR
 
 // Exact spec text, section 3b of ca-arl-plan-20260929.md.
 const BASE = 'Free through December 31, 2026. Then $60 per year, charged to your card on January 1, 2027 and every year after until you cancel. Cancel online anytime in Settings. Canceling ends your access right away. Cancel before January 1, 2027 and you pay nothing.'
-const combo = (pack: string) => `Free through December 31, 2026. Then $60 per year for Base plus $149 per year for ${pack}, charged to your card on January 1, 2027 and every year after until you cancel. Cancel online anytime in Settings. Canceling ends your access right away. Cancel before January 1, 2027 and you pay nothing.`
+const combo = (pack: string) => `Free through December 31, 2026. Then $60 per year for Base, charged to your card on January 1, 2027 and every year after until you cancel. ${pack} is $149 per year. Sport packs open mid-February 2027. We'll email you when they open. Cancel online anytime in Settings. Canceling ends your access right away. Cancel before January 1, 2027 and you pay nothing.`
 
 describe('signup ARL disclosure (spec 3b)', () => {
   it('uses the locked prices', () => {

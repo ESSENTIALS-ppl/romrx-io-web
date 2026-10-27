@@ -39,7 +39,7 @@ ok((C.footnote.match(/18 and older/g) || []).length === 1, 'one "18 and older" i
 const uni = readFileSync(join(root, 'universe.html'), 'utf8');
 ok(!/Readiness Profile/.test(uni), '/universe says Protocol, never Profile');
 for (const f of ['bjj.html', 'bodybuilding.html']) {
-  ok(readFileSync(join(root, f), 'utf8').includes('<span class="rx-beta">Beta · Sport pack starting January 2027</span>'), f + ': Stacy beta badge kept');
+  ok(readFileSync(join(root, f), 'utf8').includes('<span class="rx-beta">Beta · Sport pack starting mid-February 2027. We\'ll email you when it opens.</span>'), f + ': Stacy beta badge kept');
 }
 if (fails) { console.error(`\n${fails} failed`); process.exit(1); }
 console.log('\nuniverse-cards: all passed');
