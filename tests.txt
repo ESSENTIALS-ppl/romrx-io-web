@@ -1,0 +1,28 @@
+# feat/romood-daily tests, Mon Oct 26 2026 08:43 PM EDT
+frontend head ee40b98; backend feat/romood-daily-email 7bc1bd0
+
+== vitest, flag OFF (default)
+ Test Files  58 passed (58)
+      Tests  998 passed | 4 skipped (1002)
+
+== vitest, VITE_ROMOOD_SAVE=on
+ Test Files  58 passed (58)
+      Tests  998 passed | 4 skipped (1002)
+
+== tsc --noEmit -p tsconfig.app.json
+exit=0
+== tsc -b (npm run build typecheck)
+exit=0
+== same tsc -p tsconfig.app.json at cf8c333 (for reference)
+src/pages/AssessmentMeasureScreen.tsx(229,125): error TS2345: Argument of type '"mood"' is not assignable to parameter of type '"lead" | "setup" | "measure" | "done" | "lead-done"'.
+
+== deno check submit-assessment/index.ts
+exit=0
+== deno test mood_block.test.ts
+gate: env flag, saving on, valid tick, current consent all required ... ok (515µs)
+summary: count and rounded averages; empty is null ... ok (457µs)
+window: later of previous assessment and opt-in tick ... ok (60µs)
+block: Stacy text verbatim, numbers only, no words, omitted at 0 ... ok (124µs)
+buildMoodBlockForUser: scoped to the user, averages only, omitted when gated off ... ok (374µs)
+index.ts: mood never in subject, tags, URLs or events ... ok (1ms)
+ok | 6 passed | 0 failed (8ms)
