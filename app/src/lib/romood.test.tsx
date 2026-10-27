@@ -284,7 +284,7 @@ describe('mood_settings migration', () => {
     expect(plan).toContain('He saves NO mood, and no prod accounts are created. Cleanup: none.')
     expect(plan).toContain('Pair under review: **b830fa6/5af19bf**')
     expect(plan).not.toContain('Code head **c8412bb**')
-    const merge = plan.indexOf('7. Merge both branches to main')
+    const merge = plan.indexOf('7. Merge the two romood branches to main')
     expect(merge).toBeGreaterThan(plan.indexOf('ROMOOD_EMAIL_MOOD=on'))
     expect(plan.indexOf("Supabase MCP execute_sql")).toBeGreaterThan(merge)
     expect(plan).toContain("select count(*) from pg_roles where rolname='cli_login_postgres'")
@@ -305,6 +305,8 @@ describe('mood_settings migration', () => {
   it('PUSH-PLAN repins 6b78eca and lists the T14 site deploys with IDs from local files', () => {
     const plan = readFileSync(resolve(__dirname, '../../../PUSH-PLAN.md'), 'utf8')
     expect(plan).toContain('whose parent chain contains 6b78eca')
+    expect(plan).toContain('Push the romood, romrxbjj and romrxbodybuilding branches to GitHub as new branches only')
+    for (const m of ['feat/romood-daily-email at exactly 5af19bf', 'feat/pack-date-feb15-1026 at exactly 78249bf', 'feat/pack-date-feb15-1026 at exactly ac1c045', 'https://github.com/ESSENTIALS-ppl/romrx-bjj-web.git', 'https://github.com/ESSENTIALS-ppl/romrx-bodybuilding-web.git', 'NEVER merged to main', 'abort if HEAD differs']) expect(plan).toContain(m)
     expect(plan).toContain('exactly 5af19bf')
     for (const id of ['d9bc6384-fc26-44fb-a51d-32aa8f28dd7b', '29117887-e0e0-4f7d-8758-4a59503c8ad7', '9e59d255-74d0-4da5-a888-e1d70479b795', '78249bf', 'ac1c045']) expect(plan).toContain(id)
     expect(plan).not.toContain('06567695-4772-4025-b029-a04d838ae767')
