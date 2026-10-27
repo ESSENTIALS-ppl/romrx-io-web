@@ -262,6 +262,19 @@ describe('mood_settings migration', () => {
     expect(plan).toContain('Apply migrations 1, 2, 3, 4, 5 in order, from /workspace/romood-daily/supabase/migrations')
     expect(plan).toContain('NOT from the backend repo')
   })
+  it('PUSH-PLAN pins backend 5af19bf and runs the bundled order with switches on', () => {
+    const plan = readFileSync(resolve(__dirname, '../../../PUSH-PLAN.md'), 'utf8')
+    expect(plan).toContain('(exactly 5af19bf, expect 7 deno tests)')
+    expect(plan).toContain('at exactly 5af19bf')
+    expect(plan).not.toContain('Not tested against real Postgres')
+    expect(plan).toContain('ROMOOD-SCHEMACOPY-RETEST-3d08ba7-20261027.md, 147/147')
+    const order = ['Apply migrations 1, 2, 3, 4, 5', 'Deploy ONLY the submit-assessment', 'PROD-TRUNCATE-GRANTS-FIX-20261027.sql', 'VITE_ROMOOD_SAVE=on in the production build env', 'ROMOOD_EMAIL_MOOD=on', 'DROP ROLE cli_login_postgres']
+    const idx = order.map((o) => plan.indexOf(o))
+    idx.forEach((i) => expect(i).toBeGreaterThan(-1))
+    expect([...idx].sort((a, b) => a - b)).toEqual(idx)
+    expect(plan).toContain('PROD-TRUNCATE-GRANTS-REVERT-20261027.sql')
+    expect(plan).not.toMatch(/\u2014/)
+  })
 })
 
 describe('Input B: ROMeter dial', () => {
