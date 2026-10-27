@@ -34,7 +34,8 @@ export function AssessmentMeasureScreen(p: {
   const isHip = step.fields.some(f => f.unscored)
   const hipCopy = hipFlexScreenCopy(p.gender, parseFloat(values.hip_flex_l ?? ''), parseFloat(values.hip_flex_r ?? ''))
   const totalMeasureSteps = STEPS.length
-  const progress = Math.round((stepIdx / totalMeasureSteps) * 100)
+  // Progress fills over all 11 screens, same as the counter (Quinn Oct 26): (stepIdx + 1 + 2) / (STEPS.length + 2).
+  const progress = ((stepIdx + 1 + STEPS_BEFORE_MEASURE) / (totalMeasureSteps + STEPS_BEFORE_MEASURE)) * 100
   // Phone meter: one side at a time on this screen. Entering a meter step opens it on the first empty
   // side; Use this number fills THAT side (same path as typing), collapses it to "Saved: Left 48°",
   // and moves the meter to the next empty side. Switching steps resets this.
@@ -79,8 +80,8 @@ export function AssessmentMeasureScreen(p: {
         {/* Progress */}
         <div className="flex items-center gap-3">
           <div className="flex-1 h-1.5 bg-cobalt-light rounded-full overflow-hidden">
-            <div className="h-full bg-cobalt rounded-full transition-all duration-500"
-              style={{ width: `${progress + (100 / totalMeasureSteps)}%` }} />
+            <div className="h-full bg-cobalt rounded-full transition-all duration-500" data-testid="flow-progress"
+              style={{ width: `${progress}%` }} />
           </div>
           <span className="text-xs text-slate-500 whitespace-nowrap" data-testid="flow-counter">Step {stepIdx + 1 + STEPS_BEFORE_MEASURE} of {totalMeasureSteps + STEPS_BEFORE_MEASURE}</span>
         </div>
@@ -225,7 +226,7 @@ export function AssessmentMeasureScreen(p: {
             <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
-                onClick={() => { if (stepIdx > 0) { p.setStepIdx(s => s - 1); window.scrollTo({ top: 0 }) } else p.setPhase('setup') }}
+                onClick={() => { if (stepIdx > 0) { p.setStepIdx(s => s - 1); window.scrollTo({ top: 0 }) } else p.setPhase('mood') }}
                 className="flex items-center gap-1 text-sm text-slate-500 hover:text-cobalt px-3 py-2 rounded-card hover:bg-cobalt-light transition-colors"
               >
                 <ChevronLeft size={15} /> Back

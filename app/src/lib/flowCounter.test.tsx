@@ -47,4 +47,42 @@ describe('whole-flow counter: all 11 screens', () => {
   it('no label anywhere uses an em dash', () => {
     expect(`Step 1 of ${TOTAL}${romoodStepCounter('flow', STEPS.length)}`).not.toContain('\u2014')
   })
+
+  it.each(STEPS.map((s, i) => [i, s.id] as const))('measure step %i (%s) progress bar fills (i+3)/11', (i) => {
+    mount(createElement(AssessmentMeasureScreen, {
+      stepIdx: i, values: {}, loading: false, error: '', gender: null,
+      setPhase: noop, setStepIdx: noop, handleNext: noop, handleChange: noop,
+    }))
+    const bar = host.querySelector('[data-testid="flow-progress"]') as HTMLElement
+    expect(parseFloat(bar.style.width)).toBeCloseTo(((i + 3) / TOTAL) * 100, 5)
+  })
+})
+
+describe('Back navigation (Quinn Oct 26)', () => {
+  const back = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Back') as HTMLButtonElement
+  it('Back on the first measure screen goes to ROMood, not setup', () => {
+    const setPhase = vi.fn(), setStepIdx = vi.fn()
+    mount(createElement(AssessmentMeasureScreen, {
+      stepIdx: 0, values: {}, loading: false, error: '', gender: null,
+      setPhase, setStepIdx, handleNext: noop, handleChange: noop,
+    }))
+    act(() => { back().click() })
+    expect(setPhase).toHaveBeenCalledWith('mood')
+    expect(setStepIdx).not.toHaveBeenCalled()
+  })
+  it('Back on a later measure screen goes to the previous measure', () => {
+    const setPhase = vi.fn(), setStepIdx = vi.fn()
+    mount(createElement(AssessmentMeasureScreen, {
+      stepIdx: 1, values: {}, loading: false, error: '', gender: null,
+      setPhase, setStepIdx, handleNext: noop, handleChange: noop,
+    }))
+    act(() => { back().click() })
+    expect(setPhase).not.toHaveBeenCalled()
+    expect(setStepIdx).toHaveBeenCalled()
+  })
+  it("ROMood's own Back still goes to setup (AssessmentPhases wiring)", async () => {
+    const fs = await import('node:fs'), path = await import('node:path')
+    const src = fs.readFileSync(path.resolve(__dirname, '../pages/AssessmentPhases.tsx'), 'utf8')
+    expect(src).toContain("<ROMood onBack={() => p.setPhase('setup')} onDone={() => p.setPhase('measure')} />")
+  })
 })
