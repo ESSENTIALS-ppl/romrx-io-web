@@ -48,9 +48,9 @@ const click = async (el: HTMLElement) => { await act(async () => { el.click() })
 describe('ROMood copy (spec rev 5)', () => {
   it('exact lines', () => {
     expect(ROMOOD_COPY.encouragement).toBe("No matter where you're starting today, we're in this together.")
-    expect(ROMOOD_COPY.optInBefore + ROMOOD_COPY.optInLink + ROMOOD_COPY.optInAfter).toBe('Save my mood check-ins so ROMRx can show me how my mood changes over time. I can turn this off or delete them anytime. See the Privacy Policy.')
+    expect(ROMOOD_COPY.optInBefore + ROMOOD_COPY.optInLink + ROMOOD_COPY.optInAfter).toBe('Save my mood check-ins so ROMRx can show me how my mood changes over time, in the app and in my results email. I can turn this off or delete them anytime. See the Privacy Policy.')
     expect(ROMOOD_COPY.optInBefore).not.toMatch(/Dailee/)
-    expect(ROMOOD_SETTINGS_COPY.deleteConfirm).toBe('Delete all your saved mood check-ins? This cannot be undone. We delete them from our database right away. ROMRx does not keep backup copies.')
+    expect(ROMOOD_SETTINGS_COPY.deleteConfirm).toBe('Delete all your saved mood check-ins? This cannot be undone. Emails we already sent you are not affected. We delete them from our database right away. ROMRx does not keep backup copies.')
     expect(ROMOOD_SETTINGS_COPY.deleteConfirm).not.toMatch(/30 days|encrypted backups/)
     expect(FEELING_WORDS).toHaveLength(16)
     expect(FEELING_WORDS.find(w => w.word === 'Riled')?.description).toBe('Heated, and hard to settle.')

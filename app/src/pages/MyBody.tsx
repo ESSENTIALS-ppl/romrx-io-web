@@ -1,5 +1,6 @@
 import { LOW_BACK_NOT_MEASURED, baseLumbarRemoved, isLumbarKey } from '../lib/lumbarFlag'
 import { Link } from 'react-router-dom'
+import { ROMOOD_QUICK_COPY } from '../lib/romoodCopy'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { PageHeader } from '../components/PageHeader'
@@ -210,6 +211,7 @@ export function MyBody() {
       />
 
       {/* ROMood average: visually separate, never feeds the body score (Stacy conditions). */}
+      <Link to="/dashboard/mood" className="btn-secondary text-sm inline-block" data-testid="mybody-quick-mood">{ROMOOD_QUICK_COPY.myBodyButton}</Link>
       <MoodAverageCard userId={user?.id} />
       <MoodScoreDivider />
 

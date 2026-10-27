@@ -10,7 +10,7 @@
  */
 // Supabase is loaded lazily so screens that embed ROMood do not need a client at import time.
 const db = async () => (await import('./supabase')).supabase
-import { FEELING_WORDS, ROMOOD_PLACEHOLDERS, type FeelingWord, type Quadrant, type RetentionMode } from './romoodCopy'
+import { FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_CONSENT_VERSION, type FeelingWord, type Quadrant, type RetentionMode } from './romoodCopy'
 
 /** Mood-to-Dailee linking gate. OFF in code until the new opt-in text and /legal 7A text are live. */
 export function romoodDaileeLinkEnabled(opts: { saveEnabled: boolean; daileeFlag?: boolean }): boolean {
@@ -37,6 +37,12 @@ export function nearestWord(energy: number, pleasantness: number): FeelingWord {
 }
 
 export const ROMOOD_CONTEXT_ONBOARDING = 'onboarding'
+/** Quick check-in from My Body (/dashboard/mood). Allowed by migration 20261027000000. */
+export const ROMOOD_CONTEXT_QUICK = 'quick'
+export type MoodContext = typeof ROMOOD_CONTEXT_ONBOARDING | typeof ROMOOD_CONTEXT_QUICK
+/** SQLSTATE raised by the daily cap trigger (migration 20261027000000). */
+export const ROMOOD_DAILY_CAP_CODE = 'RM429'
+export const ROMOOD_DAILY_CAP = 4
 const SW = ROMOOD_PLACEHOLDERS.Q8_sliderSwitch
 
 export function romoodSaveEnabled(env: Record<string, unknown> = import.meta.env): boolean {
@@ -93,20 +99,30 @@ export function isValidTickTime(t: unknown): t is string {
 export async function setMoodSaving(userId: string, on: boolean, tickTime: string): Promise<{ ok: boolean }> {
   if (!isValidTickTime(tickTime)) return { ok: false }
   const row: Record<string, unknown> = on
-    ? { user_id: userId, saving_on: true, opted_in_at: tickTime, turned_off_at: null }
+    ? { user_id: userId, saving_on: true, opted_in_at: tickTime, turned_off_at: null, consent_version: ROMOOD_CONSENT_VERSION }
     : { user_id: userId, saving_on: false, turned_off_at: tickTime }
   const { error } = await (await db()).from('mood_settings').upsert(row, { onConflict: 'user_id' })
   return { ok: !error }
 }
 
-export async function getMoodSaving(userId: string): Promise<{ savingOn: boolean; optedInAt: string | null } | null> {
-  const { data, error } = await (await db()).from('mood_settings').select('saving_on, opted_in_at').eq('user_id', userId).maybeSingle()
+export async function getMoodSaving(userId: string): Promise<{ savingOn: boolean; optedInAt: string | null; consentVersion: string | null } | null> {
+  const { data, error } = await (await db()).from('mood_settings').select('saving_on, opted_in_at, consent_version').eq('user_id', userId).maybeSingle()
   if (error) return null
-  const d = data as { saving_on: boolean; opted_in_at: string | null } | null
-  return { savingOn: !!d?.saving_on, optedInAt: d?.opted_in_at ?? null }
+  const d = data as { saving_on: boolean; opted_in_at: string | null; consent_version?: string | null } | null
+  return { savingOn: !!d?.saving_on, optedInAt: d?.opted_in_at ?? null, consentVersion: d?.consent_version ?? null }
 }
 
-export async function saveMoodEntry(userId: string, input: MoodEntryInput): Promise<{ ok: boolean }> {
+/** True when saving is on under the CURRENT opt-in text with a valid tick time (re-consent rule). */
+export function hasCurrentConsent(s: { savingOn: boolean; optedInAt: string | null; consentVersion: string | null } | null): boolean {
+  return !!s && s.savingOn && isValidTickTime(s.optedInAt) && s.consentVersion === ROMOOD_CONSENT_VERSION
+}
+
+/** Detects the daily cap trigger error from a PostgREST error object. */
+export function isDailyCapError(err: { code?: string; message?: string } | null | undefined): boolean {
+  return !!err && (err.code === ROMOOD_DAILY_CAP_CODE || /romood_daily_cap/.test(err.message ?? ''))
+}
+
+export async function saveMoodEntry(userId: string, input: MoodEntryInput, context: MoodContext = ROMOOD_CONTEXT_ONBOARDING): Promise<{ ok: boolean; capped?: boolean }> {
   if (!isValidTickTime(input.optedInAt)) return { ok: false }
   const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)))
   const energy = clamp(input.energy)
@@ -117,11 +133,12 @@ export async function saveMoodEntry(userId: string, input: MoodEntryInput): Prom
     pleasantness,
     word: input.word,
     quadrant: quadrantFor(energy, pleasantness),
-    context: ROMOOD_CONTEXT_ONBOARDING,
+    context,
     opted_in: true,
     opted_in_at: input.optedInAt,
   })
-  return { ok: !error }
+  if (error) return { ok: false, capped: isDailyCapError(error) }
+  return { ok: true }
 }
 
 /** Stacy req 4 / fix 1: the user can delete their mood entries. RLS limits this to their own rows. */

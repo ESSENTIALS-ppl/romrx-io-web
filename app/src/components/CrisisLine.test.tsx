@@ -84,6 +84,6 @@ describe('single source', () => {
   })
   it('legal: backup line sits right before the 7A crisis line', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
-    expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them.</p>\n        <p>ROMRx does not monitor your check-ins and cannot respond to emergencies.')
+    expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider may keep a copy of sent emails for a limited time.</p>\n        <p>ROMRx does not monitor your check-ins and cannot respond to emergencies.')
   })
 })

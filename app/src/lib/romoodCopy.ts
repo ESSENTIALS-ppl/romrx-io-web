@@ -60,8 +60,8 @@ export const ROMOOD_COPY = {
   pleasantness: { label: 'Pleasantness', low: 'Unpleasant', high: 'Pleasant', readout: ['Leaning unpleasant', 'In the middle', 'Leaning pleasant'] },
   gridLabel: 'Feeling words',
   encouragement: "No matter where you're starting today, we're in this together.",
-  /** Opt-in text (Stacy pass 5b007ed, Oct 26). Single source for the ROMood screen and the Settings re-enable flow. No Dailee purpose until linking exists and gets its own consent. */
-  optInBefore: 'Save my mood check-ins so ROMRx can show me how my mood changes over time. I can turn this off or delete them anytime. See the ',
+  /** Opt-in text (Stacy daily/email copy, Oct 26 8:36 PM; was pass 5b007ed). Opt-ins under this text carry ROMOOD_CONSENT_VERSION. Single source for the ROMood screen and the Settings re-enable flow. No Dailee purpose until linking exists and gets its own consent. */
+  optInBefore: 'Save my mood check-ins so ROMRx can show me how my mood changes over time, in the app and in my results email. I can turn this off or delete them anytime. See the ',
   optInLink: 'Privacy Policy',
   optInAfter: '.',
   back: P.Q4_buttons.back,
@@ -79,7 +79,7 @@ export const ROMOOD_SETTINGS_COPY = {
   turnOff: 'Turn off saving',
   turnOn: 'Turn on saving',
   deleteButton: 'Delete my mood check-ins',
-  deleteConfirm: 'Delete all your saved mood check-ins? This cannot be undone. We delete them from our database right away. ROMRx does not keep backup copies.',
+  deleteConfirm: 'Delete all your saved mood check-ins? This cannot be undone. Emails we already sent you are not affected. We delete them from our database right away. ROMRx does not keep backup copies.',
   offerDelete: 'Saving is off. Do you also want to delete the mood check-ins you already saved?',
   yesDelete: 'Yes, delete them',
   keep: 'Keep them',
@@ -142,3 +142,26 @@ export const ROMOOD_MYBODY_COPY = {
 
 /** DECIDED (Jim, Oct 26): turning saving off OFFERS to delete past check-ins. No longer a placeholder. */
 export const ROMOOD_TURN_OFF_BEHAVIOR: 'offer' | 'auto' = 'offer'
+
+/** Opt-in text version. Only opt-ins under the current text (Stacy, Oct 26 8:36 PM) get mood in the results email.
+ * Older opt-ins (no version) get none until they tick the new text again (RCW 19.373.030(1)(a), (c)). */
+export const ROMOOD_CONSENT_VERSION = 'v2-email-20261026'
+
+/** Quick check-in from My Body (/dashboard/mood). Lines marked STACY-COPY-PENDING need Stacy's text. */
+export const ROMOOD_QUICK_COPY = {
+  heading: 'ROMood check',
+  backToMyBody: 'Back to My Body',
+  save: 'Save check-in',
+  done: 'Done',
+  /** Flag off: screen works, nothing is stored. */
+  notSaved: 'STACY-COPY-PENDING: Saving mood check-ins is not turned on yet, so this check-in is not saved.',
+  /** Saving on, user has not ticked the current opt-in text. */
+  tickToSave: 'STACY-COPY-PENDING: Tick the box below to save this check-in.',
+  /** Saved OK. */
+  saved: 'STACY-COPY-PENDING: Check-in saved.',
+  /** DB daily cap (4 per America/New_York day) reached: error code RM429. */
+  capReached: 'STACY-COPY-PENDING: You have saved 4 check-ins today. You can check in again tomorrow.',
+  /** Any other save failure. */
+  saveFailed: 'STACY-COPY-PENDING: We could not save this check-in. Please try again.',
+  myBodyButton: 'Quick ROMood check',
+} as const
