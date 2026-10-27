@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 import { SectionCard } from './SectionCard'
 import { RETENTION_LINES, ROMOOD_TURN_OFF_BEHAVIOR, ROMOOD_COPY, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY as S } from '../lib/romoodCopy'
-import { deleteAllMoodEntries, getMoodSaving, isValidTickTime, romoodSaveEnabled, setMoodSaving } from '../lib/romood'
+import { deleteAllMoodEntries, getMoodSaving, hasCurrentConsent, isValidTickTime, romoodSaveEnabled, setMoodSaving } from '../lib/romood'
 
 type Props = { userId?: string | null; saveEnabled?: boolean; turnOffBehavior?: 'offer' | 'auto' }
 type Dialog = null | 'confirmDelete' | 'offerDelete' | 'optIn'
@@ -23,7 +23,15 @@ export function MoodSettings({ userId, saveEnabled, turnOffBehavior = ROMOOD_TUR
   useEffect(() => {
     if (!enabled || !userId) return
     let live = true
-    void getMoodSaving(userId).then(r => { if (live && r) setSavingOn(r.savingOn) })
+    // Re-consent rule (Vera GAP B): "on" means saving is on under the CURRENT opt-in text with a valid tick time.
+    // Someone with an older opt-in sees saving OFF and the existing opt-in panel with an UNTICKED box; the old
+    // opt-in is never shown as on, and a fresh tick writes the current consent version.
+    void getMoodSaving(userId).then(r => {
+      if (!live || !r) return
+      const current = hasCurrentConsent(r)
+      setSavingOn(current)
+      if (r.savingOn && !current) { setTickAt(null); setDialog(d => d ?? 'optIn') }
+    })
     return () => { live = false }
   }, [enabled, userId])
 

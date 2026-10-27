@@ -1,5 +1,5 @@
 -- Revert 20261026230000_romood_mood_settings.sql (NOT APPLIED; for reference)
--- Manual use only, run 3rd (order 4, 3, 2, 1: cap, retention, settings, entries). Policies, grants (including the authenticated REVOKE/GRANT hardening) and the updated_at trigger go with the table; the trigger function is dropped last. Copy of supabase/migrations/20261026230000_romood_mood_settings.revert.sql.txt.
+-- Manual use only, run 4th (order 5, 4, 3, 2, 1: consent policy, cap, retention, settings, entries). Policies, grants (including the authenticated REVOKE/GRANT hardening) and the updated_at trigger go with the table; the trigger function is dropped last. Copy of supabase/migrations/20261026230000_romood_mood_settings.revert.sql.txt.
 drop policy if exists mood_entries_insert_own on public.mood_entries;
 create policy mood_entries_insert_own on public.mood_entries
   for insert to authenticated with check ((select auth.uid()) = user_id);

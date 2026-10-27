@@ -10,7 +10,7 @@ const insert = vi.fn(async (_row: Record<string, unknown>) => ({ error: null as 
 const eventInsert = vi.fn(async (_row: Record<string, unknown>) => ({ error: null as null }))
 const upsert = vi.fn(async (_row: Record<string, unknown>, _o?: unknown) => ({ error: null as null }))
 const del = vi.fn(async (_c: string, _v: string) => ({ error: null as null }))
-let settingsRow: { saving_on: boolean; opted_in_at: string | null } | null = null
+let settingsRow: { saving_on: boolean; opted_in_at: string | null; consent_version?: string | null } | null = null
 vi.mock('./supabase', () => ({ supabase: {
   auth: { getSession: async () => ({ data: { session: { user: { id: 'u1' } } } }) },
   from: (t: string) => ({
@@ -26,7 +26,7 @@ let mockSession: { user: { id: string } } | null = { user: { id: 'u1' } }
 vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ session: mockSession, loading: false }) }))
 
 import { ROMood } from '../pages/ROMood'
-import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY, RETENTION_LINES, ROMOOD_MYBODY_COPY, ROMOOD_TURN_OFF_BEHAVIOR } from './romoodCopy'
+import { ROMOOD_COPY, FEELING_WORDS, ROMOOD_PLACEHOLDERS, ROMOOD_SETTINGS_COPY, RETENTION_LINES, ROMOOD_MYBODY_COPY, ROMOOD_TURN_OFF_BEHAVIOR, ROMOOD_CONSENT_VERSION } from './romoodCopy'
 import { MoodSettings } from '../components/MoodSettings'
 import { energyFromPoint, needlePoint } from '../components/DialMoodInput'
 import { AssessmentPhases } from '../pages/AssessmentPhases'
@@ -180,7 +180,7 @@ describe('Settings > ROMood check-ins', () => {
     expect(del).toHaveBeenCalledWith('user_id', 'u1'); expect(q('mood-msg').textContent).toBe(ROMOOD_SETTINGS_COPY.deleted)
   })
   it('turning saving off offers delete (Q9 offer) and does not auto-delete', async () => {
-    settingsRow = { saving_on: true, opted_in_at: '2026-10-26T22:00:00Z' }
+    settingsRow = { saving_on: true, opted_in_at: '2026-10-26T22:00:00Z', consent_version: ROMOOD_CONSENT_VERSION }
     mountS(true); await flush()
     expect(q('mood-saving-state').textContent).toBe(ROMOOD_SETTINGS_COPY.savingOn)
     await click(q('mood-toggle')); await flush()
@@ -210,7 +210,7 @@ describe('Settings > ROMood check-ins', () => {
     expect(upsert).not.toHaveBeenCalled(); expect(q('mood-optin-panel')).toBeNull()
   })
   it("Q9 'auto' deletes on turn-off", async () => {
-    settingsRow = { saving_on: true, opted_in_at: '2026-10-26T22:00:00Z' }
+    settingsRow = { saving_on: true, opted_in_at: '2026-10-26T22:00:00Z', consent_version: ROMOOD_CONSENT_VERSION }
     mountS(true, 'auto'); await flush(); await click(q('mood-toggle')); await flush()
     expect(del).toHaveBeenCalledWith('user_id', 'u1')
   })
@@ -249,17 +249,17 @@ describe('mood_settings migration', () => {
       expect(r.indexOf('drop function if exists public.romood_touch_updated_at();')).toBeGreaterThan(r.indexOf('drop table if exists public.mood_settings;'))
     }
   })
-  it('reverts README lists the 4 reverts in migration order and the run order 4, 3, 2, 1', () => {
+  it('reverts README lists the 5 reverts in migration order and the run order 5, 4, 3, 2, 1', () => {
     const readme = readFileSync(resolve(__dirname, '../../../supabase/reverts/README.md'), 'utf8')
-    expect(readme).toContain('**4, 3, 2, 1**')
-    for (const [n, f] of [[1, '20261026220000_romood_mood_entries'], [2, '20261026230000_romood_mood_settings'], [3, '20261026233000_romood_retention'], [4, '20261027000000_romood_daily_cap']] as const) {
+    expect(readme).toContain('**5, 4, 3, 2, 1**')
+    for (const [n, f] of [[1, '20261026220000_romood_mood_entries'], [2, '20261026230000_romood_mood_settings'], [3, '20261026233000_romood_retention'], [4, '20261027000000_romood_daily_cap'], [5, '20261027010000_romood_insert_requires_v2_consent']] as const) {
       expect(readme).toContain(`| ${n}. ${f}.sql | ${f}.revert.sql |`)
       expect(existsSync(resolve(__dirname, `../../../supabase/reverts/${f}.revert.sql`))).toBe(true)
     }
   })
   it('PUSH-PLAN deploys migrations from the frontend repo, not the backend repo', () => {
     const plan = readFileSync(resolve(__dirname, '../../../PUSH-PLAN.md'), 'utf8')
-    expect(plan).toContain('Apply migrations 1, 2, 3, 4 in order, from /workspace/romood-daily/supabase/migrations')
+    expect(plan).toContain('Apply migrations 1, 2, 3, 4, 5 in order, from /workspace/romood-daily/supabase/migrations')
     expect(plan).toContain('NOT from the backend repo')
   })
 })

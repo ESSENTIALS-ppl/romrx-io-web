@@ -8,9 +8,10 @@ Written Mon Oct 26 2026, about 8:50 PM ET. Replaces the cf8c333 plan, which is W
 
 ## Step 0 (required right before any push; ABORT on any failure and tell Grant)
 1. `cd /workspace/romood-daily && git status --short` must be empty; `git rev-parse --short HEAD` must match the report; `git -C /workspace/romood-daily-backend rev-parse --short HEAD` must print the backend head named in the report (exactly b382db9, expect 7 deno tests).
-2. `cd /workspace/romood-daily/app && npx vitest run` (expect 58 files, 998 passed, 4 skipped) and again with `VITE_ROMOOD_SAVE=on`.
+2. `cd /workspace/romood-daily/app && npx vitest run` (expect 58 files, 1021 passed, 4 skipped) and again with `VITE_ROMOOD_SAVE=on`.
 3. `npm run build` (runs `tsc -b && vite build`, local dist only; expect exit 0).
 4. deno: `cd /tmp/dchk && ~/.deno/bin/deno check --node-modules-dir=auto /workspace/romood-daily-backend/supabase/functions/submit-assessment/index.ts` and `deno test --node-modules-dir=auto --allow-read .../mood_block.test.ts` (expect 7 passed).
+   Note: a PLAIN `deno check index.ts` fails with the npm:openai type error because the backend repo root has a package.json, which puts Deno 2.x in manual node_modules mode. It is the same on v38 (3043f41) and on the new tip, and it is not a code error. Local `deno bundle` of submit-assessment succeeds with `--node-modules-dir=auto`, or with the root package.json removed from a temp copy. Supabase's deploy bundler does not type-check and does not read that package.json (v38 is live from the same imports).
 5. Secret check, before any function deploy: `supabase secrets list --project-ref cqzvqzwwevnflinxgnpp` (names only, never values). ROMOOD_EMAIL_MOOD must be ABSENT; if it is listed, ABORT. Jim runs it (no CLI or token on the box); evidence file /workspace/romood-push-candidate/supabase-secrets-names.txt.
 6. Last run is in /workspace/romood-daily/tests.txt.
 
@@ -26,13 +27,14 @@ Stacy PASS (copy, 7A, email block, consent text); Quinn sign-off (she covered 04
 2. 20261026230000_romood_mood_settings.sql (also strips authenticated's default grants, incl. TRUNCATE, then grants select, insert, update; adds a BEFORE UPDATE updated_at trigger with a search_path-pinned function). Revert: supabase/reverts/20261026230000_romood_mood_settings.revert.sql
 3. 20261026233000_romood_retention.sql. Revert: supabase/reverts/20261026233000_romood_retention.revert.sql
 4. 20261027000000_romood_daily_cap.sql (daily cap trigger RM429 that also stamps created_at := now(), 'quick' context, mood_settings.consent_version). Revert: supabase/reverts/20261027000000_romood_daily_cap.revert.sql
-Revert order: **4, 3, 2, 1**, by hand. They sit outside supabase/migrations, so the CLI never picks them up. The 4th revert deletes 'quick' rows.
-Not tested against real Postgres (no test DB was allowed). Apply 4 first on a branch DB if Jim wants, and check: the 5th insert in a New York day fails with RM429, a new New York day resets, and concurrent inserts.
+5. 20261027010000_romood_insert_requires_v2_consent.sql (a RESTRICTIVE INSERT policy on mood_entries: authenticated users can only insert when their mood_settings row has consent_version = 'v2-email-20261026' and opted_in_at not null; service role is unaffected; closes Vera GAP A). Revert: supabase/reverts/20261027010000_romood_insert_requires_v2_consent.revert.sql
+Revert order: **5, 4, 3, 2, 1**, by hand. They sit outside supabase/migrations, so the CLI never picks them up. Revert 5 must run first (it reads the column revert 4 drops). Revert 4 deletes 'quick' rows.
+Not tested against real Postgres (no test DB was allowed). Apply 4 and 5 first on a branch DB if Jim wants, and check: an insert without v2 consent is rejected (migration 5), the 5th insert in a New York day fails with RM429, a new New York day resets, and concurrent inserts.
 
 ## Order of operations (only after Jim's typed go)
 1. Gates green. Step 0 passes. Credits checked; Grant told.
 2. Push frontend feat/romood-daily to origin (new branch, no rewrite of history). Push backend feat/romood-daily-email to romrxbjj-v2 (new branch only; do not merge or touch main yet).
-3. Apply migrations 1, 2, 3, 4 in order, from /workspace/romood-daily/supabase/migrations (the frontend repo, not the backend repo).
+3. Apply migrations 1, 2, 3, 4, 5 in order, from /workspace/romood-daily/supabase/migrations (the frontend repo, not the backend repo).
 4. Deploy ONLY the submit-assessment function, from the backend branch feat/romood-daily-email (b382db9): `supabase functions deploy submit-assessment --project-ref cqzvqzwwevnflinxgnpp`. Never a bulk deploy (no `deploy` without a name, no --all). NEVER deploy or create create-checkout-session or stripe-webhook. With ROMOOD_EMAIL_MOOD unset the email is byte-for-byte the v38 email (the block returns an empty string); confirm by one test submission only if Jim approves.
 5. **ROMOOD_EMAIL_MOOD secret stays UNSET** (absence confirmed in Step 0 item 5) until Jim confirms tracking is off for romrx.io in Resend (Stacy 8:44 PM). Setting it to "on" later is a separate go.
 6. Netlify draft deploy from the pushed frontend branch (no --prod). Reid checks the draft: the flow (Step 1 to 11 of 11, "Assessment step 2" eyebrow on ROMood), crisis line, /legal 7A new paragraph and deletion line, My Body "Quick ROMood check" button, /dashboard/mood (protected, redirects when signed out), cap and not-saved messages, and that saving is off.
@@ -40,12 +42,12 @@ Not tested against real Postgres (no test DB was allowed). Apply 4 first on a br
 8. Reid live check. Report deploy id, function version and credits to Grant and Jim.
 
 ## VITE_ROMOOD_SAVE decision (Jim)
-Not in netlify.toml and not set in any Netlify context, so saving ships OFF (on only when exactly "on", romood.ts:49). With it off, the quick screen works but shows "Saving check-ins isn't turned on yet, so this one won't be saved." Turning it on is a separate go: set VITE_ROMOOD_SAVE=on in Netlify for production and redeploy. Do that only after migrations 1 to 4 are applied and the 7A text is live. Jim decides when.
+Not in netlify.toml and not set in any Netlify context, so saving ships OFF (on only when exactly "on", romood.ts:49). With it off, the quick screen works but shows "Saving check-ins isn't turned on yet, so this one won't be saved." Turning it on is a separate go: set VITE_ROMOOD_SAVE=on in Netlify for production and redeploy. Do that only after migrations 1 to 5 are applied and the 7A text is live. Jim decides when.
 
 ## Rollback
 1. Netlify: restore production deploy **6adfccf02c316661a280ebd2**.
 2. Function: redeploy v38 (origin/main 3043f41 of romrxbjj-v2, `supabase functions deploy submit-assessment` from that commit). It is byte-identical to the live v38 source.
-3. Supabase: run the reverts by hand in order 4, 3, 2, 1.
+3. Supabase: run the reverts by hand in order 5, 4, 3, 2, 1.
 4. Git: `git revert -m 1 <merge>` on main for each repo, no force push.
 5. If the ROMOOD_EMAIL_MOOD secret was ever set, unset it first.
 
@@ -57,4 +59,4 @@ Not in netlify.toml and not set in any Netlify context, so saving ships OFF (on 
 - Settings.tsx is also touched by the held stage/batch-1021-io (152824d); a test merge was clean before the daily changes, so recheck.
 
 ## The line Jim types in Avery's chat
-Avery, push ROMood daily: run migrations 1 to 4, deploy only submit-assessment from feat/romood-daily-email, Netlify draft, keep ROMOOD_EMAIL_MOOD unset and VITE_ROMOOD_SAVE off.
+Avery, push ROMood daily: run migrations 1 to 5, deploy only submit-assessment from feat/romood-daily-email, Netlify draft, keep ROMOOD_EMAIL_MOOD unset and VITE_ROMOOD_SAVE off.

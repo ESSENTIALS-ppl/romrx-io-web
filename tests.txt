@@ -103,3 +103,11 @@ tsc -b: exit=0
 npm run build (tsc -b && vite build): exit=0
 deno: not rerun (backend repo untouched)
 Schema-copy test run (ROMOOD-SCHEMACOPY-TEST-20261027.sql, 70 assertions): SKIPPED. Jim said no test DB of any kind. Static check only; see the report to Grant.
+
+== Update Tue Oct 27 2026 07:36 AM EDT: Vera 5af19bf gaps A and B (migration 5 consent policy, MoodSettings re-consent display) (LOCAL ONLY)
+vitest, flag OFF: Test Files 58 passed (58) Tests 1021 passed | 4 skipped (1025)
+vitest, VITE_ROMOOD_SAVE=on: Test Files 58 passed (58) Tests 1021 passed | 4 skipped (1025)
+tsc -b: exit=0
+npm run build (tsc -b && vite build): exit=0
+deno (backend 5af19bf, temp copies only): plain 'deno check index.ts' exit 1 (npm:openai types, root package.json manual node_modules mode, same on v38); 'deno check --node-modules-dir=auto' exit 0; 'deno bundle --node-modules-dir=auto' exit 0 (63 modules, 793.98KB); deno bundle with root package.json removed exit 0.
+SQL tests against a database: NOT run (no DB connection). Migration 5 is checked by SQL-text tests only.

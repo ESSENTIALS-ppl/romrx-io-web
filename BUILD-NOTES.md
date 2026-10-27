@@ -47,3 +47,8 @@ Note: plain `tsc` at the root checks nothing (references only). Use `tsc -b`.
 - Mood email: '1 time' for count 1, 'N times' otherwise (backend fbd65a0).
 - Supabase secret names for cqzvqzwwevnflinxgnpp could NOT be listed (no supabase CLI or token on the box, MCP has no secrets tool). ROMOOD_EMAIL_MOOD is unverified; Jim to run `supabase secrets list --project-ref cqzvqzwwevnflinxgnpp`. See /workspace/romood-push-candidate/supabase-secrets-names.txt.
 - String sources: STRING-SOURCES.md.
+
+## Update Oct 27 2026 (Vera 5af19bf gaps A and B, LOCAL ONLY)
+- Migration 5: supabase/migrations/20261027010000_romood_insert_requires_v2_consent.sql. A RESTRICTIVE INSERT policy on mood_entries for authenticated: the insert needs the user's mood_settings row to have consent_version = 'v2-email-20261026' and opted_in_at not null. Chosen over a trigger: no function, no search_path or execute grant to manage, one-line revert. Service role bypasses RLS. BEFORE ROW triggers (the cap) fire before RLS WITH CHECK, so the cap and created_at stamp run first. Revert: supabase/reverts/20261027010000_romood_insert_requires_v2_consent.revert.sql (runs first; revert order is now 5, 4, 3, 2, 1).
+- MoodSettings (Settings): saving shows ON only when hasCurrentConsent() is true. An older opt-in shows 'Saving is off...' plus the existing opt-in panel with an unticked box. No new copy.
+- Tests: 1021 passed, 4 skipped (58 files), flag off and VITE_ROMOOD_SAVE=on.
