@@ -5,6 +5,9 @@
 --  * Daily cap: a BEFORE INSERT trigger rejects the 5th mood_entries row per user per America/New_York
 --    calendar day. Error: SQLSTATE 'RM429', message 'romood_daily_cap'. The app shows a friendly message.
 --  * A per-user transaction advisory lock makes concurrent inserts count correctly.
+--  * The same trigger sets created_at := now() on every insert, ignoring any client value (Vera fix:
+--    a backdated created_at could otherwise dodge the cap). A delete then re-insert still frees a slot:
+--    deleting your own check-ins is allowed by design.
 --  * context now allows 'quick' (check-in from My Body at /dashboard/mood) as well as 'onboarding'.
 --  * mood_settings.consent_version: which opt-in text the user ticked. Only 'v2-email-20261026'
 --    (Stacy's Oct 26 8:36 PM text naming the results email) allows mood in the PRP email. Older
@@ -29,6 +32,9 @@ declare
   n integer;
 begin
   perform pg_advisory_xact_lock(hashtextextended('romood_daily_cap:' || new.user_id::text, 0));
+  -- Ignore any created_at the client sends (backdated or future). The row is stamped with server time,
+  -- so the day count below, the cap, and the email window cannot be skipped by faking a time.
+  new.created_at := now();
   day_start := (date_trunc('day', now() at time zone 'America/New_York')) at time zone 'America/New_York';
   select count(*) into n
     from public.mood_entries

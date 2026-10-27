@@ -18,7 +18,7 @@ I used only the public docs. I did not open the account, use an API key or make 
 - API request logs keep "the full request and response bodies", and "Resend keeps 30 days of activity." https://resend.com/docs/knowledge-base/how-to-handle-a-leaked-api-key That means the mood averages in the html also sit in the request log for about 30 days.
 - The pricing page lists "30-day data retention" on Free and "flexible data retention" on Enterprise only. https://resend.com/pricing
 - I found no dashboard setting for a shorter retention. The only options are 30 days (fixed), Enterprise, or asking support to remove specific messages.
-- This fits Stacy's new 7A line ("our email provider may keep a copy of sent emails for a limited time"). Stacy cited the DPA's "while active, deleted within 90 days after termination". The public docs give 30 days while the account is active. That's worth telling Stacy, though the wording works either way.
+- Updated Oct 26 2026, 8:57 PM ET: the 7A deletion line now says "our email provider keeps a copy of sent emails for up to 30 days", which matches the public docs (30 days while the account is active; it was "a limited time" before). Caveat: the API request log (with the html) and 7-day backups follow the same 30-day window, and Enterprise plans can differ, so "up to 30 days" holds on Free, Pro and Scale only.
 
 ## Also worth knowing (not asked)
 - The Resend Free plan allows 100 emails a day (https://resend.com/pricing). If the romrx.io account is on Free, hundreds of users would hit that cap whether or not mood is included. Which plan the account is on can't be read without access, so Jim needs to check.

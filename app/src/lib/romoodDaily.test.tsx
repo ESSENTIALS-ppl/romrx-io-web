@@ -158,7 +158,7 @@ describe('wiring and copy rules', () => {
   it('legal 7A: Stacy paragraph and deletion line word for word', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
     expect(html).toContain("<p>Mood check-ins: if you turn on saving, we save the mood check-ins you enter, whether during an assessment or as a quick check-in from My Body, so we can show you how your mood changes over time in the app and in your results email. If you don't turn on saving, we don't keep them. We don't use them in your scores, share them with advertisers, or use them for ads or analytics. You can turn saving off or delete your check-ins anytime in Settings.</p>")
-    expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider may keep a copy of sent emails for a limited time.</p>')
+    expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider keeps a copy of sent emails for up to 30 days.</p>')
   })
   it('cap migration: trigger, 4 per America/New_York day, RM429, quick context, consent_version; revert exists', () => {
     const m = readFileSync(resolve(__dirname, '../../../supabase/migrations/20261027000000_romood_daily_cap.sql'), 'utf8')
@@ -168,8 +168,15 @@ describe('wiring and copy rules', () => {
     expect(m).toContain("errcode = 'RM429'")
     expect(m).toContain("check (context in ('onboarding', 'quick'))")
     expect(m).toContain('add column if not exists consent_version text')
+    // Vera fix: the trigger stamps server time, so a client created_at (backdated or future) cannot dodge the cap.
+    const fn = m.slice(m.indexOf('create or replace function public.romood_enforce_daily_cap'), m.indexOf('revoke all on function'))
+    expect(fn).toContain('new.created_at := now();')
+    expect(fn.indexOf('new.created_at := now();')).toBeLessThan(fn.indexOf('select count(*) into n'))
+    expect(m).toMatch(/before insert on public\.mood_entries/)
     const r = readFileSync(resolve(__dirname, '../../../supabase/reverts/20261027000000_romood_daily_cap.revert.sql'), 'utf8')
     expect(r).toContain('drop trigger if exists mood_entries_daily_cap')
     expect(r).toContain('drop column if exists consent_version')
+    expect(r).toContain('drop function if exists public.romood_enforce_daily_cap()')
+    expect(r).toContain('created_at := now()')
   })
 })

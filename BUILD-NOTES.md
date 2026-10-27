@@ -42,3 +42,8 @@ Note: plain `tsc` at the root checks nothing (references only). Use `tsc -b`.
 
 - Email mood stays OFF (ROMOOD_EMAIL_MOOD unset) until tracking is confirmed off for romrx.io in Resend (Stacy 8:44 PM).
 - Quick-screen copy is now Stacy-final (8:45 PM); no STACY-COPY-PENDING markers remain in app/src.
+- legal.html:131 deletion line now ends "our email provider keeps a copy of sent emails for up to 30 days." (8:57 PM ET, replaces "may keep ... for a limited time"). This is Stacy's final line (Addendum 2, 8:58 PM ET, /workspace/beta-launch/proof-20261020/stacy-romood-daily-email-7a-20261026.md); verified word for word.
+- Cap trigger now also sets created_at := now() and ignores any client value (Vera fix), so a backdated or future created_at cannot dodge the cap. Still open: deleting your own check-ins frees a slot (by design). Test in romoodDaily.test.tsx (cap migration test); revert file notes it.
+- Mood email: '1 time' for count 1, 'N times' otherwise (backend fbd65a0).
+- Supabase secret names for cqzvqzwwevnflinxgnpp could NOT be listed (no supabase CLI or token on the box, MCP has no secrets tool). ROMOOD_EMAIL_MOOD is unverified; Jim to run `supabase secrets list --project-ref cqzvqzwwevnflinxgnpp`. See /workspace/romood-push-candidate/supabase-secrets-names.txt.
+- String sources: STRING-SOURCES.md.

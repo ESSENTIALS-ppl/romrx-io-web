@@ -78,12 +78,14 @@ describe('single source', () => {
     const src = readFileSync(resolve(__dirname, 'CrisisLine.tsx'), 'utf8')
     for (const w of ['Having a really hard time', 'Samaritans', 'not a crisis service', 'emergency number', 'Need to talk']) expect(src).not.toContain(w)
   })
-  it('legal: no 30-day or encrypted-backups claim (Free plan)', () => {
+  it('legal: no 30-day or encrypted-backups claim about our own database (Free plan); the only 30 days is our email provider', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
-    expect(html).not.toMatch(/encrypted backups|up to 30 days/)
+    const emailLine = 'our email provider keeps a copy of sent emails for up to 30 days'
+    expect(html).toContain(emailLine)
+    expect(html.replace(emailLine, '')).not.toMatch(/encrypted backups|up to 30 days|30-day/)
   })
   it('legal: backup line sits right before the 7A crisis line', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
-    expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider may keep a copy of sent emails for a limited time.</p>\n        <p>ROMRx does not monitor your check-ins and cannot respond to emergencies.')
+    expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider keeps a copy of sent emails for up to 30 days.</p>\n        <p>ROMRx does not monitor your check-ins and cannot respond to emergencies.')
   })
 })

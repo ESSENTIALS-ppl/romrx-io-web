@@ -15,9 +15,9 @@ These plain strings are not marked pending, but Stacy can change them: heading "
 
 ## Already Stacy-final (used verbatim, no action needed)
 - Opt-in text (romoodCopy.ts optInBefore): "...over time, in the app and in my results email. I can turn this off..." This text is consent version v2-email-20261026.
-- legal.html 7A: the replacement paragraph from stacy-romood-daily-email-7a-20261026.md, plus the addendum deletion line "...Results emails we already sent you stay in your inbox, and our email provider may keep a copy of sent emails for a limited time."
+- legal.html 7A: the replacement paragraph from stacy-romood-daily-email-7a-20261026.md, plus the addendum deletion line "...Results emails we already sent you stay in your inbox, and our email provider keeps a copy of sent emails for up to 30 days." (Stacy Addendum 2, 8:58 PM ET; replaced "may keep ... for a limited time")
 - Settings delete confirm: "Emails we already sent you are not affected." added after "This cannot be undone."
 - PRP email mood block (heading, body, crisis footer) in submit-assessment/mood_block.ts.
 
 ## For Stacy to know about 7A
-- Resend's public docs say sent email and logs are kept 30 days while the account is active (not just "deleted within 90 days after termination"). "A limited time" is still accurate. See RESEND-NOTES.md.
+- Resend's public docs say sent email and logs are kept 30 days while the account is active (not just "deleted within 90 days after termination"). 7A now says "up to 30 days" (8:57 PM ET). See RESEND-NOTES.md.
