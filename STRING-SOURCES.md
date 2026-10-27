@@ -11,7 +11,7 @@ Section names are the headings in that file. "Code" is where the string lives in
 | capReached "You've saved 4 check-ins today. You can check in again tomorrow." | Addendum 2 | romoodCopy.ts ROMOOD_QUICK_COPY.capReached. MATCH |
 | saveFailed "We couldn't save this check-in. Please try again." | Addendum 2 | romoodCopy.ts ROMOOD_QUICK_COPY.saveFailed. MATCH |
 | Plain strings "ROMood check", "Back to My Body", "Save check-in", "Done", "Quick ROMood check" | Addendum 2 ("Leave the plain strings as they are") | romoodCopy.ts ROMOOD_QUICK_COPY.heading, backToMyBody, save, done, myBodyButton. MATCH |
-| Email block heading, body, crisis footer | main file, email block section | /workspace/romood-daily-backend/supabase/functions/submit-assessment/mood_block.ts (renderMoodBlock). Body now reads "1 time" or "N times" (Jim 8:56 PM). |
+| Email block heading, body, crisis footer | main file, email block section | /workspace/romood-daily-backend/supabase/functions/submit-assessment/mood_block.ts (renderMoodBlock). Body now reads "1 time" or "N times" (Grant decision 8:55 PM, from Quinn's grammar nit). |
 | New opt-in text | main file, opt-in section | romoodCopy.ts optInBefore |
 | 7A mood paragraph | main file, section 3 (7A replacement) | legal.html:130 |
 | Settings "Emails we already sent you are not affected." (after "This cannot be undone.") | main file, line 37 | romoodCopy.ts deleteConfirm (:82) |
