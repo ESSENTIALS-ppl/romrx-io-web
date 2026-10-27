@@ -304,9 +304,11 @@ describe('mood_settings migration', () => {
   })
   it('PUSH-PLAN repins 6b78eca and lists the T14 site deploys with IDs from local files', () => {
     const plan = readFileSync(resolve(__dirname, '../../../PUSH-PLAN.md'), 'utf8')
-    expect(plan).toContain('whose parent is 6b78eca')
+    expect(plan).toContain('whose parent chain contains 6b78eca')
     expect(plan).toContain('exactly 5af19bf')
-    for (const id of ['d9bc6384-fc26-44fb-a51d-32aa8f28dd7b', '29117887-e0e0-4f7d-8758-4a59503c8ad7', '9e59d255-74d0-4da5-a888-e1d70479b795', '06567695-4772-4025-b029-a04d838ae767']) expect(plan).toContain(id)
+    for (const id of ['d9bc6384-fc26-44fb-a51d-32aa8f28dd7b', '29117887-e0e0-4f7d-8758-4a59503c8ad7', '9e59d255-74d0-4da5-a888-e1d70479b795', '78249bf', 'ac1c045']) expect(plan).toContain(id)
+    expect(plan).not.toContain('06567695-4772-4025-b029-a04d838ae767')
+    expect(plan).toContain('3 publishes, about 45 credits')
     expect(plan).toContain('incomparable-pastelito-849104')
     expect(plan).toContain('about 15 per publish')
     expect(plan).toContain('STOP and report on any failure')

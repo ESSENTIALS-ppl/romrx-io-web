@@ -118,3 +118,9 @@ vitest, VITE_ROMOOD_SAVE=on: Test Files 58 passed (58) Tests 1025 passed | 4 ski
 npm run build (tsc -b && vite build): exit=0
 root npm test (header, cards, gpc, card-line): exit=0
 deno: not rerun (backend repo untouched)
+
+== Update Tue Oct 27 2026 08:42 AM EDT: PUSH-PLAN Step 5b drops yoga (2 T14 sites, 3 publishes, about 45 credits), draft pins 78249bf and ac1c045 (LOCAL ONLY)
+vitest, flag OFF: Test Files 58 passed (58) Tests 1025 passed | 4 skipped (1029)
+vitest, VITE_ROMOOD_SAVE=on: Test Files 58 passed (58) Tests 1025 passed | 4 skipped (1029)
+npm run build (tsc -b && vite build): exit=0
+deno: not rerun (backend repo untouched)
