@@ -95,3 +95,11 @@ block: count 1 reads '1 time', 2 reads '2 times' ... ok (42µs)
 buildMoodBlockForUser: scoped to the user, averages only, omitted when gated off ... ok (285µs)
 index.ts: mood never in subject, tags, URLs or events ... ok (841µs)
 ok | 7 passed | 0 failed (6ms)
+
+== Update Tue Oct 27 2026 06:29 AM EDT: grants hardening + mood_settings updated_at trigger + reverts README + PUSH-PLAN source line (LOCAL ONLY)
+vitest, flag OFF: Test Files 58 passed (58); Tests 1003 passed | 4 skipped (1007)
+vitest, VITE_ROMOOD_SAVE=on: Test Files 58 passed (58); Tests 1003 passed | 4 skipped (1007)
+tsc -b: exit=0
+npm run build (tsc -b && vite build): exit=0
+deno: not rerun (backend repo untouched)
+Schema-copy test run (ROMOOD-SCHEMACOPY-TEST-20261027.sql, 70 assertions): SKIPPED. Jim said no test DB of any kind. Static check only; see the report to Grant.

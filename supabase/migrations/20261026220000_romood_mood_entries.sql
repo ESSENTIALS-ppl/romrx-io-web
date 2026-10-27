@@ -7,7 +7,7 @@
 --  * RLS: a user can insert, read, and delete only their own rows. No update (req 4 = delete).
 --  * Rows cascade-delete with the account.
 --  * App writes stay OFF (VITE_ROMOOD_SAVE) until the /legal Privacy mood line is live (req 5).
--- Rollback: drop table if exists public.mood_entries;
+-- Rollback: drop table if exists public.mood_entries; (grants go with the table)
 -- ============================================================================================
 
 create table if not exists public.mood_entries (
@@ -41,7 +41,11 @@ drop policy if exists mood_entries_delete_own on public.mood_entries;
 create policy mood_entries_delete_own on public.mood_entries
   for delete to authenticated using ((select auth.uid()) = user_id);
 
+-- Grants: prod default ACLs auto-grant ALL on new public tables to authenticated, and a plain GRANT only
+-- ADDS to those. So strip authenticated first, then grant exactly what the app needs. This matters most for
+-- TRUNCATE, which ignores RLS. (Schema-copy finding, Oct 27 2026. No UPDATE: entries are immutable.)
 revoke all on public.mood_entries from anon;
+revoke all on public.mood_entries from authenticated;
 grant select, insert, delete on public.mood_entries to authenticated;
 
 comment on table public.mood_entries is 'ROMood self check-ins. Opt-in only. Separate from assessment scores; never used for scoring; never sent to Meta.';

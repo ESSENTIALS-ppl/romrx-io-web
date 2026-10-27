@@ -3,7 +3,7 @@ import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const insert = vi.fn(async (_row: Record<string, unknown>) => ({ error: null as null }))
@@ -142,6 +142,15 @@ describe('mood_entries migration', () => {
     expect(sql).not.toMatch(/for update/)
     expect(sql).not.toMatch(/assessments?\s*\(/i)
   })
+  it('grants: authenticated is stripped first, then gets only select, insert, delete (no TRUNCATE, no UPDATE)', () => {
+    const rev = sql.indexOf('revoke all on public.mood_entries from authenticated;')
+    const grant = sql.indexOf('grant select, insert, delete on public.mood_entries to authenticated;')
+    expect(rev).toBeGreaterThan(-1)
+    expect(grant).toBeGreaterThan(rev)
+    expect(sql).toContain('revoke all on public.mood_entries from anon;')
+    expect(sql.match(/^grant .*$/gm)).toEqual(['grant select, insert, delete on public.mood_entries to authenticated;'])
+    expect(sql.replace(/--.*$/gm, '')).not.toMatch(/grant[^;]*(truncate|update|all)/i)
+  })
 })
 
 describe('ROMood placement', () => {
@@ -215,6 +224,43 @@ describe('mood_settings migration', () => {
     expect(sql).toMatch(/s\.saving_on = true/)
     expect(sql).toMatch(/enable row level security/)
     expect(sql).toMatch(/on delete cascade/)
+  })
+  it('grants: authenticated is stripped first, then gets only select, insert, update (no TRUNCATE, no DELETE)', () => {
+    const rev = sql.indexOf('revoke all on public.mood_settings from authenticated;')
+    const grant = sql.indexOf('grant select, insert, update on public.mood_settings to authenticated;')
+    expect(rev).toBeGreaterThan(-1)
+    expect(grant).toBeGreaterThan(rev)
+    expect(sql).toContain('revoke all on public.mood_settings from anon;')
+    expect(sql.match(/^grant .*$/gm)).toEqual(['grant select, insert, update on public.mood_settings to authenticated;'])
+    expect(sql.replace(/--.*$/gm, '')).not.toMatch(/grant[^;]*(truncate|delete|all)/i)
+  })
+  it('updated_at trigger: BEFORE UPDATE, sets now(), pins search_path, not callable by app roles; revert drops it', () => {
+    expect(sql).toMatch(/updated_at\s+timestamptz not null default now\(\)/)
+    const fn = sql.slice(sql.indexOf('create or replace function public.romood_touch_updated_at'), sql.indexOf('revoke all on function public.romood_touch_updated_at'))
+    expect(fn).toContain('set search_path = pg_catalog, pg_temp')
+    expect(fn).toContain('new.updated_at := now();')
+    expect(fn).toContain('return new;')
+    expect(sql).toContain('revoke all on function public.romood_touch_updated_at() from public, anon, authenticated;')
+    expect(sql).toMatch(/create trigger mood_settings_touch_updated_at\s+before update on public\.mood_settings\s+for each row execute function public\.romood_touch_updated_at\(\);/)
+    for (const rel of ['../../../supabase/reverts/20261026230000_romood_mood_settings.revert.sql', '../../../supabase/migrations/20261026230000_romood_mood_settings.revert.sql.txt']) {
+      const r = readFileSync(resolve(__dirname, rel), 'utf8')
+      expect(r).toContain('drop table if exists public.mood_settings;')
+      expect(r).toContain('drop function if exists public.romood_touch_updated_at();')
+      expect(r.indexOf('drop function if exists public.romood_touch_updated_at();')).toBeGreaterThan(r.indexOf('drop table if exists public.mood_settings;'))
+    }
+  })
+  it('reverts README lists the 4 reverts in migration order and the run order 4, 3, 2, 1', () => {
+    const readme = readFileSync(resolve(__dirname, '../../../supabase/reverts/README.md'), 'utf8')
+    expect(readme).toContain('**4, 3, 2, 1**')
+    for (const [n, f] of [[1, '20261026220000_romood_mood_entries'], [2, '20261026230000_romood_mood_settings'], [3, '20261026233000_romood_retention'], [4, '20261027000000_romood_daily_cap']] as const) {
+      expect(readme).toContain(`| ${n}. ${f}.sql | ${f}.revert.sql |`)
+      expect(existsSync(resolve(__dirname, `../../../supabase/reverts/${f}.revert.sql`))).toBe(true)
+    }
+  })
+  it('PUSH-PLAN deploys migrations from the frontend repo, not the backend repo', () => {
+    const plan = readFileSync(resolve(__dirname, '../../../PUSH-PLAN.md'), 'utf8')
+    expect(plan).toContain('Apply migrations 1, 2, 3, 4 in order, from /workspace/romood-daily/supabase/migrations')
+    expect(plan).toContain('NOT from the backend repo')
   })
 })
 

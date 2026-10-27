@@ -1,5 +1,5 @@
--- MANUAL REVERT for 20261027000000_romood_daily_cap.sql. Not auto-run. Run FIRST (before the
--- 3 older ROMood reverts, which run 3, 2, 1). Rows with context 'quick' are deleted so the old
+-- MANUAL REVERT for 20261027000000_romood_daily_cap.sql. Not auto-run. Run FIRST (order 4, 3, 2, 1:
+-- cap, retention, settings, entries). Rows with context 'quick' are deleted so the old
 -- context check can be restored. Dropping the function also removes its created_at := now() stamp (the
 -- column default now() stays, so ordinary inserts behave as before the cap); consent_version is dropped (older opt-ins are unaffected).
 drop trigger if exists mood_entries_daily_cap on public.mood_entries;

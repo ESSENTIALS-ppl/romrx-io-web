@@ -32,8 +32,32 @@ drop policy if exists mood_settings_update_own on public.mood_settings;
 create policy mood_settings_update_own on public.mood_settings
   for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
+-- Grants: strip authenticated first (prod default ACLs auto-grant ALL, including TRUNCATE, which ignores RLS;
+-- a plain GRANT only adds), then grant exactly what the app needs. No DELETE: the saving choice is turned
+-- off, not deleted.
 revoke all on public.mood_settings from anon;
+revoke all on public.mood_settings from authenticated;
 grant select, insert, update on public.mood_settings to authenticated;
+
+-- updated_at is kept by the database, not trusted from the app: every UPDATE (including the upsert's
+-- ON CONFLICT DO UPDATE path) sets it to now(). The function pins search_path.
+create or replace function public.romood_touch_updated_at()
+returns trigger
+language plpgsql
+set search_path = pg_catalog, pg_temp
+as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+revoke all on function public.romood_touch_updated_at() from public, anon, authenticated;
+
+drop trigger if exists mood_settings_touch_updated_at on public.mood_settings;
+create trigger mood_settings_touch_updated_at
+  before update on public.mood_settings
+  for each row execute function public.romood_touch_updated_at();
 
 -- Real tick time on entries: cannot be after the row was written (small clock skew allowed).
 alter table public.mood_entries drop constraint if exists mood_entries_tick_not_future;

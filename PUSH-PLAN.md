@@ -21,9 +21,9 @@ Stacy PASS (copy, 7A, email block, consent text); Quinn sign-off (she covered 04
 - Mood window in the email: since the later of the user's previous assessment or their opt-in tick time. Confirmed in code: mood_block.ts moodWindowStart() (line 29) returns the later of the two; buildMoodBlockForUser (line 59) uses it, bounded above by the current assessment time.
 - Resend retention: 30 days on the plan tiers (public docs); no shorter self-serve setting. 7A says "up to 30 days" (legal.html:131, changed 8:57 PM ET).
 
-## Migrations, in order (run before the site and before the function; Supabase project cqzvqzwwevnflinxgnpp, Free plan, no PITR: take a schema dump first, no exports of mood rows)
-1. 20261026220000_romood_mood_entries.sql. Revert: supabase/reverts/20261026220000_romood_mood_entries.revert.sql
-2. 20261026230000_romood_mood_settings.sql. Revert: supabase/reverts/20261026230000_romood_mood_settings.revert.sql
+## Migrations, in order. SOURCE: the migration and revert SQL files come from the FRONTEND repo, /workspace/romood-daily (branch feat/romood-daily, supabase/migrations and supabase/reverts), NOT from the backend repo (/workspace/romood-daily-backend, which holds only the submit-assessment function and has no ROMood migrations). Run them before the site and before the function (Supabase project cqzvqzwwevnflinxgnpp, Free plan, no PITR: take a schema dump first, no exports of mood rows)
+1. 20261026220000_romood_mood_entries.sql (also strips authenticated's default ACL grants, incl. TRUNCATE, then grants select, insert, delete). Revert: supabase/reverts/20261026220000_romood_mood_entries.revert.sql
+2. 20261026230000_romood_mood_settings.sql (also strips authenticated's default grants, incl. TRUNCATE, then grants select, insert, update; adds a BEFORE UPDATE updated_at trigger with a search_path-pinned function). Revert: supabase/reverts/20261026230000_romood_mood_settings.revert.sql
 3. 20261026233000_romood_retention.sql. Revert: supabase/reverts/20261026233000_romood_retention.revert.sql
 4. 20261027000000_romood_daily_cap.sql (daily cap trigger RM429 that also stamps created_at := now(), 'quick' context, mood_settings.consent_version). Revert: supabase/reverts/20261027000000_romood_daily_cap.revert.sql
 Revert order: **4, 3, 2, 1**, by hand. They sit outside supabase/migrations, so the CLI never picks them up. The 4th revert deletes 'quick' rows.
@@ -32,7 +32,7 @@ Not tested against real Postgres (no test DB was allowed). Apply 4 first on a br
 ## Order of operations (only after Jim's typed go)
 1. Gates green. Step 0 passes. Credits checked; Grant told.
 2. Push frontend feat/romood-daily to origin (new branch, no rewrite of history). Push backend feat/romood-daily-email to romrxbjj-v2 (new branch only; do not merge or touch main yet).
-3. Apply migrations 1, 2, 3, 4 in order.
+3. Apply migrations 1, 2, 3, 4 in order, from /workspace/romood-daily/supabase/migrations (the frontend repo, not the backend repo).
 4. Deploy ONLY the submit-assessment function, from the backend branch feat/romood-daily-email (b382db9): `supabase functions deploy submit-assessment --project-ref cqzvqzwwevnflinxgnpp`. Never a bulk deploy (no `deploy` without a name, no --all). NEVER deploy or create create-checkout-session or stripe-webhook. With ROMOOD_EMAIL_MOOD unset the email is byte-for-byte the v38 email (the block returns an empty string); confirm by one test submission only if Jim approves.
 5. **ROMOOD_EMAIL_MOOD secret stays UNSET** (absence confirmed in Step 0 item 5) until Jim confirms tracking is off for romrx.io in Resend (Stacy 8:44 PM). Setting it to "on" later is a separate go.
 6. Netlify draft deploy from the pushed frontend branch (no --prod). Reid checks the draft: the flow (Step 1 to 11 of 11, "Assessment step 2" eyebrow on ROMood), crisis line, /legal 7A new paragraph and deletion line, My Body "Quick ROMood check" button, /dashboard/mood (protected, redirects when signed out), cap and not-saved messages, and that saving is off.
