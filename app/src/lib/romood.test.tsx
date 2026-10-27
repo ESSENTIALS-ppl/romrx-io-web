@@ -82,8 +82,8 @@ describe('ROMood logic', () => {
   it('Q6 counter shows the real flow count', async () => {
     const { romoodStepCounter } = await import('./romood'); const { STEPS } = await import('../pages/assessmentSteps')
     expect(ROMOOD_PLACEHOLDERS.Q6_stepLabel.counter).toBe('flow')
-    expect(romoodStepCounter('flow', 9)).toBe('2 of 11'); expect(romoodStepCounter('3 of 4', 9)).toBe('3 of 4'); expect(romoodStepCounter(null, 9)).toBeNull()
-    mount(true); expect(q('romood-counter').textContent).toBe(`2 of ${STEPS.length + 2}`); expect(q('romood-eyebrow').textContent).toBe('Assessment step 2')
+    expect(romoodStepCounter('flow', 9)).toBe('Step 2 of 11'); expect(romoodStepCounter('3 of 4', 9)).toBe('3 of 4'); expect(romoodStepCounter(null, 9)).toBeNull()
+    mount(true); expect(q('romood-counter').textContent).toBe(`Step 2 of ${STEPS.length + 2}`); expect(q('romood-eyebrow').textContent).toBe('Assessment step 2')
   })
   it('save flag defaults OFF', () => {
     expect(romoodSaveEnabled({})).toBe(false)
@@ -279,5 +279,16 @@ describe('ROMood plain words (no clinical terms)', () => {
     const fs = await import('node:fs'); const sql = fs.readFileSync(__dirname + '/../../../supabase/migrations/20261026220000_romood_mood_entries.sql', 'utf8')
     for (const w of FEELING_WORDS) expect(sql).toContain(`'${w.word}'`)
     expect(BANNED.test(sql.replace(/--.*$/gm, ''))).toBe(false)
+  })
+})
+
+describe('whole-flow counter on measure screens (Jim 8:10 PM)', () => {
+  it('source shows Step n+2 of STEPS.length + 2', async () => {
+    const fs = await import('node:fs'); const path = await import('node:path')
+    const src = fs.readFileSync(path.resolve(__dirname, '../pages/AssessmentMeasureScreen.tsx'), 'utf8')
+    expect(src).toContain('Step {stepIdx + 1 + STEPS_BEFORE_MEASURE} of {totalMeasureSteps + STEPS_BEFORE_MEASURE}')
+    expect(src).toContain('const STEPS_BEFORE_MEASURE = 2')
+    expect(src).not.toMatch(/\{stepIdx \+ 1\} \/ \{totalMeasureSteps\}/)
+    const { STEPS } = await import('../pages/assessmentSteps'); expect(STEPS.length + 2).toBe(11)
   })
 })

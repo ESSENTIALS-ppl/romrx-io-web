@@ -145,7 +145,7 @@ export function romoodStepEyebrow(eyebrow: string | null): string | null {
 }
 export function romoodStepCounter(counter: string | null, measureSteps: number): string | null {
   if (counter !== 'flow') return counter
-  return `${ROMOOD_FLOW_POSITION} of ${2 + measureSteps}`
+  return `Step ${ROMOOD_FLOW_POSITION} of ${2 + measureSteps}`
 }
 
 export type MoodAverage = { energy: number; pleasantness: number; count: number }
