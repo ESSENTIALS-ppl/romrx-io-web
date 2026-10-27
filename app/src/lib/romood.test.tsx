@@ -275,6 +275,22 @@ describe('mood_settings migration', () => {
     expect(plan).toContain('PROD-TRUNCATE-GRANTS-REVERT-20261027.sql')
     expect(plan).not.toMatch(/\u2014/)
   })
+  it('PUSH-PLAN applies Vera R1 to R6: switches off first, view-only draft, merge then role drop via MCP', () => {
+    const plan = readFileSync(resolve(__dirname, '../../../PUSH-PLAN.md'), 'utf8')
+    const rb = plan.slice(plan.indexOf('## Rollback'))
+    expect(rb.indexOf('supabase secrets unset ROMOOD_EMAIL_MOOD')).toBeLessThan(rb.indexOf('unset VITE_ROMOOD_SAVE'))
+    expect(rb).toContain('Keep the tables and the mood rows: no drop, no delete.')
+    expect(rb).toContain("needs Jim's own typed OK")
+    expect(plan).toContain('He saves NO mood, and no prod accounts are created. Cleanup: none.')
+    expect(plan).toContain('Pair under review: **b830fa6/5af19bf**')
+    expect(plan).not.toContain('Code head **c8412bb**')
+    const merge = plan.indexOf('7. Merge both branches to main')
+    expect(merge).toBeGreaterThan(plan.indexOf('ROMOOD_EMAIL_MOOD=on'))
+    expect(plan.indexOf("Supabase MCP execute_sql")).toBeGreaterThan(merge)
+    expect(plan).toContain("select count(*) from pg_roles where rolname='cli_login_postgres'")
+    expect(plan).toContain('stacy-romood-live-gate-20261027.md')
+    expect(plan).toContain('quinn-signoff-romood-5ad2c1c-b382db9.md')
+  })
 })
 
 describe('Input B: ROMeter dial', () => {
