@@ -5,11 +5,16 @@ import { SETUP_STEPS } from './assessmentMeta'
 import { STEPS } from './assessmentSteps'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
 import { track } from '../lib/track'
+import {
+  LEAVE_LEAVE, LEAVE_SAVED, LEAVE_SIGNED_OUT, LEAVE_STAY, LEAVE_TITLE, LEAVE_UNSAVED_LAST,
+  RESUME_BUTTON, RESUME_RETENTION, RESUME_TITLE, START_OVER_BUTTON, START_OVER_CONFIRM, resumeProgressLine,
+} from '../lib/assessmentDraftCopy'
+import type { LeaveKind } from '../lib/assessmentDraft'
 import { lazy, Suspense } from 'react'
 // Lazy so the setup/measure screens do not load the auth client just for ROMood.
 const ROMood = lazy(() => import('./ROMood').then(m => ({ default: m.ROMood })))
 
-export type Phase = 'setup' | 'mood' | 'measure' | 'lead' | 'done' | 'lead-done' | 'outro'
+export type Phase = 'setup' | 'mood' | 'measure' | 'lead' | 'done' | 'lead-done' | 'outro' | 'resume'
 
 export function AssessmentPhases(p: {
   phase: Phase
@@ -24,11 +29,16 @@ export function AssessmentPhases(p: {
   setEmail: (v: string) => void
   setFullName: (v: string) => void
   handleChange: (key: string, val: string) => void
-  handleNext: () => void
+  handleNext: (opts?: { skipped?: boolean }) => void
   handleLeadSubmit: (e: FormEvent) => void
   gender?: string | null
   /** Outro Continue (signed-in): results or the pack URL. Called only from the outro screen. */
   onOutroContinue?: () => void
+  /** Resume screen (signed in, a saved draft with at least one finished step). */
+  resume?: { done: number; total: number; startOverArmed: boolean; onResume: () => void; onStartOver: () => void }
+  /** Leave sheet over the measure screens (browser Back at step 1, or Back with unsaved work). */
+  leave?: { open: boolean; kind: LeaveKind; onStay: () => void; onLeave: () => void }
+  saveStatus?: 'idle' | 'saved' | 'failed'
 }) {
   const { phase, stepIdx, values, email, fullName, loading, error } = p
 
@@ -74,6 +84,29 @@ if (phase === 'setup') {
   // ROMood check: the very next step after the welcome (intro) video (Jim, Oct 26 2026 6:36 PM ET).
   if (phase === 'mood') {
     return <Suspense fallback={null}><ROMood onBack={() => p.setPhase('setup')} onDone={() => p.setPhase('measure')} /></Suspense>
+  }
+
+  // Resume: a signed-in member comes back with a saved draft. Mood is not part of the draft, so Resume goes straight
+  // to the measure steps (Stacy Oct 28: do not carry or infer mood).
+  if (phase === 'resume' && p.resume) {
+    const r = p.resume
+    return (
+      <div className="min-h-screen bg-surface py-8 px-4" data-resume>
+        <div className="max-w-lg mx-auto space-y-5">
+          <div className="card p-6 space-y-4 text-center">
+            <h1 className="font-display font-bold text-cobalt text-2xl">{RESUME_TITLE}</h1>
+            <p className="text-sm text-cobalt-ink" data-resume-progress>{resumeProgressLine(r.done, r.total)}</p>
+            <p className="text-sm text-slate-500" data-resume-retention>{RESUME_RETENTION}</p>
+            <button type="button" onClick={r.onResume} data-resume-go className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
+              {RESUME_BUTTON} <ChevronRight size={18} />
+            </button>
+            <button type="button" onClick={r.onStartOver} data-resume-start-over className="w-full text-sm text-slate-500 hover:text-cobalt py-2">
+              {r.startOverArmed ? START_OVER_CONFIRM : START_OVER_BUTTON}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (phase === 'lead') {
@@ -159,16 +192,33 @@ if (phase === 'setup') {
   }
 
   return (
-    <AssessmentMeasureScreen
-      stepIdx={stepIdx}
-      values={values}
-      loading={loading}
-      error={error}
-      setPhase={p.setPhase}
-      setStepIdx={p.setStepIdx}
-      handleChange={p.handleChange}
-      handleNext={p.handleNext}
-      gender={p.gender}
-    />
+    <>
+      <AssessmentMeasureScreen
+        stepIdx={stepIdx}
+        values={values}
+        loading={loading}
+        error={error}
+        setPhase={p.setPhase}
+        setStepIdx={p.setStepIdx}
+        handleChange={p.handleChange}
+        handleNext={p.handleNext}
+        gender={p.gender}
+        saveStatus={p.saveStatus}
+      />
+      {p.leave?.open ? (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4 pb-4" role="dialog" aria-modal="true" aria-labelledby="leave-title" data-leave-sheet>
+          <div className="w-full max-w-sm bg-white rounded-card p-6 space-y-4 shadow-xl">
+            <h2 id="leave-title" className="font-display font-bold text-cobalt-ink text-lg">{LEAVE_TITLE}</h2>
+            <p className="text-sm text-slate-600" data-leave-text>
+              {p.leave.kind === 'saved' ? LEAVE_SAVED : p.leave.kind === 'unsaved-last' ? LEAVE_UNSAVED_LAST : LEAVE_SIGNED_OUT}
+            </p>
+            <div className="flex gap-3">
+              <button type="button" onClick={p.leave.onStay} data-leave-stay className="btn-primary flex-1">{LEAVE_STAY}</button>
+              <button type="button" onClick={p.leave.onLeave} data-leave-leave className="flex-1 text-sm text-slate-600 border border-slate-300 rounded-card py-2">{LEAVE_LEAVE}</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }
