@@ -170,7 +170,7 @@ describe('wiring and copy rules', () => {
   })
   it('legal 7A: Stacy paragraph and deletion line word for word', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
-    expect(html).toContain("<p>Mood check-ins: if you turn on saving, we save the mood check-ins you enter, whether during an assessment or as a quick check-in from My Body, so we can show you how your mood changes over time in the app and in your results email. If you don't turn on saving, we don't keep them. We don't use them in your scores, share them with advertisers, or use them for ads or analytics. You can turn saving off or delete your check-ins anytime in Settings.</p>")
+    expect(html).toContain("<p>Mood check-ins: if you turn on saving, we save the mood check-ins you enter, whether during an assessment or as a quick check-in from My Body, so we can show you how your mood changes over time in the app and in your results email, and, if you turn it on, so ROMBot can answer your questions about them. If you don't turn on saving, we don't keep them. We don't use them in your scores, share them with advertisers, or use them for ads or analytics. You can turn saving off or delete your check-ins anytime in Settings.</p>")
     expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider keeps a copy of sent emails for up to 30 days.</p>')
   })
   it('legal 7A: Stacy ROMBot line verbatim, after the mood paragraph, with the OpenAI disclosure; no "only to answer you", no old training line', () => {
@@ -183,11 +183,17 @@ describe('wiring and copy rules', () => {
     expect(html).not.toContain('only to answer you')
     expect(html).not.toContain('are not used to train AI models')
   })
-  it('legal.html keeps the 19b965a Terms fixes (crisis line under 3, readiness bands in 3A, Oct 20 date)', () => {
+  it('legal.html keeps the 19b965a Terms fixes (crisis line under 3, readiness bands in 3A); r9 Terms and Privacy dates kept; TERMS_VERSION unchanged', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
     expect(html).toContain('<p>ROMRx is not a crisis service. We do not monitor what you enter in the app and cannot respond to emergencies.</p>')
     expect(html).toContain('Readiness bands (Needs focus, Building, Steady), scores, colors, and labels are not medical clearance')
-    expect(html).toContain('Last updated October 20, 2026')
+    expect(html).toContain('Last updated October 28, 2026')
+    expect(html).toContain('Last updated November 16, 2026')
+    expect(html).not.toContain('Last updated October 20, 2026')
+    expect(html).not.toContain('Last updated November 1, 2026')
+  })
+  it('TERMS_VERSION stays 2026-10-19 (Stacy: the v3 tick is the consent, no re-accept)', () => {
+    expect(readFileSync(resolve(__dirname, 'termsConsent.ts'), 'utf8')).toContain("export const TERMS_VERSION = '2026-10-19'")
   })
   it('migration 7: cap error detail reworded without the word limited; behavior unchanged; revert is a no-op', () => {
     const dir = resolve(__dirname, '../../../supabase')

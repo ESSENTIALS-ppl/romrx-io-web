@@ -21,8 +21,12 @@ Stacy's notes: if Zero Data Retention is later approved for the ROMRx org, the l
 - Retention: abuse monitoring logs are kept up to 30 days by default. Zero Data Retention or Modified Abuse Monitoring needs OpenAI approval and the ROMRx org status was not checked. This matches Stacy's "may keep them for up to 30 days to check for abuse".
 - ai-chat sends the check-in numbers (no free text) to OpenAI chat completions with store:false.
 
-## Still stale (for Stacy)
-The mood paragraph at line 130 says check-ins are saved "so we can show you how your mood changes over time in the app and in your results email". It does not name ROMBot. Stacy's line at 131 now covers ROMBot, and Avery has not edited line 130. The opt-in text says "for the app, emails and ROMBot (AI)".
+## Stacy's ship fixes (STACY-ROMBOT-SHIP-20261028.md, Oct 28 09:20 EDT), applied
+- legal.html line 130 now reads "... in the app and in your results email, and, if you turn it on, so ROMBot can answer your questions about them. If you don't turn on saving ..." Line 131 stays verbatim.
+- legal.html line 29: "Last updated November 1, 2026" (was October 20). TERMS_VERSION stays 2026-10-19 (the v3 mood tick is the consent, no re-accept).
+- Combined tick without the provider sentence: OK (Stacy). Counsel to confirm. Results email on v2 or v3: OK.
+- v2 ai-chat: MOOD_PROVIDER_REPLY and MOOD_SEPARATE_LINE changed to Stacy's text (see the report).
+- The "still stale" item about line 130 is closed.
 
 ## Cap error detail (migration 7, not applied)
 supabase/migrations/20261028110000_romood_cap_detail_wording.sql re-creates romood_enforce_daily_cap() with the detail "Mood check-ins are capped at 4 per day (America/New_York)." Nothing else changed. The revert is a no-op. A read-only check found the function already exists in the prod project, although the header of 20261027000000 says NOT APPLIED, so confirm prod state before applying.
