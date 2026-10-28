@@ -206,7 +206,7 @@ if (phase === 'setup') {
         saveStatus={p.saveStatus}
       />
       {p.leave?.open ? (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4 pb-4" role="dialog" aria-modal="true" aria-labelledby="leave-title" data-leave-sheet>
+        <div className="fixed inset-0 z-[10002] flex items-end sm:items-center justify-center bg-black/40 px-4 pb-4" role="dialog" aria-modal="true" aria-labelledby="leave-title" data-leave-sheet>
           <div className="w-full max-w-sm bg-white rounded-card p-6 space-y-4 shadow-xl">
             <h2 id="leave-title" className="font-display font-bold text-cobalt-ink text-lg">{LEAVE_TITLE}</h2>
             <p className="text-sm text-slate-600" data-leave-text>
