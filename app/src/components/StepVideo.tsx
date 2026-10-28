@@ -4,6 +4,8 @@ import { stepVideo } from '../lib/stepVideo'
 /**
  * Demo video for one step. Hidden until the poster loads (so a step with no file shows nothing), and
  * hidden again if the video fails. preload="none": nothing downloads until the user taps play.
+ * Posters must be tone-mapped sRGB JPEGs: the clips are iPhone HLG HDR, and an untouched ffmpeg frame grab looks
+ * washed and off-colour next to the video (scripts/make-video-posters.sh).
  * Frame: full card width, 1:1 square (720x720 source, Grant Oct 21 2026).
  */
 export function StepVideo({ stepId, title }: { stepId: string; title: string }) {
