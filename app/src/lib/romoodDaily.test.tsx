@@ -173,6 +173,35 @@ describe('wiring and copy rules', () => {
     expect(html).toContain("<p>Mood check-ins: if you turn on saving, we save the mood check-ins you enter, whether during an assessment or as a quick check-in from My Body, so we can show you how your mood changes over time in the app and in your results email. If you don't turn on saving, we don't keep them. We don't use them in your scores, share them with advertisers, or use them for ads or analytics. You can turn saving off or delete your check-ins anytime in Settings.</p>")
     expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider keeps a copy of sent emails for up to 30 days.</p>')
   })
+  it('legal 7A: Stacy ROMBot line verbatim, after the mood paragraph, with the OpenAI disclosure; no "only to answer you", no old training line', () => {
+    const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
+    const line = '<p>If you turn it on, ROMBot reads your ROMood check-ins to answer your questions. To do this, they are sent to our AI provider, OpenAI. OpenAI does not use them to train its models and may keep them for up to 30 days to check for abuse.</p>'
+    expect(html.split(line)).toHaveLength(2)
+    const sec = html.slice(html.indexOf('id="consumer-health-data">7A.'), html.indexOf('<h3 class="rx-h3">8. Contact'))
+    expect(sec.indexOf('<p>Mood check-ins: if you turn on saving')).toBeLessThan(sec.indexOf(line))
+    expect(sec.indexOf(line)).toBeLessThan(sec.indexOf('<p>When you delete your check-ins'))
+    expect(html).not.toContain('only to answer you')
+    expect(html).not.toContain('are not used to train AI models')
+  })
+  it('legal.html keeps the 19b965a Terms fixes (crisis line under 3, readiness bands in 3A, Oct 20 date)', () => {
+    const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
+    expect(html).toContain('<p>ROMRx is not a crisis service. We do not monitor what you enter in the app and cannot respond to emergencies.</p>')
+    expect(html).toContain('Readiness bands (Needs focus, Building, Steady), scores, colors, and labels are not medical clearance')
+    expect(html).toContain('Last updated October 20, 2026')
+  })
+  it('migration 7: cap error detail reworded without the word limited; behavior unchanged; revert is a no-op', () => {
+    const dir = resolve(__dirname, '../../../supabase')
+    const m = readFileSync(resolve(dir, 'migrations/20261028110000_romood_cap_detail_wording.sql'), 'utf8')
+    expect(m).not.toMatch(/limited/i)
+    expect(m).toContain("detail = 'Mood check-ins are capped at 4 per day (America/New_York).'")
+    const old = readFileSync(resolve(dir, 'migrations/20261027000000_romood_daily_cap.sql'), 'utf8')
+    const body = (x: string) => x.slice(x.indexOf('create or replace function public.romood_enforce_daily_cap()'), x.indexOf('revoke all on function public.romood_enforce_daily_cap()')).replace(/detail = '[^']*'/, 'detail = X').trim()
+    expect(body(m)).toBe(body(old))
+    expect(m).toMatch(/errcode = 'RM429', message = 'romood_daily_cap'/)
+    expect(m).not.toMatch(/[\u2013\u2014]/)
+    const r = readFileSync(resolve(dir, 'reverts/20261028110000_romood_cap_detail_wording.revert.sql'), 'utf8')
+    expect(r.replace(/--.*$/gm, '').trim()).toBe('select 1;')
+  })
   it('cap migration: trigger, 4 per America/New_York day, RM429, quick context, consent_version; revert exists', () => {
     const m = readFileSync(resolve(__dirname, '../../../supabase/migrations/20261027000000_romood_daily_cap.sql'), 'utf8')
     expect(m).toMatch(/before insert on public\.mood_entries/)
@@ -344,9 +373,10 @@ describe('migration 6: consent v3 (ROMBot) replaces the v2 insert policy', () =>
   const file = '20261028100000_romood_consent_v3_rombot'
   const sql = readFileSync(resolve(dir, `migrations/${file}.sql`), 'utf8')
   const code = sql.replace(/--.*$/gm, '')
-  it('sorts last, after migration 5', () => {
+  it('sorts after migration 5 and before the cap wording migration (migration 7)', () => {
     const names = readdirSync(resolve(dir, 'migrations')).filter(n => n.endsWith('.sql')).sort()
-    expect(names[names.length - 1]).toBe(`${file}.sql`)
+    expect(names[names.length - 2]).toBe(`${file}.sql`)
+    expect(names[names.length - 1]).toBe('20261028110000_romood_cap_detail_wording.sql')
     expect(names.indexOf(`${file}.sql`)).toBeGreaterThan(names.indexOf('20261027010000_romood_insert_requires_v2_consent.sql'))
   })
   it('drops the v2 policy and creates one restrictive insert policy that requires the app constant and a tick time', () => {
