@@ -8,6 +8,7 @@ import { SectionCard } from '../components/SectionCard'
 import { EmptyState } from '../components/EmptyState'
 import { Spinner } from '../components/Spinner'
 import { BaseRadar } from '../components/BaseRadar'
+import { SurveyCardB } from '../components/SurveyCardB'
 import { cn } from '../lib/cn'
 import { MoodAverageCard, MoodScoreDivider, HalfDial } from '../components/MoodAverageCard'
 import { HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexLegsDiffer } from '../lib/hipFlexCopy'
@@ -258,6 +259,22 @@ export function MyBody() {
 
 
       {/* Data-first: second assessment enables improvements-over-time research */}
+      {/* Survey card B (flag VITE_SURVEY_CARD_B, default OFF): after the profile, only right after an assessment. */}
+      {user && (
+        <SurveyCardB
+          userId={user.id}
+          email={user.email ?? null}
+          assessments={assessments}
+          overallBand={overallBand}
+          bandMix={{
+            needs_focus: [...scoreMap.values()].filter(b => b === 1).length,
+            building: [...scoreMap.values()].filter(b => b === 2).length,
+            steady: [...scoreMap.values()].filter(b => b === 3).length,
+          }}
+          top3={problemAreas.slice(0, 3)}
+        />
+      )}
+
       {assessments.length === 1 && (
         <div className="flex items-start gap-3 rounded-card border border-cobalt/20 bg-cobalt-light p-4">
           <TrendingUp size={18} className="text-cobalt mt-0.5 shrink-0" />
