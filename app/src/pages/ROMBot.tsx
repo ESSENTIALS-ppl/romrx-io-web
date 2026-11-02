@@ -30,7 +30,7 @@ export function ROMBot() {
   const [convId, setConvId] = useState<string | undefined>()
   const [error, setError] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
-  // FG-06: reopen the last chat after a reload (no new screen copy). Reads the user's own rows (RLS: user_id = auth.uid()).
+  // FG-06/FG-38: reopen the last chat after a reload, one account-wide history shared with BJJ and BB (no new screen copy). Reads the user's own rows (RLS: user_id = auth.uid()).
   const [restoreDone, setRestoreDone] = useState(false)
   const freshKey = user ? `romrx_rombot_fresh_${user.id}` : ''
 
@@ -43,7 +43,6 @@ export function ROMBot() {
           .from('ai_conversations')
           .select('id, updated_at')
           .eq('user_id', user.id)
-          .eq('sport', 'base')
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle()

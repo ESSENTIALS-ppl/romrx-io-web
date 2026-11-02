@@ -179,7 +179,7 @@
     if (!document.querySelector('link[data-rx-consent-css]')) {
       var link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = '/assets/consent.css';
+      link.href = '/assets/consent.css?v=5009823c2480';
       link.setAttribute('data-rx-consent-css', '1');
       document.head.appendChild(link);
     }

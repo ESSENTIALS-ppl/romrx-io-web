@@ -216,7 +216,7 @@ const RX_LEGAL = `
 function ensureConsentScript() {
   if (document.querySelector('script[data-rx-consent-js]')) return;
   const s = document.createElement('script');
-  s.src = '/assets/consent.js';
+  s.src = '/assets/consent.js?v=5009823c2480';
   s.defer = true;
   s.setAttribute('data-rx-consent-js', '1');
   document.head.appendChild(s);
@@ -226,7 +226,7 @@ function ensureConsentScript() {
 function ensureMetaAttributionScript() {
   if (document.querySelector('script[data-rx-meta-js]')) return;
   const s = document.createElement('script');
-  s.src = '/assets/meta-attribution.js';
+  s.src = '/assets/meta-attribution.js?v=5009823c2480';
   s.defer = true;
   s.setAttribute('data-rx-meta-js', '1');
   document.head.appendChild(s);
