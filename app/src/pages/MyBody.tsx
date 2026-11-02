@@ -7,7 +7,7 @@ import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { EmptyState } from '../components/EmptyState'
 import { Spinner } from '../components/Spinner'
-import { BaseRadar } from '../components/BaseRadar'
+import { BaseRadar, type EarlierShape } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
 import { MoodAverageCard, MoodScoreDivider, HalfDial } from '../components/MoodAverageCard'
 import { HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexLegsDiffer } from '../lib/hipFlexCopy'
@@ -157,6 +157,12 @@ export function MyBody() {
   const lumbarOff = baseLumbarRemoved()
   const radarRows = radarSideRowsForAssessment(assessment, jointScores).filter(r => !r.unscored)
     .filter(r => !(lumbarOff && isLumbarKey(r.key))) // Grant Oct 21 2026 7:10 PM: no lumbar axis for anyone
+  // FG-07: up to 3 earlier assessments on the radar (assessments are newest first; legend is dates only).
+  const radarDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const earlierShapes: EarlierShape[] = assessments.slice(1, 4).map(a => ({
+    label: radarDate(a.assessed_at),
+    rows: radarSideRowsForAssessment(a, null),
+  }))
   const prs = mobilityScoreForAssessment(assessment, jointScores)
   const scoreMap = jointBandsForAssessment(assessment, jointScores)
   const allJointRows = jointDisplayRowsForAssessment(assessment, jointScores)
@@ -274,7 +280,7 @@ export function MyBody() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <SectionCard title="ROM Profile">
-          <BaseRadar rows={radarRows} />
+          <BaseRadar rows={radarRows} earlier={earlierShapes} latestLabel={radarDate(assessment.assessed_at)} />
           <p className="text-[11px] text-slate-500 mt-1.5 text-center">
             Each line is one side of your body, as a % of your Base target. The dashed circle is <span className={cn('font-semibold', BAND_TONE[3].color)}>Steady</span>. Dents and gaps between the lines show where to focus.
           </p>
