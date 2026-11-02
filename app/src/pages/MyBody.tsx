@@ -169,6 +169,21 @@ export function MyBody() {
   // Grant Oct 21 2026 7:10 PM: 'Low back: not measured' for ALL users; old saved lumbar values stay in the data, bars hidden.
   const hideLumbar = lumbarOff
   const jointRows = hideLumbar ? allJointRows.filter(r => !isLumbarKey(r.key)) : allJointRows
+  // FG-08: worse-side % per joint for every loaded assessment, oldest first. Only joints with 2+ measured points get a chart.
+  const trendAssessments = assessments.length > 0 ? [...assessments].reverse() : []
+  const trendRowsByAssessment = trendAssessments.map(a => ({
+    date: a.assessed_at,
+    rows: radarSideRowsForAssessment(a, a.id === assessment.id ? jointScores : null),
+  }))
+  const trendRows = trendAssessments.length < 2 ? [] : jointRows
+    .map(jr => ({
+      key: jr.key,
+      label: jr.label,
+      points: trendRowsByAssessment
+        .map(t => { const r = t.rows.find(x => x.key === jr.key); return r && r.measured && !r.unscored ? { date: t.date, pct: r.worse } : null })
+        .filter((x): x is { date: string; pct: number } => x !== null),
+    }))
+    .filter(t => t.points.length >= 2)
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreasForAssessment(assessment)
 
@@ -392,7 +407,35 @@ export function MyBody() {
         {jointRows.some(r => r.unscored && (r.left != null || r.right != null)) && (
           <p className="text-xs text-slate-500 pt-2" data-unscored-note>Hip Flexion: {HIP_FLEX_FALLBACK_LINE}</p>
         )}
+        {/* FG-08: per-joint trend across assessments. Headings are the existing joint names; no axis text; each point's native tooltip is its date and %. */}
+        {trendRows.length > 0 && (
+          <div className="mt-3 border-t border-cobalt/10 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3" data-joint-trends>
+            {trendRows.map(t => <JointTrend key={t.key} label={t.label} points={t.points} />)}
+          </div>
+        )}
       </SectionCard>
+    </div>
+  )
+}
+
+/** FG-08: tiny trend line for one joint (no axis text). Heading is the existing joint name. */
+function JointTrend({ label, points }: { label: string; points: { date: string; pct: number }[] }) {
+  const W = 120, H = 32, pad = 3
+  const xs = (i: number) => pad + (i * (W - 2 * pad)) / Math.max(1, points.length - 1)
+  const ys = (v: number) => H - pad - (Math.max(0, Math.min(100, v)) * (H - 2 * pad)) / 100
+  const line = points.map((p, i) => `${xs(i).toFixed(1)},${ys(p.pct).toFixed(1)}`).join(' ')
+  return (
+    <div data-trend={label}>
+      <p className="text-xs font-semibold text-slate-600 mb-0.5">{label}</p>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-8" role="img" aria-label={label}>
+        <line x1={pad} x2={W - pad} y1={ys(90)} y2={ys(90)} stroke="#cbd5e1" strokeWidth={0.75} strokeDasharray="2 2" />
+        <polyline points={line} fill="none" stroke="#1D4ED8" strokeWidth={1.5} strokeLinejoin="round" />
+        {points.map((p, i) => (
+          <circle key={p.date} cx={xs(i)} cy={ys(p.pct)} r={2.2} fill="#1D4ED8">
+            <title>{new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}: {p.pct}%</title>
+          </circle>
+        ))}
+      </svg>
     </div>
   )
 }
