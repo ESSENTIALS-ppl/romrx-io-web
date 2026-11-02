@@ -71,6 +71,7 @@ type ExtProfile = {
 }
 
 const SHOW_REMINDER_TOGGLES = false
+const SHOW_NOTIFICATIONS = false
 
 export function Settings() {
   const { user, session, signOut } = useAuth()
@@ -538,6 +539,8 @@ export function Settings() {
         </SectionCard>
 
         {/* ── NOTIFICATIONS ──────────────────────────────────────── */}
+        {/* FG-04: whole section hidden. send-whats-new is retired, so 'Email product updates' has no sender; other reminders have none either. Restore when FG-09 to FG-12 ship. */}
+        {SHOW_NOTIFICATIONS && (
         <SectionCard title="Notifications">
           {notifLoading ? (
             <div className="flex items-center gap-2 py-2">
@@ -617,6 +620,7 @@ export function Settings() {
             </div>
           )}
         </SectionCard>
+        )}
 
         {/* ── SUPPORT ────────────────────────────────────────────── */}
         <SectionCard title="Support">
