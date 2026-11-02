@@ -70,6 +70,8 @@ type ExtProfile = {
   marketing_opt_out?: boolean | null
 }
 
+const SHOW_REMINDER_TOGGLES = false
+
 export function Settings() {
   const { user, session, signOut } = useAuth()
   const { profile, loading } = useProfile(user?.id)
@@ -556,50 +558,55 @@ export function Settings() {
                 onChange={v => setMarketingOptOut(!v)}
               />
 
-              <ToggleRow
-                title="Retest reminders"
-                subtitle="Prompt to retake your assessment every 42 days"
-                checked={retestReminders}
-                onChange={setRetestReminders}
-              />
-
-              <ToggleRow
-                title="Weekly progress digest"
-                subtitle="Sunday summary of PRS trend and streak"
-                checked={weeklyDigest}
-                onChange={setWeeklyDigest}
-              />
-
-              <div className="space-y-3 border-t border-slate-200 pt-4">
+              {/* FG-04: dead reminder toggles hidden (no sender is live yet). Restore when FG-09 to FG-12 ship. No new copy. */}
+              {SHOW_REMINDER_TOGGLES && (
+                <>
                 <ToggleRow
-                  title="Email reminders"
-                  subtitle="Get an email on your protocol days"
-                  checked={emailReminders}
-                  onChange={setEmailReminders}
+                  title="Retest reminders"
+                  subtitle="Prompt to retake your assessment every 42 days"
+                  checked={retestReminders}
+                  onChange={setRetestReminders}
                 />
-                {emailReminders && (
-                  <div className="flex items-center gap-3 pl-1">
-                    <label className="text-xs text-slate-500 font-semibold uppercase tracking-wide whitespace-nowrap">
-                      Reminder time
-                    </label>
-                    <input
-                      type="time"
-                      value={reminderTime}
-                      onChange={e => setReminderTime(e.target.value)}
-                      className="input max-w-[8rem]"
-                    />
-                    <span className="text-xs text-slate-500">({browserTimezone})</span>
-                  </div>
-                )}
-              </div>
 
-              <ToggleRow
-                title="Push notifications"
-                subtitle="Browser push alerts (must allow in your browser)"
-                checked={pushReminders}
-                onChange={setPushReminders}
-                icon={<Bell size={14} className="text-slate-500" />}
-              />
+                <ToggleRow
+                  title="Weekly progress digest"
+                  subtitle="Sunday summary of PRS trend and streak"
+                  checked={weeklyDigest}
+                  onChange={setWeeklyDigest}
+                />
+
+                <div className="space-y-3 border-t border-slate-200 pt-4">
+                  <ToggleRow
+                    title="Email reminders"
+                    subtitle="Get an email on your protocol days"
+                    checked={emailReminders}
+                    onChange={setEmailReminders}
+                  />
+                  {emailReminders && (
+                    <div className="flex items-center gap-3 pl-1">
+                      <label className="text-xs text-slate-500 font-semibold uppercase tracking-wide whitespace-nowrap">
+                        Reminder time
+                      </label>
+                      <input
+                        type="time"
+                        value={reminderTime}
+                        onChange={e => setReminderTime(e.target.value)}
+                        className="input max-w-[8rem]"
+                      />
+                      <span className="text-xs text-slate-500">({browserTimezone})</span>
+                    </div>
+                  )}
+                </div>
+
+                <ToggleRow
+                  title="Push notifications"
+                  subtitle="Browser push alerts (must allow in your browser)"
+                  checked={pushReminders}
+                  onChange={setPushReminders}
+                  icon={<Bell size={14} className="text-slate-500" />}
+                />
+                </>
+              )}
 
               {notifErr && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{notifErr}</p>}
 
