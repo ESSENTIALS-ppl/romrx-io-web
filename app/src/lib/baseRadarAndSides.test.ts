@@ -150,7 +150,7 @@ describe('My Body radar (v2: Left/Right outlines) == Joint Breakdown bars', () =
 
   it('MyBody.tsx renders BaseRadar from radarSideRowsForAssessment with the plain US caption', () => {
     const s = read(join(SRC, 'pages', 'MyBody.tsx'))
-    expect(s).toMatch(/<BaseRadar rows=\{radarRows\} \/>/)
+    expect(s).toMatch(/<BaseRadar rows=\{radarRows\}( earlier=\{earlierShapes\} latestLabel=\{[^}]*\})? \/>/)
     // Same words; "Steady" is wrapped in the Steady band colour (2026-09-29 cosmetics).
     expect(s).toMatch(/Each line is one side of your body, as a % of your Base target\. The dashed circle is <span className=\{cn\('font-semibold', BAND_TONE\[3\]\.color\)\}>Steady<\/span>\. Dents and gaps between the lines show where to focus\./)
     expect(s).not.toMatch(/\u2014/)
