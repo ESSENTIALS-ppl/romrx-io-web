@@ -823,6 +823,28 @@ export function MyProtocol() {
   const [tab, setTab] = useState<'daily' | 'full'>('daily')
   const [rxLibrary, setRxLibrary] = useState<Record<string, Prescription>>({})
   const [rxLoading, setRxLoading]  = useState(true)
+  // FG-17: the saved protocol (public.protocols, one row per exercise, written by the server when the assessment is scored)
+  // is the single source of truth, the same rows ROMBot reads. undefined = still loading, null = none saved (fall back to the old local pick).
+  const [savedProtocol, setSavedProtocol] = useState<{ exerciseIds: string[]; jointOrder: string[] } | null | undefined>(undefined)
+  const assessmentId = assessment?.id
+  useEffect(() => {
+    if (loading) return
+    if (!assessmentId) { setSavedProtocol(null); return }
+    let cancelled = false
+    supabase
+      .from('protocols')
+      .select('exercise_id, joint_key, priority_rank')
+      .eq('assessment_id', assessmentId)
+      .order('priority_rank', { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error || !data || data.length === 0) { setSavedProtocol(null); return }
+        const jointOrder: string[] = []
+        for (const r of data) if (!jointOrder.includes(r.joint_key as string)) jointOrder.push(r.joint_key as string)
+        setSavedProtocol({ exerciseIds: data.map(r => r.exercise_id as string), jointOrder })
+      })
+    return () => { cancelled = true }
+  }, [assessmentId, loading])
 
   const bands = useMemo(() => jointBandsForAssessment(assessment, jointScores), [assessment, jointScores])
   const scored = useMemo(() => assessment ? scoreJoints(assessment, bands) : [], [assessment, bands])
@@ -839,12 +861,38 @@ export function MyProtocol() {
       .map(s => ({ key: s.def.key, asymmetry: s.asymmetry, severity: s.severity, s }))
     // Shared with My Body (lib/mobilityBands rankProblemJoints); problemOrder kept for callers below.
     void problemOrder
-    return rankProblemJoints(assessment, rows).map(r => r.s)
-  }, [scored, problemOrder, assessment])
+    const localRanked = rankProblemJoints(assessment, rows).map(r => r.s)
+    // FG-17: when a saved protocol exists, its joints and order win, so the screen shows exactly what ROMBot reads.
+    if (savedProtocol && savedProtocol.jointOrder.length > 0) {
+      const fromSaved = savedProtocol.jointOrder
+        .map(jk => scored.find(s => s.def.key === jk || s.def.rxKey === jk || (JOINT_KEY_ALIASES[s.def.rxKey] ?? []).includes(jk)))
+        .filter((s): s is ScoredJoint => !!s)
+      if (fromSaved.length > 0) return fromSaved
+    }
+    return localRanked
+  }, [scored, problemOrder, assessment, savedProtocol])
 
   // Fetch drills for the top-3 priority joints from Supabase.
   useEffect(() => {
+    if (savedProtocol === undefined) return // wait for the saved protocol lookup
     if (ranked.length === 0) { setRxLoading(false); return }
+    if (savedProtocol && savedProtocol.exerciseIds.length > 0) {
+      setRxLoading(true)
+      supabase
+        .from('exercises')
+        .select('id, joint_key, exercise_type, name, sets, reps, coaching_cue, video_url, sports')
+        .in('id', savedProtocol.exerciseIds)
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('exercises load error:', error.message)
+            setRxLibrary({})
+          } else {
+            setRxLibrary(groupByJoint((data ?? []) as DbExercise[]))
+          }
+          setRxLoading(false)
+        })
+      return
+    }
     const wantedAliases = ranked.flatMap(r => JOINT_KEY_ALIASES[r.def.rxKey] ?? [r.def.rxKey])
     if (wantedAliases.length === 0) { setRxLoading(false); return }
     setRxLoading(true)
@@ -862,7 +910,7 @@ export function MyProtocol() {
         }
         setRxLoading(false)
       })
-  }, [ranked])
+  }, [ranked, savedProtocol])
 
   if (loading) return <Spinner />
 
