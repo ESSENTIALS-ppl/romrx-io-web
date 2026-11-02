@@ -5,6 +5,7 @@ import { PageHeader } from '../components/PageHeader'
 import { Spinner } from '../components/Spinner'
 import { Send, Loader2, Trash2 } from 'lucide-react'
 import { cn } from '../lib/cn'
+import { supabase } from '../lib/supabase'
 
 // Working shell for Phase 1: simple chat UI backed by the ai-chat edge
 // function and ai_conversations table. Sport-specific game-plan handoffs
@@ -29,16 +30,53 @@ export function ROMBot() {
   const [convId, setConvId] = useState<string | undefined>()
   const [error, setError] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+  // FG-06: reopen the last chat after a reload (no new screen copy). Reads the user's own rows (RLS: user_id = auth.uid()).
+  const [restoreDone, setRestoreDone] = useState(false)
+  const freshKey = user ? `romrx_rombot_fresh_${user.id}` : ''
 
   useEffect(() => {
-    if (messages.length === 0 && user && !profileLoading) {
+    if (!user) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data: convo } = await supabase
+          .from('ai_conversations')
+          .select('id, updated_at')
+          .eq('user_id', user.id)
+          .eq('sport', 'base')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        const clearedAt = Number(localStorage.getItem(freshKey) || 0)
+        if (convo && new Date(convo.updated_at).getTime() > clearedAt) {
+          const { data: rows } = await supabase
+            .from('ai_messages')
+            .select('role, content, created_at')
+            .eq('conversation_id', convo.id)
+            .order('created_at', { ascending: false })
+            .limit(50)
+          if (!cancelled && rows && rows.length > 0) {
+            setConvId(convo.id)
+            setMessages(rows.reverse()
+              .filter(r => r.role === 'user' || r.role === 'assistant')
+              .map(r => ({ role: r.role as 'user' | 'assistant', content: r.content as string })))
+          }
+        }
+      } catch { /* fall back to a fresh chat */ }
+      if (!cancelled) setRestoreDone(true)
+    })()
+    return () => { cancelled = true }
+  }, [user, freshKey])
+
+  useEffect(() => {
+    if (messages.length === 0 && user && !profileLoading && restoreDone) {
       const name = (profile?.full_name ?? 'there').split(' ')[0]
       setMessages([{
         role: 'assistant',
         content: `Hey ${name} - I'm ROMBot, your mobility intelligence assistant.\n\nI can see your ROM scores and protocol. Ask me anything:\n- "What's driving my lowest score?"\n- "What should I prioritize this week?"\n\nNote: ROMBot provides educational information only and is not medical advice. Consult a healthcare professional before changing your training if you have pain or injury.`,
       }])
     }
-  }, [user, profile, profileLoading, messages.length])
+  }, [user, profile, profileLoading, messages.length, restoreDone])
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -77,7 +115,7 @@ export function ROMBot() {
         title="ROMBot"
         subtitle="Your mobility intelligence assistant"
         action={
-          <button onClick={() => { setMessages([]); setConvId(undefined) }}
+          <button onClick={() => { setMessages([]); setConvId(undefined); if (freshKey) localStorage.setItem(freshKey, String(Date.now())) }}
             className="p-2 rounded-card hover:bg-red-50 text-slate-500 hover:text-red-700 transition-colors" title="Clear chat">
             <Trash2 size={15} />
           </button>
