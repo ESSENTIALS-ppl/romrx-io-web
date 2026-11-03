@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { SHOW_MARKETING_TOGGLE } from '../lib/marketingToggle'
 
 // One-click marketing opt-out. Calls the `unsubscribe` edge function, which flips
 // users.marketing_opt_out with the service role. The previous client-side update targeted a
@@ -91,10 +92,12 @@ export function Unsubscribe() {
               {email ? <><strong>{email}</strong> has been removed from ROMRx marketing emails.{' '}</> : null}
               You will no longer receive follow-up or renewal reminder emails.
             </p>
-            <p style={styles.note}>
-              Changed your mind? Re-enable emails anytime in your{' '}
-              <a href="/app/dashboard/settings" style={styles.link}>account settings</a>.
-            </p>
+            {SHOW_MARKETING_TOGGLE && (
+              <p style={styles.note}>
+                Changed your mind? Re-enable emails anytime in your{' '}
+                <a href="/app/dashboard/settings" style={styles.link}>account settings</a>.
+              </p>
+            )}
           </>
         )}
 
