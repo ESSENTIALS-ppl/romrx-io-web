@@ -6,6 +6,8 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import type { Assessment } from '../hooks/useProfile'
 import { supabase } from '../lib/supabase'
+import { requestMyDataExport, saveJsonDownload, EXPORT_BUTTON_LABEL, EXPORT_ERROR_COPY } from '../lib/exportMyData'
+import { enablePush } from '../lib/pushSubscribe'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
@@ -74,6 +76,10 @@ type ExtProfile = {
 
 const SHOW_REMINDER_TOGGLES = false
 const SHOW_NOTIFICATIONS = false
+// FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
+const SHOW_PUSH = false
+// FG-13: "Export my data" stays hidden until the export-my-data function flag is on and Jim approves the wording.
+const SHOW_EXPORT_MY_DATA = false
 
 export function Settings() {
   const { user, session, signOut } = useAuth()
@@ -117,6 +123,9 @@ export function Settings() {
   const [weeklyDigest, setWeeklyDigest] = useState(false)
   const [emailReminders, setEmailReminders] = useState(true)
   const [pushReminders, setPushReminders] = useState(false)
+  const [pushMsg, setPushMsg] = useState<string | null>(null)
+  const [exportBusy, setExportBusy] = useState(false)
+  const [exportErr, setExportErr] = useState<string | null>(null)
   const [reminderTime, setReminderTime] = useState('07:00')
 
   // Account
@@ -294,6 +303,25 @@ export function Settings() {
     setPwMsg({ type: 'ok', text: 'Password updated.' })
     setNewPassword('')
     setConfirmPw('')
+  }
+
+  // ── Export my data (FG-13, hidden behind SHOW_EXPORT_MY_DATA) ──
+  const handleExportMyData = async () => {
+    setExportBusy(true)
+    setExportErr(null)
+    const res = await requestMyDataExport((name, opts) => supabase.functions.invoke(name, opts))
+    if (res.ok) saveJsonDownload(res.filename, res.json)
+    else setExportErr(EXPORT_ERROR_COPY)
+    setExportBusy(false)
+  }
+
+  // ── Push on/off (FG-12, hidden behind SHOW_PUSH). On = subscribe + save; off = just clear the flag (saved with the form). ──
+  const handlePushToggle = async (on: boolean) => {
+    setPushMsg(null)
+    if (!on) { setPushReminders(false); return }
+    const res = await enablePush((name, opts) => supabase.functions.invoke(name, opts), import.meta.env.VITE_VAPID_PUBLIC_KEY)
+    if (res.ok) setPushReminders(true)
+    else { setPushReminders(false); setPushMsg('Push notifications could not be turned on.') }
   }
 
   // ── Request account deletion ───────────────────────────────────────────
@@ -605,13 +633,16 @@ export function Settings() {
                   )}
                 </div>
 
-                <ToggleRow
-                  title="Push notifications"
-                  subtitle="Browser push alerts (must allow in your browser)"
-                  checked={pushReminders}
-                  onChange={setPushReminders}
-                  icon={<Bell size={14} className="text-slate-500" />}
-                />
+                {SHOW_PUSH && (
+                  <ToggleRow
+                    title="Push notifications"
+                    subtitle="Browser push alerts (must allow in your browser)"
+                    checked={pushReminders}
+                    onChange={handlePushToggle}
+                    icon={<Bell size={14} className="text-slate-500" />}
+                  />
+                )}
+                {SHOW_PUSH && pushMsg && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{pushMsg}</p>}
                 </>
               )}
 
@@ -679,6 +710,19 @@ export function Settings() {
         {/* ROMood check-ins: delete + turn saving off (Stacy pass 8c61152). Hidden while saving flag is OFF. */}
         <MoodSettings userId={user?.id} />
         <div className="rounded-card bg-white border border-slate-200 p-4"><CrisisHelp /></div>
+
+        {SHOW_EXPORT_MY_DATA && (
+          <SectionCard title="Your data">
+            <button
+              onClick={handleExportMyData}
+              disabled={exportBusy}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-card bg-white border border-slate-200 text-sm font-medium text-cobalt-ink hover:bg-slate-50 transition-colors disabled:opacity-50"
+            >
+              <span className="flex-1 text-left">{exportBusy ? 'Preparing...' : EXPORT_BUTTON_LABEL}</span>
+            </button>
+            {exportErr && <p className="text-xs text-red-700 mt-2">{exportErr}</p>}
+          </SectionCard>
+        )}
 
         {/* ── DANGER ZONE ────────────────────────────────────────── */}
         <SectionCard title="Danger zone">
