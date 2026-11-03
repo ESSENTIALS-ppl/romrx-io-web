@@ -6,7 +6,9 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import type { Assessment } from '../hooks/useProfile'
 import { supabase } from '../lib/supabase'
-import { requestMyDataExport, saveJsonDownload, EXPORT_BUTTON_LABEL, EXPORT_ERROR_COPY } from '../lib/exportMyData'
+import { reminderStateFromRow, saveReminderChanges, NO_REMINDERS, type ReminderState } from '../lib/reminderOptIn'
+import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '../lib/deletionStatus'
+import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
 import { enablePush } from '../lib/pushSubscribe'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
@@ -80,6 +82,8 @@ const SHOW_NOTIFICATIONS = false
 const SHOW_PUSH = false
 // FG-13: "Export my data" stays hidden until the export-my-data function flag is on and Jim approves the wording.
 const SHOW_EXPORT_MY_DATA = false
+// FG-21: show the deletion request status (new copy, NEEDS JIM WORDING). Off: nothing is read or shown.
+const SHOW_DELETION_STATUS = false
 
 export function Settings() {
   const { user, session, signOut } = useAuth()
@@ -119,9 +123,9 @@ export function Settings() {
   const [notifSaved, setNotifSaved] = useState(false)
   const [notifErr, setNotifErr] = useState('')
   const [marketingOptOut, setMarketingOptOut] = useState(false)
-  const [retestReminders, setRetestReminders] = useState(true)
+  const [retestReminders, setRetestReminders] = useState(false)
   const [weeklyDigest, setWeeklyDigest] = useState(false)
-  const [emailReminders, setEmailReminders] = useState(true)
+  const [emailReminders, setEmailReminders] = useState(false)
   const [pushReminders, setPushReminders] = useState(false)
   const [pushMsg, setPushMsg] = useState<string | null>(null)
   const [exportBusy, setExportBusy] = useState(false)
@@ -141,6 +145,9 @@ export function Settings() {
   const [deleteDone, setDeleteDone] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const deleteInFlight = useRef(false)
+  const [deletionStatus, setDeletionStatus] = useState<DeletionStatus | null>(null)
+  // What the database holds for the three reminder switches (ON = toggle AND server-set opt-in marker). Save only calls set_reminder_opt_in for switches that changed.
+  const reminderBaseline = useRef<ReminderState>(NO_REMINDERS)
 
   // ── Hydrate profile fields ─────────────────────────────────────────────
   useEffect(() => {
@@ -189,11 +196,13 @@ export function Settings() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setEmailReminders(!!data.email_reminders)
+          const shown = reminderStateFromRow(data)
+          reminderBaseline.current = shown
+          setEmailReminders(shown.protocol)
           setPushReminders(!!data.push_reminders)
           setReminderTime(data.reminder_time ?? '07:00')
-          setRetestReminders(data.retest_reminders !== false)
-          setWeeklyDigest(!!data.weekly_digest)
+          setRetestReminders(shown.retest)
+          setWeeklyDigest(shown.digest)
         }
         setNotifLoading(false)
       })
@@ -254,6 +263,14 @@ export function Settings() {
     setPortalErr('Could not open billing portal.')
   }
 
+  // ── FG-21: deletion request status (only when SHOW_DELETION_STATUS) ──
+  useEffect(() => {
+    if (!SHOW_DELETION_STATUS || !user?.id) return
+    let live = true
+    loadDeletionStatus((t) => supabase.from(t) as never).then((st) => { if (live) setDeletionStatus(st) })
+    return () => { live = false }
+  }, [user?.id, deleteDone])
+
   // ── Save notifications ─────────────────────────────────────────────────
   const handleSaveNotifications = async () => {
     if (!user) return
@@ -266,17 +283,22 @@ export function Settings() {
 
     const { error: nErr } = await supabase.from('notification_preferences').upsert({
       user_id: user.id,
-      email_reminders: emailReminders,
       push_reminders: pushReminders,
       reminder_time: reminderTime,
       timezone: browserTimezone,
-      retest_reminders: retestReminders,
-      weekly_digest: weeklyDigest,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' })
+    if (nErr) { setNotifSaving(false); setNotifErr(nErr.message); return }
 
+    // The three email reminder switches go through set_reminder_opt_in (the only way an opt-in marker is set); a plain save can never opt anyone in.
+    const rem = await saveReminderChanges(
+      (fn, args) => supabase.rpc(fn, args),
+      reminderBaseline.current,
+      { retest: retestReminders, protocol: emailReminders, digest: weeklyDigest },
+    )
+    reminderBaseline.current = rem.applied
     setNotifSaving(false)
-    if (nErr) { setNotifErr(nErr.message); return }
+    if (!rem.ok) { setNotifErr(rem.message); return }
     setNotifSaved(true)
     setTimeout(() => setNotifSaved(false), 2000)
   }
@@ -311,7 +333,7 @@ export function Settings() {
     setExportErr(null)
     const res = await requestMyDataExport((name, opts) => supabase.functions.invoke(name, opts))
     if (res.ok) saveJsonDownload(res.filename, res.json)
-    else setExportErr(EXPORT_ERROR_COPY)
+    else setExportErr(exportErrorCopy(res.reason))
     setExportBusy(false)
   }
 
@@ -726,6 +748,9 @@ export function Settings() {
 
         {/* ── DANGER ZONE ────────────────────────────────────────── */}
         <SectionCard title="Danger zone">
+          {SHOW_DELETION_STATUS && deletionStatus && (
+            <p role="status" className="text-xs text-cobalt-ink mb-2">{DELETION_STATUS_COPY[deletionStatus]}</p>
+          )}
           <button
             onClick={() => setShowDelete(true)}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-card bg-red-50 border border-red-200 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors"
