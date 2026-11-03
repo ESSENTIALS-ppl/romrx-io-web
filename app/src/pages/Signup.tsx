@@ -31,7 +31,7 @@ export function Signup() {
   })()
   const sportKey = (addSport ?? '').toLowerCase()
   const SPORT_PROTOCOL_LABELS: Record<string, string> = {
-    bjj: 'Position Readiness Protocol\u2122 by ROMRx+BJJ',
+    bjj: 'Protocol\u2122 by ROMRx+BJJ',
     bodybuilding: 'Exercise Readiness Protocol\u2122 by ROMRx+BodyBuilding',
   }
   const protocolLabel = SPORT_PROTOCOL_LABELS[sportKey] ?? 'Finally, a mobility program customized for you.'
