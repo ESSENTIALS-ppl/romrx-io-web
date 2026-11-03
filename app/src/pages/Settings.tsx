@@ -78,6 +78,8 @@ type ExtProfile = {
 
 const SHOW_REMINDER_TOGGLES = true
 const SHOW_NOTIFICATIONS = true
+// Grant: 'Email product updates' (marketing_opt_out) toggle and subtitle stay hidden. While hidden, Save must not write marketing_opt_out, so a save can never re-subscribe someone who unsubscribed.
+const SHOW_MARKETING_TOGGLE = false
 // FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
 const SHOW_PUSH = false
 // FG-13: "Export my data" stays hidden until the export-my-data function flag is on and Jim approves the wording.
@@ -276,10 +278,12 @@ export function Settings() {
     if (!user) return
     setNotifSaving(true); setNotifSaved(false); setNotifErr('')
 
-    const { error: mErr } = await supabase.from('users')
-      .update({ marketing_opt_out: marketingOptOut })
-      .eq('id', user.id)
-    if (mErr) { setNotifErr(mErr.message); setNotifSaving(false); return }
+    if (SHOW_MARKETING_TOGGLE) {
+      const { error: mErr } = await supabase.from('users')
+        .update({ marketing_opt_out: marketingOptOut })
+        .eq('id', user.id)
+      if (mErr) { setNotifErr(mErr.message); setNotifSaving(false); return }
+    }
 
     const { error: nErr } = await supabase.from('notification_preferences').upsert({
       user_id: user.id,
@@ -608,12 +612,14 @@ export function Settings() {
                 <span className="text-xs font-medium text-cobalt-ink bg-cobalt-light px-2.5 py-1 rounded-full">{browserTimezone}</span>
               </div>
 
-              <ToggleRow
-                title="Email product updates"
-                subtitle="Occasional emails about new features and tips"
-                checked={!marketingOptOut}
-                onChange={v => setMarketingOptOut(!v)}
-              />
+              {SHOW_MARKETING_TOGGLE && (
+                <ToggleRow
+                  title="Email product updates"
+                  subtitle="Occasional emails about new features and tips"
+                  checked={!marketingOptOut}
+                  onChange={v => setMarketingOptOut(!v)}
+                />
+              )}
 
               {/* FG-04: dead reminder toggles hidden (no sender is live yet). Restore when FG-09 to FG-12 ship. No new copy. */}
               {SHOW_REMINDER_TOGGLES && (

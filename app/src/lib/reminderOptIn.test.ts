@@ -72,6 +72,7 @@ describe('lifecycle toggles visible with existing words only (feat/lifecycle-tog
   it('Notifications section and reminder toggles are on; push, export and deletion status stay off', () => {
     expect(src).toMatch(/^const SHOW_NOTIFICATIONS = true$/m)
     expect(src).toMatch(/^const SHOW_REMINDER_TOGGLES = true$/m)
+    expect(src).toMatch(/^const SHOW_MARKETING_TOGGLE = false$/m)
     expect(src).toMatch(/^const SHOW_PUSH = false$/m)
     expect(src).toMatch(/^const SHOW_EXPORT_MY_DATA = false$/m)
     expect(src).toMatch(/^const SHOW_DELETION_STATUS = false$/m)
@@ -84,5 +85,11 @@ describe('lifecycle toggles visible with existing words only (feat/lifecycle-tog
     expect(none).toEqual({ ok: false, message: 'Something went wrong.', applied: OFF })
     const thrown = await saveReminderChanges(async () => { throw new Error('x') }, OFF, { retest: true, protocol: false, digest: false })
     expect(thrown).toEqual({ ok: false, message: 'Something went wrong.', applied: OFF })
+  })
+  it('Email product updates toggle is behind SHOW_MARKETING_TOGGLE, and Save only writes marketing_opt_out when it is shown', () => {
+    expect(src).toMatch(/\{SHOW_MARKETING_TOGGLE && \(\s*<ToggleRow\s+title="Email product updates"/)
+    expect(src).toMatch(/if \(SHOW_MARKETING_TOGGLE\) \{\s*const \{ error: mErr \} = await supabase\.from\('users'\)\s*\.update\(\{ marketing_opt_out: marketingOptOut \}\)/)
+    // the only marketing_opt_out write in the file is inside that guard
+    expect(src.match(/update\(\{ marketing_opt_out/g)?.length).toBe(1)
   })
 })
