@@ -210,6 +210,7 @@ describe('Unsubscribe link handling', () => {
 
   it('the shared constant is false in src/lib/marketingToggle.ts', async () => {
     const { readFileSync } = await import('node:fs')
-    expect(readFileSync(new URL('../lib/marketingToggle.ts', import.meta.url), 'utf8')).toMatch(/^export const SHOW_MARKETING_TOGGLE = false$/m)
+    const { resolve } = await import('node:path')
+    expect(readFileSync(resolve(process.cwd(), 'src/lib/marketingToggle.ts'), 'utf8')).toMatch(/^export const SHOW_MARKETING_TOGGLE = false$/m)
   })
 })
