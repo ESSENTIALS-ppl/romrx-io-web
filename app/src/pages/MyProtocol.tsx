@@ -410,7 +410,7 @@ function TodayMovementCard({ rx, index }: { rx: Rx; index: number }) {
           {open && (
             <div className="mt-2.5 pt-2.5 border-t border-cobalt/10 space-y-2">
               {rx.cue && (
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
                   <span className="font-semibold text-cobalt-ink">How to do it: </span>{rx.cue}
                 </p>
               )}
@@ -645,7 +645,7 @@ function RxItem({
                 {openIdx === i && (
                   <div className="mt-2.5 pt-2.5 border-t border-cobalt/10 space-y-2">
                     {rx.cue && (
-                      <p className="text-xs text-slate-600 leading-relaxed">
+                      <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
                         <span className="font-semibold text-cobalt-ink">How to do it: </span>{rx.cue}
                       </p>
                     )}
