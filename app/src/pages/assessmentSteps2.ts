@@ -39,7 +39,7 @@ export const STEPS_PART2: Step[] = [
     mistake: HIP_FLEX_STEP.mistake,
     mistakeFix: HIP_FLEX_STEP.mistakeFix,
     meter: { grip: HIP_FLEX_STEP.meterGrip },
-    // FG-36: scored against 120 (JOINT_SCORE_TARGETS.hip_flex). The measure screen shows the cleared 'Typical range: 120°' with its source (lib/hipFlexCopy.ts).
+    // FG-36: scored against 120 (JOINT_SCORE_TARGETS.hip_flex). The on-screen typical range text stays the Oct 6 cleared line (lib/hipFlexCopy.ts), the 120 is never shown.
     fields: [
       { key: 'hip_flex_l', label: 'Left leg', unit: '°' },
       { key: 'hip_flex_r', label: 'Right leg', unit: '°' },

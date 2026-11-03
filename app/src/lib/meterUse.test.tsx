@@ -388,12 +388,12 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-range-source]')!.textContent).toBe('Source: Pooled: Tousignant-Laflamme 2013, Wolan-Nieroda 2020, Canovas-Ambit 2021, Wadhwa 2024')
   })
 
-  it('Quinn ranges: hip ER 29-43, hip IR 26-40, shoulder flexion 140-180, SLR 120, neck flexion 53 to 60 and extension 64 to 75 with sources; hip abduction and shoulder ER show no number', () => {
+  it('Quinn ranges: hip ER 29-43, hip IR 26-40, shoulder flexion 140-180, SLR 60-80, neck flexion 53 to 60 and extension 64 to 75 with sources; hip abduction and shoulder ER show no number', () => {
     const want: Record<string, [string, string] | null> = {
       hip_er: ['Typical range: 23-41°', 'Source: Simoneau et al., 1998; Roach and Miles, 1991'],
       hip_ir: ['Typical range: 24-40°', 'Source: Simoneau et al., 1998; Roach and Miles, 1991'],
       shoulder_flex: ['Typical range: 141-179°', 'Source: Gill et al., 2020'],
-      hip_flex: ['Typical range: 120°', 'Source: Youdas et al., 2005'],
+      hip_flex: ['Typical range: 60-80°', 'Source: Youdas et al., 2005'],
       cervical_lat: ['Typical range: 37-52°', 'Source: Pooled: Tousignant-Laflamme 2013, Wolan-Nieroda 2020, Canovas-Ambit 2021, Wadhwa 2024'], ankle_df: ['Typical range: 6.1-12.9 cm', 'Source: McBride et al., 2026'], cervical_flex_ext: ['Typical range: 39 to 62 degrees', 'Source: Pooled: Tousignant-Laflamme 2013, Wolan-Nieroda 2020, Canovas-Ambit 2021, Wadhwa 2024'], hip_abd: null, shoulder_er: null,   // shoulder ER: no range (Stacy, Oct 6 8:19 PM)
     }
     for (const [id, exp] of Object.entries(want)) {
@@ -561,11 +561,11 @@ describe('phone meter in the Base measure screen', () => {
     expect($('[data-range-source]')!.textContent).toBe(SOURCE)
   })
 
-  it('item 7: SLR shows Typical range: 120° once, with Source: Youdas et al., 2005 (switch on); ankle shows its range once', () => {
+  it('item 7: SLR shows Typical range: 60-80° once, with Source: Youdas et al., 2005 (switch on); ankle shows its range once', () => {
     expect(SHOW_SLR_TYPICAL_RANGE).toBe(true)
     mount(STEPS.findIndex(s => s.id === 'hip_flex'))
-    expect((host.textContent!.match(/Typical range: 120°/g) ?? []).length).toBe(1)
-    expect($('[data-field-note="hip_flex_l"]')!.textContent).toBe('Typical range: 120°')
+    expect((host.textContent!.match(/Typical range: 60-80°/g) ?? []).length).toBe(1)
+    expect($('[data-field-note="hip_flex_l"]')!.textContent).toBe('Typical range: 60-80°')
     expect($('[data-range-source]')!.textContent).toBe('Source: Youdas et al., 2005')
     act(() => root.unmount()); host.remove()
     mount(STEPS.findIndex(s => s.id === 'ankle_df'))
