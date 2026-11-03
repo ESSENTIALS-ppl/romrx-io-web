@@ -72,7 +72,7 @@ export function Unsubscribe() {
     <div style={styles.wrapper}>
       <div style={styles.card}>
         <img
-          src="/romrx-logo.png"
+          src="/assets/romrx-base-icon-512.svg"
           alt="ROMRx"
           style={styles.logo}
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
