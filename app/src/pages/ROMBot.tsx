@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { PageHeader } from '../components/PageHeader'
 import { Spinner } from '../components/Spinner'
+import { RecentChats } from '../components/RecentChats'
 import { Send, Loader2, Trash2 } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { supabase } from '../lib/supabase'
@@ -114,10 +115,13 @@ export function ROMBot() {
         title="ROMBot"
         subtitle="Your mobility intelligence assistant"
         action={
-          <button onClick={() => { setMessages([]); setConvId(undefined); if (freshKey) localStorage.setItem(freshKey, String(Date.now())) }}
-            className="p-2 rounded-card hover:bg-red-50 text-slate-500 hover:text-red-700 transition-colors" title="Clear chat">
-            <Trash2 size={15} />
-          </button>
+          <div className="flex gap-1">
+            <RecentChats accessToken={session?.access_token} onOpen={c => { setConvId(c.id); setMessages(c.messages) }} />
+            <button onClick={() => { setMessages([]); setConvId(undefined); if (freshKey) localStorage.setItem(freshKey, String(Date.now())) }}
+              className="p-2 rounded-card hover:bg-red-50 text-slate-500 hover:text-red-700 transition-colors" title="Clear chat">
+              <Trash2 size={15} />
+            </button>
+          </div>
         }
       />
 
