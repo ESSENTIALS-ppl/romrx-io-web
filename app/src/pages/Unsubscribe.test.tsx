@@ -13,6 +13,8 @@ import { Unsubscribe } from './Unsubscribe'
 
 let root: Root, host: HTMLDivElement
 const fetchMock = vi.fn()
+const reply = (status: number, body: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
+const SUCCESS_SENTENCE = "has been removed from ROMRx marketing emails. You will no longer receive follow-up or renewal reminder emails."
 
 async function mount(search: string) {
   window.history.pushState({}, '', `/app/unsubscribe${search}`)
@@ -25,7 +27,7 @@ async function mount(search: string) {
 
 beforeEach(() => {
   fetchMock.mockReset()
-  fetchMock.mockResolvedValue({ ok: true, status: 200 })
+  fetchMock.mockResolvedValue(reply(200, { ok: true }))
   vi.stubGlobal('fetch', fetchMock)
 })
 afterEach(() => {
@@ -80,10 +82,48 @@ describe('Unsubscribe link handling', () => {
     expect(host.textContent).toContain('Invalid link.')
   })
 
-  it('a failed request shows the existing Something went wrong. state for both link kinds', async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 500 })
+  it('no name or email (token link): no bold element is rendered, and this is the exact success text', async () => {
+    await mount('?t=goodtoken')
+    expect(host.querySelector('strong')).toBeNull()
+    const p = host.querySelectorAll('p')[0]
+    const text = p.textContent!.replace(/\s+/g, ' ').trim()
+    expect(text).toBe(SUCCESS_SENTENCE)
+    expect(host.textContent).toContain("You're unsubscribed.")
+  })
+
+  it('with an email the bold element still shows it', async () => {
+    await mount('?email=a%40b.co')
+    expect(host.querySelector('strong')!.textContent).toBe('a@b.co')
+  })
+
+  it('good token: 200 with ok:true shows success', async () => {
+    fetchMock.mockResolvedValue(reply(200, { ok: true }))
+    await mount('?t=goodtoken')
+    expect(host.textContent).toContain("You're unsubscribed.")
+    expect(host.textContent).not.toContain('Something went wrong.')
+  })
+
+  it.each([400, 401, 403, 404, 410, 422, 429, 500])('bad token: HTTP %i shows Something went wrong. and never success', async (status) => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchMock.mockResolvedValue(reply(status, { error: 'x' }))
+    await mount('?t=badtoken')
+    expect(host.textContent).toContain('Something went wrong.')
+    expect(host.textContent).not.toContain("You're unsubscribed.")
+  })
+
+  it('bad token: 200 with ok:false in the body shows Something went wrong. and never success', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchMock.mockResolvedValue(reply(200, { ok: false }))
+    await mount('?t=badtoken')
+    expect(host.textContent).toContain('Something went wrong.')
+    expect(host.textContent).not.toContain("You're unsubscribed.")
+  })
+
+  it('network error shows Something went wrong. for t and for email links', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchMock.mockRejectedValue(new Error('offline'))
     await mount('?t=tok')
     expect(host.textContent).toContain('Something went wrong.')
+    expect(host.textContent).not.toContain("You're unsubscribed.")
   })
 })

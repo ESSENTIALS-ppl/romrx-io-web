@@ -51,6 +51,9 @@ export function Unsubscribe() {
     fetch(url, request)
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        // A 2xx whose JSON body says ok:false is also a failure (bad token shape is pending Avery's v9 fix).
+        const body = await res.json().catch(() => null)
+        if (body && typeof body === 'object' && (body as { ok?: unknown }).ok === false) throw new Error('ok:false')
         setStatus('success')
       })
       .catch((err) => {
@@ -80,7 +83,7 @@ export function Unsubscribe() {
           <>
             <h1 style={styles.heading}>You're unsubscribed.</h1>
             <p style={styles.body}>
-              <strong>{email}</strong> has been removed from ROMRx marketing emails.
+              {email ? <strong>{email}</strong> : null} has been removed from ROMRx marketing emails.
               You will no longer receive follow-up or renewal reminder emails.
             </p>
             <p style={styles.note}>
