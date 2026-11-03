@@ -91,7 +91,7 @@ describe('hip flexion copy (Stacy rules)', () => {
     // Kept unchanged
     expect(HIP_FLEX_STEP.why).toBe('You raise one straight leg and read the angle. Each leg is measured on its own, so you can see both sides.')
     expect(HIP_FLEX_STEP.tool).toBe('Your phone. Lying on the floor.')
-    expect(HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 60-80°')
+    expect(HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 120°')
     expect(HIP_FLEX_RANGE_SOURCE).toBe('Source: Youdas et al., 2005')
     const step = STEPS.find(s => s.id === 'hip_flex')!
     expect(step.title).toBe('Hip Flexion (Straight-Leg Raise)')
@@ -227,7 +227,7 @@ describe('straight-leg raise typical range (Grant, Oct 5 11:14 PM: OFF)', () => 
   it('toggle is OFF: no number and no source line for SLR', async () => {
     const m = await import('./hipFlexCopy')
     expect(m.SHOW_SLR_TYPICAL_RANGE).toBe(true)
-    expect(m.HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 60-80°')
+    expect(m.HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 120°')
     const step = STEPS.find(s => s.id === 'hip_flex')!
     for (const f of step.fields) { expect(f.rangeSource).toBeUndefined(); expect(f.normalLow).toBeUndefined() }
   })

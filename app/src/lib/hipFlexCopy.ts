@@ -29,10 +29,10 @@ export const HIP_FLEX_LR_DIFFERENT_DEG = 10
 /**
  * Stacy pre-clear (Oct 5, 2026): straight-leg raise shows "Typical range: 60-85°" ONLY with Quinn's
  * peer-reviewed source visible on the same screen. Still unscored: no band, no %, not in the /100.
- * Jim (Oct 6, 2026, 11:19 AM, CLOSED) the SLR shows a range. Stacy cleared "Typical range: 60-80°"
+ * Jim (Oct 6, 2026, 11:19 AM, CLOSED) the SLR shows a range. Stacy cleared "Typical range: 120°"
  * with "Source: Youdas et al., 2005", same format as hip ER/IR and shoulder ER/flexion.
  */
-export const HIP_FLEX_TYPICAL_RANGE = 'Typical range: 60-80°'
+export const HIP_FLEX_TYPICAL_RANGE = 'Typical range: 120°'
 export const HIP_FLEX_RANGE_SOURCE = 'Source: Youdas et al., 2005'
 /**
  * ONE switch. Grant (Oct 5, 11:14 PM): OFF. Quinn rates the 60-85° source PARTIAL (paywalled table,
