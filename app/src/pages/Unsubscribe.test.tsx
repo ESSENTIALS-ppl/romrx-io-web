@@ -14,7 +14,8 @@ import { Unsubscribe } from './Unsubscribe'
 let root: Root, host: HTMLDivElement
 const fetchMock = vi.fn()
 const reply = (status: number, body: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
-const SUCCESS_SENTENCE = "has been removed from ROMRx marketing emails. You will no longer receive follow-up or renewal reminder emails."
+const SECOND_SENTENCE = "You will no longer receive follow-up or renewal reminder emails."
+const WITH_NAME_TEXT = "a@b.co has been removed from ROMRx marketing emails. You will no longer receive follow-up or renewal reminder emails."
 
 async function mount(search: string) {
   window.history.pushState({}, '', `/app/unsubscribe${search}`)
@@ -82,18 +83,19 @@ describe('Unsubscribe link handling', () => {
     expect(host.textContent).toContain('Invalid link.')
   })
 
-  it('no name or email (token link): no bold element is rendered, and this is the exact success text', async () => {
+  it('no name or email (token link): no bold element and only the second sentence is shown (exact text)', async () => {
     await mount('?t=goodtoken')
     expect(host.querySelector('strong')).toBeNull()
     const p = host.querySelectorAll('p')[0]
     const text = p.textContent!.replace(/\s+/g, ' ').trim()
-    expect(text).toBe(SUCCESS_SENTENCE)
+    expect(text).toBe(SECOND_SENTENCE)
     expect(host.textContent).toContain("You're unsubscribed.")
   })
 
   it('with an email the bold element still shows it', async () => {
     await mount('?email=a%40b.co')
     expect(host.querySelector('strong')!.textContent).toBe('a@b.co')
+    expect(host.querySelectorAll('p')[0].textContent!.replace(/\s+/g, ' ').trim()).toBe(WITH_NAME_TEXT)
   })
 
   it('good token: 200 with ok:true shows success', async () => {

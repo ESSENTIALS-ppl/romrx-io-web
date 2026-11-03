@@ -83,7 +83,7 @@ export function Unsubscribe() {
           <>
             <h1 style={styles.heading}>You're unsubscribed.</h1>
             <p style={styles.body}>
-              {email ? <strong>{email}</strong> : null} has been removed from ROMRx marketing emails.
+              {email ? <><strong>{email}</strong> has been removed from ROMRx marketing emails.{' '}</> : null}
               You will no longer receive follow-up or renewal reminder emails.
             </p>
             <p style={styles.note}>
