@@ -72,7 +72,9 @@ describe('lifecycle toggles visible with existing words only (feat/lifecycle-tog
   it('Notifications section and reminder toggles are on; push, export and deletion status stay off', () => {
     expect(src).toMatch(/^const SHOW_NOTIFICATIONS = true$/m)
     expect(src).toMatch(/^const SHOW_REMINDER_TOGGLES = true$/m)
-    expect(src).toMatch(/^const SHOW_MARKETING_TOGGLE = false$/m)
+    expect(src).toContain("import { SHOW_MARKETING_TOGGLE } from '../lib/marketingToggle'")
+    expect(src).not.toMatch(/^const SHOW_MARKETING_TOGGLE/m)
+    expect(readFileSync(new URL('./marketingToggle.ts', import.meta.url), 'utf8')).toMatch(/^export const SHOW_MARKETING_TOGGLE = false$/m)
     expect(src).toMatch(/^const SHOW_PUSH = false$/m)
     expect(src).toMatch(/^const SHOW_EXPORT_MY_DATA = false$/m)
     expect(src).toMatch(/^const SHOW_DELETION_STATUS = false$/m)

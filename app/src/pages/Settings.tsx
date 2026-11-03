@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import type { Assessment } from '../hooks/useProfile'
 import { supabase } from '../lib/supabase'
+import { SHOW_MARKETING_TOGGLE } from '../lib/marketingToggle'
 import { reminderStateFromRow, saveReminderChanges, NO_REMINDERS, type ReminderState } from '../lib/reminderOptIn'
 import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '../lib/deletionStatus'
 import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
@@ -78,8 +79,7 @@ type ExtProfile = {
 
 const SHOW_REMINDER_TOGGLES = true
 const SHOW_NOTIFICATIONS = true
-// Grant: 'Email product updates' (marketing_opt_out) toggle and subtitle stay hidden. While hidden, Save must not write marketing_opt_out, so a save can never re-subscribe someone who unsubscribed.
-const SHOW_MARKETING_TOGGLE = false
+// 'Email product updates' (marketing_opt_out) toggle follows SHOW_MARKETING_TOGGLE from ../lib/marketingToggle (shared with the unsubscribe page line). While hidden, Save must not write marketing_opt_out, so a save can never re-subscribe someone who unsubscribed.
 // FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
 const SHOW_PUSH = false
 // FG-13: "Export my data" stays hidden until the export-my-data function flag is on and Jim approves the wording.
