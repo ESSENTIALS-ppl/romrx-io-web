@@ -11,6 +11,9 @@ import { Unsubscribe } from './Unsubscribe'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
+const flag = vi.hoisted(() => ({ on: false }))
+vi.mock('../lib/marketingToggle', () => ({ get SHOW_MARKETING_TOGGLE() { return flag.on } }))
+
 let root: Root, host: HTMLDivElement
 const fetchMock = vi.fn()
 const reply = (status: number, body: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
@@ -27,6 +30,7 @@ async function mount(search: string) {
 }
 
 beforeEach(() => {
+  flag.on = false
   fetchMock.mockReset()
   fetchMock.mockResolvedValue(reply(200, { ok: true }))
   vi.stubGlobal('fetch', fetchMock)
@@ -178,5 +182,34 @@ describe('Unsubscribe link handling', () => {
     await mount('?t=tok')
     expect(host.textContent).toContain('Something went wrong.')
     expect(host.textContent).not.toContain("You're unsubscribed.")
+  })
+
+  it('success: the Changed your mind / Re-enable emails line is hidden while SHOW_MARKETING_TOGGLE is false (name, no name, email)', async () => {
+    await mount('?t=goodtoken')
+    expect(host.textContent).not.toContain('Changed your mind?')
+    expect(host.textContent).not.toContain('Re-enable emails anytime')
+    expect(host.querySelector('a')).toBeNull()
+    expect(host.querySelectorAll('p')).toHaveLength(1)
+    expect(host.querySelectorAll('p')[0].textContent!.replace(/\s+/g, ' ').trim()).toBe(SECOND_SENTENCE)
+  })
+
+  it('success with a name: exact text is unchanged and the line is still hidden', async () => {
+    await mount('?email=a%40b.co')
+    expect(host.querySelectorAll('p')[0].textContent!.replace(/\s+/g, ' ').trim()).toBe(WITH_NAME_TEXT)
+    expect(host.textContent).not.toContain('Re-enable emails anytime')
+    expect(host.querySelector('a')).toBeNull()
+  })
+
+  it('the line comes back with the toggle: exact text and the account settings link', async () => {
+    flag.on = true
+    await mount('?t=goodtoken')
+    const note = host.querySelectorAll('p')[1]
+    expect(note.textContent!.replace(/\s+/g, ' ').trim()).toBe('Changed your mind? Re-enable emails anytime in your account settings.')
+    expect(host.querySelector('a')?.getAttribute('href')).toBe('/app/dashboard/settings')
+  })
+
+  it('the shared constant is false in src/lib/marketingToggle.ts', async () => {
+    const { readFileSync } = await import('node:fs')
+    expect(readFileSync(new URL('../lib/marketingToggle.ts', import.meta.url), 'utf8')).toMatch(/^export const SHOW_MARKETING_TOGGLE = false$/m)
   })
 })
