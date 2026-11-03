@@ -13,23 +13,42 @@ export function Unsubscribe() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const raw = params.get('email')
+    const token = params.get('t')
 
-    if (!raw) {
+    if (!token && !raw) {
       setStatus('missing')
       return
     }
 
-    const decoded = decodeURIComponent(raw).trim().toLowerCase()
-    setEmail(decoded)
+    // ?email= works exactly as before. ?t= is the signed lifecycle-email token (unsubscribe v9):
+    // the token goes in the query string and the body is the RFC 8058 one-click form body.
+    // When both are present the token is used and the email is only shown.
+    let decoded = ''
+    if (raw) {
+      decoded = decodeURIComponent(raw).trim().toLowerCase()
+      setEmail(decoded)
+    }
 
-    fetch(UNSUBSCRIBE_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ email: decoded }),
-    })
+    const request: RequestInit = token
+      ? {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: 'List-Unsubscribe=One-Click',
+        }
+      : {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ email: decoded }),
+        }
+    const url = token ? `${UNSUBSCRIBE_URL}?t=${encodeURIComponent(token)}` : UNSUBSCRIBE_URL
+
+    fetch(url, request)
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         setStatus('success')
