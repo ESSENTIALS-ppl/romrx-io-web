@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useHipFlexCutover } from '../lib/hipFlexCutover'
+import { loadHipScoredIds, useHipFlexCutover } from '../lib/hipFlexCutover'
 import { gateAssessment } from '../lib/hipFlexGate'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -107,7 +107,8 @@ export function Settings() {
   // Assessment history (full list, not the recent-4 useProfile cap)
   const [rawHistory, setHistory] = useState<Assessment[]>([])
   const cutover = useHipFlexCutover() // FG-36
-  const history = useMemo(() => rawHistory.map(a => gateAssessment(a)), [rawHistory, cutover]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [hipScoredIds, setHipScoredIds] = useState<ReadonlySet<string>>(new Set()) // L937: a hip flexion score shows whatever the date
+  const history = useMemo(() => rawHistory.map(a => gateAssessment(a, hipScoredIds)), [rawHistory, cutover, hipScoredIds]) // eslint-disable-line react-hooks/exhaustive-deps
   const [historyLoading, setHistoryLoading] = useState(false)
 
   // Subscription / billing
@@ -167,8 +168,10 @@ export function Settings() {
       .select('*')
       .eq('user_id', user.id)
       .order('assessed_at', { ascending: false })
-      .then(({ data }) => {
-        setHistory((data ?? []) as Assessment[])
+      .then(async ({ data }) => {
+        const rows = (data ?? []) as Assessment[]
+        setHipScoredIds(await loadHipScoredIds(rows.map(r => r.id)))
+        setHistory(rows)
         setHistoryLoading(false)
       })
   }, [user?.id])

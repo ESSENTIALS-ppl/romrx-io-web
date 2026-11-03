@@ -12,6 +12,7 @@ export type HistoryRow = {
   joint_key: string
   left_value: number | null
   right_value: number | null
+  score?: number | null // L937: the joint_scores score (my_joint_history returns it)
 }
 export type StartNowRow = {
   joint_key: string
@@ -21,6 +22,8 @@ export type StartNowRow = {
   first_right: number | null
   latest_left: number | null
   latest_right: number | null
+  first_score?: number | null // L937: my_joint_start_vs_now returns these
+  latest_score?: number | null
 }
 /** i = position on the time axis (0 .. n-1). A joint with no row for an assessment has no point there: a gap, never zero. */
 export type TrendPoint = { date: string; pct: number; i: number }
@@ -68,8 +71,8 @@ export function buildJointTrends(rows: HistoryRow[]): TrendSeries[] {
 export function buildStartVsNowTrends(rows: StartNowRow[]): TrendSeries[] {
   const out: TrendSeries[] = []
   for (const r of rows) {
-    const first = gateJointScores({ assessed_at: r.first_assessed_at }, [r]).length ? pctFor(r.joint_key, num(r.first_left), num(r.first_right)) : null
-    const latest = gateJointScores({ assessed_at: r.latest_assessed_at }, [r]).length ? pctFor(r.joint_key, num(r.latest_left), num(r.latest_right)) : null
+    const first = gateJointScores({ assessed_at: r.first_assessed_at }, [{ ...r, score: r.first_score }]).length ? pctFor(r.joint_key, num(r.first_left), num(r.first_right)) : null
+    const latest = gateJointScores({ assessed_at: r.latest_assessed_at }, [{ ...r, score: r.latest_score }]).length ? pctFor(r.joint_key, num(r.latest_left), num(r.latest_right)) : null
     const points: TrendPoint[] = []
     if (first != null) points.push({ date: r.first_assessed_at, pct: first, i: 0 })
     if (latest != null) points.push({ date: r.latest_assessed_at, pct: latest, i: 1 })

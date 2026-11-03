@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { useHipFlexCutover } from '../lib/hipFlexCutover'
+import { useHipFlexCutover, loadHipScoredIds } from '../lib/hipFlexCutover'
 import { gateAssessment, gateJointScores } from '../lib/hipFlexGate'
 import type { JointScoreRow } from '../lib/mobilityBands'
 
@@ -78,6 +78,7 @@ export function useProfile(userId: string | undefined) {
   const [rawAssessments, setAssessments] = useState<Assessment[]>([])
   const [rawJointScores, setJointScores] = useState<JointScoreRow[]>([])
   const cutover = useHipFlexCutover() // FG-36: hip flexion counts only for assessments at or after the cutover
+  const [hipScoredIds, setHipScoredIds] = useState<ReadonlySet<string>>(new Set()) // L937: assessments that have a hip flexion score show it whatever the date
   const [sessionDates, setSessionDates] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -118,6 +119,7 @@ export function useProfile(userId: string | undefined) {
       )
       setAssessment(result.assessment)
       setAssessments(result.assessments ?? [])
+      setHipScoredIds(await loadHipScoredIds([result.assessment?.id, ...(result.assessments ?? []).map(a => a.id)].filter((x): x is string => !!x)))
       setSessionDates(
         (sessionsRes.data ?? [])
           .map((r: { session_date: string }) => r.session_date)
@@ -148,10 +150,10 @@ export function useProfile(userId: string | undefined) {
   }, [userId])
 
   const gated = useMemo(() => ({
-    assessment: gateAssessment(rawAssessment),
-    assessments: rawAssessments.map(a => gateAssessment(a)),
+    assessment: gateAssessment(rawAssessment, hipScoredIds),
+    assessments: rawAssessments.map(a => gateAssessment(a, hipScoredIds)),
     jointScores: gateJointScores(rawAssessment, rawJointScores),
-  }), [rawAssessment, rawAssessments, rawJointScores, cutover])
+  }), [rawAssessment, rawAssessments, rawJointScores, cutover, hipScoredIds])
 
   return { profile, assessment: gated.assessment, assessments: gated.assessments, jointScores: gated.jointScores, sessionDates, loading }
 }

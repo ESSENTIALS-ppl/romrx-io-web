@@ -20,7 +20,7 @@ import {
   type BandScore,
 } from '../lib/mobilityBands'
 import { track } from '../lib/track'
-import { useHipFlexCutover } from '../lib/hipFlexCutover'
+import { loadHipScoredIds, useHipFlexCutover } from '../lib/hipFlexCutover'
 import { gateAssessment } from '../lib/hipFlexGate'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 import { checkoutErrorMessage } from '../lib/checkoutErrors'
@@ -82,7 +82,8 @@ export function ResultsPreview() {
   const [searchParams] = useSearchParams()
   const [rawAssessment, setAssessment] = useState<Record<string, number | null> | null>(null)
   const cutover = useHipFlexCutover() // FG-36
-  const assessment = useMemo(() => gateAssessment(rawAssessment), [rawAssessment, cutover]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [hipScoredIds, setHipScoredIds] = useState<ReadonlySet<string>>(new Set()) // L937: a hip flexion score shows whatever the date
+  const assessment = useMemo(() => gateAssessment(rawAssessment, hipScoredIds), [rawAssessment, cutover, hipScoredIds]) // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
@@ -143,6 +144,8 @@ export function ResultsPreview() {
         data = (res.data as Record<string, number | null> | null) ?? null
       }
 
+      const aid = (data as { id?: unknown } | null)?.id
+      if (typeof aid === 'string') setHipScoredIds(await loadHipScoredIds([aid]))
       setAssessment(data)
       setLoading(false)
     })()

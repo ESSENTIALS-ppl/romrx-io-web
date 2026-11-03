@@ -20,3 +20,14 @@ export function useHipFlexCutover(): number | null {
   useEffect(() => { void loadHipFlexScoredAt() }, [])
   return useSyncExternalStore(subscribeHipFlexScoredAt, hipFlexScoredAtMs, () => null)
 }
+
+/** L937: ids of these assessments that have a hip flexion score (joint_scores row, key 'hip_flex', score not null). Read-only; on any error returns an empty set (date gate applies). */
+export async function loadHipScoredIds(ids: string[]): Promise<Set<string>> {
+  const out = new Set<string>()
+  if (!ids.length) return out
+  try {
+    const { data, error } = await supabase.from('joint_scores').select('assessment_id').eq('joint_key', 'hip_flex').not('score', 'is', null).in('assessment_id', ids)
+    if (!error && Array.isArray(data)) for (const r of data as { assessment_id: string }[]) out.add(r.assessment_id)
+  } catch { /* date gate applies */ }
+  return out
+}

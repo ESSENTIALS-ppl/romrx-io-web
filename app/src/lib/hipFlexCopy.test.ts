@@ -284,7 +284,7 @@ describe('FG-36: hip flexion is scored at 120, from the cutover (scoring_cutover
       expect(overallBandForAssessment(old)).toBe(overallBandForAssessment(full))
       expect(old.worst_joints).toEqual(['ankle_df_l'])
       expect(jointDisplayRowsForAssessment(old).find(r => r.key === 'hip_flex')!.left).toBeNull()
-      const rows = [{ joint_key: 'hip_flex', score: 1 }, { joint_key: 'hip_abd', score: 3 }]
+      const rows = [{ joint_key: 'hip_flex', score: null }, { joint_key: 'hip_abd', score: 3 }] // L937: a hip row with NO score is still dropped before the cutover
       expect(gateJointScores(old, rows)).toEqual([{ joint_key: 'hip_abd', score: 3 }])
       expect(gateJointScores({ ...lowRaise, assessed_at: POST }, rows)).toEqual(rows)
     } finally { setHipFlexScoredAtMs(null) }
@@ -310,9 +310,9 @@ describe('FG-36: hip flexion is scored at 120, from the cutover (scoring_cutover
   it('the loader reads one row, never caches a miss, and the pages use the gate', () => {
     const loader = readFileSync(join(SRC, 'lib', 'hipFlexCutover.ts'), 'utf8')
     expect(loader).toMatch(/from\('scoring_cutovers'\)\.select\('effective_at'\)\.eq\('key', 'hip_flex_scored'\)/)
-    expect(readFileSync(join(SRC, 'hooks', 'useProfile.ts'), 'utf8')).toMatch(/gateAssessment\(rawAssessment\)/)
-    expect(readFileSync(join(SRC, 'pages', 'ResultsPreview.tsx'), 'utf8')).toMatch(/gateAssessment\(rawAssessment\)/)
-    expect(readFileSync(join(SRC, 'pages', 'Settings.tsx'), 'utf8')).toMatch(/rawHistory\.map\(a => gateAssessment\(a\)\)/)
+    expect(readFileSync(join(SRC, 'hooks', 'useProfile.ts'), 'utf8')).toMatch(/gateAssessment\(rawAssessment, hipScoredIds\)/)
+    expect(readFileSync(join(SRC, 'pages', 'ResultsPreview.tsx'), 'utf8')).toMatch(/gateAssessment\(rawAssessment, hipScoredIds\)/)
+    expect(readFileSync(join(SRC, 'pages', 'Settings.tsx'), 'utf8')).toMatch(/rawHistory\.map\(a => gateAssessment\(a, hipScoredIds\)\)/)
     const page = readFileSync(join(SRC, 'pages', 'MyBody.tsx'), 'utf8')
     expect(page).toMatch(/r\.key !== 'hip_flex' \|\| r\.left != null \|\| r\.right != null/)
     expect(page).toMatch(/r\.key !== 'hip_flex' \|\| r\.measured/)
@@ -321,5 +321,77 @@ describe('FG-36: hip flexion is scored at 120, from the cutover (scoring_cutover
   it('live measure-screen chip works for hip flexion (target 120)', () => {
     expect(getScore('68', { key: 'hip_flex_l', label: 'Left' })).toBe(1)
     expect(getScore('130', { key: 'hip_flex_r', label: 'Right' })).toBe(3)
+  })
+})
+
+// L937 (Jim: rescore past assessments): a row that HAS a hip flexion score shows its bar and percent whatever its date.
+// The date gate (scoring_cutovers.hip_flex_scored) applies only to rows with no hip flexion score.
+describe('L937: a rescored pre-cutover row shows hip flexion; the date gate is only for rows with no score', () => {
+  const full = {
+    hip_er_l: 30, hip_er_r: 30, hip_ir_l: 30, hip_ir_r: 30, hip_abd_l: 45, hip_abd_r: 45,
+    shoulder_er_l: 90, shoulder_er_r: 90, shoulder_flex_l: 150, shoulder_flex_r: 150,
+    ankle_df_l: 8, ankle_df_r: 8, cervical_lat_l: 40, cervical_lat_r: 40, cervical_flex: 45, cervical_ext: 50,
+  }
+  const CUT = Date.parse('2026-11-03T02:33:59Z')
+  const PRE = '2026-10-20T12:00:00Z'
+  const POST = '2026-11-05T12:00:00Z'
+  const pre = { id: 'a-pre', ...full, hip_flex_l: 68, hip_flex_r: 68, assessed_at: PRE, worst_joints: ['hip_flex_l', 'ankle_df_l'] }
+  const hipRow = { joint_key: 'hip_flex', score: 1, left_value: 68, right_value: 68 }
+  const otherRow = { joint_key: 'hip_abd', score: 3, left_value: 45, right_value: 45 }
+
+  it('rescored pre-cutover row (has a hip score): bar and percent show, raw values and worst joints kept', () => {
+    setHipFlexScoredAtMs(CUT)
+    try {
+      const a = gateAssessment(pre, new Set(['a-pre']))
+      expect(a.hip_flex_l).toBe(68)
+      expect(a.worst_joints).toEqual(['hip_flex_l', 'ankle_df_l'])
+      expect(jointPercentsForAssessment(a).has('hip_flex')).toBe(true)
+      expect(jointDisplayRowsForAssessment(a).find(r => r.key === 'hip_flex')!.left).toBe(68)
+      expect(radarSideRowsForAssessment(a).find(r => r.key === 'hip_flex')!.measured).toBe(true)
+      expect(gateJointScores(a, [hipRow, otherRow])).toEqual([hipRow, otherRow])
+    } finally { setHipFlexScoredAtMs(null) }
+  })
+
+  it('unscored pre-cutover row (no hip score): bar and percent hidden', () => {
+    setHipFlexScoredAtMs(CUT)
+    try {
+      const a = gateAssessment(pre, new Set(['some-other-id']))
+      expect(a.hip_flex_l).toBeNull()
+      expect(a.worst_joints).toEqual(['ankle_df_l'])
+      expect(jointPercentsForAssessment(a).has('hip_flex')).toBe(false)
+      expect(gateAssessment(pre).hip_flex_l).toBeNull()
+      expect(gateJointScores(a, [{ joint_key: 'hip_flex', score: null }, otherRow])).toEqual([otherRow])
+      expect(gateJointScores(a, [{ joint_key: 'hip_flex' }, otherRow])).toEqual([otherRow])
+    } finally { setHipFlexScoredAtMs(null) }
+  })
+
+  it('post-cutover row: shows, with or without a scored id', () => {
+    setHipFlexScoredAtMs(CUT)
+    try {
+      const post = { ...pre, id: 'a-post', assessed_at: POST }
+      expect(gateAssessment(post).hip_flex_l).toBe(68)
+      expect(gateAssessment(post, new Set()).hip_flex_l).toBe(68)
+      expect(jointPercentsForAssessment(gateAssessment(post)).has('hip_flex')).toBe(true)
+      expect(gateJointScores(post, [hipRow, otherRow])).toEqual([hipRow, otherRow])
+    } finally { setHipFlexScoredAtMs(null) }
+  })
+
+  it('missing cutover row: a row with a score still shows; a row with no score stays hidden, even a brand-new one', () => {
+    setHipFlexScoredAtMs(null)
+    expect(gateAssessment(pre, new Set(['a-pre'])).hip_flex_l).toBe(68)
+    expect(gateJointScores(pre, [hipRow, otherRow])).toEqual([hipRow, otherRow])
+    expect(gateAssessment({ ...pre, id: 'a-new', assessed_at: POST }).hip_flex_l).toBeNull()
+    expect(gateAssessment({ ...pre, id: 'a-new', assessed_at: POST }, new Set(['a-pre'])).hip_flex_l).toBeNull()
+    expect(gateJointScores({ ...pre, assessed_at: POST }, [{ joint_key: 'hip_flex', score: null }, otherRow])).toEqual([otherRow])
+  })
+
+  it('the on-screen range string is unchanged', () => {
+    expect(HIP_FLEX_TYPICAL_RANGE).toBe('Typical range: 60-80°')
+  })
+
+  it('the hip score loader asks only for hip_flex rows with a score, by assessment id (read-only select)', () => {
+    const src = readFileSync(join(resolve(__dirname), 'hipFlexCutover.ts'), 'utf8')
+    expect(src).toMatch(/from\('joint_scores'\)\.select\('assessment_id'\)\.eq\('joint_key', 'hip_flex'\)\.not\('score', 'is', null\)\.in\('assessment_id', ids\)/)
+    expect(src).not.toMatch(/\.(insert|update|upsert|delete)\(/)
   })
 })
