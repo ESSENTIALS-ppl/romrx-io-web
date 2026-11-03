@@ -81,6 +81,7 @@ describe('Unsubscribe link handling', () => {
     await mount('')
     expect(fetchMock).not.toHaveBeenCalled()
     expect(host.textContent).toContain('Invalid link.')
+    expect(host.textContent).toContain('This unsubscribe link is missing the email address.')
   })
 
   it('no name or email (token link): no bold element and only the second sentence is shown (exact text)', async () => {
@@ -127,6 +128,10 @@ describe('Unsubscribe link handling', () => {
     expect(host.textContent).toContain('Invalid link.')
     expect(host.textContent).not.toContain("You're unsubscribed.")
     expect(host.textContent).not.toContain('Something went wrong.')
+    expect(host.querySelector('h1')?.textContent).toBe('Invalid link.')
+    expect(host.textContent).not.toContain('missing the email address')
+    expect(host.textContent).not.toContain('Please use the link')
+    expect(host.querySelector('p')).toBeNull()
   })
 
   it('v9 unavailable: 503 {ok:false,error:unavailable} shows the existing Something went wrong. state, never success', async () => {

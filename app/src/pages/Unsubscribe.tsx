@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 const UNSUBSCRIBE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/unsubscribe`
 
 export function Unsubscribe() {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'missing'>('loading')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'missing' | 'invalid'>('loading')
   const [email, setEmail] = useState<string | null>(null)
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export function Unsubscribe() {
         // 503 {ok:false,error:'unavailable'} and anything else = error. Success needs BOTH a 2xx and body.ok === true.
         const body = await res.json().catch(() => null) as { ok?: unknown; error?: unknown } | null
         if (res.status === 400 && body && body.error === 'invalid_token') {
-          setStatus('missing')
+          setStatus('invalid')
           return
         }
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -107,6 +107,11 @@ export function Unsubscribe() {
               and we’ll remove you manually.
             </p>
           </>
+        )}
+
+        {/* Bad token (400 invalid_token): heading only. The 'missing the email address' body below is for no email and no token. */}
+        {status === 'invalid' && (
+          <h1 style={styles.heading}>Invalid link.</h1>
         )}
 
         {status === 'missing' && (
