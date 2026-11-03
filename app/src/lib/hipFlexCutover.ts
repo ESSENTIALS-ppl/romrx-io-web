@@ -9,6 +9,9 @@ export async function loadHipFlexScoredAt(): Promise<void> {
   if (hipFlexScoredAtMs() != null || inflight) return
   inflight = true
   try {
+    // scoring_cutovers is readable by signed-in users only (RLS), so a signed-out visitor would get a 401. No session: skip the read and stay pre-cutover (fail safe).
+    const { data: sess } = await supabase.auth.getSession()
+    if (!sess?.session) return
     const { data, error } = await supabase.from('scoring_cutovers').select('effective_at').eq('key', 'hip_flex_scored').maybeSingle()
     const t = !error && data?.effective_at ? Date.parse(String(data.effective_at)) : NaN
     if (Number.isFinite(t)) setHipFlexScoredAtMs(t)
@@ -17,7 +20,12 @@ export async function loadHipFlexScoredAt(): Promise<void> {
 
 /** Call in any component that shows a score or a hip flexion row: loads the cutover once and re-renders when it arrives. */
 export function useHipFlexCutover(): number | null {
-  useEffect(() => { void loadHipFlexScoredAt() }, [])
+  useEffect(() => {
+    void loadHipFlexScoredAt()
+    // Signed out on mount, signs in later: read once the session exists.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => { if (session) void loadHipFlexScoredAt() })
+    return () => sub.subscription.unsubscribe()
+  }, [])
   return useSyncExternalStore(subscribeHipFlexScoredAt, hipFlexScoredAtMs, () => null)
 }
 
