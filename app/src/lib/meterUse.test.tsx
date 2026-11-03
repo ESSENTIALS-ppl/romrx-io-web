@@ -417,7 +417,7 @@ describe('phone meter in the Base measure screen', () => {
       expect(host.textContent).not.toMatch(/Typical range|Normal/)
       expect($('[data-range-source]')).toBeNull()
     }
-    const shown = STEPS.filter(s => s.fields.some(f => f.rangeSource && f.normalLow != null && !f.unscored && !f.referenceNote)).map(s => s.id)
+    const shown = STEPS.filter(s => s.fields.some(f => f.rangeSource && f.normalLow != null && !f.referenceNote)).map(s => s.id)
     expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_flex', 'cervical_lat', 'ankle_df'])
   })
 

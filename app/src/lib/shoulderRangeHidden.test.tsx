@@ -26,7 +26,7 @@ describe('Shoulder External Rotation shows no typical range (Stacy, Oct 6 8:19 P
     const s = STEPS.find(x => x.id === 'shoulder_er')!
     expect(s.title).toBe('Shoulder External Rotation')
     for (const f of s.fields) {
-      expect([f.normalLow, f.normalHigh, f.rangeSource, f.referenceNote, f.unscored]).toEqual([undefined, undefined, undefined, undefined, undefined])
+      expect([f.normalLow, f.normalHigh, f.rangeSource, f.referenceNote]).toEqual([undefined, undefined, undefined, undefined])
     }
   })
   it('renders no "Typical range", no "Source:", no 85-110 / 40-75, with More help closed and open', () => {
@@ -46,7 +46,7 @@ describe('Shoulder External Rotation shows no typical range (Stacy, Oct 6 8:19 P
   })
   it('the other ranged steps keep their line (hip ER, hip IR, shoulder flexion)', () => {
     expect(METER_COPY.typicalRange(140, 180)).toBe('Typical range: 140-180°')
-    const shown = STEPS.filter(s => s.fields.some(f => f.rangeSource && f.normalLow != null && !f.unscored && !f.referenceNote)).map(s => s.id)
+    const shown = STEPS.filter(s => s.fields.some(f => f.rangeSource && f.normalLow != null && !f.referenceNote)).map(s => s.id)
     expect(shown).toEqual(['hip_er', 'hip_ir', 'shoulder_flex', 'cervical_lat', 'ankle_df'])
   })
 })

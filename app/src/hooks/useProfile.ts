@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useHipFlexCutover } from '../lib/hipFlexCutover'
+import { gateAssessment, gateJointScores } from '../lib/hipFlexGate'
 import type { JointScoreRow } from '../lib/mobilityBands'
 
 export interface SportEntitlement {
@@ -72,9 +74,10 @@ export interface Assessment {
 
 export function useProfile(userId: string | undefined) {
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [assessment, setAssessment] = useState<Assessment | null>(null)
-  const [assessments, setAssessments] = useState<Assessment[]>([])
-  const [jointScores, setJointScores] = useState<JointScoreRow[]>([])
+  const [rawAssessment, setAssessment] = useState<Assessment | null>(null)
+  const [rawAssessments, setAssessments] = useState<Assessment[]>([])
+  const [rawJointScores, setJointScores] = useState<JointScoreRow[]>([])
+  const cutover = useHipFlexCutover() // FG-36: hip flexion counts only for assessments at or after the cutover
   const [sessionDates, setSessionDates] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -144,5 +147,11 @@ export function useProfile(userId: string | undefined) {
     load()
   }, [userId])
 
-  return { profile, assessment, assessments, jointScores, sessionDates, loading }
+  const gated = useMemo(() => ({
+    assessment: gateAssessment(rawAssessment),
+    assessments: rawAssessments.map(a => gateAssessment(a)),
+    jointScores: gateJointScores(rawAssessment, rawJointScores),
+  }), [rawAssessment, rawAssessments, rawJointScores, cutover])
+
+  return { profile, assessment: gated.assessment, assessments: gated.assessments, jointScores: gated.jointScores, sessionDates, loading }
 }

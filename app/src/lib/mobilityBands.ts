@@ -92,7 +92,7 @@ export const JOINT_SCORE_TARGETS: Record<string, number> = {
  * for it are ignored. Sex-specific per-leg grading (Quinn's table) is a
  * follow-up that needs the user's sex plus backend changes.
  */
-export const HIP_FLEX_UNSCORED_FALLBACK = true
+export const HIP_FLEX_UNSCORED_FALLBACK = false // FG-36 (Jim Nov 2 2026): hip flexion is scored, target 120. Older assessments are gated per assessment in lib/hipFlexGate.ts, not here.
 
 const UNSCORED_JOINT_KEYS: ReadonlySet<string> = HIP_FLEX_UNSCORED_FALLBACK
   ? new Set(['hip_flex'])

@@ -10,21 +10,17 @@ import {
   HIP_FLEX_UNSCORED_FALLBACK,
   isUnscoredJoint,
   jointBandsForAssessment,
-  jointPercent,
   jointPercentsForAssessment,
   jointDisplayRowsForAssessment,
   radarSideRowsForAssessment,
   mobilityScoreForAssessment,
   overallBandForAssessment,
-  overallBandFromJointScores,
   sideBandsForJoint,
-  sidePercent,
-  topProblemAreas,
-  topProblemAreasForAssessment,
-  scoredJointKeysWorstFirst,
+  JOINT_SCORE_TARGETS,
 } from './mobilityBands'
+import { gateAssessment, gateJointScores } from './hipFlexGate'
+import { hipFlexScoredFor, setHipFlexScoredAtMs } from './hipFlexCutoverState'
 import {
-  HIP_FLEX_FALLBACK_LINE,
   HIP_FLEX_LEFT_RIGHT_DIFFERENT,
   HIP_FLEX_RESULT_LINE_SEX_KNOWN,
   HIP_FLEX_STEP,
@@ -48,7 +44,6 @@ const SRC = resolve(__dirname, '..')
 const BANNED = /\b(normal|required|tight|injury|injuries|risk)\b/i
 
 const ALL_COPY = [
-  HIP_FLEX_FALLBACK_LINE,
   HIP_FLEX_LEFT_RIGHT_DIFFERENT,
   HIP_FLEX_RESULT_LINE_SEX_KNOWN,
   HIP_FLEX_STEP.why,
@@ -128,7 +123,6 @@ describe('hip flexion copy (Stacy rules)', () => {
     expect(text).not.toMatch(BANNED)
     expect(text).not.toMatch(/\b(100|120|68)\b/)
     for (const f of step.fields) {
-      expect(f.unscored).toBe(true)
       expect(f.normalLow).toBeUndefined()
       expect(f.normalHigh).toBeUndefined()
       expect(f.riskBelow).toBeUndefined()
@@ -136,28 +130,30 @@ describe('hip flexion copy (Stacy rules)', () => {
   })
   it('measure screen only prints a range when a field has one', () => {
     const s = readFileSync(join(SRC, 'pages', 'AssessmentMeasure.tsx'), 'utf8')
-    expect(s).toMatch(/!field\.unscored && field\.rangeSource && field\.normalLow != null/)
+    expect(s).toMatch(/field\.rangeSource && field\.normalLow != null/)
   })
 })
 
-describe('Stacy edit (Oct 4): while HIP_FLEX_UNSCORED_FALLBACK is true, the sex-known copy renders for NO ONE', () => {
+describe('FG-36: hip flexion is scored against one target, so the sex-known copy still renders for NO ONE', () => {
   const FORBIDDEN = /your sex|compared by sex|compared with|passive|rough guide|youdas|published (averages|passive)|men and women/i
   const GENDERS = ['male', 'female', 'Female', ' male ', 'MALE', '', 'prefer_not_to_say', 'other', null, undefined, '  ']
 
-  it('the flag is on', () => {
-    expect(HIP_FLEX_UNSCORED_FALLBACK).toBe(true)
+  it('the global unscored flag is off (hip flexion is scored); older assessments are gated per assessment instead', () => {
+    expect(HIP_FLEX_UNSCORED_FALLBACK).toBe(false)
   })
 
-  it('exact fallback line: "Saved for each leg, not scored." (no Youdas sentence)', () => {
-    expect(HIP_FLEX_FALLBACK_LINE).toBe('Saved for each leg, not scored.')
+  it('the "Saved for each leg, not scored." line is gone from the copy and from every screen', () => {
+    for (const f of ['lib/hipFlexCopy.ts', 'pages/MyBody.tsx', 'pages/MyProtocol.tsx', 'pages/AssessmentMeasureScreen.tsx', 'pages/assessmentSteps2.ts']) {
+      expect(readFileSync(join(SRC, f), 'utf8')).not.toMatch(/not scored/i)
+    }
   })
 
-  it('every gender gets the neutral why line, the "Saved for each leg" note and the fallback line', () => {
+  it('every gender gets the neutral why line and the "Saved for each leg" note, and no extra line', () => {
     for (const g of GENDERS) {
       const c = hipFlexScreenCopy(g as string, 60, 60)
       expect(c.why).toBe(HIP_FLEX_STEP.why)
       expect(c.inputNote).toBe('Saved for each leg')
-      expect(c.lines).toEqual(['Saved for each leg, not scored.'])
+      expect(c.lines).toEqual([])
       expect(hipFlexWhy(g as string)).toBe(HIP_FLEX_STEP.why)
       expect(hipFlexInputNote(g as string)).toBe('Saved for each leg')
       expect(hipFlexShowSexKnownCopy(g as string)).toBe(false)
@@ -176,7 +172,7 @@ describe('Stacy edit (Oct 4): while HIP_FLEX_UNSCORED_FALLBACK is true, the sex-
 
   it('the base step text and the screens that render hip copy contain none of it', () => {
     const step = STEPS.find(s => s.id === 'hip_flex')!
-    const text = [step.title, step.why, ...step.position, ...step.howTo, step.mistake, step.mistakeFix, HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT].join(' ')
+    const text = [step.title, step.why, ...step.position, ...step.howTo, step.mistake, step.mistakeFix, HIP_FLEX_LEFT_RIGHT_DIFFERENT].join(' ')
     expect(text).not.toMatch(FORBIDDEN)
     for (const f of ['MyBody.tsx', 'MyProtocol.tsx', 'AssessmentMeasure.tsx', 'AssessmentMeasureScreen.tsx', 'assessmentMeta.ts', 'assessmentSteps2.ts']) {
       const src = readFileSync(join(SRC, 'pages', f), 'utf8')
@@ -190,7 +186,7 @@ describe('Stacy edit (Oct 4): while HIP_FLEX_UNSCORED_FALLBACK is true, the sex-
     expect(HIP_FLEX_HONESTY_LINE).toContain('rough guide')
     expect(HIP_FLEX_RESULT_LINE_SEX_KNOWN).toContain('Youdas')
     const src = readFileSync(join(SRC, 'lib', 'hipFlexCopy.ts'), 'utf8')
-    expect(src).toMatch(/!HIP_FLEX_UNSCORED_FALLBACK && hipFlexSexKnown/)
+    expect(src).toMatch(/HIP_FLEX_SEX_COPY && hipFlexSexKnown/)
   })
 
   it('hipFlexSexKnown itself is unchanged (male/female only)', () => {
@@ -243,145 +239,87 @@ describe('left and right are different', () => {
   })
 })
 
-describe('safe fallback: hip flexion is never judged', () => {
-  it('constant is on and covers hip_flex only', () => {
-    expect(HIP_FLEX_UNSCORED_FALLBACK).toBe(true)
-    expect(isUnscoredJoint('hip_flex')).toBe(true)
-    expect(isUnscoredJoint('hip_flex_l')).toBe(true)
-    expect(isUnscoredJoint('hip_flex_r')).toBe(true)
-    expect(isUnscoredJoint('hip_abd')).toBe(false)
-    expect(isUnscoredJoint('shoulder_flex_l')).toBe(false)
-  })
-
-  // Average man ~68 deg, average woman ~76 deg: the old 120 target called both "Needs focus".
-  const avgMan = { hip_flex_l: 68, hip_flex_r: 68 }
-  const FULL_STEADY = {
-    hip_er_l: 50, hip_er_r: 50, hip_ir_l: 50, hip_ir_r: 50, hip_abd_l: 95, hip_abd_r: 95,
-    shoulder_er_l: 95, shoulder_er_r: 95, shoulder_flex_l: 180, shoulder_flex_r: 180,
-    ankle_df_l: 21, ankle_df_r: 21, cervical_lat_l: 46, cervical_lat_r: 46,
-    lumbar_flex: 65, lumbar_ext: 28, cervical_flex: 52, cervical_ext: 65,
+describe('FG-36: hip flexion is scored at 120, from the cutover (scoring_cutovers.hip_flex_scored)', () => {
+  const full = {
+    hip_er_l: 30, hip_er_r: 30, hip_ir_l: 30, hip_ir_r: 30, hip_abd_l: 45, hip_abd_r: 45,
+    shoulder_er_l: 90, shoulder_er_r: 90, shoulder_flex_l: 150, shoulder_flex_r: 150,
+    ankle_df_l: 8, ankle_df_r: 8, cervical_lat_l: 40, cervical_lat_r: 40, cervical_flex: 45, cervical_ext: 50,
   }
+  const POST = '2026-11-05T12:00:00Z'
+  const PRE = '2026-10-20T12:00:00Z'
+  const CUT = Date.parse('2026-11-03T00:00:00Z')
+  const lowRaise = { ...full, hip_flex_l: 68, hip_flex_r: 68 }
+  const goodRaise = { ...full, hip_flex_l: 125, hip_flex_r: 125 }
 
-  it('no band, no %, no side bands for hip flexion', () => {
-    expect(jointBandsForAssessment(avgMan).has('hip_flex')).toBe(false)
-    expect(jointPercent('hip_flex', { left: 68, right: 68 })).toBeNull()
-    expect(jointPercentsForAssessment(avgMan).has('hip_flex')).toBe(false)
-    expect(sideBandsForJoint('hip_flex', { left: 68, right: 40 }, 1)).toEqual({ left: null, right: null })
-    expect(sidePercent('hip_flex', 68, null)).toBeNull()
+  it('no joint is unscored and the target is 120', () => {
+    expect(isUnscoredJoint('hip_flex')).toBe(false)
+    expect(isUnscoredJoint('hip_flex_l')).toBe(false)
+    expect(JOINT_SCORE_TARGETS.hip_flex).toBe(120)
   })
 
-  it('persisted joint_scores rows for hip_flex (old 120 target) are ignored', () => {
-    const rows = [{ joint_key: 'hip_flex', score: 1 }]
-    expect(jointBandsForAssessment(avgMan, rows).has('hip_flex')).toBe(false)
-    expect(overallBandForAssessment(avgMan, rows)).toBeNull()
-    expect(overallBandFromJointScores(rows)).toBeNull()
-    expect(mobilityScoreForAssessment(avgMan, rows)).toBe(100)
+  it('on an assessment at or after the cutover: 68 deg is Needs focus and hip flexion is in the /100; 125 deg is Steady', () => {
+    setHipFlexScoredAtMs(CUT)
+    try {
+      const low = gateAssessment({ ...lowRaise, assessed_at: POST })
+      expect(jointBandsForAssessment(low).get('hip_flex')).toBe(1)
+      expect(jointPercentsForAssessment(low).has('hip_flex')).toBe(true)
+      expect(mobilityScoreForAssessment(low)).toBeLessThan(mobilityScoreForAssessment({ ...goodRaise, assessed_at: POST }))
+      expect(overallBandForAssessment(low)).toBe(1)
+      const good = gateAssessment({ ...goodRaise, assessed_at: POST })
+      expect(jointBandsForAssessment(good).get('hip_flex')).toBe(3)
+      expect(overallBandForAssessment(good)).toBe(3)
+      expect(radarSideRowsForAssessment(good).find(r => r.key === 'hip_flex')!.measured).toBe(true)
+      expect(sideBandsForJoint('hip_flex_l', { left: 125, right: 125 }, 3).left).toBe(3)
+    } finally { setHipFlexScoredAtMs(null) }
   })
 
-  it('a Steady user with a straight-leg raise of 68 deg stays Steady 100/100', () => {
-    const a = { ...FULL_STEADY, ...avgMan }
-    const rows = [{ joint_key: 'hip_flex', score: 1 }, { joint_key: 'hip_er', score: 3 }]
-    expect(overallBandForAssessment(a, rows)).toBe(3)
-    expect(mobilityScoreForAssessment(a, rows)).toBe(100)
-    expect(mobilityScoreForAssessment(a)).toBe(mobilityScoreForAssessment(FULL_STEADY))
+  it('an older assessment renders exactly as before: hip flexion removed from bands, %, /100, worst joints and the My Body bar', () => {
+    setHipFlexScoredAtMs(CUT)
+    try {
+      const old = gateAssessment({ ...lowRaise, assessed_at: PRE, worst_joints: ['hip_flex_l', 'ankle_df_l'] })
+      expect(old.hip_flex_l).toBeNull()
+      expect(jointBandsForAssessment(old).has('hip_flex')).toBe(false)
+      expect(jointPercentsForAssessment(old).has('hip_flex')).toBe(false)
+      expect(mobilityScoreForAssessment(old)).toBe(mobilityScoreForAssessment(full))
+      expect(overallBandForAssessment(old)).toBe(overallBandForAssessment(full))
+      expect(old.worst_joints).toEqual(['ankle_df_l'])
+      expect(jointDisplayRowsForAssessment(old).find(r => r.key === 'hip_flex')!.left).toBeNull()
+      const rows = [{ joint_key: 'hip_flex', score: 1 }, { joint_key: 'hip_abd', score: 3 }]
+      expect(gateJointScores(old, rows)).toEqual([{ joint_key: 'hip_abd', score: 3 }])
+      expect(gateJointScores({ ...lowRaise, assessed_at: POST }, rows)).toEqual(rows)
+    } finally { setHipFlexScoredAtMs(null) }
   })
 
-  it('hip flexion value does not change the /100 or the band at all', () => {
-    const base = mobilityScoreForAssessment(FULL_STEADY)
-    for (const v of [0, 30, 68, 100, 120, 170]) {
-      const a = { ...FULL_STEADY, hip_flex_l: v, hip_flex_r: v }
-      expect(mobilityScoreForAssessment(a)).toBe(base)
-      expect(overallBandForAssessment(a)).toBe(3)
-    }
+  it('cutover unknown (row, table or read access missing): EVERYTHING is pre-cutover, even a brand-new row', () => {
+    setHipFlexScoredAtMs(null)
+    const a = gateAssessment({ ...lowRaise, assessed_at: POST })
+    expect(a.hip_flex_l).toBeNull()
+    expect(jointBandsForAssessment(a).has('hip_flex')).toBe(false)
+    expect(hipFlexScoredFor({ assessed_at: POST })).toBe(false)
   })
 
-  it('never a weak spot: dropped from worst_joints / top problem areas', () => {
-    expect(topProblemAreas(['hip_flex_l', 'hip_flex_r', 'ankle_df_l', 'hip_ir_l', 'hip_abd_l'])).toEqual(['ankle_df_l', 'hip_ir_l', 'hip_abd_l'])
+  it('the boundary: exactly at the cutover counts, one second before does not; created_at is used when assessed_at is missing', () => {
+    setHipFlexScoredAtMs(CUT)
+    try {
+      expect(hipFlexScoredFor({ assessed_at: '2026-11-03T00:00:00Z' })).toBe(true)
+      expect(hipFlexScoredFor({ assessed_at: '2026-11-02T23:59:59Z' })).toBe(false)
+      expect(hipFlexScoredFor({ created_at: '2026-11-04T00:00:00Z' })).toBe(true)
+    } finally { setHipFlexScoredAtMs(null) }
   })
 
-  describe('top three problem areas come from SCORED joints only (hip removed BEFORE the cut)', () => {
-    const base = {
-      hip_er_l: 50, hip_er_r: 50, hip_ir_l: 50, hip_ir_r: 50, hip_abd_l: 95, hip_abd_r: 95,
-      shoulder_er_l: 95, shoulder_er_r: 95, shoulder_flex_l: 180, shoulder_flex_r: 180,
-      ankle_df_l: 21, ankle_df_r: 21, cervical_lat_l: 46, cervical_lat_r: 46,
-      lumbar_flex: 65, lumbar_ext: 28, cervical_flex: 52, cervical_ext: 65,
-    }
-    const hasHip = (keys: string[]) => keys.some(k => k.startsWith('hip_flex'))
-
-    it('hip flexion is the LOWEST score: top 3 are the next three scored joints, hip never appears', () => {
-      const a = {
-        ...base,
-        hip_flex_l: 10, hip_flex_r: 15,          // lowest of all (about 8%)
-        shoulder_er_l: 21.2,                      // 53% (target 40)
-        shoulder_flex_l: 78,                      // 56% (target 140)
-        hip_abd_l: 24.5,                          // 61% (target 40)
-        worst_joints: ['hip_flex_l', 'hip_flex_r', 'shoulder_er_l', 'shoulder_flex_l', 'hip_abd_l'],
-      }
-      const top = topProblemAreasForAssessment(a)
-      expect(top).toEqual(['shoulder_er_l', 'shoulder_flex_l', 'hip_abd_l'])
-      expect(hasHip(top)).toBe(false)
-    })
-
-    it('persisted worst_joints that spent its 5 slots on hip: still a full top 3 (never 2)', () => {
-      const a = {
-        ...base,
-        hip_flex_l: 60, hip_flex_r: 62,
-        shoulder_flex_l: 62, shoulder_flex_r: 66,   // 44% / 47% (target 140)
-        hip_abd_l: 20,                              // 50% (target 40)
-        shoulder_er_l: 21.2,                        // 53% (target 40)
-        worst_joints: ['shoulder_flex_l', 'shoulder_flex_r', 'hip_flex_l', 'hip_flex_r', 'hip_abd_l'],
-      }
-      // Old behavior: dedupe + drop hip AFTER the cut left only 2 items.
-      expect(topProblemAreas(a.worst_joints)).toHaveLength(2)
-      const top = topProblemAreasForAssessment(a)
-      expect(top).toEqual(['shoulder_flex_l', 'hip_abd_l', 'shoulder_er_l'])
-      expect(hasHip(top)).toBe(false)
-    })
-
-    it('no persisted worst_joints at all: ranked from the scored joints, hip excluded first', () => {
-      const a = { ...base, hip_flex_l: 0, hip_flex_r: 0, ankle_df_l: 3, shoulder_er_r: 17.8, hip_ir_r: 17 } // shoulder ER 17.8 / 40 = 44.5%, ankle 3 / 6 cm = 50%, hip IR 17 / 26 = 65%
-      expect(scoredJointKeysWorstFirst(a).some(k => k.startsWith('hip_flex'))).toBe(false)
-      expect(topProblemAreasForAssessment({ ...a, worst_joints: null })).toEqual(['ankle_df_l', 'shoulder_er_r', 'hip_ir_r']) // T1 C: shoulder ER (still narrow) gap x0.5 on 1 assessment
-      expect(topProblemAreasForAssessment({ ...a, worst_joints: [] })).toEqual(['ankle_df_l', 'shoulder_er_r', 'hip_ir_r']) // T1 C: shoulder ER (still narrow) gap x0.5 on 1 assessment
-    })
-
-    it('fewer than 3 scored joints: returns only those, never hip', () => {
-      const a = { hip_flex_l: 5, hip_flex_r: 5, ankle_df_l: 10, ankle_df_r: 12, lumbar_ext: 20, worst_joints: ['hip_flex_l', 'hip_flex_r', 'ankle_df_l'] }
-      expect(topProblemAreasForAssessment(a)).toEqual(['ankle_df_l']) // lumbar never ranked (Grant Oct 21 2026 7:10 PM)
-      expect(topProblemAreasForAssessment({ hip_flex_l: 5, hip_flex_r: 5, worst_joints: ['hip_flex_l'] })).toEqual([])
-      expect(topProblemAreasForAssessment({ hip_flex_l: 5, ankle_df_r: 9, worst_joints: ['hip_flex_l'] })).toEqual(['ankle_df_r'])
-      expect(topProblemAreasForAssessment(null)).toEqual([])
-    })
-
-    it('MyBody and MyProtocol both pick via the scored-only helper', () => {
-      for (const f of ['MyBody.tsx', 'MyProtocol.tsx']) {
-        expect(readFileSync(join(SRC, 'pages', f), 'utf8')).toMatch(/topProblemAreasForAssessment\(/)
-      }
-    })
-  })
-
-  it('My Body rows flag it unscored and the radar axis is left out by the page', () => {
-    const rows = jointDisplayRowsForAssessment({ ...FULL_STEADY, ...avgMan })
-    const hip = rows.find(r => r.key === 'hip_flex')!
-    expect(hip.unscored).toBe(true)
-    expect(hip.band).toBeNull()
-    expect(hip.left).toBe(68)
-    expect(rows.filter(r => r.unscored).map(r => r.key)).toEqual(['hip_flex'])
-    expect(radarSideRowsForAssessment({ ...FULL_STEADY, ...avgMan }).find(r => r.key === 'hip_flex')!.unscored).toBe(true)
+  it('the loader reads one row, never caches a miss, and the pages use the gate', () => {
+    const loader = readFileSync(join(SRC, 'lib', 'hipFlexCutover.ts'), 'utf8')
+    expect(loader).toMatch(/from\('scoring_cutovers'\)\.select\('effective_at'\)\.eq\('key', 'hip_flex_scored'\)/)
+    expect(readFileSync(join(SRC, 'hooks', 'useProfile.ts'), 'utf8')).toMatch(/gateAssessment\(rawAssessment\)/)
+    expect(readFileSync(join(SRC, 'pages', 'ResultsPreview.tsx'), 'utf8')).toMatch(/gateAssessment\(rawAssessment\)/)
+    expect(readFileSync(join(SRC, 'pages', 'Settings.tsx'), 'utf8')).toMatch(/rawHistory\.map\(a => gateAssessment\(a\)\)/)
     const page = readFileSync(join(SRC, 'pages', 'MyBody.tsx'), 'utf8')
-    expect(page).toMatch(/radarSideRowsForAssessment\(assessment, jointScores\)\.filter\(r => !r\.unscored\)/)
+    expect(page).toMatch(/r\.key !== 'hip_flex' \|\| r\.left != null \|\| r\.right != null/)
+    expect(page).toMatch(/r\.key !== 'hip_flex' \|\| r\.measured/)
   })
 
-  it('My Protocol never ranks it; ResultsPreview never flags its asymmetry', () => {
-    const proto = readFileSync(join(SRC, 'pages', 'MyProtocol.tsx'), 'utf8')
-    expect(proto).toMatch(/\.filter\(s => !isUnscoredJoint\(s\.def\.key\)\)/)
-    const rp = readFileSync(join(SRC, 'pages', 'ResultsPreview.tsx'), 'utf8')
-    expect(rp).toMatch(/JOINT_LABELS\[j\.key\] && !isUnscoredJoint\(j\.key\)/)
-  })
-
-  it('live measure-screen chip is off for hip flexion', () => {
-    expect(getScore('68', { key: 'hip_flex_l', label: 'Left', unscored: true })).toBeNull()
-    expect(getScore('68', { key: 'hip_flex_r', label: 'Right' })).toBeNull()
-    expect(getScore('30', { key: 'hip_abd_l', label: 'Left' })).toBe(1) // T1: 30 + 5 = 35 < 36
+  it('live measure-screen chip works for hip flexion (target 120)', () => {
+    expect(getScore('68', { key: 'hip_flex_l', label: 'Left' })).toBe(1)
+    expect(getScore('130', { key: 'hip_flex_r', label: 'Right' })).toBe(3)
   })
 })

@@ -31,7 +31,7 @@ export function AssessmentMeasureScreen(p: {
 }) {
   const { stepIdx, values, loading, error } = p
   const step = STEPS[stepIdx]
-  const isHip = step.fields.some(f => f.unscored)
+  const isHip = step.id === 'hip_flex'
   const hipCopy = hipFlexScreenCopy(p.gender, parseFloat(values.hip_flex_l ?? ''), parseFloat(values.hip_flex_r ?? ''))
   const totalMeasureSteps = STEPS.length
   // Progress fills over all 11 screens, same as the counter (Quinn Oct 26): (stepIdx + 1 + 2) / (STEPS.length + 2).
@@ -59,7 +59,7 @@ export function AssessmentMeasureScreen(p: {
   // Layout item 7: the typical range shows once per step, on the side being measured now (or the first
   // side still open), never repeated on the other side. Only real "Typical range" notes move; other
   // notes (ankle "Best of 3, in cm", the SLR sex note when the range switch is off) are untouched.
-  const isRangeNote = (f: Field) => f.unscored ? SHOW_SLR_TYPICAL_RANGE
+  const isRangeNote = (f: Field) => f.key.startsWith('hip_flex') ? SHOW_SLR_TYPICAL_RANGE
     : !f.referenceNote && !!f.rangeSource && f.normalLow != null && f.normalHigh != null
   const isCollapsed = (f: Field) => canMeter(f) && activeKey !== f.key && (values[f.key] ?? '') !== '' && !!savedByMeter[f.key]
   const rangeOpen = step.fields.filter(f => isRangeNote(f) && !isCollapsed(f))
@@ -181,7 +181,7 @@ export function AssessmentMeasureScreen(p: {
                 }
                 return (
                   <div key={f.key} className="space-y-3">
-                    <MeasureInput field={f.unscored ? { ...f, referenceNote: SHOW_SLR_TYPICAL_RANGE ? HIP_FLEX_TYPICAL_RANGE : hipCopy.inputNote } : f} value={v} onChange={p.handleChange}
+                    <MeasureInput field={f.key.startsWith('hip_flex') ? { ...f, referenceNote: SHOW_SLR_TYPICAL_RANGE ? HIP_FLEX_TYPICAL_RANGE : hipCopy.inputNote } : f} value={v} onChange={p.handleChange}
                       onMeasure={canMeter(f) ? () => setActive({ step: stepIdx, key: f.key }) : undefined} measuring={isActive}
                       upNext={canMeter(f) && !isActive && activeKey != null && v === ''}
                       hideRange={isRangeNote(f) && f.key !== rangeKey} />

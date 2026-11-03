@@ -44,7 +44,7 @@ export function RecentChats({ accessToken, onOpen }: { accessToken?: string; onO
 
   return (
     <div className="relative">
-      <button onClick={toggle} className="p-2 rounded-card hover:bg-surface text-slate-500 transition-colors" data-testid="recent-chats-button">
+      <button onClick={toggle} aria-label="Recent chats" className="p-2 rounded-card hover:bg-surface text-slate-500 transition-colors" data-testid="recent-chats-button">
         <History size={15} />
       </button>
       {open && rows.length > 0 && (

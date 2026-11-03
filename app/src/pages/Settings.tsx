@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useHipFlexCutover } from '../lib/hipFlexCutover'
+import { gateAssessment } from '../lib/hipFlexGate'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -93,7 +95,9 @@ export function Settings() {
   const [profileErr, setProfileErr] = useState('')
 
   // Assessment history (full list, not the recent-4 useProfile cap)
-  const [history, setHistory] = useState<Assessment[]>([])
+  const [rawHistory, setHistory] = useState<Assessment[]>([])
+  const cutover = useHipFlexCutover() // FG-36
+  const history = useMemo(() => rawHistory.map(a => gateAssessment(a)), [rawHistory, cutover]) // eslint-disable-line react-hooks/exhaustive-deps
   const [historyLoading, setHistoryLoading] = useState(false)
 
   // Subscription / billing

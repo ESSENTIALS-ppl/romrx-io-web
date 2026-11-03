@@ -1,5 +1,3 @@
-import { HIP_FLEX_UNSCORED_FALLBACK } from './mobilityBands'
-
 /**
  * Customer-facing hip flexion (straight-leg raise) copy. ONE place, so the step,
  * the measure screen, My Body and My Protocol can never drift apart.
@@ -39,9 +37,6 @@ export const HIP_FLEX_RANGE_SOURCE = 'Source: Youdas et al., 2005'
  * helper-lifted leg), so the straight-leg raise shows NO number and NO source line while this is false.
  */
 export const SHOW_SLR_TYPICAL_RANGE = true
-
-/** LIVE: sex unknown or not given. No low/high judgment. */
-export const HIP_FLEX_FALLBACK_LINE = 'Saved for each leg, not scored.'
 
 export const HIP_FLEX_STEP = {
   /** Always shown. Makes no comparison claim, so it is safe when sex is unknown. */
@@ -85,12 +80,15 @@ export function hipFlexSexKnown(gender: string | null | undefined): boolean {
   return g === 'male' || g === 'female'
 }
 
+/** OFF. FG-36 scores hip flexion against ONE target (120), not by sex, so the sex-comparison lines stay unused. */
+const HIP_FLEX_SEX_COPY = false
+
 /**
  * True only when the sex-known comparison copy may render: sex is male or female AND hip flexion is
  * graded (HIP_FLEX_UNSCORED_FALLBACK false). While the fallback flag is true this is false for everyone.
  */
 export function hipFlexShowSexKnownCopy(gender: string | null | undefined): boolean {
-  return !HIP_FLEX_UNSCORED_FALLBACK && hipFlexSexKnown(gender)
+  return HIP_FLEX_SEX_COPY && hipFlexSexKnown(gender)
 }
 
 /** The "why" line for the hip step: the comparison claim only when the sex-known copy is allowed. */
@@ -122,7 +120,7 @@ export function hipFlexScreenCopy(
   right: number | null | undefined,
 ): { why: string; inputNote: string; lines: string[] } {
   const known = hipFlexShowSexKnownCopy(gender)
-  const lines: string[] = known ? [HIP_FLEX_HONESTY_LINE] : [HIP_FLEX_FALLBACK_LINE]
+  const lines: string[] = known ? [HIP_FLEX_HONESTY_LINE] : []
   if (hipFlexLegsDiffer(left, right)) lines.push(HIP_FLEX_LEFT_RIGHT_DIFFERENT)
   return { why: hipFlexWhy(gender), inputNote: hipFlexInputNote(gender), lines }
 }

@@ -10,7 +10,6 @@ import { Spinner } from '../components/Spinner'
 import { BaseRadar, type EarlierShape } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
 import { MoodAverageCard, MoodScoreDivider, HalfDial } from '../components/MoodAverageCard'
-import { HIP_FLEX_FALLBACK_LINE, HIP_FLEX_LEFT_RIGHT_DIFFERENT, hipFlexLegsDiffer } from '../lib/hipFlexCopy'
 import {
   bandChip,
   jointBandsForAssessment,
@@ -27,6 +26,7 @@ import {
   type BandScore,
   type JointDisplayRow,
 } from '../lib/mobilityBands'
+import { buildJointTrends, buildStartVsNowTrends, useJointHistory, type TrendPoint, type TrendSeries } from '../lib/jointHistory'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
 
 // Local helper: BJJ's lib/utils.ts had formatJoint(); HQ's lib/ is locked, so
@@ -75,7 +75,7 @@ function computeStreak(sessionDates: string[]): number {
 // No elite sport-pack targets on Base (Fix A, Jim LOCK 2026-09-24).
 
 function JointBar({ row }: { row: JointDisplayRow }) {
-  const { label, left, right, midline, band: jointBand, unit, unscored } = row
+  const { label, left, right, midline, band: jointBand, unit } = row
   const pct = row.pct ?? 0
   const asym = left != null && right != null ? Math.abs(left - right) : 0
 
@@ -93,11 +93,7 @@ function JointBar({ row }: { row: JointDisplayRow }) {
     >
       <div className="col-start-1 row-start-1 min-w-0 sm:w-32 sm:shrink-0">
         <p className={cn('text-xs font-medium', tone ? tone.label : 'text-slate-500')}>{label}</p>
-        {unscored ? (
-          hipFlexLegsDiffer(left, right) && (
-            <p className="text-xs text-slate-500 mt-0.5">{HIP_FLEX_LEFT_RIGHT_DIFFERENT}</p>
-          )
-        ) : asym > 10 && (
+        {asym > 10 && (
           <p className="text-xs text-yellow-600 flex items-center gap-0.5 mt-0.5">
             <AlertTriangle size={9} /> {formatMeasure(asym)}{unit} gap
           </p>
@@ -116,7 +112,7 @@ function JointBar({ row }: { row: JointDisplayRow }) {
       </div>
       <div className="col-start-3 row-start-2 justify-self-end w-8 text-right sm:shrink-0">
         <span className={cn('text-xs font-bold', tone ? tone.color : 'text-slate-500')}>
-          {unscored ? '-' : `${pct}%`}
+          {pct}%
         </span>
       </div>
       <div className="col-start-2 col-end-4 row-start-1 justify-self-end flex justify-end sm:w-20 sm:shrink-0">
@@ -128,11 +124,6 @@ function JointBar({ row }: { row: JointDisplayRow }) {
             {bandChip(jointBand)}
           </span>
         )}
-        {unscored && (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap bg-slate-50 text-slate-500 border-slate-200">
-            Not scored
-          </span>
-        )}
       </div>
     </div>
   )
@@ -141,6 +132,7 @@ function JointBar({ row }: { row: JointDisplayRow }) {
 export function MyBody() {
   const { user } = useAuth()
   const { assessment, assessments, jointScores, sessionDates, loading } = useProfile(user?.id)
+  const { history: rpcHistory, startNow: rpcStartNow } = useJointHistory() // FG-08: my_joint_history / my_joint_start_vs_now
 
   if (loading) return <Spinner />
 
@@ -155,7 +147,7 @@ export function MyBody() {
 
   // Low-back flag ON (lib/lumbarFlag.ts): an unmeasured lumbar axis is left out (never drawn at 0).
   const lumbarOff = baseLumbarRemoved()
-  const radarRows = radarSideRowsForAssessment(assessment, jointScores).filter(r => !r.unscored)
+  const radarRows = radarSideRowsForAssessment(assessment, jointScores).filter(r => r.key !== 'hip_flex' || r.measured) // FG-36: hip flexion only where it was measured and counts (not on older assessments)
     .filter(r => !(lumbarOff && isLumbarKey(r.key))) // Grant Oct 21 2026 7:10 PM: no lumbar axis for anyone
   // FG-07: up to 3 earlier assessments on the radar (assessments are newest first; legend is dates only).
   const radarDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -168,22 +160,28 @@ export function MyBody() {
   const allJointRows = jointDisplayRowsForAssessment(assessment, jointScores)
   // Grant Oct 21 2026 7:10 PM: 'Low back: not measured' for ALL users; old saved lumbar values stay in the data, bars hidden.
   const hideLumbar = lumbarOff
-  const jointRows = hideLumbar ? allJointRows.filter(r => !isLumbarKey(r.key)) : allJointRows
+  const jointRows = (hideLumbar ? allJointRows.filter(r => !isLumbarKey(r.key)) : allJointRows)
+    .filter(r => r.key !== 'hip_flex' || r.left != null || r.right != null) // FG-36: the Hip Flexion bar is hidden on assessments before the cutover
   // FG-08: worse-side % per joint for every loaded assessment, oldest first. Only joints with 2+ measured points get a chart.
   const trendAssessments = assessments.length > 0 ? [...assessments].reverse() : []
   const trendRowsByAssessment = trendAssessments.map(a => ({
     date: a.assessed_at,
     rows: radarSideRowsForAssessment(a, a.id === assessment.id ? jointScores : null),
   }))
-  const trendRows = trendAssessments.length < 2 ? [] : jointRows
-    .map(jr => ({
-      key: jr.key,
-      label: jr.label,
-      points: trendRowsByAssessment
-        .map(t => { const r = t.rows.find(x => x.key === jr.key); return r && r.measured && !r.unscored ? { date: t.date, pct: r.worse } : null })
-        .filter((x): x is { date: string; pct: number } => x !== null),
-    }))
-    .filter(t => t.points.length >= 2)
+  const localTrends: TrendSeries[] = trendAssessments.length < 2 ? [] : jointRows.map(jr => ({
+    key: jr.key,
+    n: trendAssessments.length,
+    points: trendRowsByAssessment
+      .map((t, i) => { const r = t.rows.find(x => x.key === jr.key); return r && r.measured && !r.unscored ? { date: t.date, pct: r.worse, i } : null })
+      .filter((x): x is TrendPoint => x !== null),
+  }))
+  // Source order: the signed-in history rpc, then first-vs-latest, then the assessments already on this page (silent fallback).
+  const rpcTrends: TrendSeries[] | null = rpcHistory && rpcHistory.length > 0 ? buildJointTrends(rpcHistory)
+    : rpcStartNow && rpcStartNow.length > 0 ? buildStartVsNowTrends(rpcStartNow) : null
+  const trendSource = rpcTrends ?? localTrends
+  const trendRows = jointRows
+    .map(jr => ({ key: jr.key, label: jr.label, series: trendSource.find(t => t.key === jr.key) }))
+    .filter((t): t is { key: string; label: string; series: TrendSeries } => !!t.series && t.series.points.length >= 2)
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreasForAssessment(assessment)
 
@@ -404,13 +402,10 @@ export function MyBody() {
           {jointRows.map(row => <JointBar key={row.key} row={row} />)}
           {hideLumbar && <p className="py-2 text-xs text-slate-500" data-low-back-not-measured>{LOW_BACK_NOT_MEASURED}</p>}
         </div>
-        {jointRows.some(r => r.unscored && (r.left != null || r.right != null)) && (
-          <p className="text-xs text-slate-500 pt-2" data-unscored-note>Hip Flexion: {HIP_FLEX_FALLBACK_LINE}</p>
-        )}
         {/* FG-08: per-joint trend across assessments. Headings are the existing joint names; no axis text; each point's native tooltip is its date and %. */}
         {trendRows.length > 0 && (
           <div className="mt-3 border-t border-cobalt/10 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3" data-joint-trends>
-            {trendRows.map(t => <JointTrend key={t.key} label={t.label} points={t.points} />)}
+            {trendRows.map(t => <JointTrend key={t.key} label={t.label} points={t.series.points} n={t.series.n} />)}
           </div>
         )}
       </SectionCard>
@@ -419,19 +414,27 @@ export function MyBody() {
 }
 
 /** FG-08: tiny trend line for one joint (no axis text). Heading is the existing joint name. */
-function JointTrend({ label, points }: { label: string; points: { date: string; pct: number }[] }) {
+function JointTrend({ label, points, n }: { label: string; points: TrendPoint[]; n: number }) {
   const W = 120, H = 32, pad = 3
-  const xs = (i: number) => pad + (i * (W - 2 * pad)) / Math.max(1, points.length - 1)
+  const xs = (i: number) => pad + (i * (W - 2 * pad)) / Math.max(1, n - 1)
   const ys = (v: number) => H - pad - (Math.max(0, Math.min(100, v)) * (H - 2 * pad)) / 100
-  const line = points.map((p, i) => `${xs(i).toFixed(1)},${ys(p.pct).toFixed(1)}`).join(' ')
+  // A missing assessment is a gap in the line (never a zero): split into runs of neighbouring assessments.
+  const runs: TrendPoint[][] = []
+  for (const p of points) {
+    const last = runs[runs.length - 1]
+    if (last && last[last.length - 1].i === p.i - 1) last.push(p)
+    else runs.push([p])
+  }
   return (
     <div data-trend={label}>
       <p className="text-xs font-semibold text-slate-600 mb-0.5">{label}</p>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-8" role="img" aria-label={label}>
         <line x1={pad} x2={W - pad} y1={ys(90)} y2={ys(90)} stroke="#cbd5e1" strokeWidth={0.75} strokeDasharray="2 2" />
-        <polyline points={line} fill="none" stroke="#1D4ED8" strokeWidth={1.5} strokeLinejoin="round" />
-        {points.map((p, i) => (
-          <circle key={p.date} cx={xs(i)} cy={ys(p.pct)} r={2.2} fill="#1D4ED8">
+        {runs.filter(r => r.length > 1).map(r => (
+          <polyline key={r[0].i} points={r.map(p => `${xs(p.i).toFixed(1)},${ys(p.pct).toFixed(1)}`).join(' ')} fill="none" stroke="#1D4ED8" strokeWidth={1.5} strokeLinejoin="round" />
+        ))}
+        {points.map(p => (
+          <circle key={p.date} cx={xs(p.i)} cy={ys(p.pct)} r={2.2} fill="#1D4ED8">
             <title>{new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}: {p.pct}%</title>
           </circle>
         ))}

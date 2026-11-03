@@ -39,11 +39,10 @@ export const STEPS_PART2: Step[] = [
     mistake: HIP_FLEX_STEP.mistake,
     mistakeFix: HIP_FLEX_STEP.mistakeFix,
     meter: { grip: HIP_FLEX_STEP.meterGrip },
-    // No normal/target range on purpose: see lib/hipFlexCopy.ts and HIP_FLEX_UNSCORED_FALLBACK. The input note and the
-    // sex-known "why" sentence are chosen by the measure screen from the user's sex (hipFlexInputNote / hipFlexWhy).
+    // FG-36: scored against 120 (JOINT_SCORE_TARGETS.hip_flex). The measure screen shows the cleared 'Typical range: 120°' with its source (lib/hipFlexCopy.ts).
     fields: [
-      { key: 'hip_flex_l', label: 'Left leg', unit: '°', unscored: true },
-      { key: 'hip_flex_r', label: 'Right leg', unit: '°', unscored: true },
+      { key: 'hip_flex_l', label: 'Left leg', unit: '°' },
+      { key: 'hip_flex_r', label: 'Right leg', unit: '°' },
     ],
   },
 {

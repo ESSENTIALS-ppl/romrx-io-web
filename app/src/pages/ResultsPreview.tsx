@@ -20,6 +20,8 @@ import {
   type BandScore,
 } from '../lib/mobilityBands'
 import { track } from '../lib/track'
+import { useHipFlexCutover } from '../lib/hipFlexCutover'
+import { gateAssessment } from '../lib/hipFlexGate'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 import { checkoutErrorMessage } from '../lib/checkoutErrors'
 import { CARD_LINE_SHORT, CARD_LINE_SHORT_NODATE } from '../lib/cardLine'
@@ -78,7 +80,9 @@ export function ResultsPreview() {
   const { user, session, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [assessment, setAssessment] = useState<Record<string, number | null> | null>(null)
+  const [rawAssessment, setAssessment] = useState<Record<string, number | null> | null>(null)
+  const cutover = useHipFlexCutover() // FG-36
+  const assessment = useMemo(() => gateAssessment(rawAssessment), [rawAssessment, cutover]) // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')

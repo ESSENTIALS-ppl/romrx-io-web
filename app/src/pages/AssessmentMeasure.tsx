@@ -25,7 +25,7 @@ export function MeasureInput({ field, value, onChange, onMeasure, measuring, upN
         <label htmlFor={`m-${field.key}`} className="text-sm font-semibold text-cobalt-ink">{field.label}{upNext && <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400" data-up-next>{METER_COPY.upNext}</span>}</label>
         {(() => {
           // A typical range shows ONLY where a source exists (Stacy/Grant, Oct 5): rangeSource is required.
-          const note = field.referenceNote ?? (!field.unscored && field.rangeSource && field.normalLow != null && field.normalHigh != null ? METER_COPY.typicalRange(field.normalLow, field.normalHigh, field.unit ?? '') : null)
+          const note = field.referenceNote ?? (field.rangeSource && field.normalLow != null && field.normalHigh != null ? METER_COPY.typicalRange(field.normalLow, field.normalHigh, field.unit ?? '') : null)
           return note && !hideRange ? <span className="text-xs text-slate-500" data-field-note={field.key}>{note}</span> : null
         })()}
       </div>

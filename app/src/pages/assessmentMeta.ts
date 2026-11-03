@@ -12,8 +12,6 @@ export interface Field {
   referenceNote?: string
   /** Short citation shown under the inputs when the step shows a typical range (Quinn, verified Oct 5). */
   rangeSource?: string
-  /** true = recorded per leg but never judged: no range label, no live band chip. */
-  unscored?: boolean
 }
 
 export interface Step {
@@ -57,7 +55,7 @@ export const SETUP_STEPS: { icon: string; label: string; detail: string; more?: 
 export function getScore(val: string, field: Field): BandScore | null {
   const n = parseFloat(val)
   if (isNaN(n) || val === '') return null
-  if (field.unscored || isUnscoredJoint(field.key)) return null
+  if (isUnscoredJoint(field.key)) return null
   const target = JOINT_SCORE_TARGETS[jointKeyBase(field.key)]
   if (target == null) return null
   return bandScoreForJoint(field.key, n, target)

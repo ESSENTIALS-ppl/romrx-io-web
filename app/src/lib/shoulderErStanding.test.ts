@@ -148,7 +148,7 @@ describe('shoulder_er copy and fields (Oct 6 8:19 PM; Stacy PASS title, cue, sto
   })
   it('NO typical range and NO source on this step (Stacy, Oct 6 8:19 PM); scoring target 85 elsewhere', () => {
     for (const f of s.fields) {
-      expect([f.normalLow, f.normalHigh, f.rangeSource, f.referenceNote, f.unscored]).toEqual([undefined, undefined, undefined, undefined, undefined])
+      expect([f.normalLow, f.normalHigh, f.rangeSource, f.referenceNote]).toEqual([undefined, undefined, undefined, undefined])
     }
     expect(JOINT_SCORE_TARGETS.shoulder_er).toBe(85)
   })

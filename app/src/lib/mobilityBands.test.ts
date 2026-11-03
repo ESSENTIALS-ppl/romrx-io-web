@@ -86,7 +86,7 @@ describe('boundaries: same measurement → same band on every surface', () => {
   for (const [joint, target] of Object.entries(JOINT_SCORE_TARGETS)) {
     const def = ASSESSMENT_JOINTS.find(j => j.key === joint)
     if (!def) continue
-    // Hip flexion is never banded (HIP_FLEX_UNSCORED_FALLBACK); see hipFlexCopy.test.ts.
+    // Hip flexion is banded from the cutover (FG-36); see hipFlexCopy.test.ts.
     if (isUnscoredJoint(joint)) continue
     // T1 option A (per-joint config): the Steady line sits Es lower and the Building line Eb lower.
     const { steady: Es, building: Eb } = narrowBuffers(joint)
@@ -257,7 +257,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     name: '02 LOW', score: 89, band: 1, text: '89/100 \u00B7 Needs focus',
     worst: ['lumbar_ext', 'shoulder_er_l', 'lumbar_flex', 'shoulder_er_r', 'cervical_lat_l'],
     pct: {
-      hip_er: 100, hip_ir: 91, hip_abd: 100, shoulder_er: 72, shoulder_flex: 100,
+      hip_er: 100, hip_ir: 91, hip_abd: 100, hip_flex: 79, shoulder_er: 72, shoulder_flex: 100,
       ankle_df: 100, lumbar_flex: 75, lumbar_ext: 64, cervical_lat: 86, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
@@ -274,7 +274,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     name: '03 MID/BOUNDARY', score: 98, band: 2, text: '98/100 \u00B7 Building',
     worst: ['shoulder_er_l', 'shoulder_er_r', 'cervical_lat_l', 'cervical_lat_r', 'cervical_flex'],
     pct: {
-      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 84, shoulder_flex: 100,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, hip_flex: 100, shoulder_er: 84, shoulder_flex: 100,
       ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 97, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
@@ -289,7 +289,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     name: '04 HIGH', score: 100, band: 3, text: '100/100 \u00B7 Steady',
     worst: ['hip_er_l', 'hip_er_r', 'hip_ir_l', 'hip_ir_r', 'hip_abd_l'],
     pct: {
-      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 100, shoulder_flex: 100,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, hip_flex: 100, shoulder_er: 100, shoulder_flex: 100,
       ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 100, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
@@ -306,7 +306,7 @@ const AUDIT_FIXTURES: Array<{ name: string; a: Record<string, number | null>; sc
     worst: ['shoulder_er_l', 'shoulder_er_r', 'cervical_lat_l', 'cervical_lat_r', 'cervical_flex'],
     // T1 option A (Oct 21): shoulder ER L 71.1 + 5 = 76.1 < 76.5 → Needs focus, raw 71.1 / 85 = 83.6 → 83.
     pct: {
-      hip_er: 100, hip_ir: 100, hip_abd: 100, shoulder_er: 83, shoulder_flex: 100,
+      hip_er: 100, hip_ir: 100, hip_abd: 100, hip_flex: 100, shoulder_er: 83, shoulder_flex: 100,
       ankle_df: 100, lumbar_flex: 100, lumbar_ext: 100, cervical_lat: 97, cervical_flex: 100, cervical_ext: 100,
     },
     a: {
