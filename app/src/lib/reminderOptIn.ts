@@ -28,10 +28,10 @@ export async function saveReminderChanges(
     if (before[k] === after[k]) continue
     try {
       const { error } = await rpc('set_reminder_opt_in', { p_kind: k, p_on: after[k] })
-      if (error) return { ok: false, message: error.message || 'Could not save', applied }
+      if (error) return { ok: false, message: error.message || 'Something went wrong.', applied }
       applied[k] = after[k]
     } catch {
-      return { ok: false, message: 'Could not save', applied }
+      return { ok: false, message: 'Something went wrong.', applied }
     }
   }
   return { ok: true, applied }

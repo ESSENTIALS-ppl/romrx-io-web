@@ -66,3 +66,23 @@ describe('Settings.tsx wiring', () => {
     expect(page).toMatch(/if \(!SHOW_DELETION_STATUS \|\| !user\?\.id\) return/)
   })
 })
+
+describe('lifecycle toggles visible with existing words only (feat/lifecycle-toggles-20261102-base)', () => {
+  const src = readFileSync(new URL('../pages/Settings.tsx', import.meta.url), 'utf8')
+  it('Notifications section and reminder toggles are on; push, export and deletion status stay off', () => {
+    expect(src).toMatch(/^const SHOW_NOTIFICATIONS = true$/m)
+    expect(src).toMatch(/^const SHOW_REMINDER_TOGGLES = true$/m)
+    expect(src).toMatch(/^const SHOW_PUSH = false$/m)
+    expect(src).toMatch(/^const SHOW_EXPORT_MY_DATA = false$/m)
+    expect(src).toMatch(/^const SHOW_DELETION_STATUS = false$/m)
+  })
+  it('the toggles keep their existing labels', () => {
+    for (const s of ['title="Email product updates"', 'subtitle="Occasional emails about new features and tips"', 'title="Retest reminders"', 'subtitle="Prompt to retake your assessment every 42 days"', 'title="Weekly progress digest"', 'subtitle="Sunday summary of PRS trend and streak"', 'title="Email reminders"', 'subtitle="Get an email on your protocol days"', 'Reminder time', 'Save notification settings']) expect(src).toContain(s)
+  })
+  it('a failed reminder save with no database message falls back to the existing Something went wrong. (no new copy)', async () => {
+    const none = await saveReminderChanges(async () => ({ error: {} }), OFF, { retest: true, protocol: false, digest: false })
+    expect(none).toEqual({ ok: false, message: 'Something went wrong.', applied: OFF })
+    const thrown = await saveReminderChanges(async () => { throw new Error('x') }, OFF, { retest: true, protocol: false, digest: false })
+    expect(thrown).toEqual({ ok: false, message: 'Something went wrong.', applied: OFF })
+  })
+})

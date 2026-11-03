@@ -76,8 +76,8 @@ type ExtProfile = {
   marketing_opt_out?: boolean | null
 }
 
-const SHOW_REMINDER_TOGGLES = false
-const SHOW_NOTIFICATIONS = false
+const SHOW_REMINDER_TOGGLES = true
+const SHOW_NOTIFICATIONS = true
 // FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
 const SHOW_PUSH = false
 // FG-13: "Export my data" stays hidden until the export-my-data function flag is on and Jim approves the wording.
