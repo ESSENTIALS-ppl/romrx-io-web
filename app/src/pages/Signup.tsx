@@ -32,7 +32,7 @@ export function Signup() {
   const sportKey = (addSport ?? '').toLowerCase()
   const SPORT_PROTOCOL_LABELS: Record<string, string> = {
     bjj: 'Protocol by ROMRx+BJJ',
-    bodybuilding: 'Exercise Readiness Protocol\u2122 by ROMRx+BodyBuilding',
+    bodybuilding: 'Exercise Readiness Protocol by ROMRx+BodyBuilding',
   }
   const protocolLabel = SPORT_PROTOCOL_LABELS[sportKey] ?? 'Finally, a mobility program customized for you.'
   const assessmentDest = `/onboarding/assessment${addSport ? `?add=${encodeURIComponent(addSport)}` : ''}`
