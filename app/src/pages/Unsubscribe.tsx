@@ -50,10 +50,15 @@ export function Unsubscribe() {
 
     fetch(url, request)
       .then(async (res) => {
+        // Unsubscribe v9 (staged 9632328): 200 {ok:true} = done; 400 {ok:false,error:'invalid_token'} = bad link;
+        // 503 {ok:false,error:'unavailable'} and anything else = error. Success needs BOTH a 2xx and body.ok === true.
+        const body = await res.json().catch(() => null) as { ok?: unknown; error?: unknown } | null
+        if (res.status === 400 && body && body.error === 'invalid_token') {
+          setStatus('missing')
+          return
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        // A 2xx whose JSON body says ok:false is also a failure (bad token shape is pending Avery's v9 fix).
-        const body = await res.json().catch(() => null)
-        if (body && typeof body === 'object' && (body as { ok?: unknown }).ok === false) throw new Error('ok:false')
+        if (!body || body.ok !== true) throw new Error('not ok')
         setStatus('success')
       })
       .catch((err) => {

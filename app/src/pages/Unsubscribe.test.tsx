@@ -105,7 +105,7 @@ describe('Unsubscribe link handling', () => {
     expect(host.textContent).not.toContain('Something went wrong.')
   })
 
-  it.each([400, 401, 403, 404, 410, 422, 429, 500])('bad token: HTTP %i shows Something went wrong. and never success', async (status) => {
+  it.each([400, 401, 403, 404, 410, 422, 429, 500])('other failure: HTTP %i (not invalid_token) shows Something went wrong. and never success', async (status) => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     fetchMock.mockResolvedValue(reply(status, { error: 'x' }))
     await mount('?t=badtoken')
@@ -119,6 +119,52 @@ describe('Unsubscribe link handling', () => {
     await mount('?t=badtoken')
     expect(host.textContent).toContain('Something went wrong.')
     expect(host.textContent).not.toContain("You're unsubscribed.")
+  })
+
+  it('v9 bad token: 400 {ok:false,error:invalid_token} shows the existing Invalid link. state, never success', async () => {
+    fetchMock.mockResolvedValue(reply(400, { ok: false, error: 'invalid_token' }))
+    await mount('?t=forged')
+    expect(host.textContent).toContain('Invalid link.')
+    expect(host.textContent).not.toContain("You're unsubscribed.")
+    expect(host.textContent).not.toContain('Something went wrong.')
+  })
+
+  it('v9 unavailable: 503 {ok:false,error:unavailable} shows the existing Something went wrong. state, never success', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchMock.mockResolvedValue(reply(503, { ok: false, error: 'unavailable' }))
+    await mount('?t=goodtoken')
+    expect(host.textContent).toContain('Something went wrong.')
+    expect(host.textContent).not.toContain("You're unsubscribed.")
+    expect(host.textContent).not.toContain('Invalid link.')
+  })
+
+  it('v9 wrong body: 400 {error:"One-click body required"} (no invalid_token) is Something went wrong., not Invalid link.', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchMock.mockResolvedValue(reply(400, { error: 'One-click body required' }))
+    await mount('?t=tok')
+    expect(host.textContent).toContain('Something went wrong.')
+    expect(host.textContent).not.toContain('Invalid link.')
+  })
+
+  it.each([[{}], [null], [{ ok: 'true' }], [{ ok: 1 }]])('success needs body.ok === true: a 200 with body %j is Something went wrong.', async (body) => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchMock.mockResolvedValue(reply(200, body))
+    await mount('?t=tok')
+    expect(host.textContent).toContain('Something went wrong.')
+    expect(host.textContent).not.toContain("You're unsubscribed.")
+  })
+
+  it('invalid_token with a non-400 status is still Something went wrong.', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchMock.mockResolvedValue(reply(503, { ok: false, error: 'invalid_token' }))
+    await mount('?t=tok')
+    expect(host.textContent).toContain('Something went wrong.')
+  })
+
+  it('email link still succeeds on the v8 200 {ok:true}', async () => {
+    fetchMock.mockResolvedValue(reply(200, { ok: true }))
+    await mount('?email=a%40b.co')
+    expect(host.textContent).toContain("You're unsubscribed.")
   })
 
   it('network error shows Something went wrong. for t and for email links', async () => {
