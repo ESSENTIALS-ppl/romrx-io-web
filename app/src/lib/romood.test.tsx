@@ -313,7 +313,7 @@ describe('mood_settings migration', () => {
     expect(plan.split('- Frontend: ').length).toBe(2)
     expect(plan).toContain('Repinned Tue Oct 27 2026')
     const partials = readFileSync(resolve(__dirname, '../../../assets/partials.js'), 'utf8')
-    expect(partials).toContain("betaStatus: 'Opens mid-February 2027'")
+    expect(partials).toContain("betaStatus: 'Opens Spring 2027'")
     expect(partials).not.toContain("betaStatus: 'Beta now'")
     expect(plan).toContain('exactly 5af19bf')
     for (const id of ['d9bc6384-fc26-44fb-a51d-32aa8f28dd7b', '29117887-e0e0-4f7d-8758-4a59503c8ad7', '9e59d255-74d0-4da5-a888-e1d70479b795', '78249bf', 'ac1c045']) expect(plan).toContain(id)
