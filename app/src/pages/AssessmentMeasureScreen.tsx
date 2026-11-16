@@ -2,17 +2,18 @@ import { directionForField } from '../lib/meterDirection'
 import { StepVideo } from '../components/StepVideo'
 import { Loader2, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, AlertTriangle, SkipForward } from 'lucide-react'
 import { cn } from '../lib/cn'
-import { STEPS } from './assessmentSteps'
+import { STEPS as ALL_STEPS } from './assessmentSteps'
 import { MeasureInput } from './AssessmentMeasure'
 import { HIP_FLEX_LEFT_RIGHT_DIFFERENT, HIP_FLEX_RANGE_SOURCE, HIP_FLEX_TYPICAL_RANGE, SHOW_SLR_TYPICAL_RANGE, hipFlexScreenCopy } from '../lib/hipFlexCopy'
 import { useState, type Dispatch, type SetStateAction } from 'react'
 import { PhoneMeter } from '../components/PhoneMeter'
 import { meterLikelyAvailable } from '../lib/meterSensor'
 import { METER_COPY, MEASUREMENTS_HEADER, MORE_HELP_LABEL } from '../lib/meterCopy'
-import type { Field } from './assessmentMeta'
+import type { Field, Step } from './assessmentMeta'
 import { STOP_LINE } from '../lib/stopLine'
 /** Whole-flow count (Jim, Oct 26 2026 8:10 PM ET): setup (1) and ROMood (2) come before the measure steps. */
 const STEPS_BEFORE_MEASURE = 2
+const DEFAULT_BEFORE_MEASURE = STEPS_BEFORE_MEASURE
 
 /** Safety, not-medical-advice or warm-up wording that must never fold under More help (Stacy, Oct 6). */
 export const SAFETY_TEXT = /pain|stop if|hurt|medical|advice|warm[ -]?up|injur|doctor/i
@@ -28,8 +29,17 @@ export function AssessmentMeasureScreen(p: {
   handleNext: () => void
   /** Profile gender, when signed in. Only male or female counts as sex known. */
   gender?: string | null
+  /** P1-06 quick check: measure only these steps (default: the full assessment). */
+  steps?: Step[]
+  /** P1-06: screens shown before measuring, for the counter (default 2: setup and mood). */
+  beforeMeasure?: number
+  /** P1-06: Back on the first step (default: back to the mood screen). */
+  onBackFirst?: () => void
 }) {
   const { stepIdx, values, loading, error } = p
+  const STEPS = p.steps ?? ALL_STEPS
+  // P1-06: the quick check passes 1 (its intro screen); the full assessment keeps 2 (setup and mood).
+  const STEPS_BEFORE_MEASURE = p.beforeMeasure ?? DEFAULT_BEFORE_MEASURE
   const step = STEPS[stepIdx]
   const isHip = step.id === 'hip_flex'
   const hipCopy = hipFlexScreenCopy(p.gender, parseFloat(values.hip_flex_l ?? ''), parseFloat(values.hip_flex_r ?? ''))
@@ -226,7 +236,7 @@ export function AssessmentMeasureScreen(p: {
             <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
-                onClick={() => { if (stepIdx > 0) { p.setStepIdx(s => s - 1); window.scrollTo({ top: 0 }) } else p.setPhase('mood') }}
+                onClick={() => { if (stepIdx > 0) { p.setStepIdx(s => s - 1); window.scrollTo({ top: 0 }) } else if (p.onBackFirst) p.onBackFirst(); else p.setPhase('mood') }}
                 className="flex items-center gap-1 text-sm text-slate-500 hover:text-cobalt px-3 py-2 rounded-card hover:bg-cobalt-light transition-colors"
               >
                 <ChevronLeft size={15} /> Back
