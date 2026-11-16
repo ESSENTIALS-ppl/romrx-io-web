@@ -8,7 +8,7 @@ import { ROMETER_COPY } from '../lib/rometerCopy'
 import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Gauge, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRombotCheckin } from '../hooks/useRombotCheckin'
-import { RombotUnreadDot } from './RombotCheckin'
+import { RombotTabUnread } from './RombotCheckin'
 
 interface NavItem {
   to: string
@@ -71,7 +71,7 @@ export function Layout() {
               >
                 <Icon size={14} />
                 {label}
-                {to === '/dashboard/rombot' && <RombotUnreadDot show={checkinUnread} />}
+                {to === '/dashboard/rombot' && <RombotTabUnread unread={checkinUnread} />}
               </NavLink>
             ))}
           </nav>

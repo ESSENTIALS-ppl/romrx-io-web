@@ -37,9 +37,10 @@ vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ user: USER, session: { ac
 vi.mock('../hooks/useProfile', () => ({ useProfile: () => ({ profile: { full_name: 'Sam Lee', age_bucket: '30-39' }, loading: false }) }))
 
 import { RombotCheckinCard, RombotUnreadDot } from './RombotCheckin'
+import { Layout } from './Layout'
 import { ROMBot } from '../pages/ROMBot'
 import { useRombotCheckin } from '../hooks/useRombotCheckin'
-import { CHECKIN_BUTTON_LABELS, CHECKIN_LOAD_ERROR, CHECKIN_PATH, buildCheckin, markCheckinRead, parseSnapshot, readKey } from '../lib/rombotCheckin'
+import { CHECKIN_BUTTON_LABELS, CHECKIN_LOAD_ERROR, CHECKIN_TAB_SR_LABEL, CHECKIN_TODAY_LINE, CHECKIN_PATH, buildCheckin, markCheckinRead, parseSnapshot, readKey } from '../lib/rombotCheckin'
 
 // Rendered samples from Avery's RENDERED-SAMPLES-3076398b.txt (server output = Stacy's words, filled in).
 const NOTE_A = "Hey Sam, ROMBot here. It's been 3 days since your assessment, and your plan is ready. Today's focus is your hips. It's short, and you can do it now. Want to start?\nIf something got in the way, tell me here and I'll help you find an easier way in."
@@ -107,6 +108,14 @@ describe('P1-17 Stacy words', () => {
     expect(CHECKIN_LOAD_ERROR).toBe('Something went wrong. Please try again.')
     expect(readFileSync(__dirname + '/../pages/Settings.tsx', 'utf8')).toContain(CHECKIN_LOAD_ERROR) // existing string, not new
   })
+  const cf = process.env.STACY_CLIENT_WORDS_FILE
+  it.skipIf(!cf || !existsSync(cf))('client words match Stacy file 9d8fe291 items 1 and 2 (STACY_CLIENT_WORDS_FILE set)', () => {
+    const raw = readFileSync(cf!)
+    expect(createHash('sha256').update(raw).digest('hex').startsWith('9d8fe291')).toBe(true)
+    const t = raw.toString('utf8')
+    expect(t).toContain('\n' + CHECKIN_TODAY_LINE + '\n')
+    expect(t).toContain('\n' + CHECKIN_TAB_SR_LABEL + '\n')
+  })
   const f = process.env.STACY_WORDS_FILE
   it.skipIf(!f || !existsSync(f))('labels match Stacy file 6fd272b6 (STACY_WORDS_FILE set)', () => {
     const raw = readFileSync(f!)
@@ -118,16 +127,27 @@ describe('P1-17 Stacy words', () => {
 })
 
 describe('P1-17 Today card', () => {
-  it('unread check-in: card shows ROMBot + Stacy line 1 + Stacy button; line 3 stays in the chat', async () => {
+  it('unread check-in: card shows exactly Stacy item 1 line + Stacy button, and NO server note text', async () => {
     seed()
     await mount(createElement(RombotCheckinCard, { userId: USER.id }))
     expect(q('rombot-checkin-card')).toBeTruthy()
-    expect(q('rombot-checkin-line1')!.textContent).toBe(LINE1_A)
+    expect(CHECKIN_TODAY_LINE).toBe('ROMBot left you a note.')
+    expect(q('rombot-checkin-line')!.textContent).toBe('ROMBot left you a note.')
+    expect(q('rombot-checkin-line1')).toBeNull()
     expect(q('rombot-checkin-button')!.textContent).toBe("Start today's session")
     expect(q('rombot-checkin-open')!.getAttribute('href')).toBe('/dashboard/rombot')
     expect(q('rombot-unread-dot')).toBeTruthy()
-    expect(host.textContent).not.toContain('If something got in the way')
-    expect(host.textContent).not.toContain('left you a note')
+    expect(q('rombot-checkin-card')!.textContent).toBe("ROMBot left you a note.Start today's session")
+  })
+  it.each([['A', NOTE_A], ['C', NOTE_C]] as const)('privacy: branch %s card never shows a name, a count, a focus area or any note text', async (b, note) => {
+    seed(b, note)
+    await mount(createElement(RombotCheckinCard, { userId: USER.id }))
+    const t = q('rombot-checkin-card')!.textContent!
+    expect(t).not.toMatch(/Sam/)
+    expect(t).not.toMatch(/\d/)
+    expect(t).not.toMatch(/hips|shoulders|neck|ankles|focus/i)
+    for (const line of note.split('\n')) expect(t).not.toContain(line)
+    expect(t).not.toMatch(/sessions? since|next check|3 days/i)
   })
   it('branch C shows "See my plan"', async () => {
     seed('C', NOTE_C)
@@ -162,10 +182,10 @@ describe('P1-17 Today card', () => {
     expect(q('rombot-checkin-card')).toBeNull()
     expect(host.textContent).toBe('')
   })
-  it('off-contract button: card still shows line 1 but no button', async () => {
+  it('off-contract button: card still shows Stacy line but no button', async () => {
     seed(); (db.conv as Row).context_snapshot = snap('A', 'Go now')
     await mount(createElement(RombotCheckinCard, { userId: USER.id }))
-    expect(q('rombot-checkin-line1')).toBeTruthy()
+    expect(q('rombot-checkin-line')!.textContent).toBe(CHECKIN_TODAY_LINE)
     expect(q('rombot-checkin-button')).toBeNull()
   })
 })
@@ -182,6 +202,38 @@ describe('P1-17 unread dot', () => {
   it('no dot without a check-in', async () => {
     await mount(createElement(DotHarness))
     expect(q('rombot-unread-dot')).toBeNull()
+  })
+})
+
+describe('P1-17 ROMBot tab (Layout): screen-reader label, Stacy item 2', () => {
+  const tab = () => [...host.querySelectorAll('nav a')].find(a => a.getAttribute('href') === '/dashboard/rombot') as HTMLElement
+  it('unread: tab reads "ROMBot" then the visually hidden "New note from ROMBot"; the dot is aria-hidden', async () => {
+    seed()
+    await mount(createElement(Layout), '/dashboard/my-body')
+    expect(CHECKIN_TAB_SR_LABEL).toBe('New note from ROMBot')
+    const sr = tab().querySelector('[data-testid="rombot-tab-sr-label"]') as HTMLElement
+    expect(sr.textContent).toBe('New note from ROMBot')
+    expect(sr.className.split(' ')).toContain('sr-only')
+    expect(tab().textContent).toBe('ROMBotNew note from ROMBot') // label comes after the tab name
+    const dot = tab().querySelector('[data-testid="rombot-unread-dot"]') as HTMLElement
+    expect(dot.getAttribute('aria-hidden')).toBe('true')
+    expect(dot.textContent).toBe('')
+    // only the ROMBot tab carries it
+    expect(host.querySelectorAll('[data-testid="rombot-tab-sr-label"]')).toHaveLength(1)
+  })
+  it('read: label and dot are removed from the tab', async () => {
+    seed()
+    await mount(createElement(Layout), '/dashboard/my-body')
+    expect(tab().querySelector('[data-testid="rombot-tab-sr-label"]')).toBeTruthy()
+    await act(async () => { markCheckinRead(USER.id, CONV) })
+    expect(tab().querySelector('[data-testid="rombot-tab-sr-label"]')).toBeNull()
+    expect(tab().querySelector('[data-testid="rombot-unread-dot"]')).toBeNull()
+    expect(tab().textContent).toBe('ROMBot')
+  })
+  it('no check-in: no label, no dot', async () => {
+    await mount(createElement(Layout), '/dashboard/my-body')
+    expect(host.querySelector('[data-testid="rombot-tab-sr-label"]')).toBeNull()
+    expect(tab().textContent).toBe('ROMBot')
   })
 })
 
