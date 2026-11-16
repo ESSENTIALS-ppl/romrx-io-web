@@ -10,6 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { localDateIso, localDateOfTimestamp, isCompletedToday } from '../lib/localDate'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -462,9 +463,11 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
   }, [storageKey, assessedAt])
 
   const [log, setLog] = useState<SessionLog>(getLog)
-  const [completedToday, setCompletedToday] = useState(false)
+  // P1-05: null until the database answers; then the protocol_sessions row for today's LOCAL day decides.
+  const [dbToday, setDbToday] = useState<boolean | null>(null)
+  const [todayIso, setTodayIso] = useState(() => localDateIso())
   const [dbSessionCount, setDbSessionCount] = useState(0)
-  const [cycleStartDate, setCycleStartDate] = useState(() => assessedAt.slice(0, 10))
+  const [cycleStartDate, setCycleStartDate] = useState(() => localDateOfTimestamp(assessedAt))
 
   useEffect(() => {
     if (!userId) return
@@ -476,7 +479,7 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.assessed_at) setCycleStartDate(data.assessed_at.slice(0, 10))
+        if (data?.assessed_at) setCycleStartDate(localDateOfTimestamp(data.assessed_at))
       })
   }, [userId])
 
@@ -492,13 +495,33 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
 
   useEffect(() => { refreshCount() }, [refreshCount])
 
+  // P1-05: "completed today" reads the database for today's local day (one row per user per local day, any sport).
   useEffect(() => {
-    const todayIso = new Date().toISOString().slice(0, 10)
-    setCompletedToday(log.sessions.includes(todayIso))
-  }, [log])
+    if (!userId) return
+    let cancelled = false
+    supabase
+      .from('protocol_sessions')
+      .select('session_date')
+      .eq('user_id', userId)
+      .eq('session_date', todayIso)
+      .limit(1)
+      .then(({ data, error }) => { if (!cancelled && !error && data) setDbToday(data.length > 0) })
+    return () => { cancelled = true }
+  }, [userId, todayIso])
+
+  // Roll the day over when the tab comes back after local midnight (no lockout the next morning).
+  useEffect(() => {
+    const check = () => { const t = localDateIso(); setTodayIso(prev => { if (prev !== t) { setDbToday(null); return t } return prev }) }
+    document.addEventListener('visibilitychange', check)
+    window.addEventListener('focus', check)
+    return () => { document.removeEventListener('visibilitychange', check); window.removeEventListener('focus', check) }
+  }, [])
+
+  const completedToday = isCompletedToday(dbToday, log.sessions, todayIso)
 
   const handleMarkComplete = useCallback(() => {
-    const todayIso = new Date().toISOString().slice(0, 10)
+    const todayIso = localDateIso() // P1-05: local calendar day, not the UTC day
+    setTodayIso(todayIso)
     const protocolDay = `P${todayPriorityIndex + 1}`
     setLog(prev => {
       const sessions = prev.sessions.includes(todayIso)
@@ -508,13 +531,13 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
       try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch { /* ignore */ }
       return next
     })
-    setCompletedToday(true)
+    setDbToday(true) // optimistic; the upsert below makes it true in the database
     supabase.from('protocol_sessions').upsert({
       user_id: userId,
       session_date: todayIso,
       protocol_day: protocolDay,
     }, { onConflict: 'user_id,session_date' }).then(({ error }) => {
-      if (!error) refreshCount()
+      if (!error || error.code === '23505') refreshCount() // 23505 = already logged today
     })
   }, [storageKey, userId, todayPriorityIndex, refreshCount])
 
