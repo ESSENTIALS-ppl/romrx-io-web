@@ -28,6 +28,7 @@ import {
 } from '../lib/mobilityBands'
 import { buildJointTrends, buildStartVsNowTrends, useJointHistory, type TrendPoint, type TrendSeries } from '../lib/jointHistory'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
+import { ProgressCalendar } from '../components/ProgressCalendar'
 
 // Local helper: BJJ's lib/utils.ts had formatJoint(); HQ's lib/ is locked, so
 // we keep a small local copy here instead of touching app/src/lib/.
@@ -396,6 +397,9 @@ export function MyBody() {
           </div>
         </SectionCard>
       </div>
+
+      {/* P1-10: calendar of done days and milestone badges (renders nothing until Stacy's words are in) */}
+      <ProgressCalendar sessionDates={sessionDates} />
 
       <SectionCard title="Joint Breakdown" subtitle="Worse side shown - % of your Base target">
         <div className="divide-y divide-cobalt/10">
