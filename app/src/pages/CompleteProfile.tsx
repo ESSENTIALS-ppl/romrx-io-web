@@ -6,6 +6,7 @@ import { SectionCard } from '../components/SectionCard'
 import { cn } from '../lib/cn'
 import { Save, Loader2 } from 'lucide-react'
 import { AGE_BUCKETS } from '../lib/ageBuckets'
+import { completeProfileNext } from '../lib/completeProfileNext'
 
 const GENDERS = [
   { v: 'male', l: 'Male' },
@@ -39,7 +40,7 @@ export function CompleteProfile() {
       setErr(error.message)
       return
     }
-    window.location.assign('/app/dashboard/my-body')
+    window.location.assign(`/app${completeProfileNext(window.location.search)}`)
   }
 
   return (

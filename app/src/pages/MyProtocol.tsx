@@ -355,14 +355,24 @@ function RetestBanner({ assessedAt }: { assessedAt: string }) {
 
 // ---- Why statement card ----------------------------------------------------
 function WhyStatement({ heading, body }: { heading: string; body: string }) {
+  // P1-03: collapsed by default so the Today card is the first thing on the page. The heading (existing copy) is the toggle.
+  const [open, setOpen] = useState(false)
   return (
-    <div className="rounded-card border border-cobalt/20 bg-cobalt-light p-5">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-cobalt mb-3">
+    <div className="rounded-card border border-cobalt/20 bg-cobalt-light px-5 py-3" data-testid="why-statement">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-widest text-cobalt"
+      >
         {heading}
-      </p>
-      <p className="text-sm text-cobalt-ink leading-relaxed">
-        {body}
-      </p>
+        <ChevronDown size={14} className={cn('transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <p className="text-sm text-cobalt-ink leading-relaxed mt-3">
+          {body}
+        </p>
+      )}
     </div>
   )
 }
@@ -942,25 +952,6 @@ export function MyProtocol() {
     <div className="space-y-5">
       <PageHeader title="My Protocol" subtitle={`Based on assessment · ${dateStr}`} />
 
-      {/* Mobility band (matches MyBody so the two pages read as siblings) */}
-      <div className={cn('flex items-center gap-4 rounded-card border p-4 border-cobalt/10', tier.bg)}>
-        <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
-          <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
-          <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <TrendingUp size={13} className={tier.color} />
-            <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
-          </div>
-          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{formatScoreBand(prs, overallBand)}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Your top three problem areas shape today's plan</p>
-        </div>
-      </div>
-
-      {/* Retest banner */}
-      <RetestBanner assessedAt={assessedAt} />
-
       {/* Sub-tab switcher */}
       <div className="flex gap-1 p-1 rounded-card bg-slate-50 border border-cobalt/10">
         {([['daily', 'Daily'], ['full', 'Full']] as const).map(([key, label]) => (
@@ -977,10 +968,9 @@ export function MyProtocol() {
         ))}
       </div>
 
-      {/* Daily */}
+      {/* Daily (P1-03: Today card first, WHY collapsed under it) */}
       {tab === 'daily' && (
         <>
-          <WhyStatement heading="WHY DAILY" body={DAILY_WHY} />
           {rxLoading ? (
             <div className="py-8 flex justify-center"><Spinner /></div>
           ) : (
@@ -993,6 +983,7 @@ export function MyProtocol() {
               />
             )
           )}
+          <WhyStatement heading="WHY DAILY" body={DAILY_WHY} />
         </>
       )}
 
@@ -1017,6 +1008,26 @@ export function MyProtocol() {
           </div>
         </>
       )}
+
+      {/* P1-03: band summary and retest banner moved below the session */}
+      {/* Mobility band (matches MyBody so the two pages read as siblings) */}
+      <div className={cn('flex items-center gap-4 rounded-card border p-4 border-cobalt/10', tier.bg)}>
+        <div className={cn('w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0', tier.ring)}>
+          <span className={cn('font-display font-bold text-2xl leading-none', tier.color)}>{prs}</span>
+          <span className={cn('text-[10px] font-bold', tier.color)}>/100</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <TrendingUp size={13} className={tier.color} />
+            <span className={cn('text-xs font-bold tracking-wider', tier.color)}>Mobility band</span>
+          </div>
+          <p className={cn('text-lg font-bold leading-tight', tier.color)}>{formatScoreBand(prs, overallBand)}</p>
+          <p className="text-xs text-slate-500 mt-0.5">Your top three problem areas shape today's plan</p>
+        </div>
+      </div>
+
+      {/* Retest banner */}
+      <RetestBanner assessedAt={assessedAt} />
 
       <p className="text-center text-xs text-slate-500 pb-2">
         Protocol auto-updates with each new assessment. Retest every 6 weeks.

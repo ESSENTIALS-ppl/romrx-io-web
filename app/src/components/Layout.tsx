@@ -41,7 +41,8 @@ export function Layout() {
   const onGate = location.pathname.startsWith('/dashboard/complete-profile')
     || location.pathname.startsWith('/dashboard/settings')
   if (!profileLoading && needsDemographics && !onGate) {
-    return <Navigate to="/dashboard/complete-profile" replace />
+    // P1-03: remember where the user was going (for example the Today card right after unlock).
+    return <Navigate to={`/dashboard/complete-profile?next=${encodeURIComponent(location.pathname)}`} replace />
   }
 
   return (
