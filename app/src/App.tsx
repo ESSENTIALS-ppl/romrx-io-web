@@ -25,6 +25,7 @@ import { CompleteProfile } from './pages/CompleteProfile'
 
 import { signupSportRedirectTarget } from './lib/signupRedirect'
 import { dashboardIndexTarget } from './lib/checkoutLanding'
+import { QuickCheck } from './pages/QuickCheck'
 
 // P1-03: Stripe success landing (/dashboard?checkout=base_success|unlock_success) opens the Today card; plain /dashboard stays My Body.
 function DashboardIndex() {
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="/dashboard/my-body" element={<MyBody />} />
             <Route path="/dashboard/mood" element={<QuickMood />} />
             <Route path="/dashboard/my-protocol" element={<MyProtocol />} />
+            <Route path="/dashboard/quick-check" element={<QuickCheck />} />
             <Route path="/dashboard/my-fuel" element={<MyFuel />} />
             <Route path="/dashboard/my-sport" element={<MySport />} />
             <Route path="/dashboard/rombot" element={<ROMBot />} />

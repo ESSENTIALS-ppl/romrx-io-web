@@ -12,6 +12,7 @@ import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../compon
 import { cn } from '../lib/cn'
 import { ReminderOptIn } from '../components/ReminderOptIn'
 import { localDateIso, localDateOfTimestamp, isCompletedToday, isUnexpectedSaveError, withoutDay } from '../lib/localDate'
+import { QuickCheckBanner } from '../components/QuickCheckBanner'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -644,6 +645,8 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
       )}
 
       <div className="px-5 pb-5">
+        {/* P1-06: quick check banner or "Your next check" line (hidden while QUICK_CHECK_ON is false) */}
+        <div className="mb-3 empty:hidden"><QuickCheckBanner userId={userId} /></div>
         {completedToday ? (
           <div className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-50 border border-green-200 py-3.5 text-green-700 font-semibold text-sm">
             <CheckCircle2 size={16} fill="currentColor" strokeWidth={0} />
