@@ -11,6 +11,7 @@ import { SETTINGS_REMINDER_COPY as R, PRIVACY_URL, friendlyTimeZone } from '../l
 import { toWholeHour, reminderStateFromRow, saveReminderChanges, NO_REMINDERS, type ReminderState } from '../lib/reminderOptIn'
 import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '../lib/deletionStatus'
 import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
+import { YOUR_DATA_COPY as YD, PLAN_LINE_INDEX, dialogLines } from '../lib/yourDataCopy'
 import { enablePush } from '../lib/pushSubscribe'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
@@ -26,7 +27,7 @@ import {
 } from '../lib/cancelSubscription'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 import {
-  requestAccountDeletion, deletionErrorCopy, DELETION_BUTTON_LABEL, DELETION_SUCCESS_COPY,
+  requestAccountDeletion, deletionErrorCopy, DELETION_BUTTON_LABEL, DELETION_SUCCESS_COPY, deletionSiteForHost,
 } from '../lib/accountDeletionRequest'
 import { bandFull, formatScoreBand, mobilityScoreForAssessment, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
 import {
@@ -135,6 +136,7 @@ export function Settings() {
   const [pushMsg, setPushMsg] = useState<string | null>(null)
   const [exportBusy, setExportBusy] = useState(false)
   const [exportErr, setExportErr] = useState<string | null>(null)
+  const [exportDone, setExportDone] = useState(false) // P1-23: Stacy's success line after a download
   const [reminderTime, setReminderTime] = useState('07:00')
 
   // Account
@@ -149,6 +151,7 @@ export function Settings() {
   const [deleting, setDeleting] = useState(false)
   const [deleteDone, setDeleteDone] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteAlreadyOpen, setDeleteAlreadyOpen] = useState(false) // P1-23: function said a request is already open
   const deleteInFlight = useRef(false)
   const [deletionStatus, setDeletionStatus] = useState<DeletionStatus | null>(null)
   // What the database holds for the three reminder switches (ON = toggle AND server-set opt-in marker). Save only calls set_reminder_opt_in for switches that changed.
@@ -338,8 +341,9 @@ export function Settings() {
   const handleExportMyData = async () => {
     setExportBusy(true)
     setExportErr(null)
+    setExportDone(false)
     const res = await requestMyDataExport((name, opts) => supabase.functions.invoke(name, opts))
-    if (res.ok) saveJsonDownload(res.filename, res.json)
+    if (res.ok) { saveJsonDownload(res.filename, res.json); setExportDone(true) }
     else setExportErr(exportErrorCopy(res.reason))
     setExportBusy(false)
   }
@@ -364,9 +368,9 @@ export function Settings() {
     try {
       const result = await requestAccountDeletion(
         (name, opts) => supabase.functions.invoke(name, opts),
-        'romrx.io',
+        deletionSiteForHost(window.location.hostname), // P1-23: romrx.io, romrxbjj.com or romrxbodybuilding.com
       )
-      if (result.ok) setDeleteDone(true)
+      if (result.ok) { setDeleteAlreadyOpen(result.alreadyOpen); setDeleteDone(true) }
       else setDeleteError(deletionErrorCopy(result.reason))
     } finally {
       deleteInFlight.current = false
@@ -756,21 +760,24 @@ export function Settings() {
         <MoodSettings userId={user?.id} />
         <div className="rounded-card bg-white border border-slate-200 p-4"><CrisisHelp /></div>
 
-        {SHOW_EXPORT_MY_DATA && (
-          <SectionCard title="Your data">
-            <button
-              onClick={handleExportMyData}
-              disabled={exportBusy}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-card bg-white border border-slate-200 text-sm font-medium text-cobalt-ink hover:bg-slate-50 transition-colors disabled:opacity-50"
-            >
-              <span className="flex-1 text-left">{exportBusy ? 'Preparing...' : EXPORT_BUTTON_LABEL}</span>
-            </button>
-            {exportErr && <p className="text-xs text-red-700 mt-2">{exportErr}</p>}
-          </SectionCard>
-        )}
-
-        {/* ── DANGER ZONE ────────────────────────────────────────── */}
-        <SectionCard title="Danger zone">
+        {/* ── YOUR DATA (P1-23): export (behind SHOW_EXPORT_MY_DATA) and delete, folded into one section (Stacy note 8) ── */}
+        <SectionCard title={YD.title}>
+          {/* The intro offers a download, so it shows only with export on (Vera F1) */}
+          {SHOW_EXPORT_MY_DATA && <p className="text-sm text-slate-600 mb-3">{YD.intro}</p>}
+          {SHOW_EXPORT_MY_DATA && (
+            <div className="mb-4" data-testid="your-data-export">
+              <button
+                onClick={handleExportMyData}
+                disabled={exportBusy}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-card bg-white border border-slate-200 text-sm font-medium text-cobalt-ink hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <span className="flex-1 text-left">{exportBusy ? YD.exportBusy : EXPORT_BUTTON_LABEL}</span>
+              </button>
+              <p className="text-xs text-slate-500 mt-1.5">{YD.exportHelp}</p>
+              {exportDone && <p role="status" className="text-xs text-cobalt-ink mt-2">{YD.exportSuccess}</p>}
+              {exportErr && <p className="text-xs text-red-700 mt-2">{exportErr}</p>}
+            </div>
+          )}
           {SHOW_DELETION_STATUS && deletionStatus && (
             <p role="status" className="text-xs text-cobalt-ink mb-2">{DELETION_STATUS_COPY[deletionStatus]}</p>
           )}
@@ -781,10 +788,11 @@ export function Settings() {
             <Trash2 size={15} className="shrink-0" />
             <span className="flex-1 text-left">
               {DELETION_BUTTON_LABEL}
-              <span className="block text-xs font-normal mt-0.5 opacity-70">Sends a deletion request to our privacy team</span>
+              <span className="block text-xs font-normal mt-0.5 opacity-70">{YD.deleteHelp}</span>
             </span>
             <ChevronRight size={14} />
           </button>
+          <p className="text-xs text-slate-500 mt-4" data-testid="your-data-email-fallback">{YD.emailFallback}</p>
         </SectionCard>
       </div>
 
@@ -796,14 +804,14 @@ export function Settings() {
               <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center shrink-0">
                 <Trash2 size={16} className="text-red-700" />
               </div>
-              <h3 className="font-display font-bold text-lg text-cobalt-ink">{DELETION_BUTTON_LABEL}</h3>
+              <h3 className="font-display font-bold text-lg text-cobalt-ink">{YD.dialogTitle}</h3>
             </div>
             {deleteDone ? (
               <>
-                <p role="status" className="text-sm text-cobalt-ink leading-relaxed">{DELETION_SUCCESS_COPY}</p>
+                <p role="status" className="text-sm text-cobalt-ink leading-relaxed">{deleteAlreadyOpen ? YD.alreadyOpen : DELETION_SUCCESS_COPY}</p>
                 <div className="flex gap-3 pt-1">
                   <button
-                    onClick={() => { setShowDelete(false); setDeleteText('') }}
+                    onClick={() => { setShowDelete(false); setDeleteText(''); setDeleteAlreadyOpen(false) }}
                     className="btn-ghost flex-1 text-sm"
                   >
                     Close
@@ -812,15 +820,28 @@ export function Settings() {
               </>
             ) : (
               <>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  This sends a deletion request to our privacy team. Nothing is deleted right away.
-                  Type <span className="font-bold text-cobalt-ink">DELETE</span> to confirm.
-                </p>
+                {/* Stacy's dialog body in her order. The plan line comes before the confirm field and the send button:
+                    request-account-deletion does NOT cancel Stripe (Avery contract). */}
+                <div className="space-y-2 max-h-[45vh] overflow-y-auto" data-testid="delete-dialog-body">
+                  {dialogLines(SHOW_EXPORT_MY_DATA).map(({ line, index: i }) => (
+                    <p
+                      key={i}
+                      data-testid={i === PLAN_LINE_INDEX ? 'delete-plan-line' : undefined}
+                      className={i === PLAN_LINE_INDEX
+                        ? 'text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-card px-3 py-2 leading-relaxed'
+                        : 'text-sm text-slate-600 leading-relaxed'}
+                    >
+                      {line}
+                    </p>
+                  ))}
+                </div>
+                <label htmlFor="delete-confirm" className="block text-xs font-semibold text-slate-600">{YD.confirmLabel}</label>
                 <input
+                  id="delete-confirm"
                   type="text"
                   value={deleteText}
                   onChange={e => setDeleteText(e.target.value)}
-                  placeholder="Type DELETE"
+                  placeholder={YD.confirmPlaceholder}
                   className="input"
                 />
                 {deleteError && (
@@ -831,7 +852,7 @@ export function Settings() {
                     onClick={() => { setShowDelete(false); setDeleteText(''); setDeleteError(null) }}
                     className="btn-ghost flex-1 text-sm"
                   >
-                    Cancel
+                    {YD.cancel}
                   </button>
                   <button
                     onClick={handleDelete}
@@ -839,7 +860,7 @@ export function Settings() {
                     className="flex-1 px-4 py-2.5 rounded-card bg-red-600 text-white text-sm font-medium disabled:opacity-40 hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
                   >
                     {deleting && <Loader2 size={14} className="animate-spin" />}
-                    {deleting ? 'Sending...' : 'Send request'}
+                    {deleting ? YD.sending : YD.send}
                   </button>
                 </div>
               </>

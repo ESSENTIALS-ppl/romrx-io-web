@@ -11,7 +11,9 @@ describe('P1-03 start session 1 from the results', () => {
   it('ResultsPreview sends unlocked and active users to the Today card, never My Body', () => {
     const s = read('pages', 'ResultsPreview.tsx')
     expect(s).toMatch(/export const TODAY_PATH = '\/dashboard\/my-protocol'/)
-    expect(s.match(/navigate\(TODAY_PATH, \{ replace: true \}\)/g)?.length).toBe(2)
+    // Integration with P1-11: the active-user path goes to What changed right after a retest, otherwise the Today card
+    expect(s.match(/navigate\(TODAY_PATH, \{ replace: true \}\)/g)?.length).toBe(1)
+    expect(s).toContain('navigate(WHAT_CHANGED_COPY && justAssessed ? WHAT_CHANGED_PATH : TODAY_PATH, { replace: true })')
     expect(s).not.toMatch(/navigate\('\/dashboard\/my-body'/)
   })
 
