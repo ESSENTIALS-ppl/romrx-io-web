@@ -24,6 +24,7 @@ import { Settings } from './pages/Settings'
 import { CompleteProfile } from './pages/CompleteProfile'
 
 import { signupSportRedirectTarget } from './lib/signupRedirect'
+import { QuickCheck } from './pages/QuickCheck'
 
 function SignupSportRedirect() {
   const { sport } = useParams<{ sport: string }>()
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/dashboard/my-body" element={<MyBody />} />
             <Route path="/dashboard/mood" element={<QuickMood />} />
             <Route path="/dashboard/my-protocol" element={<MyProtocol />} />
+            <Route path="/dashboard/quick-check" element={<QuickCheck />} />
             <Route path="/dashboard/my-fuel" element={<MyFuel />} />
             <Route path="/dashboard/my-sport" element={<MySport />} />
             <Route path="/dashboard/rombot" element={<ROMBot />} />
