@@ -457,8 +457,9 @@ interface TodayCardProps {
   rxLibrary: Record<string, Prescription>
   assessedAt: string
   userId: string
+  assessmentId?: string | null
 }
-function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
+function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: TodayCardProps) {
   const todayDow = new Date().getDay()
   const todayPriorityIndex = ROTATION[todayDow]
   const todayPriority = ranked[Math.min(todayPriorityIndex, ranked.length - 1)]
@@ -534,6 +535,12 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
     const todayIso = localDateIso() // P1-05: local calendar day, not the UTC day
     setTodayIso(todayIso)
     const protocolDay = `P${todayPriorityIndex + 1}`
+    // P1-22: write protocol_completions (one row per Today-card movement).
+    const joint = todayPriority?.def.key ?? todayPriority?.def.rxKey ?? null
+    const rxToday = todayPriority ? rxLibrary[todayPriority.def.rxKey] : null
+    const movements: Rx[] = rxToday
+      ? [rxToday.exercises[0], rxToday.stretches[0], rxToday.foam[0]].filter(Boolean) as Rx[]
+      : []
     setLog(prev => {
       const sessions = prev.sessions.includes(todayIso)
         ? prev.sessions
@@ -547,10 +554,26 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
       user_id: userId,
       session_date: todayIso,
       protocol_day: protocolDay,
-    }, { onConflict: 'user_id,session_date' }).then(({ error }) => {
+    }, { onConflict: 'user_id,session_date' }).then(async ({ error }) => {
       if (!error || error.code === '23505') refreshCount() // 23505 = already logged today
+      // P1-22: completions only after a session write that succeeded (as in 41b947e7).
+      if (error) return
+      // Completions are best-effort: a failure must not undo the session log.
+      try {
+        const rows = (movements.length ? movements : [null]).map((m) => ({
+          user_id: userId,
+          assessment_id: assessmentId ?? null,
+          exercise_id: m?.id ?? null,
+          joint,
+          completed_at: new Date().toISOString(),
+        }))
+        const { error: cErr } = await supabase.from('protocol_completions').insert(rows)
+        if (cErr) console.error('protocol_completions insert failed:', cErr.message)
+      } catch (e) {
+        console.error('protocol_completions insert threw:', e)
+      }
     })
-  }, [storageKey, userId, todayPriorityIndex, refreshCount])
+  }, [storageKey, userId, todayPriorityIndex, refreshCount, assessmentId, todayPriority, rxLibrary])
 
   const sessionsThisCycle = Math.min(dbSessionCount, CYCLE_TARGET)
   const progressPct = Math.min(100, Math.round((sessionsThisCycle / CYCLE_TARGET) * 100))
@@ -1009,6 +1032,7 @@ export function MyProtocol() {
                 rxLibrary={rxLibrary}
                 assessedAt={assessedAt}
                 userId={user.id}
+                assessmentId={assessmentId}
               />
             )
           )}
