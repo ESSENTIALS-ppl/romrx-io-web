@@ -10,6 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done, week1LocalDate, week1StartFrom, week1CountEnd } from '../lib/week1Goal'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -464,6 +465,7 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
   const [log, setLog] = useState<SessionLog>(getLog)
   const [completedToday, setCompletedToday] = useState(false)
   const [dbSessionCount, setDbSessionCount] = useState(0)
+  const [week1Dates, setWeek1Dates] = useState<string[]>([]) // P1-04
   const [cycleStartDate, setCycleStartDate] = useState(() => assessedAt.slice(0, 10))
 
   useEffect(() => {
@@ -490,7 +492,22 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
       .then(({ count }) => { if (count !== null) setDbSessionCount(count) })
   }, [userId, cycleStartDate])
 
-  useEffect(() => { refreshCount() }, [refreshCount])
+  useEffect(() => { refreshCount() }, [refreshCount]) // Session N/42 on load (kept from b52546f; Vera F0)
+
+  // P1-04: session days inside week 1 of this cycle (same date convention as the write below).
+  const refreshWeek1 = useCallback(() => {
+    if (!userId) return
+    const w = week1Window(week1StartFrom(assessedAt)) // local day the assessment was taken
+    supabase
+      .from('protocol_sessions')
+      .select('session_date')
+      .eq('user_id', userId)
+      .gte('session_date', w.start)
+      .lt('session_date', week1CountEnd(w))
+      .then(({ data }) => { if (data) setWeek1Dates(data.map(r => r.session_date as string)) })
+  }, [userId, assessedAt])
+
+  useEffect(() => { refreshWeek1() }, [refreshWeek1])
 
   useEffect(() => {
     const todayIso = new Date().toISOString().slice(0, 10)
@@ -514,9 +531,13 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
       session_date: todayIso,
       protocol_day: protocolDay,
     }, { onConflict: 'user_id,session_date' }).then(({ error }) => {
-      if (!error) refreshCount()
+      if (!error) { refreshCount(); refreshWeek1() }
     })
-  }, [storageKey, userId, todayPriorityIndex, refreshCount])
+  }, [storageKey, userId, todayPriorityIndex, refreshCount, refreshWeek1])
+
+  const week1 = week1Window(week1StartFrom(assessedAt))
+  const showWeek1 = isInWeek1(week1LocalDate(), week1) // P1-04: the user's local day
+  const week1Count = week1Done(week1Dates, week1)
 
   const sessionsThisCycle = Math.min(dbSessionCount, CYCLE_TARGET)
   const progressPct = Math.min(100, Math.round((sessionsThisCycle / CYCLE_TARGET) * 100))
@@ -555,6 +576,25 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
             />
           </div>
         </div>
+
+        {showWeek1 && (
+          <div className="flex items-center justify-between gap-3 mt-2 mb-2 rounded-lg bg-cobalt-light px-3 py-2" data-testid="week1-goal">
+            <span className="text-xs font-semibold text-cobalt-ink">
+              {week1Count >= WEEK1_GOAL ? WEEK1_COPY.done : WEEK1_COPY.label}
+            </span>
+            <span className="flex items-center gap-1.5">
+              {week1Count < WEEK1_GOAL && <span className="text-xs text-slate-500 mr-1">{WEEK1_COPY.progress(week1Count)}</span>}
+              {Array.from({ length: WEEK1_GOAL }, (_, i) => (
+                <span
+                  key={i}
+                  data-testid="week1-dot"
+                  data-done={i < week1Count ? 'true' : 'false'}
+                  className={cn('w-3 h-3 rounded-full border-2', i < week1Count ? 'bg-cobalt border-cobalt' : 'bg-white border-cobalt/40')}
+                />
+              ))}
+            </span>
+          </div>
+        )}
 
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
           <TrendingUp size={11} className="text-cobalt shrink-0" />
