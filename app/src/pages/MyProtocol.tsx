@@ -10,7 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
-import { WEEK1_GOAL, week1Window, isInWeek1, week1Done } from '../lib/week1Goal'
+import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done } from '../lib/week1Goal'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -579,9 +579,10 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
         {showWeek1 && (
           <div className="flex items-center justify-between gap-3 mt-2 mb-2 rounded-lg bg-cobalt-light px-3 py-2" data-testid="week1-goal">
             <span className="text-xs font-semibold text-cobalt-ink">
-              {week1Count >= WEEK1_GOAL ? '{{P1-04 WEEK 1 GOAL DONE, STACY}}' : '{{P1-04 WEEK 1 GOAL LABEL, STACY}}'}
+              {week1Count >= WEEK1_GOAL ? WEEK1_COPY.done : WEEK1_COPY.label}
             </span>
-            <span className="flex items-center gap-1.5" aria-label={`${week1Count} of ${WEEK1_GOAL}`}>
+            <span className="flex items-center gap-1.5">
+              {week1Count < WEEK1_GOAL && <span className="text-xs text-slate-500 mr-1">{WEEK1_COPY.progress(week1Count)}</span>}
               {Array.from({ length: WEEK1_GOAL }, (_, i) => (
                 <span
                   key={i}

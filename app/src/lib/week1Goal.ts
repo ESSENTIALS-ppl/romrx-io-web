@@ -26,3 +26,10 @@ export function week1Done(sessionDates: readonly string[], w: { start: string; e
   const days = new Set(sessionDates.filter(d => d >= w.start && d < w.end))
   return Math.min(days.size, WEEK1_GOAL)
 }
+
+// Words: Stacy, /workspace/process/evidence/STACY-P1-04-AND-P1-01-PRIVACY-WORDS-20261115-2104.md, character for character.
+export const WEEK1_COPY = {
+  label: 'Week 1 goal: 3 sessions',
+  done: 'Week 1 goal done: 3 of 3',
+  progress: (n: number) => `${n} of 3 this week`,
+} as const

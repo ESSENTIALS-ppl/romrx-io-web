@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { WEEK1_GOAL, week1Window, isInWeek1, week1Done } from './week1Goal'
+import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done } from './week1Goal'
 
 describe('P1-04 week 1 goal', () => {
   const w = week1Window('2026-11-15T23:30:00+00:00')
@@ -23,11 +23,15 @@ describe('P1-04 week 1 goal', () => {
   it('works across a month end', () => {
     expect(week1Window('2026-11-28')).toEqual({ start: '2026-11-28', end: '2026-12-05' })
   })
-  it('Today card shows 3 dots in week 1 with placeholder words only (no final copy)', () => {
+  it("Today card shows 3 dots in week 1 with Stacy's words", () => {
     const s = readFileSync(join(process.cwd(), 'src', 'pages', 'MyProtocol.tsx'), 'utf8')
     expect(s).toMatch(/\{showWeek1 && \(/)
-    expect(s).toContain('{{P1-04 WEEK 1 GOAL LABEL, STACY}}')
-    expect(s).toContain('{{P1-04 WEEK 1 GOAL DONE, STACY}}')
+    expect(s).not.toMatch(/\{\{P1-04/)
+    expect(s).toContain('WEEK1_COPY.done : WEEK1_COPY.label')
+    expect(s).toContain('WEEK1_COPY.progress(week1Count)')
     expect(s).toMatch(/refreshCount\(\); refreshWeek1\(\)/)
+    expect(WEEK1_COPY.label).toBe('Week 1 goal: 3 sessions')
+    expect(WEEK1_COPY.done).toBe('Week 1 goal done: 3 of 3')
+    expect(WEEK1_COPY.progress(2)).toBe('2 of 3 this week')
   })
 })
