@@ -1,5 +1,5 @@
 // P1-01 reminder opt-in words, copied character for character from Stacy:
-// /workspace/process/evidence/STACY-P1-01-WORDS-20261115-2053.md (sections A, B, C). Needs Jim yes before live (NEEDS JIM WORDING).
+// /workspace/process/evidence/STACY-P1-01-WORDS-20261115-2053.md (sections A, B, C). Words covered by L1036(a).
 // Do not edit here without a new Stacy file.
 
 export const PRIVACY_URL = 'https://romrx.io/legal#privacy'
