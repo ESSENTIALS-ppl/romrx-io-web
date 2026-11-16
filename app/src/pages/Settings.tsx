@@ -6,7 +6,9 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import type { Assessment } from '../hooks/useProfile'
 import { supabase } from '../lib/supabase'
-import { reminderStateFromRow, saveReminderChanges, NO_REMINDERS, type ReminderState } from '../lib/reminderOptIn'
+import { SHOW_MARKETING_TOGGLE } from '../lib/marketingToggle'
+import { SETTINGS_REMINDER_COPY as R, PRIVACY_URL, friendlyTimeZone } from '../lib/reminderCopy'
+import { toWholeHour, reminderStateFromRow, saveReminderChanges, NO_REMINDERS, type ReminderState } from '../lib/reminderOptIn'
 import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '../lib/deletionStatus'
 import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
 import { enablePush } from '../lib/pushSubscribe'
@@ -76,8 +78,10 @@ type ExtProfile = {
   marketing_opt_out?: boolean | null
 }
 
-const SHOW_REMINDER_TOGGLES = false
-const SHOW_NOTIFICATIONS = false
+// P1-01 (Jim L1031, D1): the notification section and the three reminder toggles are shown. Each toggle still loads OFF
+// unless the database holds toggle AND server-set opt-in marker (reminderStateFromRow); nothing here opts anyone in.
+const SHOW_REMINDER_TOGGLES = true
+const SHOW_NOTIFICATIONS = true
 // FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
 const SHOW_PUSH = false
 // FG-13: "Export my data" stays hidden until the export-my-data function flag is on and Jim approves the wording.
@@ -203,7 +207,7 @@ export function Settings() {
           reminderBaseline.current = shown
           setEmailReminders(shown.protocol)
           setPushReminders(!!data.push_reminders)
-          setReminderTime(data.reminder_time ?? '07:00')
+          setReminderTime(toWholeHour((data.reminder_time ?? '07:00').slice(0, 5)))
           setRetestReminders(shown.retest)
           setWeeklyDigest(shown.digest)
         }
@@ -282,16 +286,16 @@ export function Settings() {
     const { error: mErr } = await supabase.from('users')
       .update({ marketing_opt_out: marketingOptOut })
       .eq('id', user.id)
-    if (mErr) { setNotifErr(mErr.message); setNotifSaving(false); return }
+    if (mErr) { setNotifErr(R.error); setNotifSaving(false); return }
 
     const { error: nErr } = await supabase.from('notification_preferences').upsert({
       user_id: user.id,
       push_reminders: pushReminders,
-      reminder_time: reminderTime,
+      reminder_time: toWholeHour(reminderTime), // hour only: the sender ignores minutes (Stacy note 3b)
       timezone: browserTimezone,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' })
-    if (nErr) { setNotifSaving(false); setNotifErr(nErr.message); return }
+    if (nErr) { setNotifSaving(false); setNotifErr(R.error); return }
 
     // The three email reminder switches go through set_reminder_opt_in (the only way an opt-in marker is set); a plain save can never opt anyone in.
     const rem = await saveReminderChanges(
@@ -301,7 +305,7 @@ export function Settings() {
     )
     reminderBaseline.current = rem.applied
     setNotifSaving(false)
-    if (!rem.ok) { setNotifErr(rem.message); return }
+    if (!rem.ok) { setNotifErr(R.error); return }
     setNotifSaved(true)
     setTimeout(() => setNotifSaved(false), 2000)
   }
@@ -598,7 +602,7 @@ export function Settings() {
         {/* ── NOTIFICATIONS ──────────────────────────────────────── */}
         {/* FG-04: whole section hidden. send-whats-new is retired, so 'Email product updates' has no sender; other reminders have none either. Restore when FG-09 to FG-12 ship. */}
         {SHOW_NOTIFICATIONS && (
-        <SectionCard title="Notifications">
+        <SectionCard title={R.title}>
           {notifLoading ? (
             <div className="flex items-center gap-2 py-2">
               <Loader2 size={14} className="animate-spin text-cobalt" />
@@ -606,57 +610,61 @@ export function Settings() {
             </div>
           ) : (
             <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Timezone</p>
-                <span className="text-xs font-medium text-cobalt-ink bg-cobalt-light px-2.5 py-1 rounded-full">{browserTimezone}</span>
-              </div>
+              <p className="text-sm text-slate-600">{R.intro}</p>
 
+              {/* P1-01: product updates have no sender (send-whats-new retired), so this row stays behind the shared SHOW_MARKETING_TOGGLE (false). */}
+              {SHOW_MARKETING_TOGGLE && (
               <ToggleRow
                 title="Email product updates"
                 subtitle="Occasional emails about new features and tips"
                 checked={!marketingOptOut}
                 onChange={v => setMarketingOptOut(!v)}
               />
+              )}
 
-              {/* FG-04: dead reminder toggles hidden (no sender is live yet). Restore when FG-09 to FG-12 ship. No new copy. */}
+              {/* P1-01: the three reminder toggles (order per Stacy: plan day, check, weekly). Each loads OFF unless toggle AND marker. */}
               {SHOW_REMINDER_TOGGLES && (
                 <>
                 <ToggleRow
-                  title="Retest reminders"
-                  subtitle="Prompt to retake your assessment every 42 days"
+                  title={R.protocolTitle}
+                  subtitle={R.protocolHelp}
+                  checked={emailReminders}
+                  onChange={setEmailReminders}
+                />
+
+                <ToggleRow
+                  title={R.retestTitle}
+                  subtitle={R.retestHelp}
                   checked={retestReminders}
                   onChange={setRetestReminders}
                 />
 
                 <ToggleRow
-                  title="Weekly progress digest"
-                  subtitle="Sunday summary of PRS trend and streak"
+                  title={R.digestTitle}
+                  subtitle={R.digestHelp}
                   checked={weeklyDigest}
                   onChange={setWeeklyDigest}
                 />
 
-                <div className="space-y-3 border-t border-slate-200 pt-4">
-                  <ToggleRow
-                    title="Email reminders"
-                    subtitle="Get an email on your protocol days"
-                    checked={emailReminders}
-                    onChange={setEmailReminders}
-                  />
-                  {emailReminders && (
+                {(emailReminders || retestReminders) && (
+                  <div className="space-y-1 border-t border-slate-200 pt-4">
                     <div className="flex items-center gap-3 pl-1">
-                      <label className="text-xs text-slate-500 font-semibold uppercase tracking-wide whitespace-nowrap">
-                        Reminder time
+                      <label htmlFor="settings-reminder-time" className="text-xs text-slate-500 font-semibold uppercase tracking-wide whitespace-nowrap">
+                        {R.timeLabel}
                       </label>
+                      {/* whole hours only: the sender reads the hour (Stacy note 3b) */}
                       <input
+                        id="settings-reminder-time"
                         type="time"
+                        step={3600}
                         value={reminderTime}
-                        onChange={e => setReminderTime(e.target.value)}
+                        onChange={e => setReminderTime(toWholeHour(e.target.value))}
                         className="input max-w-[8rem]"
                       />
-                      <span className="text-xs text-slate-500">({browserTimezone})</span>
                     </div>
-                  )}
-                </div>
+                    <p className="text-xs text-slate-500 pl-1">{R.timeHelper(friendlyTimeZone(browserTimezone))}</p>
+                  </div>
+                )}
 
                 {SHOW_PUSH && (
                   <ToggleRow
@@ -668,6 +676,18 @@ export function Settings() {
                   />
                 )}
                 {SHOW_PUSH && pushMsg && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{pushMsg}</p>}
+
+                {/* P1-01: turn off all emails = users.marketing_opt_out (already stops every lifecycle email). ON means opted out. */}
+                <div className="border-t border-slate-200 pt-4">
+                  <ToggleRow
+                    title={R.offAllTitle}
+                    subtitle={R.offAllHelp}
+                    checked={marketingOptOut}
+                    onChange={setMarketingOptOut}
+                  />
+                </div>
+
+                <p className="text-xs text-slate-500">{R.privacyBefore}<a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer" className="underline">{R.privacyLink}</a>{R.privacyAfter}</p>
                 </>
               )}
 
@@ -675,7 +695,7 @@ export function Settings() {
 
               <button onClick={handleSaveNotifications} disabled={notifSaving} className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50">
                 {notifSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                {notifSaved ? 'Saved' : 'Save notification settings'}
+                {notifSaved ? R.saved : R.save}
               </button>
             </div>
           )}

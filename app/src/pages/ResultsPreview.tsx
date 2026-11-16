@@ -25,6 +25,7 @@ import { gateAssessment } from '../lib/hipFlexGate'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 import { checkoutErrorMessage } from '../lib/checkoutErrors'
 import { CARD_LINE_SHORT, CARD_LINE_SHORT_NODATE } from '../lib/cardLine'
+import { ReminderOptIn } from '../components/ReminderOptIn'
 
 // P1-03: after the results (unlock, or an active user finishing an assessment) the next screen is today's session.
 export const TODAY_PATH = '/dashboard/my-protocol'
@@ -358,6 +359,9 @@ export function ResultsPreview() {
             </>}
           </button>
         )}
+
+        {/* P1-01: one-tap reminder opt-in on the results screen (signed-in only) */}
+        {user && <ReminderOptIn userId={user.id} placement="results" dark />}
 
         <p className="text-center text-xs text-white/30">
           Free through December 31, 2026. {CARD_LINE_SHORT_NODATE} You pay nothing before January 1, 2027. Then $60 a year, renewing until you cancel. Cancel online anytime.
