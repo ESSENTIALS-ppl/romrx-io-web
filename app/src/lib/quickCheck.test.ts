@@ -38,7 +38,8 @@ describe('P1-06 quick check', () => {
     expect(nextCheckLine({ next_check_at: '2026-12-28T17:00:00Z', next_retest_at: null, check_joints: ['x'] }, now)).toBe('Your next check: Monday, December 28')
     expect(nextCheckLine({ next_check_at: '2026-11-14T17:00:00Z', next_retest_at: null, check_joints: ['x'] }, now)).toBe(Q.nextCheckDue)
     expect(nextCheckLine(null, now)).toBeNull()
-    expect(isQuickCheckDue({ next_check_at: '2026-11-14T17:00:00Z', next_retest_at: null, check_joints: ['hip_er_r'] }, now)).toBe(true)
+    // v4: due by the 34835f66 local-day window, so the row carries last_assessed_at (Nov 7 = day 0, Nov 15 = day 8)
+    expect(isQuickCheckDue({ next_check_at: '2026-11-14T17:00:00Z', next_retest_at: null, check_joints: ['hip_er_r'], last_assessed_at: '2026-11-07T17:00:00Z' }, now)).toBe(true)
     expect(isQuickCheckDue({ next_check_at: '2026-11-14T17:00:00Z', next_retest_at: null, check_joints: [] }, now)).toBe(false)
   })
   it('day 1 = last full assessment, quick rows skipped', () => {
@@ -48,8 +49,9 @@ describe('P1-06 quick check', () => {
     const now = new Date('2026-11-15T12:00:00-05:00')
     const retest = '2026-12-13T17:00:00Z'
     // full save: day 7 check, day 42 retest; due once day 7 is reached
-    expect(isQuickCheckDue({ next_check_at: '2026-11-08T17:00:00Z', next_retest_at: retest, check_joints: ['hip_er_r'] }, new Date('2026-11-08T18:00:00Z'))).toBe(true)
-    expect(isQuickCheckDue({ next_check_at: '2026-11-08T17:00:00Z', next_retest_at: retest, check_joints: ['hip_er_r'] }, new Date('2026-11-07T18:00:00Z'))).toBe(false)
+    const full = { next_check_at: '2026-11-08T17:00:00Z', next_retest_at: retest, check_joints: ['hip_er_r'], last_assessed_at: '2026-11-01T17:00:00Z' }
+    expect(isQuickCheckDue(full, new Date('2026-11-08T18:00:00Z'))).toBe(true)
+    expect(isQuickCheckDue(full, new Date('2026-11-07T18:00:00Z'))).toBe(false)
     // rule 2 (quick saved) and the roll both set next_check_at = next_retest_at: no banner, even on retest day
     const done = { next_check_at: retest, next_retest_at: retest, check_joints: ['hip_er_r'] }
     expect(isQuickCheckPending(done)).toBe(false)
@@ -71,8 +73,11 @@ describe('P1-06 quick check', () => {
     expect(SCHEDULE_COLUMNS).toBe('next_check_at, next_retest_at, check_joints, last_assessed_at, last_assessment_id')
     const page = readFileSync(join(process.cwd(), 'src', 'pages', 'QuickCheck.tsx'), 'utf8')
     const banner = readFileSync(join(process.cwd(), 'src', 'components', 'QuickCheckBanner.tsx'), 'utf8')
-    expect(page.match(/select\(SCHEDULE_COLUMNS\)/g)?.length).toBe(2)
-    expect(banner).toContain('select(SCHEDULE_COLUMNS)')
+    const loader = readFileSync(join(process.cwd(), 'src', 'lib', 'quickCheckLoad.ts'), 'utf8')
+    expect(page.match(/select\(SCHEDULE_COLUMNS\)/g)?.length).toBe(1) // re-read after a save
+    expect(loader).toContain('select(SCHEDULE_COLUMNS)')
+    expect(page).toContain('loadQuickContext(user.id)')
+    expect(banner).toContain('loadQuickContext(userId)')
     expect(page).toContain('65c3a036')
     expect(page).not.toMatch(/65a251b8|c8769478/)
   })

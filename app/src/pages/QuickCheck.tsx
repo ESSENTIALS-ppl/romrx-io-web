@@ -10,9 +10,11 @@ import { Spinner } from '../components/Spinner'
 import { STOP_LINE } from '../lib/stopLine'
 import { STEPS } from './assessmentSteps'
 import { AssessmentMeasureScreen } from './AssessmentMeasureScreen'
+import { loadQuickContext } from '../lib/quickCheckLoad'
 import {
   QUICK_CHECK_ON, QUICK_CHECK_COPY as Q, quickCheckSteps, jointName, jointList, formatValue, compareLine,
-  nextCheckLine, quickSubmitBody, dayOneAssessment, SCHEDULE_COLUMNS, type Schedule,
+  nextCheckLineInCycle, quickSubmitBody, dayOneAssessment, SCHEDULE_COLUMNS, quickCheckPageGate, quickSubmitOutcome, GENERIC_ERROR,
+  type QuickContext, type Schedule,
 } from '../lib/quickCheck'
 
 const SUBMIT_ASSESSMENT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-assessment`
@@ -31,6 +33,7 @@ function QuickCheckInner() {
   const navigate = useNavigate()
   const [phase, setPhase] = useState<Phase>('loading')
   const [schedule, setSchedule] = useState<Schedule | null>(null)
+  const [ctx, setCtx] = useState<QuickContext>({})
   const [day1, setDay1] = useState<Record<string, unknown> | null>(null)
   const [stepIdx, setStepIdx] = useState(0)
   const [values, setValues] = useState<Record<string, string>>({})
@@ -42,13 +45,15 @@ function QuickCheckInner() {
     if (!user?.id) return
     let cancelled = false
     ;(async () => {
-      const [{ data: sch, error: sErr }, { data: rows }] = await Promise.all([
-        supabase.from('user_mobility_schedule').select(SCHEDULE_COLUMNS).eq('user_id', user.id).maybeSingle(),
+      const [load, { data: rows }] = await Promise.all([
+        loadQuickContext(user.id).catch(() => null),
         supabase.from('assessments').select('*').eq('user_id', user.id).order('assessed_at', { ascending: false }).limit(10),
       ])
       if (cancelled) return
-      const s = (sErr ? null : sch) as Schedule | null
-      if (!s?.check_joints?.length) { setGone(true); return }
+      const s = load && !load.failed ? load.schedule : null
+      // v4 gate (Avery 34835f66 window): outside local days 7 to 14, or a quick check already done this cycle, go to Today with no form.
+      if (!s || !load || load.failed || quickCheckPageGate(s, new Date(), load.ctx) !== 'intro') { setGone(true); return }
+      setCtx(load.ctx)
       setSchedule(s)
       // Assessments read with select('*') and filtered in code, so it works before and after 20261116031000 adds check_kind.
       setDay1(dayOneAssessment((rows ?? []) as Record<string, unknown>[], s.last_assessment_id))
@@ -64,7 +69,9 @@ function QuickCheckInner() {
   if (phase === 'loading') return <Spinner />
 
   const submit = async () => {
-    if (!session?.access_token || !schedule?.check_joints) return
+    // v4: no sign-in token shows the existing generic line instead of doing nothing.
+    if (!session?.access_token) { setError(GENERIC_ERROR); return }
+    if (!schedule?.check_joints) return
     setLoading(true); setError('')
     try {
       const res = await fetch(SUBMIT_ASSESSMENT_URL, {
@@ -78,15 +85,18 @@ function QuickCheckInner() {
       })
       const data = await res.json().catch(() => ({ ok: false }))
       setLoading(false)
-      // 65c3a036: 200 { ok: true, check_kind: 'quick', ... }; any 400 { error } (no schedule, unexpected or missing joint) shows the generic line.
-      if (!res.ok || !data.ok) { setError('Something went wrong. Please try again.'); return }
+      // 65c3a036 / 34835f66: 200 { ok: true, check_kind: 'quick', ... }. The window 400 'No quick re-check is scheduled'
+      // goes to Today (no retry loop); any other failure shows the existing generic line.
+      const outcome = quickSubmitOutcome(res.status, data)
+      if (outcome.kind === 'today') { navigate(TODAY, { replace: true }); return }
+      if (outcome.kind === 'error') { setError(outcome.message); return }
       track('quick_check_completed', { joints: schedule.check_joints.length })
       const { data: sch } = await supabase.from('user_mobility_schedule').select(SCHEDULE_COLUMNS).eq('user_id', user!.id).maybeSingle()
       if (sch) setSchedule(sch as Schedule)
       setPhase('result')
     } catch {
       setLoading(false)
-      setError('Something went wrong. Please try again.')
+      setError(GENERIC_ERROR)
     }
   }
 
@@ -110,7 +120,7 @@ function QuickCheckInner() {
   }
 
   if (phase === 'result') {
-    const next = nextCheckLine(schedule)
+    const next = nextCheckLineInCycle(schedule, new Date(), { ...ctx, quickDone: true })
     return (
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4" data-testid="quick-check-result">
         <h1 className="font-display font-bold text-2xl text-cobalt-ink">{Q.resultTitle}</h1>

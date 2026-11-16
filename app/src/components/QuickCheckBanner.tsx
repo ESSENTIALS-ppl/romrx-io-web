@@ -1,9 +1,10 @@
 // P1-06: Today card banner (quick check due) and the "Your next check" line. Behind QUICK_CHECK_ON (false).
-// Schedule rules from Avery romrxbjj-v2 65c3a036 / P1-07 v2: due = next_check_at reached and not equal to next_retest_at.
+// v4: due only inside Avery's server window (romrxbjj-v2 34835f66): local days 7 to 14 after the cycle's full assessment,
+// stored time zone else America/New_York, and not if a quick check is already done this cycle (schedule or quick row).
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
-import { QUICK_CHECK_ON, QUICK_CHECK_COPY as Q, QUICK_CHECK_PATH, SCHEDULE_COLUMNS, isQuickCheckDue, nextCheckLine, quickCheckDismissKey, type Schedule } from '../lib/quickCheck'
+import { QUICK_CHECK_ON, QUICK_CHECK_COPY as Q, QUICK_CHECK_PATH, isQuickCheckDue, nextCheckLineInCycle, quickCheckDismissKey, type QuickContext, type Schedule } from '../lib/quickCheck'
+import { loadQuickContext } from '../lib/quickCheckLoad'
 
 export function QuickCheckBanner({ userId }: { userId: string }) {
   if (!QUICK_CHECK_ON || !userId) return null
@@ -13,17 +14,17 @@ export function QuickCheckBanner({ userId }: { userId: string }) {
 function QuickCheckBannerInner({ userId }: { userId: string }) {
   const navigate = useNavigate()
   const [s, setS] = useState<Schedule | null>(null)
+  const [ctx, setCtx] = useState<QuickContext>({})
   const [later, setLater] = useState(false)
   useEffect(() => {
     let cancelled = false
-    supabase.from('user_mobility_schedule').select(SCHEDULE_COLUMNS).eq('user_id', userId).maybeSingle()
-      .then(({ data, error }) => { if (!cancelled && !error && data) setS(data as Schedule) })
+    loadQuickContext(userId).then(r => { if (!cancelled && !r.failed && r.schedule) { setCtx(r.ctx); setS(r.schedule) } }).catch(() => { /* nothing shown */ })
     return () => { cancelled = true }
   }, [userId])
   if (!s) return null
-  const due = isQuickCheckDue(s)
+  const due = isQuickCheckDue(s, new Date(), ctx)
   const dismissed = later || (due && (() => { try { return localStorage.getItem(quickCheckDismissKey(userId, s.next_check_at!)) === '1' } catch { return false } })())
-  const line = nextCheckLine(s)
+  const line = nextCheckLineInCycle(s, new Date(), ctx)
   if (due && !dismissed) {
     return (
       <div className="rounded-card border border-cobalt/20 bg-white p-4 space-y-2" data-testid="quick-check-banner">
