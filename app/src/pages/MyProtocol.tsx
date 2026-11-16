@@ -10,7 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
-import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done } from '../lib/week1Goal'
+import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done, week1LocalDate, week1StartFrom, week1CountEnd } from '../lib/week1Goal'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -495,17 +495,16 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
   // P1-04: session days inside week 1 of this cycle (same date convention as the write below).
   const refreshWeek1 = useCallback(() => {
     if (!userId) return
-    const w = week1Window(cycleStartDate)
+    const w = week1Window(week1StartFrom(assessedAt)) // local day the assessment was taken
     supabase
       .from('protocol_sessions')
       .select('session_date')
       .eq('user_id', userId)
       .gte('session_date', w.start)
-      .lt('session_date', w.end)
+      .lt('session_date', week1CountEnd(w))
       .then(({ data }) => { if (data) setWeek1Dates(data.map(r => r.session_date as string)) })
-  }, [userId, cycleStartDate])
+  }, [userId, assessedAt])
 
-  useEffect(() => { refreshCount() }, [refreshCount])
   useEffect(() => { refreshWeek1() }, [refreshWeek1])
 
   useEffect(() => {
@@ -534,8 +533,8 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
     })
   }, [storageKey, userId, todayPriorityIndex, refreshCount, refreshWeek1])
 
-  const week1 = week1Window(cycleStartDate)
-  const showWeek1 = isInWeek1(new Date().toISOString().slice(0, 10), week1) // same convention as the write (P1-05 changes both)
+  const week1 = week1Window(week1StartFrom(assessedAt))
+  const showWeek1 = isInWeek1(week1LocalDate(), week1) // P1-04: the user's local day
   const week1Count = week1Done(week1Dates, week1)
 
   const sessionsThisCycle = Math.min(dbSessionCount, CYCLE_TARGET)

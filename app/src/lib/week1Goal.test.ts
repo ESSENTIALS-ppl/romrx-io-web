@@ -1,8 +1,9 @@
+process.env.TZ = 'America/New_York'
 // P1-04: 3-in-week-1 goal helpers and their use on the Today card.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done } from './week1Goal'
+import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done, week1LocalDate, week1StartFrom, week1CountEnd } from './week1Goal'
 
 describe('P1-04 week 1 goal', () => {
   const w = week1Window('2026-11-15T23:30:00+00:00')
@@ -17,7 +18,8 @@ describe('P1-04 week 1 goal', () => {
     expect(WEEK1_GOAL).toBe(3)
     expect(week1Done([], w)).toBe(0)
     expect(week1Done(['2026-11-15', '2026-11-15', '2026-11-16'], w)).toBe(2)
-    expect(week1Done(['2026-11-14', '2026-11-22', '2026-11-17'], w)).toBe(1)
+    expect(week1Done(['2026-11-14', '2026-11-23', '2026-11-17'], w)).toBe(1)
+    expect(week1Done(['2026-11-22'], w)).toBe(1) // day after week 1: an evening day-7 session stored on the UTC day (pre P1-05)
     expect(week1Done(['2026-11-15', '2026-11-16', '2026-11-17', '2026-11-18'], w)).toBe(3)
   })
   it('works across a month end', () => {
@@ -33,5 +35,24 @@ describe('P1-04 week 1 goal', () => {
     expect(WEEK1_COPY.label).toBe('Week 1 goal: 3 sessions')
     expect(WEEK1_COPY.done).toBe('Week 1 goal done: 3 of 3')
     expect(WEEK1_COPY.progress(2)).toBe('2 of 3 this week')
+  })
+  it('an 8 PM ET session counts in today\'s week 1, in either P1-05 ship order', () => {
+    const assessedAt = '2026-11-16T00:30:00+00:00' // 7:30 PM ET Sun Nov 15 (UTC already says Nov 16)
+    const w = week1Window(week1StartFrom(assessedAt))
+    expect(w.start).toBe('2026-11-15') // local day, not the UTC day
+    const eightPm = new Date('2026-11-15T20:00:00-05:00')
+    const today = week1LocalDate(eightPm)
+    expect(today).toBe('2026-11-15')
+    expect(isInWeek1(today, w)).toBe(true) // the card shows that evening
+    expect(week1Done([today], w)).toBe(1) // with P1-05: stored as the local day
+    expect(week1Done([eightPm.toISOString().slice(0, 10)], w)).toBe(1) // without P1-05: stored as the UTC day (Nov 16)
+    expect(week1CountEnd(w)).toBe('2026-11-23')
+    expect(isInWeek1(week1LocalDate(new Date('2026-11-22T08:00:00-05:00')), w)).toBe(false) // day 8: card hidden
+  })
+  it('MyProtocol uses the local day for week 1, not toISOString', () => {
+    const s = readFileSync(join(process.cwd(), 'src', 'pages', 'MyProtocol.tsx'), 'utf8')
+    expect(s).toContain('isInWeek1(week1LocalDate(), week1)')
+    expect(s).toContain('week1Window(week1StartFrom(assessedAt))')
+    expect(s).not.toMatch(/isInWeek1\(new Date\(\)\.toISOString/)
   })
 })
