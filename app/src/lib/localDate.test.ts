@@ -3,7 +3,7 @@ process.env.TZ = 'America/New_York'
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { localDateIso, localDateOfTimestamp, addDaysIso, isCompletedToday, computeStreak } from './localDate'
+import { localDateIso, localDateOfTimestamp, addDaysIso, isCompletedToday, computeStreak, isUnexpectedSaveError, withoutDay } from './localDate'
 
 const et = (s: string) => new Date(s) // ISO with explicit offset
 
@@ -56,5 +56,20 @@ describe('P1-05 local session date', () => {
     expect(mp).toContain("onConflict: 'user_id,session_date'")
     expect(mb).toContain("import { computeStreak } from '../lib/localDate'")
     expect(mb).not.toMatch(/function computeStreak/)
+  })
+  it('a failed save (not 23505) undoes the optimistic completed; 23505 keeps it', () => {
+    expect(isUnexpectedSaveError(null)).toBe(false)
+    expect(isUnexpectedSaveError({ code: '23505' })).toBe(false)
+    expect(isUnexpectedSaveError({ code: '42501' })).toBe(true)
+    expect(isUnexpectedSaveError({})).toBe(true)
+    const today = '2026-11-15'
+    const cached = withoutDay(['2026-11-14', today], today)
+    expect(cached).toEqual(['2026-11-14'])
+    // After the revert the DB answer is false and wins over any cache, so the card is not completed.
+    expect(isCompletedToday(false, [today], today)).toBe(false)
+    expect(isCompletedToday(null, cached, today)).toBe(false)
+    const mp = readFileSync(join(process.cwd(), 'src', 'pages', 'MyProtocol.tsx'), 'utf8')
+    expect(mp).toMatch(/if \(isUnexpectedSaveError\(error\)\) \{\n\s+\/\/ P1-05[^\n]*\n\s+setDbToday\(false\)/)
+    expect(mp).toContain('withoutDay(prev.sessions, todayIso)')
   })
 })

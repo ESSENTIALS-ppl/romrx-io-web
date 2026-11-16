@@ -45,3 +45,13 @@ export function computeStreak(sessionDates: readonly string[], now: Date = new D
   }
   return count
 }
+
+/** P1-05: a session save failed for a reason other than "already logged today" (23505), so the optimistic "completed" must be undone. */
+export function isUnexpectedSaveError(error: { code?: string } | null | undefined): boolean {
+  return !!error && error.code !== '23505'
+}
+
+/** Remove one day from the cached session list (used to undo an optimistic mark that did not save). */
+export function withoutDay(sessions: readonly string[], day: string): string[] {
+  return sessions.filter((d) => d !== day)
+}

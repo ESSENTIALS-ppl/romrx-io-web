@@ -11,7 +11,7 @@ import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
 import { ReminderOptIn } from '../components/ReminderOptIn'
-import { localDateIso, localDateOfTimestamp, isCompletedToday } from '../lib/localDate'
+import { localDateIso, localDateOfTimestamp, isCompletedToday, isUnexpectedSaveError, withoutDay } from '../lib/localDate'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -541,6 +541,7 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
     const movements: Rx[] = rxToday
       ? [rxToday.exercises[0], rxToday.stretches[0], rxToday.foam[0]].filter(Boolean) as Rx[]
       : []
+    const hadTodayCached = log.sessions.includes(todayIso) // was already saved before this tap
     setLog(prev => {
       const sessions = prev.sessions.includes(todayIso)
         ? prev.sessions
@@ -556,6 +557,17 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
       protocol_day: protocolDay,
     }, { onConflict: 'user_id,session_date' }).then(async ({ error }) => {
       if (!error || error.code === '23505') refreshCount() // 23505 = already logged today
+      if (isUnexpectedSaveError(error)) {
+        // P1-05: the save did not land, so undo the optimistic "completed" (no stale tick until reload).
+        setDbToday(false)
+        if (!hadTodayCached) {
+          setLog(prev => {
+            const next: SessionLog = { ...prev, sessions: withoutDay(prev.sessions, todayIso) }
+            try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch { /* ignore */ }
+            return next
+          })
+        }
+      }
       // P1-22: completions only after a session write that succeeded (as in 41b947e7).
       if (error) return
       // Completions are best-effort: a failure must not undo the session log.
@@ -573,7 +585,7 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
         console.error('protocol_completions insert threw:', e)
       }
     })
-  }, [storageKey, userId, todayPriorityIndex, refreshCount, assessmentId, todayPriority, rxLibrary])
+  }, [storageKey, userId, todayPriorityIndex, refreshCount, assessmentId, todayPriority, rxLibrary, log.sessions])
 
   const sessionsThisCycle = Math.min(dbSessionCount, CYCLE_TARGET)
   const progressPct = Math.min(100, Math.round((sessionsThisCycle / CYCLE_TARGET) * 100))
