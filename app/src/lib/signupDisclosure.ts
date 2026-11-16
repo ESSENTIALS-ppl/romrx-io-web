@@ -18,9 +18,9 @@ export function sportPackName(add: string | null | undefined): string | null {
 export function signupDisclosure(add: string | null | undefined): string {
   const pack = sportPackName(add)
   const { base, pack: packPrice } = SIGNUP_PRICES_USD
-  // STACY TO CLEAR (2026-10-26): packs are not charged Jan 1, 2027; they open mid-February 2027.
+  // Packs are not charged Jan 1, 2027. Pack date line is Jim's exact 'Coming Spring 2027' (L879/L1001, L1019).
   const charge = pack
-    ? `$${base} per year for Base, charged to your card on January 1, 2027 and every year after until you cancel. ${pack} is $${packPrice} per year. Sport packs open Spring 2027. We'll email you when they open.`
+    ? `$${base} per year for Base, charged to your card on January 1, 2027 and every year after until you cancel. ${pack} is $${packPrice} per year. Coming Spring 2027.`
     : `$${base} per year, charged to your card on January 1, 2027 and every year after until you cancel.`
   return `Free through December 31, 2026. Then ${charge} Cancel online anytime in Settings. Canceling ends your access right away. Cancel before January 1, 2027 and you pay nothing.`
 }
