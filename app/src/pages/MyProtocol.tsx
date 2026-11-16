@@ -10,6 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { SoloChallenge } from '../components/SoloChallenge'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -992,6 +993,10 @@ export function MyProtocol() {
                 userId={user.id}
               />
             )
+          )}
+          {/* P1-21: solo 14-day challenge on the #1 problem area (renders nothing until words land) */}
+          {user && !rxLoading && (
+            <SoloChallenge userId={user.id} jointKey={ranked[0]?.def.key ?? null} jointLabel={ranked[0]?.def.label ?? null} />
           )}
         </>
       )}
