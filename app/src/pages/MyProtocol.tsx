@@ -12,6 +12,14 @@ import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../compon
 import { cn } from '../lib/cn'
 import { ReminderOptIn } from '../components/ReminderOptIn'
 import { localDateIso, localDateOfTimestamp, isCompletedToday, isUnexpectedSaveError, withoutDay } from '../lib/localDate'
+import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done, week1LocalDate, week1StartFrom, week1CountEnd } from '../lib/week1Goal'
+import { AddToHomeScreenTip } from '../components/AddToHomeScreenTip'
+import { SESSION_LENGTH_COPY, SESSION_LENGTHS, pickMovements, pickWithSlots, readSessionLength, sessionLengthKey, type SessionLength } from '../lib/sessionLength'
+import { WeeklyGoal } from '../components/WeeklyGoal'
+import { WEEKLY_GOAL_COPY } from '../lib/weeklyGoal'
+import { GuidedPlayer } from '../components/GuidedPlayer'
+import { PLAYER_COPY } from '../lib/guidedPlayer'
+import { SoloChallenge } from '../components/SoloChallenge'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -402,7 +410,8 @@ function TodayMovementCard({ rx, index }: { rx: Rx; index: number }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="text-[10px] text-cobalt font-bold uppercase tracking-wider mb-0.5">{labels[index]}</p>
+              {/* P1-19: Full can list more than 3, so the same Movement N pattern continues past 3 */}
+              <p className="text-[10px] text-cobalt font-bold uppercase tracking-wider mb-0.5">{labels[index] ?? `Movement ${index + 1}`}</p>
               <p className={cn('text-sm font-semibold leading-snug', checked ? 'line-through text-slate-400' : 'text-cobalt-ink')}>
                 {rx.name}
               </p>
@@ -478,8 +487,14 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
   // P1-05: null until the database answers; then the protocol_sessions row for today's LOCAL day decides.
   const [dbToday, setDbToday] = useState<boolean | null>(null)
   const [todayIso, setTodayIso] = useState(() => localDateIso())
+  const [sessionLength, setSessionLengthState] = useState<SessionLength>(() => readSessionLength(userId)) // P1-19
+  const setSessionLength = (l: SessionLength) => {
+    setSessionLengthState(l)
+    try { localStorage.setItem(sessionLengthKey(userId), l) } catch { /* ignore */ }
+  }
   const [dbSessionCount, setDbSessionCount] = useState(0)
   const [cycleStartDate, setCycleStartDate] = useState(() => localDateOfTimestamp(assessedAt))
+  const [week1Dates, setWeek1Dates] = useState<string[]>([]) // P1-04
 
   useEffect(() => {
     if (!userId) return
@@ -505,7 +520,22 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
       .then(({ count }) => { if (count !== null) setDbSessionCount(count) })
   }, [userId, cycleStartDate])
 
-  useEffect(() => { refreshCount() }, [refreshCount])
+  useEffect(() => { refreshCount() }, [refreshCount]) // Session N/42 on load (kept from b52546f; Vera F0)
+
+  // P1-04: session days inside week 1 of this cycle (same date convention as the write below).
+  const refreshWeek1 = useCallback(() => {
+    if (!userId) return
+    const w = week1Window(week1StartFrom(assessedAt)) // local day the assessment was taken
+    supabase
+      .from('protocol_sessions')
+      .select('session_date')
+      .eq('user_id', userId)
+      .gte('session_date', w.start)
+      .lt('session_date', week1CountEnd(w))
+      .then(({ data }) => { if (data) setWeek1Dates(data.map(r => r.session_date as string)) })
+  }, [userId, assessedAt])
+
+  useEffect(() => { refreshWeek1() }, [refreshWeek1])
 
   // P1-05: "completed today" reads the database for today's local day (one row per user per local day, any sport).
   useEffect(() => {
@@ -538,9 +568,7 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
     // P1-22: write protocol_completions (one row per Today-card movement).
     const joint = todayPriority?.def.key ?? todayPriority?.def.rxKey ?? null
     const rxToday = todayPriority ? rxLibrary[todayPriority.def.rxKey] : null
-    const movements: Rx[] = rxToday
-      ? [rxToday.exercises[0], rxToday.stretches[0], rxToday.foam[0]].filter(Boolean) as Rx[]
-      : []
+    const movements: Rx[] = pickMovements<Rx>(rxToday, sessionLength) // P1-19: the movements of the chosen length (standard = the 3 as before)
     const hadTodayCached = log.sessions.includes(todayIso) // was already saved before this tap
     setLog(prev => {
       const sessions = prev.sessions.includes(todayIso)
@@ -556,7 +584,7 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
       session_date: todayIso,
       protocol_day: protocolDay,
     }, { onConflict: 'user_id,session_date' }).then(async ({ error }) => {
-      if (!error || error.code === '23505') refreshCount() // 23505 = already logged today
+      if (!error || error.code === '23505') { refreshCount(); refreshWeek1() } // 23505 = already logged today
       if (isUnexpectedSaveError(error)) {
         // P1-05: the save did not land, so undo the optimistic "completed" (no stale tick until reload).
         setDbToday(false)
@@ -585,7 +613,11 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
         console.error('protocol_completions insert threw:', e)
       }
     })
-  }, [storageKey, userId, todayPriorityIndex, refreshCount, assessmentId, todayPriority, rxLibrary, log.sessions])
+  }, [storageKey, userId, todayPriorityIndex, refreshCount, refreshWeek1, assessmentId, todayPriority, rxLibrary, log.sessions, sessionLength])
+
+  const week1 = week1Window(week1StartFrom(assessedAt))
+  const showWeek1 = isInWeek1(week1LocalDate(), week1) // P1-04: the user's local day
+  const week1Count = week1Done(week1Dates, week1)
 
   const sessionsThisCycle = Math.min(dbSessionCount, CYCLE_TARGET)
   const progressPct = Math.min(100, Math.round((sessionsThisCycle / CYCLE_TARGET) * 100))
@@ -596,9 +628,14 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
   const retestDateStr = retestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   const rx = todayPriority ? rxLibrary[todayPriority.def.rxKey] : null
-  const todayMovements: Rx[] = rx
-    ? [rx.exercises[0], rx.stretches[0], rx.foam[0]].filter(Boolean) as Rx[]
-    : []
+  // P1-19: standard is today's card unchanged; quick and full only once the chooser has words (SESSION_LENGTH_COPY).
+  const todayMovements: Rx[] = pickMovements<Rx>(rx, sessionLength)
+  // P1-20 + P1-19: the player plays the movements of the chosen session length, each with its slot (timed vs reps)
+  const playerMovements = useMemo(
+    () => pickWithSlots<Rx>(rx, sessionLength).map(({ item, slot }) => ({ name: item.name, dose: item.dose, slot })),
+    [rx, sessionLength],
+  )
+  const [playerOpen, setPlayerOpen] = useState(false)
 
   return (
     <div className="rounded-card border-2 border-cobalt bg-white shadow-md overflow-hidden">
@@ -610,12 +647,19 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
               {todayPriority ? todayPriority.def.label : 'Recovery Day'}
             </h2>
           </div>
+          {/* P1-09: the weekly goal replaces "Session N/42" once it has words; until then the counter stays */}
+          {!WEEKLY_GOAL_COPY && (
           <div className="text-right shrink-0">
             <p className="text-[10px] text-slate-500 uppercase tracking-wide">Session</p>
             <p className="text-lg font-bold text-cobalt leading-tight">{sessionsThisCycle}<span className="text-sm font-normal text-slate-400">/{CYCLE_TARGET}</span></p>
           </div>
+          )}
         </div>
+        {/* Integration: one goal at a time. Week 1 shows the P1-04 week 1 goal; the weekly goal (P1-09) takes over from week 2 */}
+        {!showWeek1 && <WeeklyGoal userId={userId} refreshKey={dbSessionCount} />}
 
+        {/* P1-09: with the weekly goal on, the bar follows the week (inside WeeklyGoal), not the 42-session cycle */}
+        {!WEEKLY_GOAL_COPY && (
         <div className="mt-3 mb-2">
           <div className="w-full bg-cobalt-light rounded-full h-2">
             <div
@@ -624,6 +668,26 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
             />
           </div>
         </div>
+        )}
+
+        {showWeek1 && (
+          <div className="flex items-center justify-between gap-3 mt-2 mb-2 rounded-lg bg-cobalt-light px-3 py-2" data-testid="week1-goal">
+            <span className="text-xs font-semibold text-cobalt-ink">
+              {week1Count >= WEEK1_GOAL ? WEEK1_COPY.done : WEEK1_COPY.label}
+            </span>
+            <span className="flex items-center gap-1.5">
+              {week1Count < WEEK1_GOAL && <span className="text-xs text-slate-500 mr-1">{WEEK1_COPY.progress(week1Count)}</span>}
+              {Array.from({ length: WEEK1_GOAL }, (_, i) => (
+                <span
+                  key={i}
+                  data-testid="week1-dot"
+                  data-done={i < week1Count ? 'true' : 'false'}
+                  className={cn('w-3 h-3 rounded-full border-2', i < week1Count ? 'bg-cobalt border-cobalt' : 'bg-white border-cobalt/40')}
+                />
+              ))}
+            </span>
+          </div>
+        )}
 
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
           <TrendingUp size={11} className="text-cobalt shrink-0" />
@@ -634,6 +698,26 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
         </div>
       </div>
 
+      {SESSION_LENGTH_COPY && (
+        <div className="px-5 pb-3" data-testid="session-length">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">{SESSION_LENGTH_COPY.heading}</p>
+          <div role="radiogroup" aria-label={SESSION_LENGTH_COPY.heading} className="grid grid-cols-3 gap-1.5">
+            {SESSION_LENGTHS.map(l => (
+              <button
+                key={l}
+                type="button"
+                role="radio"
+                aria-checked={sessionLength === l}
+                onClick={() => setSessionLength(l)}
+                className={cn('rounded-lg px-2 py-1.5 text-xs font-semibold border', sessionLength === l ? 'bg-cobalt text-white border-cobalt' : 'bg-white text-cobalt-ink border-slate-200')}
+              >
+                {SESSION_LENGTH_COPY![l]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {todayMovements.length > 0 && (
         <div className="px-5 pb-4 space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Today's movements</p>
@@ -641,6 +725,17 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
             <TodayMovementCard key={m.id} rx={m} index={i} />
           ))}
         </div>
+      )}
+
+      {PLAYER_COPY && playerMovements.length > 0 && (
+        <div className="px-5 pb-3">
+          <button type="button" onClick={() => setPlayerOpen(true)} className="w-full rounded-xl py-3 text-sm font-bold text-cobalt border-2 border-cobalt bg-white">
+            {PLAYER_COPY.start}
+          </button>
+        </div>
+      )}
+      {PLAYER_COPY && playerOpen && (
+        <GuidedPlayer copy={PLAYER_COPY} movements={playerMovements} completedToday={completedToday} onMarkComplete={handleMarkComplete} onClose={() => setPlayerOpen(false)} />
       )}
 
       <div className="px-5 pb-5">
@@ -654,6 +749,8 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
         {completedToday && dbSessionCount === 1 && (
           <div className="mt-3"><ReminderOptIn userId={userId} placement="after_session" /></div>
         )}
+        {/* P1-13: Add to Home Screen tip after session 1, under the reminder offer (phones only) */}
+        {completedToday && dbSessionCount === 1 && <div className="mt-3"><AddToHomeScreenTip /></div>}
         {completedToday ? null : (
           <button
             onClick={handleMarkComplete}
@@ -1047,6 +1144,10 @@ export function MyProtocol() {
                 assessmentId={assessmentId}
               />
             )
+          )}
+          {/* P1-21: solo 14-day challenge on the #1 problem area (any logged session counts) */}
+          {user && !rxLoading && (
+            <SoloChallenge userId={user.id} jointKey={ranked[0]?.def.key ?? null} jointLabel={ranked[0]?.def.label ?? null} />
           )}
           <WhyStatement heading="WHY DAILY" body={DAILY_WHY} />
         </>
