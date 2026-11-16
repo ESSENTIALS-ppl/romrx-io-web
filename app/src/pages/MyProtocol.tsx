@@ -21,6 +21,7 @@ import { GuidedPlayer } from '../components/GuidedPlayer'
 import { PLAYER_COPY } from '../lib/guidedPlayer'
 import { SoloChallenge } from '../components/SoloChallenge'
 import { QuickCheckBanner } from '../components/QuickCheckBanner'
+import { RombotCheckinCard } from '../components/RombotCheckin'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -1137,6 +1138,8 @@ export function MyProtocol() {
       {/* Daily (P1-03: Today card first, WHY collapsed under it) */}
       {tab === 'daily' && (
         <>
+          {/* P1-17: day 3 ROMBot note, only while unread */}
+          {user && <RombotCheckinCard userId={user.id} />}
           {rxLoading ? (
             <div className="py-8 flex justify-center"><Spinner /></div>
           ) : (
