@@ -49,8 +49,11 @@ describe('key and step lists', () => {
   })
   // Runs when V2_MIGRATIONS points at the v2 migrations folder (local check; Netlify has no v2 repo).
   const mig = process.env.V2_MIGRATIONS
-  it.skipIf(!mig || !existsSync(join(mig ?? '', '20261029100000_assessment_drafts.sql')))('the client key and step lists equal the SQL lists', () => {
-    const sql = readFileSync(join(mig!, '20261029100000_assessment_drafts.sql'), 'utf8')
+  // Skips only when V2_MIGRATIONS is unset. If it is set and the applied file is missing, the test fails.
+  it.skipIf(!mig)('the client key and step lists equal the SQL lists', () => {
+    const file = join(mig!, '20261116024051_assessment_drafts.sql')
+    expect(existsSync(file), `missing ${file}`).toBe(true)
+    const sql = readFileSync(file, 'utf8')
     for (const k of DRAFT_KEYS) expect(sql, k).toContain(`'${k}'`)
     for (const id of DRAFT_STEP_IDS) expect(sql, id).toContain(`'${id}'`)
     const keyBlock = sql.slice(sql.indexOf('assessment_draft_values_ok'))
