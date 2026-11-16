@@ -30,6 +30,7 @@ import {
   BAND_TONE,
   type BandScore,
 } from '../lib/mobilityBands'
+import { skipQuick } from '../lib/assessmentReads'
 import {
   AlertTriangle, ChevronDown, ChevronUp, CheckCircle2, Circle,
   ClipboardList, Dumbbell, Flame, PersonStanding,
@@ -468,10 +469,11 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
 
   useEffect(() => {
     if (!userId) return
-    supabase
+    // P1-06b: the cycle starts at the latest full assessment, never a quick check (needs migration 20261116020000)
+    skipQuick(supabase
       .from('assessments')
       .select('assessed_at')
-      .eq('user_id', userId)
+      .eq('user_id', userId))
       .order('assessed_at', { ascending: false })
       .limit(1)
       .maybeSingle()
