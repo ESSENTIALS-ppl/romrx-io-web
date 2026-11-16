@@ -64,3 +64,12 @@ export function optInTarget(cur: ReminderState): ReminderState {
 export function toWholeHour(t: string): string {
   return isValidReminderTime(t) ? `${t.slice(0, 2)}:00` : OPT_IN_DEFAULT_TIME
 }
+
+// set_reminder_opt_in (migration 20261103000050, live as 20261103023541) sets only the toggle and its marker. The time and
+// timezone live in the existing notification_preferences.reminder_time and .timezone columns (the same write Settings does).
+// Without them the sender falls back to 9 AM Central (Stacy note 3a), so the one tap saves both, hour only.
+export type PrefsUpsertFn = (row: { user_id: string; reminder_time: string; timezone: string; updated_at: string }) => PromiseLike<{ error: { message?: string } | null }>
+
+export async function saveReminderTime(upsert: PrefsUpsertFn, userId: string, time: string, timezone: string) {
+  return upsert({ user_id: userId, reminder_time: toWholeHour(time), timezone: timezone || 'UTC', updated_at: new Date().toISOString() })
+}

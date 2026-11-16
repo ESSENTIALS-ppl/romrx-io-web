@@ -2,6 +2,8 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { saveReminderTime } from './reminderOptIn'
+import { OPT_IN_COPY, SETTINGS_REMINDER_COPY, displayTime, friendlyTimeZone } from './reminderCopy'
 import { saveReminderChanges, shouldOfferOptIn, optInTarget, toWholeHour, isValidReminderTime, optInDismissKey, reminderStateFromRow } from './reminderOptIn'
 
 const src = (p: string) => readFileSync(join(process.cwd(), 'src', p), 'utf8')
@@ -42,15 +44,13 @@ describe('P1-01 helpers', () => {
 
 describe('P1-01 wiring', () => {
   const comp = src('components/ReminderOptIn.tsx')
-  it('component never writes the toggles or markers directly; words are placeholders', () => {
-    const upsert = comp.slice(comp.indexOf(".upsert({"), comp.indexOf("}, { onConflict"))
-    expect(upsert).not.toMatch(/email_reminders|retest_reminders|weekly_digest|push_reminders|_opt_in_at/)
-    expect(upsert).toMatch(/reminder_time/)
+  it('component never writes the toggles or markers directly; words come from reminderCopy', () => {
     expect(comp).toContain('saveReminderChanges(')
-    expect(comp).toContain('{{P1-01 RESULTS HEADLINE, STACY}}')
-    expect(comp).toContain('{{P1-01 OPT-IN CONSENT LINE, STACY}}')
+    expect(comp).toContain('C[placement].heading')
+    expect(comp).toContain('{C.consentBefore}<a href={PRIVACY_URL}')
+    expect(comp).not.toMatch(/\{\{P1-01/)
+    expect(comp).toContain('saveReminderTime(')
     expect(comp).toContain('step={3600}')
-    expect(comp).toContain('{{P1-01 OPT-IN BUTTON, STACY}}')
   })
   it('placed on results (signed in) and after a completed session', () => {
     expect(src('pages/ResultsPreview.tsx')).toMatch(/\{user && <ReminderOptIn userId=\{user\.id\} placement="results"/)
@@ -62,7 +62,36 @@ describe('P1-01 wiring', () => {
     expect(s).toContain('const SHOW_NOTIFICATIONS = true')
     expect(s).toContain('const SHOW_PUSH = false')
     expect(s).toMatch(/\{SHOW_MARKETING_TOGGLE && \(\s*<ToggleRow\s*title="Email product updates"/)
-    expect(s).toContain('{{P1-01 SETTINGS TURN OFF ALL TITLE, STACY}}')
+    expect(s).toContain('title={R.offAllTitle}')
+    expect(s).not.toMatch(/\{\{P1-01/)
+    expect(s).toContain('reminder_time: toWholeHour(reminderTime)')
     expect(s).toMatch(/checked=\{marketingOptOut\}\s*onChange=\{setMarketingOptOut\}/)
+  })
+})
+
+describe('P1-01 time and timezone write (Stacy note 3a)', () => {
+  it('saveReminderTime writes reminder_time (whole hour) and timezone, and nothing about toggles or markers', async () => {
+    const rows: Record<string, unknown>[] = []
+    await saveReminderTime(async row => { rows.push(row); return { error: null } }, 'u1', '19:45', 'America/New_York')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ user_id: 'u1', reminder_time: '19:00', timezone: 'America/New_York' })
+    expect(Object.keys(rows[0]).sort()).toEqual(['reminder_time', 'timezone', 'updated_at', 'user_id'])
+  })
+})
+
+describe('P1-01 words (Stacy file 2053, verbatim)', () => {
+  it('key lines and helpers', () => {
+    expect(OPT_IN_COPY.results.heading).toBe('Want a reminder?')
+    expect(OPT_IN_COPY.after_session.heading).toBe('Session 1 done.')
+    expect(OPT_IN_COPY.primary).toBe('Remind me')
+    expect(OPT_IN_COPY.consentBefore + OPT_IN_COPY.consentLink + OPT_IN_COPY.consentAfter).toBe('Email me around this time on my plan days, when my next check is due, and if I have not been back in 2 weeks. I can turn this off anytime in Settings. See the Privacy Policy.')
+    expect(OPT_IN_COPY.confirmation(displayTime('07:00'))).toBe("You're set. We'll email you around 7:00 AM on your plan days. You can change this anytime in Settings.")
+    expect(SETTINGS_REMINDER_COPY.title).toBe('Reminders')
+    expect(displayTime('19:00')).toBe('7:00 PM')
+    expect(displayTime('00:00')).toBe('12:00 AM')
+    expect(friendlyTimeZone('America/New_York')).toMatch(/Eastern Time|America\/New_York/)
+    expect(friendlyTimeZone('Not/AZone')).toBe('Not/AZone')
+    const all = JSON.stringify(OPT_IN_COPY) + JSON.stringify(SETTINGS_REMINDER_COPY)
+    expect(all).not.toMatch(/[\u2013\u2014]/)
   })
 })
