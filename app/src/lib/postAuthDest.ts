@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { track } from './track'
 import { takePostAuthNext } from './packReturn'
+import { skipQuick } from './assessmentReads'
 
 /** Default post-login home when the user already has an assessment. */
 export const DEFAULT_HOME = '/dashboard/my-body'
@@ -25,10 +26,11 @@ export async function resolvePostAuthDest(
   if (stashedNext) return stashedNext
   if (!userId) return DEFAULT_HOME
   try {
-    const { count, error } = await supabase
+    // P1-06b: only full assessments count (needs migration 20261116020000; on error the user goes to DEFAULT_HOME as before)
+    const { count, error } = await skipQuick(supabase
       .from('assessments')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
+      .eq('user_id', userId))
     if (error) return DEFAULT_HOME
     if ((count ?? 0) === 0) {
       track('login_redirected_to_assessment', { reason: 'no_assessment' })
