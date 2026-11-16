@@ -26,6 +26,7 @@ import { withStripeTestFlag } from '../lib/stripeTestMode'
 import { checkoutErrorMessage } from '../lib/checkoutErrors'
 import { CARD_LINE_SHORT, CARD_LINE_SHORT_NODATE } from '../lib/cardLine'
 import { ReminderOptIn } from '../components/ReminderOptIn'
+import { skipQuick } from '../lib/assessmentReads'
 
 // P1-03: after the results (unlock, or an active user finishing an assessment) the next screen is today's session.
 export const TODAY_PATH = '/dashboard/my-protocol'
@@ -137,10 +138,11 @@ export function ResultsPreview() {
       let data: Record<string, number | null> | null = null
       for (let attempt = 0; attempt < 4 && !data; attempt++) {
         if (attempt > 0) await new Promise(r => setTimeout(r, 750))
-        const res = await supabase
+        // P1-06b: skip quick-check rows (needs migration 20261116020000)
+        const res = await skipQuick(supabase
           .from('assessments')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id))
           .order('assessed_at', { ascending: false })
           .limit(1)
           .maybeSingle()

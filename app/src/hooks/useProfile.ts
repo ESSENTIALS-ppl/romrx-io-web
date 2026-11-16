@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useHipFlexCutover, loadHipScoredIds } from '../lib/hipFlexCutover'
 import { gateAssessment, gateJointScores } from '../lib/hipFlexGate'
 import type { JointScoreRow } from '../lib/mobilityBands'
+import { pickFullAssessments } from '../lib/assessmentReads'
 
 export interface SportEntitlement {
   sport: string
@@ -117,9 +118,11 @@ export function useProfile(userId: string | undefined) {
           ? { ...result.profile, sport_entitlements: result.sport_entitlements ?? result.profile.sport_entitlements ?? [] }
           : null,
       )
-      setAssessment(result.assessment)
-      setAssessments(result.assessments ?? [])
-      setHipScoredIds(await loadHipScoredIds([result.assessment?.id, ...(result.assessments ?? []).map(a => a.id)].filter((x): x is string => !!x)))
+      // P1-06b: latest and history skip quick-check rows (My Body, My Protocol, retest banner, protocol inputs all read these)
+      const full = pickFullAssessments(result.assessment, result.assessments ?? [])
+      setAssessment(full.latest)
+      setAssessments(full.history)
+      setHipScoredIds(await loadHipScoredIds([full.latest?.id, ...full.history.map(a => a.id)].filter((x): x is string => !!x)))
       setSessionDates(
         (sessionsRes.data ?? [])
           .map((r: { session_date: string }) => r.session_date)
@@ -128,11 +131,11 @@ export function useProfile(userId: string | undefined) {
 
       // Shared scoring path with ROMBot: persisted joint_scores for latest assessment.
       // RLS: "joint_scores: athlete reads own" via assessments.user_id = auth.uid().
-      if (result.assessment?.id) {
+      if (full.latest?.id) {
         const { data: scores, error: scoresErr } = await supabase
           .from('joint_scores')
           .select('joint_key, score, left_value, right_value, asymmetry_pct, asymmetry_flag')
-          .eq('assessment_id', result.assessment.id)
+          .eq('assessment_id', full.latest.id)
         if (scoresErr) {
           console.error('joint_scores fetch error:', scoresErr.message)
           setJointScores([])
