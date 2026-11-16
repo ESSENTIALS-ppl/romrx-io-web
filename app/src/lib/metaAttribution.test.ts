@@ -330,7 +330,13 @@ describe('SPA trackMetaEvent fbp/fbc (shipped flag)', () => {
     expect(eid).toBeNull()
     // A GPC state change is logged to the first-party consent log (Legal 2026-09-24); never Meta.
     expect(fetches.filter((f) => f.url !== '/api/consent')).toHaveLength(0)
-    for (const f of fetches) expect(JSON.stringify(f.body)).not.toMatch(/fbp|fbc|event_name/)
+    // Match JSON keys and the cookie values, not bare hex: a random anon_id UUID can contain "fbc".
+    for (const f of fetches) {
+      const body = JSON.stringify(f.body)
+      expect(body).not.toMatch(/"(fbp|fbc|event_name)"\s*:/)
+      expect(body).not.toContain(FBP)
+      expect(body).not.toContain(FBC_COOKIE)
+    }
   })
 })
 
