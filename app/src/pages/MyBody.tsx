@@ -28,6 +28,7 @@ import {
 } from '../lib/mobilityBands'
 import { buildJointTrends, buildStartVsNowTrends, useJointHistory, type TrendPoint, type TrendSeries } from '../lib/jointHistory'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
+import { computeStreak } from '../lib/localDate'
 
 // Local helper: BJJ's lib/utils.ts had formatJoint(); HQ's lib/ is locked, so
 // we keep a small local copy here instead of touching app/src/lib/.
@@ -47,27 +48,7 @@ function formatJoint(key: string): string {
   return side ? `${label} (${side})` : label
 }
 
-// Compute current streak: consecutive days ending today or yesterday with a logged session.
-// Grace of 1 day (yesterday counts) so a user missing today doesn't insta-break their streak.
-function computeStreak(sessionDates: string[]): number {
-  if (sessionDates.length === 0) return 0
-  const set = new Set(sessionDates)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const iso = (d: Date) => d.toISOString().slice(0, 10)
-  // Find anchor: today or yesterday. If neither logged, streak = 0.
-  let cursor = new Date(today)
-  if (!set.has(iso(cursor))) {
-    cursor.setDate(cursor.getDate() - 1)
-    if (!set.has(iso(cursor))) return 0
-  }
-  let count = 0
-  while (set.has(iso(cursor))) {
-    count += 1
-    cursor.setDate(cursor.getDate() - 1)
-  }
-  return count
-}
+// P1-05: computeStreak moved to lib/localDate.ts (local calendar days, same rule: ends today or yesterday).
 
 // Base radar + Joint Breakdown use the SAME rows (lib/mobilityBands):
 // bars = jointDisplayRowsForAssessment, radar = radarSideRowsForAssessment
