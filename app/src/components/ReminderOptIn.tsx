@@ -1,0 +1,124 @@
+// P1-01 (Base engagement): one-tap "remind me" with a time the user picks.
+// Shown on the results screen and after a completed session until the user opts in or taps not now.
+// ALL WORDS ARE PLACEHOLDERS {{P1-01 ...}} until Stacy clears them and Jim says yes (NEEDS JIM WORDING).
+import { useEffect, useMemo, useState } from 'react'
+import { Bell, Loader2 } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+import { track } from '../lib/track'
+import { cn } from '../lib/cn'
+import {
+  reminderStateFromRow,
+  saveReminderChanges,
+  shouldOfferOptIn,
+  isValidReminderTime,
+  optInDismissKey,
+  OPT_IN_DEFAULT_TIME,
+  type OptInPlacement,
+  type ReminderState,
+} from '../lib/reminderOptIn'
+
+export function ReminderOptIn({ userId, placement, dark = false }: { userId: string; placement: OptInPlacement; dark?: boolean }) {
+  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', [])
+  const [state, setState] = useState<ReminderState | null>(null)
+  const [time, setTime] = useState(OPT_IN_DEFAULT_TIME)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [err, setErr] = useState('')
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem(optInDismissKey(userId, placement)) === '1' } catch { return false }
+  })
+
+  useEffect(() => {
+    if (!userId || dismissed) return
+    let cancelled = false
+    supabase.from('notification_preferences').select('*').eq('user_id', userId).maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled || error) return
+        setState(reminderStateFromRow(data))
+        const t = (data as { reminder_time?: string } | null)?.reminder_time
+        if (t && isValidReminderTime(t.slice(0, 5))) setTime(t.slice(0, 5))
+      })
+    return () => { cancelled = true }
+  }, [userId, dismissed])
+
+  if (dismissed || (!saved && !shouldOfferOptIn(state))) return null
+
+  const handleYes = async () => {
+    if (!isValidReminderTime(time) || !state) return
+    setSaving(true); setErr('')
+    track('reminder_optin_clicked', { placement })
+    // Time and timezone first (same columns Settings saves); the opt-in itself only through the RPC.
+    const { error: pErr } = await supabase.from('notification_preferences').upsert({
+      user_id: userId,
+      reminder_time: time,
+      timezone,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' })
+    if (pErr) { setSaving(false); setErr('{{P1-01 OPT-IN ERROR, STACY}}'); return }
+    const res = await saveReminderChanges((fn, args) => supabase.rpc(fn, args), state, { ...state, protocol: true })
+    setSaving(false)
+    if (!res.ok) { setErr('{{P1-01 OPT-IN ERROR, STACY}}'); return }
+    setState(res.applied)
+    setSaved(true)
+    track('reminder_optin_saved', { placement })
+  }
+
+  const handleNotNow = () => {
+    try { localStorage.setItem(optInDismissKey(userId, placement), '1') } catch { /* ignore */ }
+    setDismissed(true)
+    track('reminder_optin_dismissed', { placement })
+  }
+
+  return (
+    <div
+      data-testid={`reminder-optin-${placement}`}
+      className={cn('rounded-card border p-4 space-y-3', dark ? 'bg-white/5 border-white/20 text-white' : 'bg-white border-cobalt/20 text-cobalt-ink')}
+    >
+      <div className="flex items-start gap-2">
+        <Bell size={16} className={cn('mt-0.5 shrink-0', dark ? 'text-white' : 'text-cobalt')} />
+        <div className="min-w-0">
+          <p className="text-sm font-bold">{saved ? '{{P1-01 OPT-IN SAVED HEADLINE, STACY}}' : '{{P1-01 OPT-IN HEADLINE, STACY}}'}</p>
+          <p className={cn('text-xs mt-1', dark ? 'text-white/70' : 'text-slate-600')}>
+            {saved ? '{{P1-01 OPT-IN SAVED BODY, STACY}}' : '{{P1-01 OPT-IN BODY, STACY}}'}
+          </p>
+        </div>
+      </div>
+      {!saved && (
+        <>
+          <div className="flex items-center gap-3">
+            <label htmlFor={`optin-time-${placement}`} className={cn('text-xs font-semibold uppercase tracking-wide', dark ? 'text-white/70' : 'text-slate-500')}>
+              {'{{P1-01 OPT-IN TIME LABEL, STACY}}'}
+            </label>
+            <input
+              id={`optin-time-${placement}`}
+              type="time"
+              value={time}
+              onChange={e => setTime(e.target.value)}
+              className="input max-w-[8rem] text-cobalt-ink"
+            />
+            <span className={cn('text-xs', dark ? 'text-white/50' : 'text-slate-500')}>({timezone})</span>
+          </div>
+          {err && <p className="text-xs text-red-500">{err}</p>}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleYes}
+              disabled={saving || !isValidReminderTime(time)}
+              className={cn('flex-1 rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60', dark ? 'bg-white text-cobalt-ink' : 'bg-cobalt text-white')}
+            >
+              {saving && <Loader2 size={14} className="animate-spin" />}
+              {'{{P1-01 OPT-IN BUTTON, STACY}}'}
+            </button>
+            <button
+              type="button"
+              onClick={handleNotNow}
+              className={cn('rounded-xl px-3 py-2.5 text-sm font-semibold', dark ? 'text-white/70 hover:bg-white/10' : 'text-slate-500 hover:bg-slate-100')}
+            >
+              {'{{P1-01 OPT-IN NOT NOW, STACY}}'}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}

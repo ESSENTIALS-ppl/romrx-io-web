@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import type { Assessment } from '../hooks/useProfile'
 import { supabase } from '../lib/supabase'
+import { SHOW_MARKETING_TOGGLE } from '../lib/marketingToggle'
 import { reminderStateFromRow, saveReminderChanges, NO_REMINDERS, type ReminderState } from '../lib/reminderOptIn'
 import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '../lib/deletionStatus'
 import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
@@ -76,8 +77,10 @@ type ExtProfile = {
   marketing_opt_out?: boolean | null
 }
 
-const SHOW_REMINDER_TOGGLES = false
-const SHOW_NOTIFICATIONS = false
+// P1-01 (Jim L1031, D1): the notification section and the three reminder toggles are shown. Each toggle still loads OFF
+// unless the database holds toggle AND server-set opt-in marker (reminderStateFromRow); nothing here opts anyone in.
+const SHOW_REMINDER_TOGGLES = true
+const SHOW_NOTIFICATIONS = true
 // FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
 const SHOW_PUSH = false
 // FG-13: "Export my data" stays hidden until the export-my-data function flag is on and Jim approves the wording.
@@ -611,12 +614,15 @@ export function Settings() {
                 <span className="text-xs font-medium text-cobalt-ink bg-cobalt-light px-2.5 py-1 rounded-full">{browserTimezone}</span>
               </div>
 
+              {/* P1-01: product updates have no sender (send-whats-new retired), so this row stays behind the shared SHOW_MARKETING_TOGGLE (false). */}
+              {SHOW_MARKETING_TOGGLE && (
               <ToggleRow
                 title="Email product updates"
                 subtitle="Occasional emails about new features and tips"
                 checked={!marketingOptOut}
                 onChange={v => setMarketingOptOut(!v)}
               />
+              )}
 
               {/* FG-04: dead reminder toggles hidden (no sender is live yet). Restore when FG-09 to FG-12 ship. No new copy. */}
               {SHOW_REMINDER_TOGGLES && (

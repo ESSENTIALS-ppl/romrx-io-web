@@ -36,3 +36,20 @@ export async function saveReminderChanges(
   }
   return { ok: true, applied }
 }
+
+// ── P1-01 one-tap opt-in (results screen and after session 1) ────────────────────────────────
+// The one tap turns on the daily protocol reminder ('protocol' kind) at the time the user picks, through the same
+// set_reminder_opt_in RPC Settings uses, so the server-set opt-in marker is the only thing that can opt anyone in.
+export type OptInPlacement = 'results' | 'after_session'
+export const OPT_IN_DEFAULT_TIME = '07:00'
+export const optInDismissKey = (userId: string, placement: OptInPlacement) => `romrx_hq_reminder_optin_dismissed_${placement}_${userId}`
+
+/** HH:MM 24h, the format the Settings time input and notification_preferences.reminder_time already use. */
+export function isValidReminderTime(t: string): boolean {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(t)
+}
+
+/** Show the card only when the protocol reminder is not already on (toggle AND marker). */
+export function shouldOfferOptIn(state: ReminderState | null): boolean {
+  return state !== null && !state.protocol
+}
