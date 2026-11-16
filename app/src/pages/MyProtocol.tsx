@@ -10,6 +10,8 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { GuidedPlayer } from '../components/GuidedPlayer'
+import { PLAYER_COPY, TODAY_SLOTS } from '../lib/guidedPlayer'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -530,6 +532,11 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
   const todayMovements: Rx[] = rx
     ? [rx.exercises[0], rx.stretches[0], rx.foam[0]].filter(Boolean) as Rx[]
     : []
+  // P1-20: same three slots, with the slot kept so the player knows timed vs reps
+  const playerMovements = useMemo(() => (rx
+    ? [rx.exercises[0], rx.stretches[0], rx.foam[0]].flatMap((m, k) => (m ? [{ name: m.name, dose: m.dose, slot: TODAY_SLOTS[k] }] : []))
+    : []), [rx])
+  const [playerOpen, setPlayerOpen] = useState(false)
 
   return (
     <div className="rounded-card border-2 border-cobalt bg-white shadow-md overflow-hidden">
@@ -572,6 +579,17 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
             <TodayMovementCard key={m.id} rx={m} index={i} />
           ))}
         </div>
+      )}
+
+      {PLAYER_COPY && playerMovements.length > 0 && (
+        <div className="px-5 pb-3">
+          <button type="button" onClick={() => setPlayerOpen(true)} className="w-full rounded-xl py-3 text-sm font-bold text-cobalt border-2 border-cobalt bg-white">
+            {PLAYER_COPY.start}
+          </button>
+        </div>
+      )}
+      {PLAYER_COPY && playerOpen && (
+        <GuidedPlayer copy={PLAYER_COPY} movements={playerMovements} completedToday={completedToday} onMarkComplete={handleMarkComplete} onClose={() => setPlayerOpen(false)} />
       )}
 
       <div className="px-5 pb-5">
