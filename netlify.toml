@@ -211,3 +211,27 @@
   from = "/bb"
   to = "/bodybuilding"
   status = 301
+
+# P1-30 Content-Security-Policy for the Base web app only (/app).
+# Built from the live /app HTML + JS hosts checked Sun Nov 15, 2026, ~8:53 PM ET
+# (America/New_York). Live /app had no CSP today.
+# This branch ships REPORT-ONLY so a deploy cannot break the app. Flip to the
+# enforce header in netlify.csp-enforce.snippet.toml after watching the
+# console (no report-uri yet). js.stripe.com is not loaded; checkout navigates
+# to billing.stripe.com. Crisis and sport URLs are top-level links, not fetches.
+# style-src includes 'unsafe-inline' for React style attributes and Google Fonts.
+# script-src does not; Meta Pixel may log violations in report-only.
+[[headers]]
+  for = "/app"
+  [headers.values]
+    Content-Security-Policy-Report-Only = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://www.facebook.com https://connect.facebook.net; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://cqzvqzwwevnflinxgnpp.supabase.co wss://cqzvqzwwevnflinxgnpp.supabase.co https://romrx.io https://billing.stripe.com https://www.facebook.com https://connect.facebook.net; upgrade-insecure-requests"
+
+[[headers]]
+  for = "/app/"
+  [headers.values]
+    Content-Security-Policy-Report-Only = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://www.facebook.com https://connect.facebook.net; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://cqzvqzwwevnflinxgnpp.supabase.co wss://cqzvqzwwevnflinxgnpp.supabase.co https://romrx.io https://billing.stripe.com https://www.facebook.com https://connect.facebook.net; upgrade-insecure-requests"
+
+[[headers]]
+  for = "/app/*"
+  [headers.values]
+    Content-Security-Policy-Report-Only = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://www.facebook.com https://connect.facebook.net; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://cqzvqzwwevnflinxgnpp.supabase.co wss://cqzvqzwwevnflinxgnpp.supabase.co https://romrx.io https://billing.stripe.com https://www.facebook.com https://connect.facebook.net; upgrade-insecure-requests"
