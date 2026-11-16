@@ -36,11 +36,11 @@ describe('P1-06b skip quick-check rows', () => {
     expect(pickFullAssessments(null, [])).toEqual({ latest: null, history: [] })
   })
   it('every direct assessments read in the app uses skipQuick', () => {
-    for (const f of ['pages/Settings.tsx', 'pages/ResultsPreview.tsx', 'pages/MyProtocol.tsx', 'lib/postAuthDest.ts']) {
+    for (const f of ['pages/Settings.tsx', 'pages/ResultsPreview.tsx', 'pages/MyProtocol.tsx', 'lib/postAuthDest.ts', 'lib/assessmentDraftStore.ts']) {
       const s = src(f)
       const reads = s.split(".from('assessments')").length - 1
       expect(reads, f).toBeGreaterThan(0)
-      expect(s.split("skipQuick(supabase").length - 1, f).toBe(reads)
+      expect(s.split(/skipQuick\((?:supabase|\(await db\(\)\))/).length - 1, f).toBe(reads)
     }
     expect(src('hooks/useProfile.ts')).toContain('pickFullAssessments(result.assessment, result.assessments ?? [])')
   })
