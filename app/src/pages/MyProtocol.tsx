@@ -10,6 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { AddToHomeScreenTip } from '../components/AddToHomeScreenTip'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -580,7 +581,10 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
             <CheckCircle2 size={16} fill="currentColor" strokeWidth={0} />
             Completed today
           </div>
-        ) : (
+        ) : null}
+        {/* P1-13: Add to Home Screen tip after session 1 (renders nothing until Stacy's words are in) */}
+        {completedToday && dbSessionCount === 1 && <div className="mt-3"><AddToHomeScreenTip /></div>}
+        {completedToday ? null : (
           <button
             onClick={handleMarkComplete}
             className="w-full rounded-xl py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.98] bg-cobalt"
