@@ -86,7 +86,7 @@ export function ReminderOptIn({ userId, placement, dark = false }: { userId: str
       {!saved && (
         <>
           <div className="flex items-center gap-3">
-            <label htmlFor={`optin-time-${placement}`} className={cn('text-xs font-semibold uppercase tracking-wide', dark ? 'text-white/70' : 'text-slate-500')}>
+            <label htmlFor={`optin-time-${placement}`} className={cn('text-xs font-semibold', dark ? 'text-white/70' : 'text-slate-500')}>
               {C.timeLabel}
             </label>
             <input
