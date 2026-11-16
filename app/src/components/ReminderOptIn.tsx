@@ -10,6 +10,8 @@ import {
   reminderStateFromRow,
   saveReminderChanges,
   shouldOfferOptIn,
+  optInTarget,
+  toWholeHour,
   isValidReminderTime,
   optInDismissKey,
   OPT_IN_DEFAULT_TIME,
@@ -36,7 +38,7 @@ export function ReminderOptIn({ userId, placement, dark = false }: { userId: str
         if (cancelled || error) return
         setState(reminderStateFromRow(data))
         const t = (data as { reminder_time?: string } | null)?.reminder_time
-        if (t && isValidReminderTime(t.slice(0, 5))) setTime(t.slice(0, 5))
+        if (t && isValidReminderTime(t.slice(0, 5))) setTime(toWholeHour(t.slice(0, 5)))
       })
     return () => { cancelled = true }
   }, [userId, dismissed])
@@ -50,14 +52,14 @@ export function ReminderOptIn({ userId, placement, dark = false }: { userId: str
     // Time and timezone first (same columns Settings saves); the opt-in itself only through the RPC.
     const { error: pErr } = await supabase.from('notification_preferences').upsert({
       user_id: userId,
-      reminder_time: time,
+      reminder_time: toWholeHour(time),
       timezone,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' })
     if (pErr) { setSaving(false); setErr('{{P1-01 OPT-IN ERROR, STACY}}'); return }
-    const res = await saveReminderChanges((fn, args) => supabase.rpc(fn, args), state, { ...state, protocol: true })
+    const res = await saveReminderChanges((fn, args) => supabase.rpc(fn, args), state, optInTarget(state))
     setSaving(false)
-    if (!res.ok) { setErr('{{P1-01 OPT-IN ERROR, STACY}}'); return }
+    if (!res.ok) { setState(res.applied); setErr('{{P1-01 OPT-IN ERROR, STACY}}'); return }
     setState(res.applied)
     setSaved(true)
     track('reminder_optin_saved', { placement })
@@ -77,9 +79,9 @@ export function ReminderOptIn({ userId, placement, dark = false }: { userId: str
       <div className="flex items-start gap-2">
         <Bell size={16} className={cn('mt-0.5 shrink-0', dark ? 'text-white' : 'text-cobalt')} />
         <div className="min-w-0">
-          <p className="text-sm font-bold">{saved ? '{{P1-01 OPT-IN SAVED HEADLINE, STACY}}' : '{{P1-01 OPT-IN HEADLINE, STACY}}'}</p>
+          <p className="text-sm font-bold">{saved ? '{{P1-01 OPT-IN CONFIRMATION, STACY}}' : placement === 'results' ? '{{P1-01 RESULTS HEADLINE, STACY}}' : '{{P1-01 AFTER SESSION 1 HEADLINE, STACY}}'}</p>
           <p className={cn('text-xs mt-1', dark ? 'text-white/70' : 'text-slate-600')}>
-            {saved ? '{{P1-01 OPT-IN SAVED BODY, STACY}}' : '{{P1-01 OPT-IN BODY, STACY}}'}
+            {saved ? null : placement === 'results' ? '{{P1-01 RESULTS BODY, STACY}}' : '{{P1-01 AFTER SESSION 1 BODY, STACY}}'}
           </p>
         </div>
       </div>
@@ -92,12 +94,18 @@ export function ReminderOptIn({ userId, placement, dark = false }: { userId: str
             <input
               id={`optin-time-${placement}`}
               type="time"
+              step={3600}
               value={time}
               onChange={e => setTime(e.target.value)}
               className="input max-w-[8rem] text-cobalt-ink"
             />
-            <span className={cn('text-xs', dark ? 'text-white/50' : 'text-slate-500')}>({timezone})</span>
           </div>
+          <p className={cn('text-xs', dark ? 'text-white/50' : 'text-slate-500')}>{'{{P1-01 OPT-IN TIME HELPER, STACY}}'} ({timezone})</p>
+          {/* Consent line: shown in full right above the button, never collapsed (Stacy A). Links the Privacy Policy. */}
+          <p data-testid="reminder-optin-consent" className={cn('text-xs leading-relaxed', dark ? 'text-white/80' : 'text-slate-600')}>
+            {'{{P1-01 OPT-IN CONSENT LINE, STACY}}'}{' '}
+            <a href="https://romrx.io/legal#privacy" target="_blank" rel="noopener noreferrer" className="underline">{'{{P1-01 PRIVACY POLICY LINK, STACY}}'}</a>
+          </p>
           {err && <p className="text-xs text-red-500">{err}</p>}
           <div className="flex gap-2">
             <button

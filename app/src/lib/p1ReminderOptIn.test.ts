@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { saveReminderChanges, shouldOfferOptIn, isValidReminderTime, optInDismissKey, reminderStateFromRow } from './reminderOptIn'
+import { saveReminderChanges, shouldOfferOptIn, optInTarget, toWholeHour, isValidReminderTime, optInDismissKey, reminderStateFromRow } from './reminderOptIn'
 
 const src = (p: string) => readFileSync(join(process.cwd(), 'src', p), 'utf8')
 
@@ -21,13 +21,22 @@ describe('P1-01 helpers', () => {
     expect(optInDismissKey('u1', 'results')).not.toBe(optInDismissKey('u1', 'after_session'))
     expect(optInDismissKey('u1', 'results')).not.toBe(optInDismissKey('u2', 'results'))
   })
-  it('the one tap makes exactly one RPC call: protocol on, nothing else', async () => {
+  it('the one tap turns on protocol and retest only, never digest (Stacy)', async () => {
     const calls: Array<[string, Record<string, unknown>]> = []
     const rpc = async (fn: string, args: Record<string, unknown>) => { calls.push([fn, args]); return { error: null } }
     const cur = reminderStateFromRow(null)
-    const res = await saveReminderChanges(rpc as never, cur, { ...cur, protocol: true })
+    const res = await saveReminderChanges(rpc as never, cur, optInTarget(cur))
     expect(res.ok).toBe(true)
-    expect(calls).toEqual([['set_reminder_opt_in', { p_kind: 'protocol', p_on: true }]])
+    expect(calls.map(c => c[1])).toEqual(expect.arrayContaining([{ p_kind: 'protocol', p_on: true }, { p_kind: 'retest', p_on: true }]))
+    expect(calls).toHaveLength(2)
+    expect(calls.every(c => c[0] === 'set_reminder_opt_in')).toBe(true)
+    expect(optInTarget({ retest: false, protocol: false, digest: true }).digest).toBe(true)
+    expect(optInTarget({ retest: false, protocol: false, digest: false }).digest).toBe(false)
+  })
+  it('whole hours only', () => {
+    expect(toWholeHour('07:30')).toBe('07:00')
+    expect(toWholeHour('bad')).toBe('07:00')
+    expect(toWholeHour('21:00')).toBe('21:00')
   })
 })
 
@@ -38,12 +47,14 @@ describe('P1-01 wiring', () => {
     expect(upsert).not.toMatch(/email_reminders|retest_reminders|weekly_digest|push_reminders|_opt_in_at/)
     expect(upsert).toMatch(/reminder_time/)
     expect(comp).toContain('saveReminderChanges(')
-    expect(comp).toContain('{{P1-01 OPT-IN HEADLINE, STACY}}')
+    expect(comp).toContain('{{P1-01 RESULTS HEADLINE, STACY}}')
+    expect(comp).toContain('{{P1-01 OPT-IN CONSENT LINE, STACY}}')
+    expect(comp).toContain('step={3600}')
     expect(comp).toContain('{{P1-01 OPT-IN BUTTON, STACY}}')
   })
   it('placed on results (signed in) and after a completed session', () => {
     expect(src('pages/ResultsPreview.tsx')).toMatch(/\{user && <ReminderOptIn userId=\{user\.id\} placement="results"/)
-    expect(src('pages/MyProtocol.tsx')).toMatch(/completedToday && dbSessionCount >= 1 && \(/)
+    expect(src('pages/MyProtocol.tsx')).toMatch(/completedToday && dbSessionCount === 1 && \(/)
   })
   it('Settings shows the reminder toggles, keeps push and product updates hidden', () => {
     const s = src('pages/Settings.tsx')
@@ -51,5 +62,7 @@ describe('P1-01 wiring', () => {
     expect(s).toContain('const SHOW_NOTIFICATIONS = true')
     expect(s).toContain('const SHOW_PUSH = false')
     expect(s).toMatch(/\{SHOW_MARKETING_TOGGLE && \(\s*<ToggleRow\s*title="Email product updates"/)
+    expect(s).toContain('{{P1-01 SETTINGS TURN OFF ALL TITLE, STACY}}')
+    expect(s).toMatch(/checked=\{marketingOptOut\}\s*onChange=\{setMarketingOptOut\}/)
   })
 })

@@ -38,8 +38,9 @@ export async function saveReminderChanges(
 }
 
 // ── P1-01 one-tap opt-in (results screen and after session 1) ────────────────────────────────
-// The one tap turns on the daily protocol reminder ('protocol' kind) at the time the user picks, through the same
-// set_reminder_opt_in RPC Settings uses, so the server-set opt-in marker is the only thing that can opt anyone in.
+// Per Stacy (STACY-P1-01-WORDS-20261115-2053.md): the one tap turns on 'protocol' (plan day) AND 'retest' (check) reminders,
+// never the digest and never push, through the same set_reminder_opt_in RPC Settings uses, so the server-set marker is the
+// only thing that can opt anyone in. Time and timezone are saved too (the sender reads the hour only).
 export type OptInPlacement = 'results' | 'after_session'
 export const OPT_IN_DEFAULT_TIME = '07:00'
 export const optInDismissKey = (userId: string, placement: OptInPlacement) => `romrx_hq_reminder_optin_dismissed_${placement}_${userId}`
@@ -52,4 +53,14 @@ export function isValidReminderTime(t: string): boolean {
 /** Show the card only when the protocol reminder is not already on (toggle AND marker). */
 export function shouldOfferOptIn(state: ReminderState | null): boolean {
   return state !== null && !state.protocol
+}
+
+/** The state the one tap asks for: protocol and retest on, digest untouched. */
+export function optInTarget(cur: ReminderState): ReminderState {
+  return { ...cur, protocol: true, retest: true }
+}
+
+/** Whole hours only (the sender ignores minutes). */
+export function toWholeHour(t: string): string {
+  return isValidReminderTime(t) ? `${t.slice(0, 2)}:00` : OPT_IN_DEFAULT_TIME
 }

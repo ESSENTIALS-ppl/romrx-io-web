@@ -582,8 +582,8 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
             Completed today
           </div>
         ) : null}
-        {/* P1-01: offer the reminder right after a completed session (hidden once opted in or dismissed) */}
-        {completedToday && dbSessionCount >= 1 && (
+        {/* P1-01: offer the reminder right after session 1 (Stacy B); hidden once opted in or dismissed */}
+        {completedToday && dbSessionCount === 1 && (
           <div className="mt-3"><ReminderOptIn userId={userId} placement="after_session" /></div>
         )}
         {completedToday ? null : (

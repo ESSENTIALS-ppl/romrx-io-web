@@ -601,7 +601,7 @@ export function Settings() {
         {/* ── NOTIFICATIONS ──────────────────────────────────────── */}
         {/* FG-04: whole section hidden. send-whats-new is retired, so 'Email product updates' has no sender; other reminders have none either. Restore when FG-09 to FG-12 ship. */}
         {SHOW_NOTIFICATIONS && (
-        <SectionCard title="Notifications">
+        <SectionCard title="{{P1-01 SETTINGS SECTION TITLE, STACY}}">
           {notifLoading ? (
             <div className="flex items-center gap-2 py-2">
               <Loader2 size={14} className="animate-spin text-cobalt" />
@@ -609,10 +609,7 @@ export function Settings() {
             </div>
           ) : (
             <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Timezone</p>
-                <span className="text-xs font-medium text-cobalt-ink bg-cobalt-light px-2.5 py-1 rounded-full">{browserTimezone}</span>
-              </div>
+              <p className="text-sm text-slate-600">{'{{P1-01 SETTINGS SECTION INTRO, STACY}}'}</p>
 
               {/* P1-01: product updates have no sender (send-whats-new retired), so this row stays behind the shared SHOW_MARKETING_TOGGLE (false). */}
               {SHOW_MARKETING_TOGGLE && (
@@ -624,45 +621,49 @@ export function Settings() {
               />
               )}
 
-              {/* FG-04: dead reminder toggles hidden (no sender is live yet). Restore when FG-09 to FG-12 ship. No new copy. */}
+              {/* P1-01: the three reminder toggles (order per Stacy: plan day, check, weekly). Each loads OFF unless toggle AND marker. */}
               {SHOW_REMINDER_TOGGLES && (
                 <>
                 <ToggleRow
-                  title="Retest reminders"
-                  subtitle="Prompt to retake your assessment every 42 days"
+                  title="{{P1-01 SETTINGS PROTOCOL TOGGLE TITLE, STACY}}"
+                  subtitle="{{P1-01 SETTINGS PROTOCOL TOGGLE HELP, STACY}}"
+                  checked={emailReminders}
+                  onChange={setEmailReminders}
+                />
+
+                <ToggleRow
+                  title="{{P1-01 SETTINGS RETEST TOGGLE TITLE, STACY}}"
+                  subtitle="{{P1-01 SETTINGS RETEST TOGGLE HELP, STACY}}"
                   checked={retestReminders}
                   onChange={setRetestReminders}
                 />
 
                 <ToggleRow
-                  title="Weekly progress digest"
-                  subtitle="Sunday summary of PRS trend and streak"
+                  title="{{P1-01 SETTINGS DIGEST TOGGLE TITLE, STACY}}"
+                  subtitle="{{P1-01 SETTINGS DIGEST TOGGLE HELP, STACY}}"
                   checked={weeklyDigest}
                   onChange={setWeeklyDigest}
                 />
 
-                <div className="space-y-3 border-t border-slate-200 pt-4">
-                  <ToggleRow
-                    title="Email reminders"
-                    subtitle="Get an email on your protocol days"
-                    checked={emailReminders}
-                    onChange={setEmailReminders}
-                  />
-                  {emailReminders && (
+                {(emailReminders || retestReminders) && (
+                  <div className="space-y-1 border-t border-slate-200 pt-4">
                     <div className="flex items-center gap-3 pl-1">
-                      <label className="text-xs text-slate-500 font-semibold uppercase tracking-wide whitespace-nowrap">
-                        Reminder time
+                      <label htmlFor="settings-reminder-time" className="text-xs text-slate-500 font-semibold uppercase tracking-wide whitespace-nowrap">
+                        {'{{P1-01 SETTINGS TIME LABEL, STACY}}'}
                       </label>
+                      {/* whole hours only: the sender reads the hour (Stacy note 3b) */}
                       <input
+                        id="settings-reminder-time"
                         type="time"
+                        step={3600}
                         value={reminderTime}
                         onChange={e => setReminderTime(e.target.value)}
                         className="input max-w-[8rem]"
                       />
-                      <span className="text-xs text-slate-500">({browserTimezone})</span>
                     </div>
-                  )}
-                </div>
+                    <p className="text-xs text-slate-500 pl-1">{'{{P1-01 SETTINGS TIME HELPER, STACY}}'} ({browserTimezone})</p>
+                  </div>
+                )}
 
                 {SHOW_PUSH && (
                   <ToggleRow
@@ -674,6 +675,18 @@ export function Settings() {
                   />
                 )}
                 {SHOW_PUSH && pushMsg && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{pushMsg}</p>}
+
+                {/* P1-01: turn off all emails = users.marketing_opt_out (already stops every lifecycle email). ON means opted out. */}
+                <div className="border-t border-slate-200 pt-4">
+                  <ToggleRow
+                    title="{{P1-01 SETTINGS TURN OFF ALL TITLE, STACY}}"
+                    subtitle="{{P1-01 SETTINGS TURN OFF ALL HELP, STACY}}"
+                    checked={marketingOptOut}
+                    onChange={setMarketingOptOut}
+                  />
+                </div>
+
+                <p className="text-xs text-slate-500">{'{{P1-01 SETTINGS PRIVACY LINE, STACY}}'}</p>
                 </>
               )}
 
