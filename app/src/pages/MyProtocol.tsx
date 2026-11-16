@@ -10,6 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { SESSION_LENGTH_COPY, SESSION_LENGTHS, pickMovements, readSessionLength, sessionLengthKey, type SessionLength } from '../lib/sessionLength'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -462,6 +463,11 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
   }, [storageKey, assessedAt])
 
   const [log, setLog] = useState<SessionLog>(getLog)
+  const [sessionLength, setSessionLengthState] = useState<SessionLength>(() => readSessionLength(userId)) // P1-19
+  const setSessionLength = (l: SessionLength) => {
+    setSessionLengthState(l)
+    try { localStorage.setItem(sessionLengthKey(userId), l) } catch { /* ignore */ }
+  }
   const [completedToday, setCompletedToday] = useState(false)
   const [dbSessionCount, setDbSessionCount] = useState(0)
   const [cycleStartDate, setCycleStartDate] = useState(() => assessedAt.slice(0, 10))
@@ -527,9 +533,8 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
   const retestDateStr = retestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   const rx = todayPriority ? rxLibrary[todayPriority.def.rxKey] : null
-  const todayMovements: Rx[] = rx
-    ? [rx.exercises[0], rx.stretches[0], rx.foam[0]].filter(Boolean) as Rx[]
-    : []
+  // P1-19: standard is today's card unchanged; quick and full only once the chooser has words (SESSION_LENGTH_COPY).
+  const todayMovements: Rx[] = pickMovements<Rx>(rx, sessionLength)
 
   return (
     <div className="rounded-card border-2 border-cobalt bg-white shadow-md overflow-hidden">
@@ -564,6 +569,26 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
           }
         </div>
       </div>
+
+      {SESSION_LENGTH_COPY && (
+        <div className="px-5 pb-3" data-testid="session-length">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">{SESSION_LENGTH_COPY.heading}</p>
+          <div role="radiogroup" aria-label={SESSION_LENGTH_COPY.heading} className="grid grid-cols-3 gap-1.5">
+            {SESSION_LENGTHS.map(l => (
+              <button
+                key={l}
+                type="button"
+                role="radio"
+                aria-checked={sessionLength === l}
+                onClick={() => setSessionLength(l)}
+                className={cn('rounded-lg px-2 py-1.5 text-xs font-semibold border', sessionLength === l ? 'bg-cobalt text-white border-cobalt' : 'bg-white text-cobalt-ink border-slate-200')}
+              >
+                {SESSION_LENGTH_COPY![l]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {todayMovements.length > 0 && (
         <div className="px-5 pb-4 space-y-2">
