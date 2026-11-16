@@ -1,21 +1,21 @@
 // P1-06 (Base engagement): day 7 to 14 quick re-check of the 1 or 2 focus areas, shown as day 1 next to now.
-// SHIP GATE: this UI may go live ONLY with or after Avery's P1-06 v2 backend, romrxbjj-v2 65c3a036 (compute-tiers quick guard
-// after the Row 19 caller check, submit-assessment quick path, migration 20261116031000 assessments.check_kind) and
-// bda32302 (server reads skip check_kind='quick': get_my_profile, my_joint_history, my_joint_start_vs_now, rombot_context;
-// migrations 20261116031100 and 20261116031200), on P1-07 v2 (20261116030000 user_mobility_schedule and its roll cron).
-// Replaces the dead 65a251b8 and c8769478 contracts. Live submit-assessment today ignores check_kind, so a quick submit would
-// be saved as a FULL assessment and rewrite the plan. So the whole feature (route and Today card banner) is behind QUICK_CHECK_ON = false.
+// SHIP GATE: this UI may go live ONLY with or after Avery's final server set, romrxbjj-v2 branch feat/p1-06-v5-on-p1-07-v4-20261115
+// (tip 47aad435): P1-07 v4 1fae96b8 (20261116030000 user_mobility_schedule and its roll, America/New_York fallback),
+// 170e1bc (compute-tiers quick guard after the Row 19 caller check, submit-assessment quick path, migration 20261116031000
+// assessments.check_kind; content of 65c3a036), 3b30ab57 (server reads skip check_kind='quick': get_my_profile,
+// my_joint_history, my_joint_start_vs_now, rombot_context; migrations 20261116031100 and 20261116031200; content of bda32302),
+// c9bf74ed (day 7 to 14 window) and 832056dd (saved quick row check). Live submit-assessment today ignores check_kind, so a
+// quick submit would be saved as a FULL assessment and rewrite the plan. So the whole feature is behind QUICK_CHECK_ON = false.
 //
-// 65c3a036 contract this file follows (read only):
+// Server contract this file follows (read only, at 47aad435):
 //  - POST functions/v1/submit-assessment, body { check_kind: 'quick', <scheduled field keys>: number }.
 //    200 { ok: true, assessment_id, assessed_at, sport, check_kind: 'quick' } (no assessment-done email).
-//    400 { error } with: 'check_kind must be full or quick', 'No quick re-check is scheduled' (no schedule row or empty
-//    check_joints, so a user with no full assessment cannot save a quick check), 'Quick re-check only accepts the scheduled joints',
-//    'Quick re-check needs a measurement for a scheduled joint', 'At least one ROM measurement is required'.
+//    400 { error } with: 'check_kind must be full or quick', 'No quick re-check is scheduled' (no schedule row, empty
+//    check_joints, outside the window, or a quick check already done this cycle), 'Quick re-check only accepts the scheduled
+//    joints', 'Quick re-check needs a measurement for a scheduled joint', 'At least one ROM measurement is required'.
+//  - compute-tiers skips a quick row: 200 { success: true, assessment_id, sport, skipped: 'quick_check_no_rescore' }.
 //  - Schedule writer rules (Grant 9:38 PM ET): full save sets next_check_at = +7 days and next_retest_at = +42 days;
-//    a quick save sets next_check_at = next_retest_at; the hourly roll sets next_check_at = next_retest_at once the window ends
-//    (65c3a036: after local day 7; Avery is moving the roll to after local day 14, so the check stays open days 7 to 14).
-//    The client needs no change for either: it reads only whether next_check_at still differs from next_retest_at.
+//    a quick save sets next_check_at = next_retest_at; the hourly roll sets next_check_at = next_retest_at after local day 14.
 //    So next_check_at === next_retest_at means no quick check is pending (only the full retest).
 import type { Field, Step } from '../pages/assessmentMeta'
 
@@ -93,27 +93,28 @@ export function nextCheckLine(s: Schedule | null, now: Date = new Date()): strin
   return new Date(next).getTime() <= now.getTime() ? QUICK_CHECK_COPY.nextCheckDue : QUICK_CHECK_COPY.nextCheck(formatCheckDate(next))
 }
 
-/** A quick check is pending only while next_check_at is set and differs from next_retest_at (65c3a036 rule 2 and the roll
+/** A quick check is pending only while next_check_at is set and differs from next_retest_at (server rule 2 and the roll
  *  both set next_check_at = next_retest_at once it is done or missed). */
 export function isQuickCheckPending(s: Schedule | null): boolean {
   if (!s?.next_check_at || !s.check_joints?.length) return false
   return !s.next_retest_at || new Date(s.next_check_at).getTime() !== new Date(s.next_retest_at).getTime()
 }
 
-/** Banner and page: due = inside the 34835f66 window (see isQuickCheckInWindow below). Replaces the v3 "next_check_at reached" rule. */
+/** Banner and page: due = inside the c9bf74ed / 832056dd window (see isQuickCheckInWindow below). Replaces the v3 "next_check_at reached" rule. */
 export function isQuickCheckDue(s: Schedule | null, now: Date = new Date(), ctx: QuickContext = {}): boolean {
   return isQuickCheckInWindow(s, now, ctx)
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// v4 window, matching Avery's server guard romrxbjj-v2 34835f66 (schedule.ts rejectQuickWindow, read only):
+// Window, matching Avery's server guard romrxbjj-v2 c9bf74ed and 832056dd (schedule.ts rejectQuickWindow and
+// rejectQuickSavedRow at 47aad435, read only):
 //  - day 0 is the LOCAL calendar date of user_mobility_schedule.last_assessed_at (the cycle's full assessment);
 //  - the day number is the local date of now minus day 0, in calendar days;
 //  - a quick check is accepted on local days 7 to 14 inclusive (day 14 runs to the end of that local day);
 //  - zone: notification_preferences.timezone if valid, else America/New_York (server DEFAULT_TZ); the device zone
 //    is used only if this browser cannot format America/New_York;
-//  - once per cycle: the server treats next_check_at === next_retest_at as done (rule 2). The client also hides when a
-//    quick row exists after last_assessed_at (stricter, in case the schedule write after a quick save failed).
+//  - once per cycle: next_check_at === next_retest_at (rule 2), OR an assessments row with check_kind = 'quick' and
+//    created_at strictly after last_assessed_at (832056dd quickRowExistsThisCycle; created_at is the table default now()).
 // Outside that the server answers 400 'No quick re-check is scheduled' (QUICK_NOT_SCHEDULED_ERROR).
 export const DEFAULT_TZ = 'America/New_York'
 export const QUICK_WINDOW_FIRST_DAY = 7
@@ -158,11 +159,11 @@ export function quickDoneBySchedule(s: Schedule | null): boolean {
   return Number.isFinite(a) && Number.isFinite(b) && a === b
 }
 
-/** Any quick row assessed after the cycle's full assessment (rows from the one explicit quick read). */
-export function quickRowAfter(rows: readonly { assessed_at?: string | null; check_kind?: string | null }[] | null | undefined, lastAssessedAt: string | null | undefined): boolean {
-  if (!rows?.length || !lastAssessedAt) return false
-  const start = Date.parse(lastAssessedAt)
-  return rows.some(r => r.check_kind === 'quick' && !!r.assessed_at && Date.parse(r.assessed_at) > start)
+/** Any quick row created after the cycle's full assessment (832056dd: created_at strictly after last_assessed_at). */
+export function quickRowAfter(rows: readonly { created_at?: string | null; check_kind?: string | null }[] | null | undefined, lastAssessedAt: string | null | undefined): boolean {
+  const start = lastAssessedAt ? Date.parse(lastAssessedAt) : NaN
+  if (!rows?.length || !Number.isFinite(start)) return false
+  return rows.some(r => r.check_kind === 'quick' && !!r.created_at && Number.isFinite(Date.parse(r.created_at)) && Date.parse(r.created_at) > start)
 }
 
 export type QuickContext = { tz?: string | null; quickDone?: boolean }

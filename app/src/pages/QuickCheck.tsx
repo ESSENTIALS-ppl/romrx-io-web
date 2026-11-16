@@ -1,5 +1,5 @@
 // P1-06 quick check screen (/dashboard/quick-check). Behind QUICK_CHECK_ON (false): see lib/quickCheck.ts for the ship gate
-// (Avery romrxbjj-v2 65c3a036 compute-tiers guard and submit-assessment quick path, plus bda32302 server quick-skip).
+// (Avery romrxbjj-v2 final set, tip 47aad435: guard c9bf74ed, saved quick row check 832056dd, server reads 3b30ab57).
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -51,7 +51,7 @@ function QuickCheckInner() {
       ])
       if (cancelled) return
       const s = load && !load.failed ? load.schedule : null
-      // v4 gate (Avery 34835f66 window): outside local days 7 to 14, or a quick check already done this cycle, go to Today with no form.
+      // Gate (Avery c9bf74ed window and 832056dd quick row): outside local days 7 to 14, or a quick check already done this cycle, go to Today with no form.
       if (!s || !load || load.failed || quickCheckPageGate(s, new Date(), load.ctx) !== 'intro') { setGone(true); return }
       setCtx(load.ctx)
       setSchedule(s)
@@ -85,7 +85,7 @@ function QuickCheckInner() {
       })
       const data = await res.json().catch(() => ({ ok: false }))
       setLoading(false)
-      // 65c3a036 / 34835f66: 200 { ok: true, check_kind: 'quick', ... }. The window 400 'No quick re-check is scheduled'
+      // 47aad435: 200 { ok: true, check_kind: 'quick', ... }. The window 400 'No quick re-check is scheduled'
       // goes to Today (no retry loop); any other failure shows the existing generic line.
       const outcome = quickSubmitOutcome(res.status, data)
       if (outcome.kind === 'today') { navigate(TODAY, { replace: true }); return }

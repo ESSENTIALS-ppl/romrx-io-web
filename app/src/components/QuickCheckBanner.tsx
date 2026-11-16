@@ -1,5 +1,5 @@
 // P1-06: Today card banner (quick check due) and the "Your next check" line. Behind QUICK_CHECK_ON (false).
-// v4: due only inside Avery's server window (romrxbjj-v2 34835f66): local days 7 to 14 after the cycle's full assessment,
+// Due only inside Avery's server window (romrxbjj-v2 c9bf74ed and 832056dd, tip 47aad435): local days 7 to 14 after the cycle's full assessment,
 // stored time zone else America/New_York, and not if a quick check is already done this cycle (schedule or quick row).
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'

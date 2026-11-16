@@ -1,4 +1,4 @@
-// P1-06 v4: client window matches Avery's server guard (romrxbjj-v2 34835f66 rejectQuickWindow).
+// P1-06: client window matches Avery's server guard (romrxbjj-v2 c9bf74ed rejectQuickWindow, 832056dd rejectQuickSavedRow).
 // Device zone set far from New York so a test passes only if the stored zone / America/New_York rule is used.
 process.env.TZ = 'Asia/Tokyo'
 import { describe, it, expect } from 'vitest'
@@ -22,7 +22,7 @@ const day7early = at('2026-11-08T05:30:00Z')  // Sun Nov 8, 12:30 AM ET (before 
 const day14late = at('2026-11-16T04:30:00Z')  // Sun Nov 15, 11:30 PM ET
 const day15early = at('2026-11-16T05:30:00Z') // Mon Nov 16, 12:30 AM ET, before the hourly roll runs
 
-describe('P1-06 v4 quick check window (34835f66 rule)', () => {
+describe('P1-06 quick check window (c9bf74ed and 832056dd rules)', () => {
   it('feature stays off', () => { expect(QUICK_CHECK_ON).toBe(false) })
 
   it('day numbers: day 0 is the local date of last_assessed_at, in New York when no zone is stored', () => {
@@ -46,9 +46,13 @@ describe('P1-06 v4 quick check window (34835f66 rule)', () => {
   })
 
   it('quick check already done this cycle hidden: by a quick row after the full assessment, or by the schedule', () => {
-    const rows = [{ assessed_at: '2026-11-09T14:00:00Z', check_kind: 'quick' }]
+    // 832056dd: created_at strictly after last_assessed_at; a previous cycle's quick row and a full row do not count.
+    const rows = [{ created_at: '2026-11-09T14:00:00Z', check_kind: 'quick' }]
     expect(quickRowAfter(rows, row.last_assessed_at)).toBe(true)
-    expect(quickRowAfter([{ assessed_at: '2026-10-20T14:00:00Z', check_kind: 'quick' }], row.last_assessed_at)).toBe(false)
+    expect(quickRowAfter([{ created_at: '2026-10-20T14:00:00Z', check_kind: 'quick' }], row.last_assessed_at)).toBe(false)
+    expect(quickRowAfter([{ created_at: row.last_assessed_at, check_kind: 'quick' }], row.last_assessed_at)).toBe(false)
+    expect(quickRowAfter([{ created_at: '2026-11-09T14:00:00Z', check_kind: 'full' }], row.last_assessed_at)).toBe(false)
+    expect(quickRowAfter([{ assessed_at: '2026-11-09T14:00:00Z', check_kind: 'quick' } as never], row.last_assessed_at)).toBe(false)
     expect(isQuickCheckDue(row, at('2026-11-10T15:00:00Z'), { quickDone: true })).toBe(false)
     expect(isQuickCheckDue({ ...row, next_check_at: row.next_retest_at }, at('2026-11-10T15:00:00Z'))).toBe(false)
     expect(nextCheckLineInCycle(row, at('2026-11-10T15:00:00Z'), { quickDone: true })).toBe('Your next check: Sunday, December 13')
@@ -100,6 +104,8 @@ describe('P1-06 v4 quick check window (34835f66 rule)', () => {
   it('only the one gate read selects quick rows; it fails closed', () => {
     const loader = readFileSync(join(process.cwd(), 'src', 'lib', 'quickCheckLoad.ts'), 'utf8')
     expect(loader).toContain(".eq('check_kind', 'quick')")
+    expect(loader).toContain(".gt('created_at', schedule.last_assessed_at)")
+    expect(loader).not.toContain("gt('assessed_at'")
     expect(loader).toContain('if (qErr) return { schedule, ctx: { ...ctx, quickDone: true }, failed: true }')
   })
 })

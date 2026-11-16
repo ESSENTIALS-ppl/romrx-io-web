@@ -10,7 +10,7 @@ import {
 } from './quickCheck'
 
 describe('P1-06 quick check', () => {
-  it('is OFF until Avery\'s 65c3a036 compute-tiers guard and bda32302 ship; route matches the emails', () => {
+  it('is OFF until Avery\'s server set (tip 47aad435) ships; route matches the emails', () => {
     expect(QUICK_CHECK_ON).toBe(false)
     expect(QUICK_CHECK_PATH).toBe('/dashboard/quick-check')
     const app = readFileSync(join(process.cwd(), 'src', 'App.tsx'), 'utf8')
@@ -38,14 +38,14 @@ describe('P1-06 quick check', () => {
     expect(nextCheckLine({ next_check_at: '2026-12-28T17:00:00Z', next_retest_at: null, check_joints: ['x'] }, now)).toBe('Your next check: Monday, December 28')
     expect(nextCheckLine({ next_check_at: '2026-11-14T17:00:00Z', next_retest_at: null, check_joints: ['x'] }, now)).toBe(Q.nextCheckDue)
     expect(nextCheckLine(null, now)).toBeNull()
-    // v4: due by the 34835f66 local-day window, so the row carries last_assessed_at (Nov 7 = day 0, Nov 15 = day 8)
+    // due by the c9bf74ed local-day window, so the row carries last_assessed_at (Nov 7 = day 0, Nov 15 = day 8)
     expect(isQuickCheckDue({ next_check_at: '2026-11-14T17:00:00Z', next_retest_at: null, check_joints: ['hip_er_r'], last_assessed_at: '2026-11-07T17:00:00Z' }, now)).toBe(true)
     expect(isQuickCheckDue({ next_check_at: '2026-11-14T17:00:00Z', next_retest_at: null, check_joints: [] }, now)).toBe(false)
   })
   it('day 1 = last full assessment, quick rows skipped', () => {
     expect(lastFullAssessment([{ id: 'q', check_kind: 'quick' }, { id: 'f', check_kind: null }, { id: 'old' }])).toEqual({ id: 'f', check_kind: null })
   })
-  it('65c3a036 schedule rules: pending only while next_check_at differs from next_retest_at', () => {
+  it('schedule rules (rule 2): pending only while next_check_at differs from next_retest_at', () => {
     const now = new Date('2026-11-15T12:00:00-05:00')
     const retest = '2026-12-13T17:00:00Z'
     // full save: day 7 check, day 42 retest; due once day 7 is reached
@@ -69,7 +69,7 @@ describe('P1-06 quick check', () => {
     expect(dayOneAssessment(rows, 'q')).toEqual({ id: 'f2', check_kind: 'full' })
     expect(dayOneAssessment(rows, 'gone')).toEqual({ id: 'f2', check_kind: 'full' })
   })
-  it('banner and screen read the same schedule columns; page cites 65c3a036', () => {
+  it('banner and screen read the same schedule columns; page cites the final server set', () => {
     expect(SCHEDULE_COLUMNS).toBe('next_check_at, next_retest_at, check_joints, last_assessed_at, last_assessment_id')
     const page = readFileSync(join(process.cwd(), 'src', 'pages', 'QuickCheck.tsx'), 'utf8')
     const banner = readFileSync(join(process.cwd(), 'src', 'components', 'QuickCheckBanner.tsx'), 'utf8')
@@ -78,7 +78,7 @@ describe('P1-06 quick check', () => {
     expect(loader).toContain('select(SCHEDULE_COLUMNS)')
     expect(page).toContain('loadQuickContext(user.id)')
     expect(banner).toContain('loadQuickContext(userId)')
-    expect(page).toContain('65c3a036')
+    expect(page).toContain('47aad435')
     expect(page).not.toMatch(/65a251b8|c8769478/)
   })
   it('window day 7 to 14 (Avery roll after local day 14): day 7 shows, day 14 shows, day 15 hidden after the roll', () => {

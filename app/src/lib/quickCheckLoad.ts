@@ -4,8 +4,8 @@ import { SCHEDULE_COLUMNS, quickRowAfter, type QuickContext, type Schedule } fro
 
 export type QuickLoad = { schedule: Schedule | null; ctx: QuickContext; failed: boolean }
 
-/** Schedule, stored time zone, and the ONE explicit quick-row read (check_kind = 'quick' after the cycle's full
- *  assessment; needs migration 20261116031000). Every other assessments read stays quick-skipped. A failed read of the
+/** Schedule, stored time zone, and the ONE explicit quick-row read (check_kind = 'quick', created_at after the cycle's
+ *  full assessment, the same read as Avery's 832056dd; needs migration 20261116031000). Every other assessments read stays quick-skipped. A failed read of the
  *  schedule or the quick rows counts as "not due" (failed = true), so nothing is offered that the server would reject. */
 export async function loadQuickContext(userId: string): Promise<QuickLoad> {
   const [{ data: sch, error: sErr }, { data: pref }] = await Promise.all([
@@ -18,11 +18,11 @@ export async function loadQuickContext(userId: string): Promise<QuickLoad> {
   if (!schedule?.last_assessed_at) return { schedule, ctx, failed: !!sErr }
   const { data: rows, error: qErr } = await supabase
     .from('assessments')
-    .select('id, assessed_at, check_kind')
+    .select('id, created_at, check_kind')
     .eq('user_id', userId)
     .eq('check_kind', 'quick')
-    .gt('assessed_at', schedule.last_assessed_at)
+    .gt('created_at', schedule.last_assessed_at)
     .limit(1)
   if (qErr) return { schedule, ctx: { ...ctx, quickDone: true }, failed: true }
-  return { schedule, ctx: { ...ctx, quickDone: quickRowAfter(rows as { assessed_at: string; check_kind: string }[], schedule.last_assessed_at) }, failed: false }
+  return { schedule, ctx: { ...ctx, quickDone: quickRowAfter(rows as { created_at: string; check_kind: string }[], schedule.last_assessed_at) }, failed: false }
 }
