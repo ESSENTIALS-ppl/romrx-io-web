@@ -22,7 +22,7 @@ import {
 } from '../lib/reminderOptIn'
 
 export function ReminderOptIn({ userId, placement, dark = false }: { userId: string; placement: OptInPlacement; dark?: boolean }) {
-  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', [])
+  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York', [])
   const [state, setState] = useState<ReminderState | null>(null)
   const [time, setTime] = useState(OPT_IN_DEFAULT_TIME)
   const [saving, setSaving] = useState(false)
