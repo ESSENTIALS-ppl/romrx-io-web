@@ -14,6 +14,8 @@ const navigate = vi.hoisted(() => vi.fn())
 const captured = vi.hoisted(() => ({ props: null as null | Record<string, any> }))
 
 vi.mock('./track', () => ({ track: () => {}, trackPageView: () => {} }))
+// Progress saving: a store that answers at once with no saved draft (the draft rules have their own tests).
+vi.mock('./assessmentDraftStore', () => ({ supabaseDraftStore: { save: async () => true, load: async () => null, remove: async () => true, newestAssessmentAt: async () => null } }))
 vi.mock('../hooks/useAuth', () => ({ useAuth: () => ({ session: auth.session, loading: false }) }))
 vi.mock('../hooks/useProfile', () => ({ useProfile: () => ({ profile: null }) }))
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }))
@@ -69,6 +71,7 @@ describe('outro shows only after the email-sending submit returned ok', () => {
     vi.doMock('../pages/AssessmentPhases', () => ({ AssessmentPhases: (p: Record<string, any>) => { captured.props = p; return null } }))
     const { Assessment } = await import('../pages/Assessment')
     act(() => { root.render(createElement(Assessment)) })
+    await act(async () => {})   // the saved-draft check settles before the first screen
   }
   function deferredFetch() {
     let resolve!: (r: unknown) => void
@@ -83,7 +86,7 @@ describe('outro shows only after the email-sending submit returned ok', () => {
     const f = deferredFetch()
     await mountAssessment()
     toLastStep()
-    act(() => { captured.props!.handleNext() })
+    await act(async () => { captured.props!.handleNext() })
     expect(f.fetch).toHaveBeenCalledTimes(1)
     expect(String((f.fetch.mock.calls[0] as unknown[])[0])).toContain('/functions/v1/submit-assessment')
     expect(captured.props!.phase).not.toBe('outro')
@@ -97,7 +100,7 @@ describe('outro shows only after the email-sending submit returned ok', () => {
     const f = deferredFetch()
     await mountAssessment()
     toLastStep()
-    act(() => { captured.props!.handleNext() })
+    await act(async () => { captured.props!.handleNext() })
     await act(async () => { f.resolve({ ok: false, error: 'x' }, false) })
     expect(captured.props!.phase).not.toBe('outro')
     expect(captured.props!.error).toBe('x')

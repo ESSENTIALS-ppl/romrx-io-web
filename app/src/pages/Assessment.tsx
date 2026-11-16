@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -8,6 +8,15 @@ import { AssessmentPhases, type Phase } from './AssessmentPhases'
 import { track } from '../lib/track'
 import { loginForPackAssessment, packReturnKey, packReturnUrl } from '../lib/packReturn'
 import { Spinner } from '../components/Spinner'
+import {
+  buildSnapshot, clearMirror, createDraftSaver, guardDecision, isResumable, isStaleVersusAssessment, leaveSheetKind,
+  pickDraft, readMirror, rowToDraft, valuesToStrings, withTimeout,
+  type Draft, type DraftSaver, type SaveStatus,
+} from '../lib/assessmentDraft'
+import { supabaseDraftStore } from '../lib/assessmentDraftStore'
+
+// localStorage for the per-member progress copy. Signed-in members only (Stacy Oct 28): no copy for signed-out visitors.
+const draftStorage = () => { try { return window.localStorage } catch { return null } }
 
 // Authenticated Base HQ → submit-assessment (great-job). Lead path unchanged.
 const SUBMIT_ASSESSMENT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-assessment`
@@ -34,37 +43,185 @@ export function Assessment() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // ---- Progress drafts (signed in only). See lib/assessmentDraft.ts for the rules. ----
+  const userId = session?.user?.id ?? null
+  const [draftChecked, setDraftChecked] = useState(false)
+  const [resumeDraft, setResumeDraft] = useState<Draft | null>(null)
+  const [startOverArmed, setStartOverArmed] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const [leaveOpen, setLeaveOpen] = useState(false)
+  const saverRef = useRef<{ uid: string; saver: DraftSaver } | null>(null)
+  const finalPending = useRef(false)
+  const leavingRef = useRef(false)
+  const phaseRef = useRef<Phase>(phase)
+  const stepIdxRef = useRef(stepIdx)
+  const valuesRef = useRef(values)
+  phaseRef.current = phase
+  stepIdxRef.current = stepIdx
+  valuesRef.current = values
+
+  const getSaver = useCallback((seed?: Draft | null): DraftSaver | null => {
+    if (!userId) return null
+    const cur = saverRef.current
+    if (cur && cur.uid === userId && !seed) return cur.saver
+    const saver = createDraftSaver({
+      store: supabaseDraftStore, userId, storage: draftStorage(), onStatus: setSaveStatus,
+      createdAt: seed?.createdAt ?? null, lastSavedAt: seed ? (seed.serverUpdatedAt ?? seed.savedAt) : null,
+    })
+    saverRef.current = { uid: userId, saver }
+    return saver
+  }, [userId])
+
+  // Load the member's draft once the session is known. The setup screen waits (up to 4 seconds) so a first
+  // save cannot overwrite a draft the member has not seen yet.
+  useEffect(() => {
+    if (authLoading) return
+    if (!userId) { setDraftChecked(true); return }
+    let live = true
+    ;(async () => {
+     try {
+      const [row, newest] = await withTimeout(
+        Promise.all([supabaseDraftStore.load(userId), supabaseDraftStore.newestAssessmentAt(userId)]),
+        4000, [null, null] as [Awaited<ReturnType<typeof supabaseDraftStore.load>>, number | null],
+      )
+      const now = Date.now()
+      let d = pickDraft(rowToDraft(row), readMirror(draftStorage(), userId, now), now)
+      if (d && isStaleVersusAssessment(d, newest)) { clearMirror(draftStorage(), userId); d = null }
+      if (!live) return
+      if (d && isResumable(d, now)) {
+        setResumeDraft(d)
+        setPhase(ph => (ph === 'setup' ? 'resume' : ph))
+        track('assessment_resume_shown', { completed_steps: d.completedSteps.length, total_steps: STEPS.length })
+      }
+     } finally {
+      if (live) setDraftChecked(true)
+     }
+    })()
+    return () => { live = false }
+  }, [authLoading, userId])
+
+  // Retry an unsaved snapshot when the network or the tab comes back.
+  useEffect(() => {
+    const retry = () => { void saverRef.current?.saver.retry() }
+    const vis = () => { if (document.visibilityState === 'visible') retry() }
+    window.addEventListener('online', retry)
+    document.addEventListener('visibilitychange', vis)
+    return () => { window.removeEventListener('online', retry); document.removeEventListener('visibilitychange', vis) }
+  }, [])
+
+  // Back button and leave guard, measure screens only. One sentinel history entry makes browser Back land here
+  // instead of leaving the page (lib/assessmentDraft.guardDecision decides what Back does).
+  useEffect(() => {
+    if (phase !== 'measure') return
+    leavingRef.current = false
+    const mark = { ...(window.history.state ?? {}), romrxAssessmentGuard: true }
+    window.history.pushState(mark, '')
+    const onPop = () => {
+      if (leavingRef.current) return
+      const d = guardDecision({ phase: phaseRef.current, stepIdx: stepIdxRef.current })
+      if (d === 'none') return
+      window.history.pushState(mark, '')
+      if (d === 'previous-step') { setStepIdx(i => Math.max(0, i - 1)); window.scrollTo({ top: 0 }) }
+      else { setLeaveOpen(true); track('assessment_leave_guard_shown', { step_index: stepIdxRef.current }) }
+    }
+    const onBefore = (e: BeforeUnloadEvent) => {
+      if (leavingRef.current) return
+      const unsavedWork = saverRef.current ? saverRef.current.saver.isDirty() : Object.values(valuesRef.current).some(v => v !== '')
+      if (!unsavedWork) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('popstate', onPop)
+    window.addEventListener('beforeunload', onBefore)
+    return () => { window.removeEventListener('popstate', onPop); window.removeEventListener('beforeunload', onBefore) }
+  }, [phase])
+
+  const handleLeave = () => {
+    leavingRef.current = true
+    setLeaveOpen(false)
+    track('assessment_leave_confirmed', { step_index: stepIdx })
+    window.history.go(-2)
+    // First entry in this tab: there is nowhere to go back to, so go home.
+    window.setTimeout(() => { if (leavingRef.current && window.location.pathname.includes('/onboarding/assessment')) navigate('/', { replace: true }) }, 250)
+  }
+
+  const handleResume = () => {
+    if (!resumeDraft) return
+    getSaver(resumeDraft)
+    setValues(valuesToStrings(resumeDraft.values))
+    setStepIdx(Math.min(resumeDraft.stepIdx, STEPS.length - 1))
+    track('assessment_resumed', { step_index: resumeDraft.stepIdx, completed_steps: resumeDraft.completedSteps.length })
+    setPhase('measure')
+    window.scrollTo({ top: 0 })
+  }
+
+  const handleStartOver = async () => {
+    if (!startOverArmed) { setStartOverArmed(true); return }
+    track('assessment_start_over')
+    const saver = getSaver()
+    if (saver) await saver.discard()
+    else if (userId) { await supabaseDraftStore.remove(userId); clearMirror(draftStorage(), userId) }
+    saverRef.current = null
+    setResumeDraft(null); setStartOverArmed(false); setValues({}); setStepIdx(0); setSaveStatus('idle')
+    setPhase('setup')
+  }
+
   const handleChange = (key: string, val: string) => setValues(p => ({ ...p, [key]: val }))
 
-  const handleNext = () => {
+  const handleNext = async (opts?: { skipped?: boolean }) => {
+    if (finalPending.current) return
     track('assessment_step_completed', { step_index: stepIdx, step_key: STEPS[stepIdx]?.id ?? String(stepIdx), total_steps: STEPS.length, authenticated: !!session })
-    if (stepIdx < STEPS.length - 1) {
+    const step = STEPS[stepIdx]
+    const skipKeys = opts?.skipped && step ? step.fields.map(f => f.key) : []
+    // The Skip button clears fields and calls us in the same tick, so `values` here is still the old closure:
+    // build what this step really holds.
+    const effective: Record<string, string> = { ...values }
+    for (const k of skipKeys) effective[k] = ''
+    const isLast = stepIdx >= STEPS.length - 1
+    const saver = getSaver()
+    let finalSave: Promise<boolean> | null = null
+    if (saver) {
+      const { snapshot, dropped } = buildSnapshot({ values: effective, stepIds: STEPS.map(s => s.id), finishedIdx: stepIdx, skipKeys })
+      if (dropped.length > 0) track('assessment_draft_value_dropped', { count: dropped.length })
+      const saving = saver.save(snapshot)
+      track('assessment_draft_saved', { step_index: stepIdx, step_key: step?.id ?? String(stepIdx) })
+      if (isLast) finalSave = saving
+    }
+    if (!isLast) {
       setStepIdx(s => s + 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else if (session) {
-      submit()
+      // Wait for the final save (up to 5 seconds) before submit, so it cannot land after the database has cleared the
+      // draft (Vera D3). A save that fails or times out never blocks Submit.
+      finalPending.current = true
+      setLoading(true); setError('')
+      if (finalSave) await withTimeout(finalSave, 5000, false)
+      saver?.close()
+      await submit(undefined, undefined, effective)
+      finalPending.current = false
     } else {
       track('assessment_lead_gate_shown', { total_steps: STEPS.length })
       setPhase('lead')
     }
   }
 
-  function computeAssessmentData() {
+  function computeAssessmentData(source: Record<string, string> = values) {
     const data: Record<string, number | null> = {}
-    for (const [k, v] of Object.entries(values)) {
+    for (const [k, v] of Object.entries(source)) {
       data[k] = v === '' ? null : parseFloat(v)
     }
     return data
   }
 
-  const submit = async (leadEmail?: string, leadName?: string) => {
+  const submit = async (leadEmail?: string, leadName?: string, valuesNow?: Record<string, string>) => {
     setLoading(true); setError('')
-    const assessment_data = computeAssessmentData()
+    const assessment_data = computeAssessmentData(valuesNow ?? values)
 
     // Logged-in Base HQ path: same edge as sport apps (insert + great-job email).
     // Payload is flat ROM fields; submit-assessment reads active_sport for brand.
     if (session) {
       if (!session.access_token) {
+        saverRef.current?.saver.reopen()
         setLoading(false)
         setError('Session expired - please sign in again.')
         return
@@ -82,14 +239,20 @@ export function Assessment() {
         const data = await res.json().catch(() => ({ ok: false, error: `HTTP ${res.status}` }))
         setLoading(false)
         if (!res.ok || !data.ok) {
+          saverRef.current?.saver.reopen()
           setError(data.error ?? `Submission failed (HTTP ${res.status}). Please try again.`)
           return
         }
+        // Done: the database clears the draft on insert. Drop this device's copy now and delete the row once any
+        // save still in flight has finished (it was closed above, so nothing new can start).
+        clearMirror(draftStorage(), userId)
+        void saverRef.current?.saver.finish()
         track('assessment_completed_ui', { authenticated: true, measured_fields: Object.values(assessment_data).filter(v => v !== null).length })
         // Outro replaces the 2 s 'done' spinner (Grant Oct 21 2026). The great-job email was sent by
         // submit-assessment before this response returned; Continue goes to results or the pack.
         setPhase('outro')
       } catch {
+        saverRef.current?.saver.reopen()
         setLoading(false)
         setError('Something went wrong. Please try again.')
       }
@@ -138,6 +301,8 @@ export function Assessment() {
 
   // Pack hand-off: hold a spinner until we know the member is signed in.
   if (returnKey && (authLoading || !session)) return <Spinner />
+  // Wait for the draft check before showing the first screen (4 second limit), so Resume can show instead of a blank form.
+  if (phase === 'setup' && (authLoading || (userId && !draftChecked))) return <Spinner />
 
   // -- Setup screen -----------------------------------------------------------
   
@@ -159,6 +324,12 @@ export function Assessment() {
       handleNext={handleNext}
       handleLeadSubmit={handleLeadSubmit}
       onOutroContinue={handleOutroContinue}
+      saveStatus={userId ? saveStatus : undefined}
+      resume={resumeDraft ? {
+        done: resumeDraft.completedSteps.length, total: STEPS.length, startOverArmed,
+        onResume: handleResume, onStartOver: () => { void handleStartOver() },
+      } : undefined}
+      leave={{ open: leaveOpen, kind: leaveSheetKind({ signedIn: !!userId, lastSaveFailed: saveStatus === 'failed' }), onStay: () => setLeaveOpen(false), onLeave: handleLeave }}
     />
   )
 }

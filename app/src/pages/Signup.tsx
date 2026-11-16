@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Loader2, UserPlus, Mail } from 'lucide-react'
@@ -10,6 +10,9 @@ import { DoNotSellLink } from '../components/ConsentBanner'
 import { AGE_BUCKETS } from '../lib/ageBuckets'
 import { signupMissing, signupMissingHint, type SignupMissingField } from '../lib/signupMissing'
 import { signupConsentMetadata } from '../lib/termsConsent'
+import { useAuth } from '../hooks/useAuth'
+import { resolvePostAuthDest } from '../lib/postAuthDest'
+import { shouldRedirectSignedIn } from '../lib/assessmentDraft'
 
 const GENDERS = [
   { v: 'male', l: 'Male' },
@@ -45,6 +48,17 @@ export function Signup() {
   const [error, setError] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [checkEmail, setCheckEmail] = useState(false)
+  // Already signed in (for example Back from the assessment lands here): send them on instead of showing the form.
+  // An explicit ?lead= or ?add= keeps its own destination. Never fires while the sign up itself is running.
+  const { session: authSession, loading: authLoading } = useAuth()
+  useEffect(() => {
+    if (!shouldRedirectSignedIn({ authLoading, hasSession: !!authSession, submitting: loading, checkEmail })) return
+    let live = true
+    resolvePostAuthDest(authSession?.user?.id, leadToken || addSport ? nextDest : null).then(dest => {
+      if (live) navigate(dest, { replace: true })
+    })
+    return () => { live = false }
+  }, [authLoading, authSession, loading, checkEmail])
   const [gender, setGender] = useState('')
   const [ageBucket, setAgeBucket] = useState('')
   const [highlight, setHighlight] = useState<SignupMissingField | null>(null)
