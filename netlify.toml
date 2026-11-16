@@ -196,6 +196,17 @@
   to = "/legal.html"
   status = 200
 
+# P1-24 Trust and Security page (draft, not published until Jim yes).
+[[redirects]]
+  from = "/trust"
+  to = "/trust.html"
+  status = 200
+
+[[redirects]]
+  from = "/security"
+  to = "/trust.html"
+  status = 200
+
 [[redirects]]
   from = "/bjj"
   to = "/bjj.html"
