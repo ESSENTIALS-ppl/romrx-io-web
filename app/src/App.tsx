@@ -24,6 +24,13 @@ import { Settings } from './pages/Settings'
 import { CompleteProfile } from './pages/CompleteProfile'
 
 import { signupSportRedirectTarget } from './lib/signupRedirect'
+import { dashboardIndexTarget } from './lib/checkoutLanding'
+
+// P1-03: Stripe success landing (/dashboard?checkout=base_success|unlock_success) opens the Today card; plain /dashboard stays My Body.
+function DashboardIndex() {
+  const { search } = useLocation()
+  return <Navigate to={dashboardIndexTarget(search)} replace />
+}
 
 function SignupSportRedirect() {
   const { sport } = useParams<{ sport: string }>()
@@ -54,7 +61,7 @@ export default function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Navigate to="/dashboard/my-body" replace />} />
+            <Route path="/dashboard" element={<DashboardIndex />} />
             <Route path="/dashboard/my-body" element={<MyBody />} />
             <Route path="/dashboard/mood" element={<QuickMood />} />
             <Route path="/dashboard/my-protocol" element={<MyProtocol />} />

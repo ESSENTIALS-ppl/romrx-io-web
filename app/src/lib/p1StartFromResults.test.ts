@@ -41,3 +41,22 @@ describe('P1-03 start session 1 from the results', () => {
     expect(read('components', 'Layout.tsx')).toMatch(/complete-profile\?next=\$\{encodeURIComponent\(location\.pathname\)\}/)
   })
 })
+
+import { dashboardIndexTarget } from './checkoutLanding'
+describe('P1-03 Stripe success landing (client side, no server change)', () => {
+  it('base_success and unlock_success open the Today card; anything else stays My Body', () => {
+    expect(dashboardIndexTarget('?checkout=base_success')).toBe('/dashboard/my-protocol')
+    expect(dashboardIndexTarget('?checkout=base_success&add=bjj')).toBe('/dashboard/my-protocol')
+    expect(dashboardIndexTarget('?checkout=unlock_success')).toBe('/dashboard/my-protocol')
+    expect(dashboardIndexTarget('?checkout=base_cancel')).toBe('/dashboard/my-body')
+    expect(dashboardIndexTarget('?checkout=unlock_cancel')).toBe('/dashboard/my-body')
+    expect(dashboardIndexTarget('')).toBe('/dashboard/my-body')
+  })
+  it('the /dashboard index route uses it and stays inside ProtectedRoute (active only)', () => {
+    const app = readFileSync(join(process.cwd(), 'src', 'App.tsx'), 'utf8')
+    expect(app).toContain('<Route path="/dashboard" element={<DashboardIndex />} />')
+    const prot = app.indexOf('<Route element={<ProtectedRoute />}>')
+    expect(prot).toBeGreaterThan(-1)
+    expect(app.indexOf('<DashboardIndex />')).toBeGreaterThan(prot)
+  })
+})
