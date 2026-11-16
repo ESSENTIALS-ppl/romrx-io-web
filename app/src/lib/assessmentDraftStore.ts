@@ -3,6 +3,7 @@
 // The client is loaded on first use, so pages that only import the saver (and their tests) never build it.
 const db = async () => (await import('./supabase')).supabase
 import type { DraftStore } from './assessmentDraft'
+import { skipQuick } from './assessmentReads'
 
 export const supabaseDraftStore: DraftStore = {
   async save(_userId, row) {
@@ -24,10 +25,11 @@ export const supabaseDraftStore: DraftStore = {
     return !error
   },
   async newestAssessmentAt(userId) {
-    const { data, error } = await (await db())
+    // P1-06b: a quick check is not a newer full assessment, so it never makes a full-assessment draft stale (needs migration 20261116031000)
+    const { data, error } = await skipQuick((await db())
       .from('assessments')
       .select('created_at')
-      .eq('user_id', userId)
+      .eq('user_id', userId))
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
