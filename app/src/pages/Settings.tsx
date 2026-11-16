@@ -36,6 +36,7 @@ import {
   CheckCircle2, XCircle,
 } from 'lucide-react'
 import { AGE_BUCKETS, isAllowedAgeBucket } from '../lib/ageBuckets'
+import { skipQuick } from '../lib/assessmentReads'
 
 const PORTAL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-portal-session`
 
@@ -171,9 +172,10 @@ export function Settings() {
   useEffect(() => {
     if (!user?.id) return
     setHistoryLoading(true)
-    supabase.from('assessments')
+    // P1-06b: skip quick-check rows (needs migration 20261116031000)
+    skipQuick(supabase.from('assessments')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.id))
       .order('assessed_at', { ascending: false })
       .then(async ({ data }) => {
         const rows = (data ?? []) as Assessment[]
