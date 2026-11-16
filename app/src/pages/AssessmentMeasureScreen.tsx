@@ -1,5 +1,6 @@
 import { directionForField } from '../lib/meterDirection'
 import { StepVideo } from '../components/StepVideo'
+import { SAVE_STATUS_FAILED, SAVE_STATUS_SAVED } from '../lib/assessmentDraftCopy'
 import { Loader2, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, AlertTriangle, SkipForward } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { STEPS } from './assessmentSteps'
@@ -25,7 +26,10 @@ export function AssessmentMeasureScreen(p: {
   setPhase: (ph: 'setup' | 'mood' | 'measure' | 'lead' | 'done' | 'lead-done') => void
   setStepIdx: Dispatch<SetStateAction<number>>
   handleChange: (key: string, val: string) => void
-  handleNext: () => void
+  /** `skipped` tells the page this step was skipped (its fields count as empty even before state updates). */
+  handleNext: (opts?: { skipped?: boolean }) => void
+  /** Progress saving status for signed-in members. Hidden when undefined or 'idle'. */
+  saveStatus?: 'idle' | 'saved' | 'failed'
   /** Profile gender, when signed in. Only male or female counts as sex known. */
   gender?: string | null
 }) {
@@ -222,6 +226,12 @@ export function AssessmentMeasureScreen(p: {
 
             {error && <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
+            {p.saveStatus && p.saveStatus !== 'idle' ? (
+              <p className={p.saveStatus === 'failed' ? 'text-center text-xs text-amber-700' : 'text-center text-xs text-slate-500'} data-save-status={p.saveStatus} role="status">
+                {p.saveStatus === 'failed' ? SAVE_STATUS_FAILED : SAVE_STATUS_SAVED}
+              </p>
+            ) : null}
+
             {/* Navigation */}
             <div className="flex items-center justify-between pt-2">
               <button
@@ -235,7 +245,7 @@ export function AssessmentMeasureScreen(p: {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => { for (const f of step.fields) p.handleChange(f.key, ''); p.handleNext() }}
+                  onClick={() => { for (const f of step.fields) p.handleChange(f.key, ''); p.handleNext({ skipped: true }) }}
                   className="flex items-center gap-1 text-xs text-slate-500 hover:text-cobalt-ink px-3 py-2 rounded-card hover:bg-surface transition-colors"
                 >
                   <SkipForward size={13} /> Skip
@@ -243,7 +253,7 @@ export function AssessmentMeasureScreen(p: {
 
                 <button
                   type="button"
-                  onClick={p.handleNext}
+                  onClick={() => p.handleNext()}
                   disabled={loading}
                   className="btn-primary flex items-center gap-2"
                 >
