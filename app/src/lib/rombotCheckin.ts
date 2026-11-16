@@ -3,8 +3,8 @@
 // row (role "assistant", content = Stacy line 1 + "\n" + line 3) on the user's local day 3. The client only READS the
 // user's own rows (RLS user_id = auth.uid()); it never writes either table. The day 3 timing is server side.
 // context_snapshot = { kind: "checkin_d3", branch: "A"|"B"|"C", assessment_id, button: { label, path } }.
-// Words: STACY-P1-17-DAY3-WORDS-20261116-0926.md (sha256 6fd272b6...). The only words this file can put on screen are
-// Stacy's two button labels (whitelisted below) and the server note itself. No new words.
+// Words: STACY-P1-17-DAY3-WORDS-20261116-0926.md (sha256 6fd272b6...) button labels (whitelisted below) and
+// STACY-P1-17-CLIENT-WORDS-20261116-0958.md (sha256 9d8fe291...) items 1 and 2. The server note shows only inside ROMBot.
 // Read state: there is no read column on ai_conversations, so "read" = opened on this device (localStorage) OR the user
 // has replied in the check-in chat (works across devices).
 import { supabase } from './supabase'
@@ -22,6 +22,12 @@ export const CHECKIN_BUTTON_LABELS: Readonly<Record<CheckinBranch, string>> = {
   B: "Start today's session",
   C: 'See my plan',
 }
+
+/** Stacy client words (STACY-P1-17-CLIENT-WORDS-20261116-0958.md, 9d8fe291, items 1 and 2), byte for byte.
+ *  Item 1: the Today card shows this line INSTEAD of the note's first line, so the Today screen never shows a name, a
+ *  session count or a focus area. Item 2: visually hidden label after the ROMBot tab name while the note is unread. */
+export const CHECKIN_TODAY_LINE = 'ROMBot left you a note.'
+export const CHECKIN_TAB_SR_LABEL = 'New note from ROMBot'
 
 /** Existing app string (Settings, ResultsPreview, Unlock). Used when the check-in chat cannot be loaded. */
 export const CHECKIN_LOAD_ERROR = 'Something went wrong. Please try again.'
