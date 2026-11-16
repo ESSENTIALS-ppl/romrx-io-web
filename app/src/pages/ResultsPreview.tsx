@@ -26,6 +26,8 @@ import { withStripeTestFlag } from '../lib/stripeTestMode'
 import { checkoutErrorMessage } from '../lib/checkoutErrors'
 import { CARD_LINE_SHORT, CARD_LINE_SHORT_NODATE } from '../lib/cardLine'
 
+// P1-03: after the results (unlock, or an active user finishing an assessment) the next screen is today's session.
+export const TODAY_PATH = '/dashboard/my-protocol'
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
 const BETA_ACTIVATE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-beta-base`
 type PendingSport = 'bjj' | 'bodybuilding'
@@ -125,7 +127,7 @@ export function ResultsPreview() {
       // Only 'active' unlocks the dashboard. Set by Stripe webhook OR
       // activate-beta-base during free beta. Never set client-side (incident 2026-06-10).
       if (userRow?.base_status === 'active') {
-        navigate('/dashboard/my-body', { replace: true })
+        navigate(TODAY_PATH, { replace: true }) // P1-03: land on the Today card, not My Body
         return
       }
 
@@ -176,7 +178,7 @@ export function ResultsPreview() {
         })
         const data = await res.json().catch(() => ({} as Record<string, unknown>))
         if (res.ok && (data as { ok?: boolean; base_status?: string }).ok) {
-          navigate('/dashboard/my-body', { replace: true })
+          navigate(TODAY_PATH, { replace: true }) // P1-03: start session 1 from the results
           return
         }
         // free_unlock_disabled / checkout_required → fall through to Stripe
