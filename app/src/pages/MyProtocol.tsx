@@ -10,6 +10,8 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { RADAR_LEFT_COLOR, RADAR_RIGHT_COLOR, RADAR_RIGHT_DASH } from '../components/BaseRadar'
 import { cn } from '../lib/cn'
+import { WeeklyGoal } from '../components/WeeklyGoal'
+import { WEEKLY_GOAL_COPY } from '../lib/weeklyGoal'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -541,11 +543,15 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId }: TodayCardProps) {
               {todayPriority ? todayPriority.def.label : 'Recovery Day'}
             </h2>
           </div>
+          {/* P1-09: the weekly goal replaces "Session N/42" once it has words; until then the counter stays */}
+          {!WEEKLY_GOAL_COPY && (
           <div className="text-right shrink-0">
             <p className="text-[10px] text-slate-500 uppercase tracking-wide">Session</p>
             <p className="text-lg font-bold text-cobalt leading-tight">{sessionsThisCycle}<span className="text-sm font-normal text-slate-400">/{CYCLE_TARGET}</span></p>
           </div>
+          )}
         </div>
+        <WeeklyGoal userId={userId} refreshKey={dbSessionCount} />
 
         <div className="mt-3 mb-2">
           <div className="w-full bg-cobalt-light rounded-full h-2">
