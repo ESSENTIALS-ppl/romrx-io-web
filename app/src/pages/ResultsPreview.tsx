@@ -25,6 +25,7 @@ import { gateAssessment } from '../lib/hipFlexGate'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 import { checkoutErrorMessage } from '../lib/checkoutErrors'
 import { CARD_LINE_SHORT, CARD_LINE_SHORT_NODATE } from '../lib/cardLine'
+import { WHAT_CHANGED_COPY, WHAT_CHANGED_PATH, takeJustAssessed } from '../lib/whatChanged'
 
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
 const BETA_ACTIVATE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-beta-base`
@@ -79,6 +80,7 @@ function getTopAsymmetries(assessment: Record<string, number | null>): Asymmetry
 export function ResultsPreview() {
   const { user, session, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const [justAssessed] = useState(takeJustAssessed)
   const [searchParams] = useSearchParams()
   const [rawAssessment, setAssessment] = useState<Record<string, number | null> | null>(null)
   const cutover = useHipFlexCutover() // FG-36
@@ -125,7 +127,8 @@ export function ResultsPreview() {
       // Only 'active' unlocks the dashboard. Set by Stripe webhook OR
       // activate-beta-base during free beta. Never set client-side (incident 2026-06-10).
       if (userRow?.base_status === 'active') {
-        navigate('/dashboard/my-body', { replace: true })
+        // P1-11: straight after a retest, an active user sees what changed (once it has words); otherwise My Body as before
+        navigate(WHAT_CHANGED_COPY && justAssessed ? WHAT_CHANGED_PATH : '/dashboard/my-body', { replace: true })
         return
       }
 
@@ -149,7 +152,7 @@ export function ResultsPreview() {
       setAssessment(data)
       setLoading(false)
     })()
-  }, [user, authLoading, navigate])
+  }, [user, authLoading, navigate, justAssessed])
 
   const handleUnlock = async (includePendingSport: boolean) => {
     track('results_unlock_clicked', {
