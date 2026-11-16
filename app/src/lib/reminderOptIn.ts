@@ -71,5 +71,5 @@ export function toWholeHour(t: string): string {
 export type PrefsUpsertFn = (row: { user_id: string; reminder_time: string; timezone: string; updated_at: string }) => PromiseLike<{ error: { message?: string } | null }>
 
 export async function saveReminderTime(upsert: PrefsUpsertFn, userId: string, time: string, timezone: string) {
-  return upsert({ user_id: userId, reminder_time: toWholeHour(time), timezone: timezone || 'UTC', updated_at: new Date().toISOString() })
+  return upsert({ user_id: userId, reminder_time: toWholeHour(time), timezone: timezone || 'America/New_York', updated_at: new Date().toISOString() })
 }

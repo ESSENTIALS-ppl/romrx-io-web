@@ -96,7 +96,7 @@ export function Settings() {
   const { profile, loading } = useProfile(user?.id)
   const ext = profile as unknown as ExtProfile | null
   const browserTimezone = useMemo(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
     [],
   )
 
