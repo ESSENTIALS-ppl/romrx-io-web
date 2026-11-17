@@ -138,7 +138,16 @@ describe('P1-14 pushSubscribe', () => {
     act(() => root.unmount()); host.remove()
   })
 
-  it('every client push string is a NEEDS STACY placeholder (no invented words)', () => {
-    for (const v of Object.values(PUSH_COPY)) expect(v.startsWith('NEEDS STACY')).toBe(true)
+  it('client push words are Stacy 666e6603, verbatim (deviceLimit without the email clause, long unsupported form)', () => {
+    expect(PUSH_COPY).toEqual({
+      toggleTitle: "Reminder notifications",
+      toggleHelp: "Get your daily reminder at your reminder time, and a note when your retest is due. Your browser will ask you to allow notifications. Turning this off stops them on all your devices.",
+      denied: "Notifications are blocked for ROMRx in your browser. To get reminders, allow notifications for romrx.io in your browser settings, then try again.",
+      unsupported: "This browser can't show notifications. Try another browser, or on iPhone or iPad, add ROMRx to your Home Screen from Safari and turn this on there.",
+      deviceLimit: "Reminders are already on for 10 devices, the most we allow. Turn them off on a device you no longer use.",
+      genericError: "Notifications could not be turned on. Please try again.",
+    })
+    expect(PUSH_COPY.deviceLimit).not.toContain('@')
+    expect(PUSH_COPY.deviceLimit.endsWith('Turn them off on a device you no longer use.')).toBe(true)
   })
 })

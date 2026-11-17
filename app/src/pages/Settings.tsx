@@ -86,7 +86,7 @@ type ExtProfile = {
 // unless the database holds toggle AND server-set opt-in marker (reminderStateFromRow); nothing here opts anyone in.
 const SHOW_REMINDER_TOGGLES = true
 const SHOW_NOTIFICATIONS = true
-// FG-12 / P1-14: push toggle stays hidden until Jim's OK, a VAPID key (VITE_VAPID_PUBLIC_KEY) and Stacy's words (PUSH_COPY is all NEEDS STACY).
+// FG-12 / P1-14: push toggle stays hidden until Jim's OK, a VAPID key (VITE_VAPID_PUBLIC_KEY) and Stacy's words (PUSH_COPY, Stacy 666e6603).
 // Off: no toggle, no permission prompt, no pushManager.subscribe, no save-push-subscription call.
 const SHOW_PUSH = false
 // FG-13: "Export my data". Jim's "go on all 31" (ledger L1229); Stacy cleared the words (007f8638, 2529bbfa).
