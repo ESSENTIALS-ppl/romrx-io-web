@@ -75,3 +75,18 @@ describe('P1-23 unhide: export on, server export off (503) is handled with the e
     expect(r3).toEqual({ ok: false, reason: 'failed' })
   })
 })
+
+// P1-23 r5: Stacy STACY-P1-23-UNHIDE-P1-26-FOLLOWUP-20261116-2022.md (sha256 2529bbfa), inserted by script.
+describe('P1-23 r5 words (Stacy 2529bbfa)', () => {
+  it('export help line names feedback', () => {
+    expect(YD.exportHelp).toBe("Get a copy of your ROMRx data as a file. It includes your profile, assessments and results, plan, sessions, ROMBot chats, saved mood check-ins, feedback you've sent and settings.")
+  })
+  it('delete dialog "That includes" line names feedback', () => {
+    expect(YD.dialogBody[0]).toBe("We'll delete your account and the personal information tied to you. That includes your profile, assessments and results, plan and session history, ROMBot chats, mood check-ins, feedback you've sent and settings.")
+    expect(YD.dialogBody[0].endsWith("That includes your profile, assessments and results, plan and session history, ROMBot chats, mood check-ins, feedback you've sent and settings.")).toBe(true)
+  })
+  it('old lines are gone', () => {
+    expect(YD.exportHelp).not.toBe("Get a copy of your ROMRx data as a file. It includes your profile, assessments and results, plan, sessions, ROMBot chats, saved mood check-ins and settings.")
+    expect(YD.dialogBody[0]).not.toContain("That includes your profile, assessments and results, plan and session history, ROMBot chats, mood check-ins and settings.")
+  })
+})

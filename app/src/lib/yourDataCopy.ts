@@ -5,7 +5,7 @@
 export const YOUR_DATA_COPY = {
   title: 'Your data',
   intro: 'Download a copy of your ROMRx data, or ask us to delete your account.',
-  exportHelp: 'Get a copy of your ROMRx data as a file. It includes your profile, assessments and results, plan, sessions, ROMBot chats, saved mood check-ins and settings.',
+  exportHelp: "Get a copy of your ROMRx data as a file. It includes your profile, assessments and results, plan, sessions, ROMBot chats, saved mood check-ins, feedback you've sent and settings.",
   exportBusy: 'Preparing your file...',
   exportSuccess: 'Your file is downloading. Keep it somewhere safe. It has your personal information in it.',
   deleteButton: 'Delete my account',
@@ -13,7 +13,7 @@ export const YOUR_DATA_COPY = {
   dialogTitle: 'Delete your account?',
   // Dialog body, in Stacy's order. The plan line (index 3) is the cancel-first line: Avery's function does not cancel Stripe.
   dialogBody: [
-    "We'll delete your account and the personal information tied to you. That includes your profile, assessments and results, plan and session history, ROMBot chats, mood check-ins and settings.",
+    "We'll delete your account and the personal information tied to you. That includes your profile, assessments and results, plan and session history, ROMBot chats, mood check-ins, feedback you've sent and settings.",
     'We finish within 30 days and email you to confirm.',
     'What we may keep: data that is already anonymized or combined so it no longer identifies you, such as group statistics. Emails we already sent stay in your inbox.',
     "Your plan: to make sure you aren't charged again, cancel your plan in Subscription before you send this request. All sales are final.",
