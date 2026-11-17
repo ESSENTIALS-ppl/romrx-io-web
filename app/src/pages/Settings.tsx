@@ -91,6 +91,8 @@ const SHOW_PUSH = false
 const SHOW_EXPORT_MY_DATA = true // P1-23 unhide (Grant, Nov 16 r3). SHOW_DELETION_STATUS stays false.
 // FG-21: show the deletion request status (new copy, NEEDS JIM WORDING). Off: nothing is read or shown.
 const SHOW_DELETION_STATUS = false
+// P1-12: "Add to my calendar" (.ics download) stays hidden until calendar-ics is deployed and the release is approved.
+const SHOW_CALENDAR_ICS = false
 
 export function Settings() {
   const { user, session, signOut } = useAuth()
@@ -288,6 +290,7 @@ export function Settings() {
 
   // ── P1-12: web-only .ics download (no native calendar). Ships with calendar-ics on 47aad435. ──
   const handleAddToCalendar = async () => {
+    if (!SHOW_CALENDAR_ICS) return // P1-12 flag off: no request to calendar-ics, no error line
     if (!session?.access_token) { setCalendarMsg(CAL.error); return }
     setCalendarBusy(true)
     setCalendarMsg(null)
@@ -690,20 +693,22 @@ export function Settings() {
                   </div>
                 )}
 
-                <div className="space-y-1 border-t border-slate-200 pt-4">
-                  <button
-                    type="button"
-                    onClick={handleAddToCalendar}
-                    disabled={calendarBusy || !session}
-                    className="w-full rounded-xl border border-cobalt/20 bg-white py-2.5 px-3 text-sm font-semibold text-cobalt-ink flex items-center justify-center gap-2 disabled:opacity-60"
-                    data-testid="add-to-calendar"
-                  >
-                    {calendarBusy ? <Loader2 size={14} className="animate-spin" /> : <Calendar size={14} />}
-                    {CAL.button}
-                  </button>
-                  <p className="text-xs text-slate-500 pl-1">{CAL.help}</p>
-                  {calendarMsg && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{calendarMsg}</p>}
-                </div>
+                {SHOW_CALENDAR_ICS && (
+                  <div className="space-y-1 border-t border-slate-200 pt-4">
+                    <button
+                      type="button"
+                      onClick={handleAddToCalendar}
+                      disabled={calendarBusy || !session}
+                      className="w-full rounded-xl border border-cobalt/20 bg-white py-2.5 px-3 text-sm font-semibold text-cobalt-ink flex items-center justify-center gap-2 disabled:opacity-60"
+                      data-testid="add-to-calendar"
+                    >
+                      {calendarBusy ? <Loader2 size={14} className="animate-spin" /> : <Calendar size={14} />}
+                      {CAL.button}
+                    </button>
+                    <p className="text-xs text-slate-500 pl-1">{CAL.help}</p>
+                    {calendarMsg && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{calendarMsg}</p>}
+                  </div>
+                )}
 
                 {SHOW_PUSH && (
                   <ToggleRow
