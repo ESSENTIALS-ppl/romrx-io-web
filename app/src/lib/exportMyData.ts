@@ -1,6 +1,6 @@
-// FG-13 "Export my data" helper (Avery, staged). Hidden: the Settings button is behind SHOW_EXPORT_MY_DATA = false,
-// and the edge function `export-my-data` answers 503 until its EXPORT_MY_DATA flag is exactly "on".
-// NEEDS JIM WORDING (Stacy clearance needed): button label and the two messages below. Nothing here is live copy.
+// FG-13 "Export my data" helper (Avery). Shown in Settings behind SHOW_EXPORT_MY_DATA (true since P1-23 r3);
+// the edge function `export-my-data` answers 503 until its EXPORT_MY_DATA flag is exactly "on" (then the error copy shows).
+// Wording: Jim's "go on all 31" (ledger L1229); Stacy cleared the label and messages (007f8638, 2529bbfa).
 export const EXPORT_BUTTON_LABEL = 'Export my data'
 export const EXPORT_ERROR_COPY = 'We could not export your data. Please try again, or email privacy@romrx.io.'
 
