@@ -26,6 +26,8 @@ import { withStripeTestFlag } from '../lib/stripeTestMode'
 import { checkoutErrorMessage } from '../lib/checkoutErrors'
 import { CARD_LINE_SHORT, CARD_LINE_SHORT_NODATE } from '../lib/cardLine'
 import { ReminderOptIn } from '../components/ReminderOptIn'
+import { WHAT_CHANGED_COPY, WHAT_CHANGED_PATH, takeJustAssessed } from '../lib/whatChanged'
+import { skipQuick } from '../lib/assessmentReads'
 
 // P1-03: after the results (unlock, or an active user finishing an assessment) the next screen is today's session.
 export const TODAY_PATH = '/dashboard/my-protocol'
@@ -82,6 +84,7 @@ function getTopAsymmetries(assessment: Record<string, number | null>): Asymmetry
 export function ResultsPreview() {
   const { user, session, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const [justAssessed] = useState(takeJustAssessed)
   const [searchParams] = useSearchParams()
   const [rawAssessment, setAssessment] = useState<Record<string, number | null> | null>(null)
   const cutover = useHipFlexCutover() // FG-36
@@ -128,7 +131,8 @@ export function ResultsPreview() {
       // Only 'active' unlocks the dashboard. Set by Stripe webhook OR
       // activate-beta-base during free beta. Never set client-side (incident 2026-06-10).
       if (userRow?.base_status === 'active') {
-        navigate(TODAY_PATH, { replace: true }) // P1-03: land on the Today card, not My Body
+        // P1-11 + P1-03: straight after a retest an active user sees what changed; otherwise the Today card (P1-03)
+        navigate(WHAT_CHANGED_COPY && justAssessed ? WHAT_CHANGED_PATH : TODAY_PATH, { replace: true })
         return
       }
 
@@ -137,10 +141,11 @@ export function ResultsPreview() {
       let data: Record<string, number | null> | null = null
       for (let attempt = 0; attempt < 4 && !data; attempt++) {
         if (attempt > 0) await new Promise(r => setTimeout(r, 750))
-        const res = await supabase
+        // P1-06b: skip quick-check rows (needs migration 20261116031000)
+        const res = await skipQuick(supabase
           .from('assessments')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id))
           .order('assessed_at', { ascending: false })
           .limit(1)
           .maybeSingle()
@@ -152,7 +157,7 @@ export function ResultsPreview() {
       setAssessment(data)
       setLoading(false)
     })()
-  }, [user, authLoading, navigate])
+  }, [user, authLoading, navigate, justAssessed])
 
   const handleUnlock = async (includePendingSport: boolean) => {
     track('results_unlock_clicked', {

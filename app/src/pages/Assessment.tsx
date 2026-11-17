@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { JUST_ASSESSED_KEY } from '../lib/whatChanged'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -289,6 +290,8 @@ export function Assessment() {
 
   const handleOutroContinue = () => {
     const packUrl = packReturnUrl(returnKey)
+    // P1-11: tell the results page this is straight after an assessment, so an active user can see what changed
+    if (!packUrl) { try { sessionStorage.setItem(JUST_ASSESSED_KEY, '1') } catch { /* ignore */ } }
     if (packUrl) window.location.assign(packUrl)
     else navigate('/onboarding/results', { replace: true })
   }
