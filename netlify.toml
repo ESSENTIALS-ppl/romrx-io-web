@@ -31,6 +31,14 @@
   to = "/app/dist/favicon.ico"
   status = 200
 
+# P1-26 service worker: /app/sw.js must serve the built worker (app/dist/sw.js), not the SPA shell. Must stay BEFORE
+# the /app/* SPA rule below. A 200 rewrite keeps the URL /app/sw.js, so the worker can control scope /app/.
+[[redirects]]
+  from = "/app/sw.js"
+  to = "/app/dist/sw.js"
+  status = 200
+  force = true
+
 # SPA entry: force=true overrides any static app/index.html left in publish.
 # Without force, Netlify serves repo app/index.html (Vite /src/main.tsx) for
 # /app and /app/ ahead of redirects — Field RISK 2026-09-08.
@@ -79,6 +87,13 @@
     Cache-Control = "public, max-age=0, must-revalidate"
 
 # Vite bundles are content-hashed (index-<hash>.js), so immutable is safe here.
+[[headers]]
+  for = "/app/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, max-age=0, must-revalidate"
+    Content-Type = "application/javascript; charset=utf-8"
+    Service-Worker-Allowed = "/app/"
+
 [[headers]]
   for = "/app/assets/*"
   [headers.values]
