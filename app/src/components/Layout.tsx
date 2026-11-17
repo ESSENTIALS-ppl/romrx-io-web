@@ -7,6 +7,8 @@ import { DoNotSellLink } from './ConsentBanner'
 import { ROMETER_COPY } from '../lib/rometerCopy'
 import { Dumbbell, ClipboardList, Apple, Trophy, MessageSquare, Gauge, Settings, LogOut } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useRombotCheckin } from '../hooks/useRombotCheckin'
+import { RombotTabUnread } from './RombotCheckin'
 
 interface NavItem {
   to: string
@@ -27,6 +29,7 @@ const NAV: NavItem[] = [
 export function Layout() {
   const { user, signOut } = useAuth()
   const { profile, loading: profileLoading } = useProfile(user?.id)
+  const { unread: checkinUnread } = useRombotCheckin(user?.id) // P1-17: dot on the ROMBot tab while the day 3 note is unread
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -68,6 +71,7 @@ export function Layout() {
               >
                 <Icon size={14} />
                 {label}
+                {to === '/dashboard/rombot' && <RombotTabUnread unread={checkinUnread} />}
               </NavLink>
             ))}
           </nav>
