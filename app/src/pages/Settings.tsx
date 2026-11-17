@@ -86,9 +86,11 @@ type ExtProfile = {
 // unless the database holds toggle AND server-set opt-in marker (reminderStateFromRow); nothing here opts anyone in.
 const SHOW_REMINDER_TOGGLES = true
 const SHOW_NOTIFICATIONS = true
-// FG-12 / P1-14: push toggle stays hidden until Jim's OK, a VAPID key (VITE_VAPID_PUBLIC_KEY) and Stacy's words (PUSH_COPY, Stacy 666e6603).
-// Off: no toggle, no permission prompt, no pushManager.subscribe, no save-push-subscription call.
-const SHOW_PUSH = false
+// FG-12 / P1-14: push toggle shown (r10, Grant Nov 17). Words: PUSH_COPY (Stacy 666e6603; deviceLimit Stacy 3f9a069f).
+// Opt-in only: the toggle starts OFF, and nothing prompts or subscribes on load. Notification.requestPermission and
+// pushManager.subscribe run only inside enablePush, which is called only from handlePushToggle(true) after a tap.
+// Needs VITE_VAPID_PUBLIC_KEY at build time; without it a tap fails quietly (no_key). Settings.pushFlag.test.tsx fails if this is false.
+const SHOW_PUSH = true
 // FG-13: "Export my data". Jim's "go on all 31" (ledger L1229); Stacy cleared the words (007f8638, 2529bbfa).
 const SHOW_EXPORT_MY_DATA = true // P1-23 unhide (Grant, Nov 16 r3). SHOW_DELETION_STATUS stays false.
 // FG-21: show the deletion request status (new copy, NEEDS JIM WORDING). Off: nothing is read or shown.
