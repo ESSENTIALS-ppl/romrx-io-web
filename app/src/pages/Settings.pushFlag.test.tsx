@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-// P1-14 r7: SHOW_PUSH = false (compiled constant in Settings.tsx).
-// Renders the real Settings page (data hooks mocked) with browser push APIs stubbed, and proves: no push toggle or push words
-// text, no Notification.requestPermission, no pushManager.subscribe, no save-push-subscription request. Control: the export button renders.
+// P1-14 r10: SHOW_PUSH = true (compiled constant in Settings.tsx). Push is opt-in only.
+// Renders the real Settings page (data hooks mocked) with browser push APIs stubbed, and proves: the toggle renders OFF with
+// Stacy's title and help; mounting never calls Notification.requestPermission, getRegistration, pushManager.subscribe or
+// save-push-subscription; the prompt fires only after a tap. The source test is the production-build guard (fails if false).
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -47,56 +48,134 @@ vi.mock('../components/CrisisLine', () => ({ CrisisHelp: () => null }))
 import { Settings } from './Settings'
 import { PUSH_COPY } from '../lib/pushCopy'
 
+const TEST_URL = 'https://test-project.supabase.co'
+const TEST_VAPID = 'test-vapid-key' // test-only value, not a real key
 let host: HTMLDivElement; let root: Root
-const fetchSpy = vi.fn(async (..._a: unknown[]) => new Response('{}', { status: 200 }))
-const requestPermission = vi.fn(async () => 'granted')
-const subscribe = vi.fn(async () => ({}))
-const getRegistration = vi.fn(async () => ({ pushManager: { subscribe, getSubscription: async () => null } }))
+let saveResponse: () => Response = () => new Response('{"ok":true}', { status: 200 })
+const fetchSpy = vi.fn(async (..._a: unknown[]) => saveResponse())
+let permissionAnswer = 'granted'
+const order: string[] = []
+const requestPermission = vi.fn(async () => { order.push('requestPermission'); return permissionAnswer })
+const unsubscribe = vi.fn(async () => true)
+const sub = { endpoint: 'https://push.example/ep1', toJSON: () => ({ endpoint: 'https://push.example/ep1', keys: { p256dh: 'p', auth: 'a' } }), unsubscribe }
+const subscribe = vi.fn(async (_o: unknown) => { order.push('subscribe'); return sub })
+const getRegistration = vi.fn(async (..._a: unknown[]) => ({ pushManager: { subscribe, getSubscription: async () => null } }))
 const register = vi.fn(async () => ({}))
 
 beforeEach(() => {
-  calls.length = 0; fetchSpy.mockClear(); requestPermission.mockClear(); subscribe.mockClear(); getRegistration.mockClear(); register.mockClear()
+  calls.length = 0; order.length = 0; permissionAnswer = 'granted'
+  saveResponse = () => new Response('{"ok":true}', { status: 200 })
+  for (const m of [fetchSpy, requestPermission, subscribe, getRegistration, register, unsubscribe]) m.mockClear()
   vi.stubGlobal('fetch', fetchSpy)
+  vi.stubEnv('VITE_SUPABASE_URL', TEST_URL)
+  vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-anon-key')
+  vi.stubEnv('VITE_VAPID_PUBLIC_KEY', TEST_VAPID)
   vi.stubGlobal('Notification', Object.assign(function Notification() {}, { requestPermission, permission: 'default' }))
   vi.stubGlobal('PushManager', function PushManager() {})
   Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { getRegistration, register, ready: new Promise(() => {}), getRegistrations: async () => [] } })
   host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host)
 })
 afterEach(() => {
-  act(() => root.unmount()); host.remove(); vi.unstubAllGlobals()
+  act(() => root.unmount()); host.remove(); vi.unstubAllGlobals(); vi.unstubAllEnvs()
   delete (navigator as unknown as { serviceWorker?: unknown }).serviceWorker
 })
 
+async function settle() { for (let i = 0; i < 5; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)) }) }
 async function renderSettings() {
   await act(async () => { root.render(<MemoryRouter><Settings /></MemoryRouter>) })
-  for (let i = 0; i < 5; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)) })
+  await settle()
 }
+const toggle = () => host.querySelector(`[aria-label="${PUSH_COPY.toggleTitle}"]`) as HTMLButtonElement | null
+async function tap() { await act(async () => { toggle()!.click() }); await settle() }
+const saveCalls = () => fetchSpy.mock.calls.filter(c => String(c[0]).includes('save-push-subscription'))
 
-describe('P1-14 SHOW_PUSH = false', () => {
-  it('flag off: the Settings render has no push toggle and none of the push words', async () => {
+describe('P1-14 SHOW_PUSH = true (opt-in only)', () => {
+  it('flag on: the toggle renders OFF with Stacy title and help, and no error line', async () => {
     await renderSettings()
     expect(host.querySelector('[data-testid="your-data-export"]')).not.toBeNull() // control: the page rendered
-    expect(host.querySelector(`[aria-label="${PUSH_COPY.toggleTitle}"]`)).toBeNull()
-    for (const v of Object.values(PUSH_COPY)) expect(host.textContent).not.toContain(v)
+    expect(toggle()).not.toBeNull()
+    expect(toggle()!.getAttribute('role')).toBe('switch')
+    expect(toggle()!.getAttribute('aria-checked')).toBe('false')
+    expect(host.textContent).toContain('Reminder notifications')
+    expect(host.textContent).toContain(PUSH_COPY.toggleHelp)
+    for (const k of ['denied', 'unsupported', 'deviceLimit', 'genericError'] as const) expect(host.textContent).not.toContain(PUSH_COPY[k])
   })
 
-  it('flag off: rendering Settings never prompts, subscribes or calls save-push-subscription', async () => {
+  it('flag on: mounting Settings never prompts, never touches the worker, never subscribes, never calls save-push-subscription', async () => {
     await renderSettings()
     expect(requestPermission).not.toHaveBeenCalled()
-    expect(subscribe).not.toHaveBeenCalled()
     expect(getRegistration).not.toHaveBeenCalled()
-    expect(fetchSpy.mock.calls.map(c => String(c[0])).some(u => u.includes('save-push-subscription'))).toBe(false)
+    expect(subscribe).not.toHaveBeenCalled()
+    expect(saveCalls()).toHaveLength(0)
     expect(calls.some(c => c.includes('save-push-subscription'))).toBe(false)
   })
 
-  it('flag off in source: compiled false, toggle and handler both gated', () => {
+  it('flag on: the permission prompt fires only after a tap, then subscribe, then save-push-subscription with the user token', async () => {
+    await renderSettings()
+    expect(requestPermission).not.toHaveBeenCalled()
+    await tap()
+    expect(requestPermission).toHaveBeenCalledTimes(1)
+    expect(order).toEqual(['requestPermission', 'subscribe'])
+    expect(subscribe.mock.calls[0][0]).toMatchObject({ userVisibleOnly: true })
+    expect(saveCalls()).toHaveLength(1)
+    const [url, init] = saveCalls()[0] as [string, RequestInit]
+    expect(url).toBe(`${TEST_URL}/functions/v1/save-push-subscription`)
+    expect(init.method).toBe('POST')
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok')
+    expect(JSON.parse(String(init.body)).subscription.endpoint).toBe('https://push.example/ep1')
+    expect(toggle()!.getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('flag on: permission denied shows the denied line, stays OFF, and never subscribes', async () => {
+    permissionAnswer = 'denied'
+    await renderSettings()
+    await tap()
+    expect(requestPermission).toHaveBeenCalledTimes(1)
+    expect(subscribe).not.toHaveBeenCalled()
+    expect(saveCalls()).toHaveLength(0)
+    expect(host.textContent).toContain(PUSH_COPY.denied)
+    expect(toggle()!.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('flag on: 409 device_limit_reached shows the deviceLimit line (no email), stays OFF, and drops the browser subscription', async () => {
+    saveResponse = () => new Response('{"error":"device_limit_reached"}', { status: 409 })
+    await renderSettings()
+    await tap()
+    expect(host.textContent).toContain('Reminders are already on for 10 devices, the most we allow. Turn them off on a device you no longer use.')
+    expect(PUSH_COPY.deviceLimit).not.toContain('@')
+    expect(unsubscribe).toHaveBeenCalledTimes(1)
+    expect(toggle()!.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('flag on: with no VAPID key a tap fails quietly (no_key): no prompt, no subscribe, no message, stays OFF', async () => {
+    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', '')
+    await renderSettings()
+    await tap()
+    expect(requestPermission).not.toHaveBeenCalled()
+    expect(subscribe).not.toHaveBeenCalled()
+    expect(saveCalls()).toHaveLength(0)
+    for (const k of ['denied', 'unsupported', 'deviceLimit', 'genericError'] as const) expect(host.textContent).not.toContain(PUSH_COPY[k])
+    expect(toggle()!.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('production-build guard: FAILS if SHOW_PUSH is false; prompt only reachable from the tap handler', () => {
     const src = readFileSync(join(__dirname, 'Settings.tsx'), 'utf8')
-    expect(src).toMatch(/^const SHOW_PUSH = false$/m)
+    expect(src).not.toMatch(/^const SHOW_PUSH = false/m)
+    expect(src).toMatch(/^const SHOW_PUSH = true$/m)
     expect(src).toContain('if (!SHOW_PUSH) return')
     const gate = src.indexOf('{SHOW_PUSH && (')
     expect(gate).toBeGreaterThan(0)
-    expect(src.indexOf('title={PUSH_COPY.toggleTitle}')).toBeGreaterThan(gate)
     expect(src.indexOf('title={PUSH_COPY.toggleTitle}') - gate).toBeLessThan(200)
     expect(src).toContain('{SHOW_PUSH && pushMsg && ')
+    // opt-in: Settings never asks for permission or subscribes itself; enablePush is called once, inside handlePushToggle
+    const code = src.split('\n').map(l => l.replace(/\/\/.*$/, '')).join('\n') // comments may name the APIs; code may not
+    expect(code).not.toMatch(/requestPermission/)
+    expect(code).not.toMatch(/pushManager/)
+    expect(src.split('enablePush(').length - 1).toBe(1)
+    const h = src.indexOf('const handlePushToggle = async (on: boolean) => {')
+    expect(src.indexOf('enablePush(')).toBeGreaterThan(h)
+    expect(src.indexOf('enablePush(') - h).toBeLessThan(800)
+    expect(src).toContain('onChange={handlePushToggle}')
+    expect(src).toMatch(/const \[pushReminders, setPushReminders\] = useState\(false\)/)
   })
 })
