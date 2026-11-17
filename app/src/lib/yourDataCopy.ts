@@ -1,5 +1,5 @@
-// P1-23 Settings "Your data" words: Stacy, /workspace/process/evidence/STACY-P1-23-WORDS-20261115-2056.md, character for character
-// (also in Avery's CLIENT-API-CONTRACT-FOR-JULES.md). Jim yes needed before live (NEEDS JIM WORDING, Stacy note 1).
+// P1-23 Settings "Your data" words: Stacy, character for character. Cleared: Stacy 007f8638 (STACY-P1-23-WORDS-20261115-2056.md)
+// and 2529bbfa (STACY-P1-23-UNHIDE-P1-26-FOLLOWUP-20261116-2022.md); Jim's "go on all 31" (ledger L1229). Also in Avery's CLIENT-API-CONTRACT-FOR-JULES.md.
 // Existing strings Stacy kept unchanged stay where they are: EXPORT_BUTTON_LABEL, EXPORT_REAUTH_COPY, EXPORT_ERROR_COPY
 // (lib/exportMyData.ts), DELETION_SUCCESS_COPY (lib/accountDeletionRequest.ts), DELETION_STATUS_COPY (lib/deletionStatus.ts).
 export const YOUR_DATA_COPY = {
