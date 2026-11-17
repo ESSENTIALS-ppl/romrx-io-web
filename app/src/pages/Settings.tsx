@@ -13,6 +13,7 @@ import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '.
 import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
 import { YOUR_DATA_COPY as YD, PLAN_LINE_INDEX, dialogLines } from '../lib/yourDataCopy'
 import { enablePush } from '../lib/pushSubscribe'
+import { ADD_TO_CALENDAR_COPY as CAL, fetchCalendarIcs, saveIcsDownload } from '../lib/addToCalendar'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { Spinner } from '../components/Spinner'
@@ -32,7 +33,7 @@ import {
 import { bandFull, formatScoreBand, mobilityScoreForAssessment, overallBandForAssessment, BAND_TONE, type BandScore } from '../lib/mobilityBands'
 import {
   Save, Loader2, ExternalLink, LogOut, Mail, HelpCircle, ChevronRight,
-  ClipboardList, TrendingUp, Bell, KeyRound, Trash2, MessageSquarePlus,
+  ClipboardList, TrendingUp, Bell, Calendar, KeyRound, Trash2, MessageSquarePlus,
   CheckCircle2, XCircle,
 } from 'lucide-react'
 import { AGE_BUCKETS, isAllowedAgeBucket } from '../lib/ageBuckets'
@@ -135,6 +136,8 @@ export function Settings() {
   const [emailReminders, setEmailReminders] = useState(false)
   const [pushReminders, setPushReminders] = useState(false)
   const [pushMsg, setPushMsg] = useState<string | null>(null)
+  const [calendarMsg, setCalendarMsg] = useState<string | null>(null)
+  const [calendarBusy, setCalendarBusy] = useState(false)
   const [exportBusy, setExportBusy] = useState(false)
   const [exportErr, setExportErr] = useState<string | null>(null)
   const [exportDone, setExportDone] = useState(false) // P1-23: Stacy's success line after a download
@@ -282,6 +285,21 @@ export function Settings() {
     loadDeletionStatus((t) => supabase.from(t) as never).then((st) => { if (live) setDeletionStatus(st) })
     return () => { live = false }
   }, [user?.id, deleteDone])
+
+  // ── P1-12: web-only .ics download (no native calendar). Ships with calendar-ics on 47aad435. ──
+  const handleAddToCalendar = async () => {
+    if (!session?.access_token) { setCalendarMsg(CAL.error); return }
+    setCalendarBusy(true)
+    setCalendarMsg(null)
+    const res = await fetchCalendarIcs({
+      supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      accessToken: session.access_token,
+    })
+    if (res.ok) saveIcsDownload(res.filename, res.ics)
+    else setCalendarMsg(CAL.error)
+    setCalendarBusy(false)
+  }
 
   // ── Save notifications ─────────────────────────────────────────────────
   const handleSaveNotifications = async () => {
@@ -671,6 +689,21 @@ export function Settings() {
                     <p className="text-xs text-slate-500 pl-1">{R.timeHelper(friendlyTimeZone(browserTimezone))}</p>
                   </div>
                 )}
+
+                <div className="space-y-1 border-t border-slate-200 pt-4">
+                  <button
+                    type="button"
+                    onClick={handleAddToCalendar}
+                    disabled={calendarBusy || !session}
+                    className="w-full rounded-xl border border-cobalt/20 bg-white py-2.5 px-3 text-sm font-semibold text-cobalt-ink flex items-center justify-center gap-2 disabled:opacity-60"
+                    data-testid="add-to-calendar"
+                  >
+                    {calendarBusy ? <Loader2 size={14} className="animate-spin" /> : <Calendar size={14} />}
+                    {CAL.button}
+                  </button>
+                  <p className="text-xs text-slate-500 pl-1">{CAL.help}</p>
+                  {calendarMsg && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{calendarMsg}</p>}
+                </div>
 
                 {SHOW_PUSH && (
                   <ToggleRow
