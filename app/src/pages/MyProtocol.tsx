@@ -21,6 +21,8 @@ import { GuidedPlayer } from '../components/GuidedPlayer'
 import { PLAYER_COPY } from '../lib/guidedPlayer'
 import { SoloChallenge } from '../components/SoloChallenge'
 import { QuickCheckBanner } from '../components/QuickCheckBanner'
+import { SessionFeel } from '../components/SessionFeel'
+import { SHOW_SESSION_FEEDBACK } from '../lib/sessionFeedback'
 import {
   bandFull,
   jointBandsForAssessment,
@@ -750,6 +752,8 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
             Completed today
           </div>
         ) : null}
+        {/* P1-18: "How did that feel?" once per session; renders nothing while SHOW_SESSION_FEEDBACK is false */}
+        {SHOW_SESSION_FEEDBACK && completedToday && <div className="mt-3 empty:hidden"><SessionFeel userId={userId} sessionDate={todayIso} refreshKey={dbSessionCount} /></div>}
         {/* P1-01: offer the reminder right after session 1 (Stacy B); hidden once opted in or dismissed */}
         {completedToday && dbSessionCount === 1 && (
           <div className="mt-3"><ReminderOptIn userId={userId} placement="after_session" /></div>
