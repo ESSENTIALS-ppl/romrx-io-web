@@ -12,7 +12,8 @@ import { toWholeHour, reminderStateFromRow, saveReminderChanges, NO_REMINDERS, t
 import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '../lib/deletionStatus'
 import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
 import { YOUR_DATA_COPY as YD, PLAN_LINE_INDEX, dialogLines } from '../lib/yourDataCopy'
-import { enablePush } from '../lib/pushSubscribe'
+import { enablePush, disablePush, makePushPost } from '../lib/pushSubscribe'
+import { PUSH_COPY, pushMessageFor } from '../lib/pushCopy'
 import { ADD_TO_CALENDAR_COPY as CAL, fetchCalendarIcs, saveIcsDownload } from '../lib/addToCalendar'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
@@ -85,7 +86,8 @@ type ExtProfile = {
 // unless the database holds toggle AND server-set opt-in marker (reminderStateFromRow); nothing here opts anyone in.
 const SHOW_REMINDER_TOGGLES = true
 const SHOW_NOTIFICATIONS = true
-// FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
+// FG-12 / P1-14: push toggle stays hidden until Jim's OK, a VAPID key (VITE_VAPID_PUBLIC_KEY) and Stacy's words (PUSH_COPY is all NEEDS STACY).
+// Off: no toggle, no permission prompt, no pushManager.subscribe, no save-push-subscription call.
 const SHOW_PUSH = false
 // FG-13: "Export my data". Jim's "go on all 31" (ledger L1229); Stacy cleared the words (007f8638, 2529bbfa).
 const SHOW_EXPORT_MY_DATA = true // P1-23 unhide (Grant, Nov 16 r3). SHOW_DELETION_STATUS stays false.
@@ -371,13 +373,20 @@ export function Settings() {
     setExportBusy(false)
   }
 
-  // ── Push on/off (FG-12, hidden behind SHOW_PUSH). On = subscribe + save; off = just clear the flag (saved with the form). ──
+  // ── Push on/off (FG-12 / P1-14, hidden behind SHOW_PUSH). On = tap -> permission -> subscribe -> save-push-subscription.
+  // Off = browser unsubscribe + {unsubscribe, endpoint} to the same function, and push_reminders = false saved with the form (as before). ──
   const handlePushToggle = async (on: boolean) => {
+    if (!SHOW_PUSH) return // P1-14 flag off: no prompt, no subscribe, no request
     setPushMsg(null)
-    if (!on) { setPushReminders(false); return }
-    const res = await enablePush((name, opts) => supabase.functions.invoke(name, opts), import.meta.env.VITE_VAPID_PUBLIC_KEY)
+    const post = makePushPost({
+      supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      getAccessToken: () => session?.access_token ?? null,
+    })
+    if (!on) { setPushReminders(false); void disablePush({ post }); return }
+    const res = await enablePush({ post, vapidPublicKey: import.meta.env.VITE_VAPID_PUBLIC_KEY })
     if (res.ok) setPushReminders(true)
-    else { setPushReminders(false); setPushMsg('Push notifications could not be turned on.') }
+    else { setPushReminders(false); setPushMsg(pushMessageFor(res.reason)) }
   }
 
   // ── Request account deletion ───────────────────────────────────────────
@@ -712,8 +721,8 @@ export function Settings() {
 
                 {SHOW_PUSH && (
                   <ToggleRow
-                    title="Push notifications"
-                    subtitle="Browser push alerts (must allow in your browser)"
+                    title={PUSH_COPY.toggleTitle}
+                    subtitle={PUSH_COPY.toggleHelp}
                     checked={pushReminders}
                     onChange={handlePushToggle}
                     icon={<Bell size={14} className="text-slate-500" />}
