@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_BASE_LUMBAR_REMOVED?: string
   /** 'on' turns on the one-time terms re-accept screen (default off; Sunday batch). */
   readonly VITE_TERMS_REACCEPT_GATE?: string
+  /** 'on' enables P1-26 offline cache / service worker (default off). Only the exact string on. */
+  readonly VITE_P1_26_OFFLINE_CACHE?: string
 }
 
 interface ImportMeta {

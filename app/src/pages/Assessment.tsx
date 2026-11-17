@@ -15,6 +15,7 @@ import {
   type Draft, type DraftSaver, type SaveStatus,
 } from '../lib/assessmentDraft'
 import { supabaseDraftStore } from '../lib/assessmentDraftStore'
+import { postSubmitAssessment } from '../lib/offlineSubmitQueue'
 
 // localStorage for the per-member progress copy. Signed-in members only (Stacy Oct 28): no copy for signed-out visitors.
 const draftStorage = () => { try { return window.localStorage } catch { return null } }
@@ -228,20 +229,18 @@ export function Assessment() {
         return
       }
       try {
-        const res = await fetch(SUBMIT_ASSESSMENT_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify(assessment_data),
+        // P1-26: when the offline-cache flag is on, a network drop queues this signed-in submit
+        // and syncs on reconnect. Success and HTTP-error paths are unchanged. Lead submits are not queued.
+        const result = await postSubmitAssessment({
+          url: SUBMIT_ASSESSMENT_URL,
+          accessToken: session.access_token,
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          body: assessment_data,
         })
-        const data = await res.json().catch(() => ({ ok: false, error: `HTTP ${res.status}` }))
         setLoading(false)
-        if (!res.ok || !data.ok) {
+        if (!result.ok) {
           saverRef.current?.saver.reopen()
-          setError(data.error ?? `Submission failed (HTTP ${res.status}). Please try again.`)
+          setError(result.error ?? 'Submission failed. Please try again.')
           return
         }
         // Done: the database clears the draft on insert. Drop this device's copy now and delete the row once any

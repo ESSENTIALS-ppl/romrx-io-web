@@ -28,6 +28,8 @@ import { CARD_LINE_SHORT, CARD_LINE_SHORT_NODATE } from '../lib/cardLine'
 import { ReminderOptIn } from '../components/ReminderOptIn'
 import { WHAT_CHANGED_COPY, WHAT_CHANGED_PATH, takeJustAssessed } from '../lib/whatChanged'
 import { skipQuick } from '../lib/assessmentReads'
+import { ResultsSurvey } from '../components/ResultsSurvey'
+import { SHOW_RESULTS_SURVEY } from '../lib/resultsSurvey'
 
 // P1-03: after the results (unlock, or an active user finishing an assessment) the next screen is today's session.
 export const TODAY_PATH = '/dashboard/my-protocol'
@@ -371,6 +373,9 @@ export function ResultsPreview() {
         <p className="text-center text-xs text-white/30">
           Free through December 31, 2026. {CARD_LINE_SHORT_NODATE} You pay nothing before January 1, 2027. Then $60 a year, renewing until you cancel. Cancel online anytime.
         </p>
+
+        {/* P1-18b: short optional survey, last on the screen; renders nothing while SHOW_RESULTS_SURVEY is false; never for a quick re-check */}
+        {SHOW_RESULTS_SURVEY && user && <ResultsSurvey userId={user.id} assessment={assessment as { id?: unknown; check_kind?: unknown }} />}
       </div>
     </div>
   )
