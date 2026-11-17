@@ -1,11 +1,11 @@
 // P1-12: web-only .ics download/link. No native calendar APIs.
 // Talks to the calendar-ics edge function (JWT). Not for deploy until that function is live
-// and Stacy has cleared the button words (open: same note as the .ics SUMMARY/DESCRIPTION strings).
+// Words: Stacy STACY-P1-12-P1-29-WORDS-20261116-2032.md (e9809b24): button and file name CLEAR, help and error EDITED (verbatim).
 
 export const ADD_TO_CALENDAR_COPY = {
   button: 'Add to my calendar',
-  help: 'Download a calendar file for your protocol days, check-in, and 6-week retest.',
-  error: 'The calendar file could not be downloaded.',
+  help: "Download a calendar file with a daily session reminder and your next check-in and retest dates. If those dates change, download it again.",
+  error: "The calendar file could not be downloaded. Please try again.",
   filename: 'romrx-base.ics',
 } as const
 

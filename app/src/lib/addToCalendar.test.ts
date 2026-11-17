@@ -44,4 +44,8 @@ describe('P1-12 addToCalendar (web download only)', () => {
     expect(bad).toEqual({ ok: false, reason: 'failed' })
   })
 
+  it('help and error words are Stacy e9809b24, verbatim', () => {
+    expect(ADD_TO_CALENDAR_COPY.help).toBe("Download a calendar file with a daily session reminder and your next check-in and retest dates. If those dates change, download it again.")
+    expect(ADD_TO_CALENDAR_COPY.error).toBe("The calendar file could not be downloaded. Please try again.")
+  })
 })
