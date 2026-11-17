@@ -2,7 +2,8 @@
 // P1-14 r10: SHOW_PUSH = true (compiled constant in Settings.tsx). Push is opt-in only.
 // Renders the real Settings page (data hooks mocked) with browser push APIs stubbed, and proves: the toggle renders OFF with
 // Stacy's title and help; mounting never calls Notification.requestPermission, getRegistration, pushManager.subscribe or
-// save-push-subscription; the prompt fires only after a tap. The source test is the production-build guard (fails if false).
+// save-push-subscription; the prompt fires only after a tap. The toggle shows ON only with saved push_reminders = true AND a
+// live subscription on this browser (read-only getSubscription). The source test is the production-build guard (fails if false).
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -13,12 +14,16 @@ import { join } from 'node:path'
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const calls: string[] = []
-function chain(): unknown {
-  const result = { data: [], error: null, count: 0 }
+// Per-test saved notification_preferences row (null = no row) and captured upserts, via globalThis because vi.mock is hoisted.
+const G = globalThis as unknown as { __prefRow: Record<string, unknown> | null; __upserts: { table: string; row: Record<string, unknown> }[] }
+G.__prefRow = null; G.__upserts = []
+function chain(table = ''): unknown {
+  const result = { data: table === 'notification_preferences' ? G.__prefRow : [], error: null, count: 0 }
   const fn = (..._a: unknown[]) => proxy
   const proxy: unknown = new Proxy(fn, {
     get(_t, prop) {
       if (prop === 'then') return (res: (v: unknown) => unknown, rej?: (e: unknown) => unknown) => Promise.resolve(result).then(res, rej)
+      if (prop === 'upsert') return (row: Record<string, unknown>) => { G.__upserts.push({ table, row }); return proxy }
       return proxy
     },
     apply() { return proxy },
@@ -27,7 +32,7 @@ function chain(): unknown {
 }
 vi.mock('../lib/supabase', () => ({
   supabase: {
-    from: (t: string) => { calls.push(`from:${t}`); return chain() },
+    from: (t: string) => { calls.push(`from:${t}`); return chain(t) },
     rpc: (n: string) => { calls.push(`rpc:${n}`); return chain() },
     functions: { invoke: async (n: string) => { calls.push(`invoke:${n}`); return { data: null, error: null } } },
     auth: { getSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }), signOut: async () => ({}) },
@@ -59,11 +64,13 @@ const requestPermission = vi.fn(async () => { order.push('requestPermission'); r
 const unsubscribe = vi.fn(async () => true)
 const sub = { endpoint: 'https://push.example/ep1', toJSON: () => ({ endpoint: 'https://push.example/ep1', keys: { p256dh: 'p', auth: 'a' } }), unsubscribe }
 const subscribe = vi.fn(async (_o: unknown) => { order.push('subscribe'); return sub })
-const getRegistration = vi.fn(async (..._a: unknown[]) => ({ pushManager: { subscribe, getSubscription: async () => null } }))
+let liveSub: typeof sub | null = null
+const getSubscription = vi.fn(async () => liveSub)
+const getRegistration = vi.fn(async (..._a: unknown[]) => ({ pushManager: { subscribe, getSubscription } }))
 const register = vi.fn(async () => ({}))
 
 beforeEach(() => {
-  calls.length = 0; order.length = 0; permissionAnswer = 'granted'
+  calls.length = 0; order.length = 0; permissionAnswer = 'granted'; liveSub = null; G.__prefRow = null; G.__upserts = []; getSubscription.mockClear()
   saveResponse = () => new Response('{"ok":true}', { status: 200 })
   for (const m of [fetchSpy, requestPermission, subscribe, getRegistration, register, unsubscribe]) m.mockClear()
   vi.stubGlobal('fetch', fetchSpy)
@@ -101,13 +108,70 @@ describe('P1-14 SHOW_PUSH = true (opt-in only)', () => {
     for (const k of ['denied', 'unsupported', 'deviceLimit', 'genericError'] as const) expect(host.textContent).not.toContain(PUSH_COPY[k])
   })
 
-  it('flag on: mounting Settings never prompts, never touches the worker, never subscribes, never calls save-push-subscription', async () => {
+  it('flag on: mounting Settings never prompts, never subscribes, never calls save-push-subscription (no saved row: worker not touched)', async () => {
     await renderSettings()
     expect(requestPermission).not.toHaveBeenCalled()
     expect(getRegistration).not.toHaveBeenCalled()
     expect(subscribe).not.toHaveBeenCalled()
     expect(saveCalls()).toHaveLength(0)
     expect(calls.some(c => c.includes('save-push-subscription'))).toBe(false)
+  })
+
+  it('flag on: saved push_reminders = true with NO live subscription on this browser renders OFF, with no prompt', async () => {
+    G.__prefRow = { push_reminders: true, reminder_time: '07:00' }
+    await renderSettings()
+    expect(getSubscription).toHaveBeenCalledTimes(1) // read-only check
+    expect(toggle()!.getAttribute('aria-checked')).toBe('false')
+    expect(requestPermission).not.toHaveBeenCalled()
+    expect(subscribe).not.toHaveBeenCalled()
+    expect(saveCalls()).toHaveLength(0)
+  })
+
+  it('flag on: saved push_reminders = true WITH a live subscription renders ON, with no prompt and no subscribe', async () => {
+    G.__prefRow = { push_reminders: true, reminder_time: '07:00' }
+    liveSub = sub
+    await renderSettings()
+    expect(toggle()!.getAttribute('aria-checked')).toBe('true')
+    expect(requestPermission).not.toHaveBeenCalled()
+    expect(subscribe).not.toHaveBeenCalled()
+    expect(saveCalls()).toHaveLength(0)
+  })
+
+  it('flag on: a live subscription without saved push_reminders = true renders OFF (the account has push off)', async () => {
+    G.__prefRow = { push_reminders: false, reminder_time: '07:00' }
+    liveSub = sub
+    await renderSettings()
+    expect(toggle()!.getAttribute('aria-checked')).toBe('false')
+    expect(requestPermission).not.toHaveBeenCalled()
+  })
+
+  it('flag on: saving the form on a device that never subscribed keeps the account push_reminders = true', async () => {
+    G.__prefRow = { push_reminders: true, reminder_time: '07:00' }
+    await renderSettings()
+    expect(toggle()!.getAttribute('aria-checked')).toBe('false')
+    const save = Array.from(host.querySelectorAll('button')).find(b => /save/i.test(b.textContent ?? '') && b.className.includes('btn-primary') && b.closest('section, div')?.textContent?.includes('Reminder notifications'))
+    expect(save).toBeTruthy()
+    await act(async () => { save!.click() }); await settle()
+    const np = G.__upserts.filter(u => u.table === 'notification_preferences')
+    expect(np).toHaveLength(1)
+    expect(np[0].row.push_reminders).toBe(true)
+  })
+
+  it('flag on: turning OFF stays account-wide: unsubscribes this browser, tells the server, and the form saves push_reminders = false', async () => {
+    G.__prefRow = { push_reminders: true, reminder_time: '07:00' }
+    liveSub = sub
+    await renderSettings()
+    expect(toggle()!.getAttribute('aria-checked')).toBe('true')
+    await tap()
+    expect(toggle()!.getAttribute('aria-checked')).toBe('false')
+    expect(unsubscribe).toHaveBeenCalledTimes(1)
+    expect(saveCalls()).toHaveLength(1)
+    expect(JSON.parse(String((saveCalls()[0][1] as RequestInit).body))).toEqual({ unsubscribe: true, endpoint: 'https://push.example/ep1' })
+    const save = Array.from(host.querySelectorAll('button')).find(b => /save/i.test(b.textContent ?? '') && b.className.includes('btn-primary') && b.closest('section, div')?.textContent?.includes('Reminder notifications'))
+    await act(async () => { save!.click() }); await settle()
+    const np = G.__upserts.filter(u => u.table === 'notification_preferences')
+    expect(np[np.length - 1].row.push_reminders).toBe(false)
+    expect(requestPermission).not.toHaveBeenCalled()
   })
 
   it('flag on: the permission prompt fires only after a tap, then subscribe, then save-push-subscription with the user token', async () => {
@@ -177,5 +241,7 @@ describe('P1-14 SHOW_PUSH = true (opt-in only)', () => {
     expect(src.indexOf('enablePush(') - h).toBeLessThan(800)
     expect(src).toContain('onChange={handlePushToggle}')
     expect(src).toMatch(/const \[pushReminders, setPushReminders\] = useState\(false\)/)
+    expect(code).not.toMatch(/setPushReminders\(!!data\.push_reminders\)/) // a saved true alone never shows ON
+    expect(code).toContain('push_reminders: pushPref')
   })
 })
