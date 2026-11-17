@@ -44,6 +44,20 @@ export function browserPushEnv(): PushEnv | null {
   }
 }
 
+/** Read-only: does this browser have a live push subscription in the /app/ worker? Never prompts, never subscribes
+ *  (getRegistration + pushManager.getSubscription only). Settings uses it so the toggle shows ON only on a device that subscribed. */
+export async function hasLivePushSubscription(env?: PushEnv | null): Promise<boolean> {
+  const e = env === undefined ? browserPushEnv() : env
+  if (!e) return false
+  try {
+    const reg = await e.getRegistration()
+    if (!reg?.pushManager) return false
+    return (await reg.pushManager.getSubscription()) != null
+  } catch {
+    return false
+  }
+}
+
 /** Map a save-push-subscription response (contract section 1) to a result. */
 export function pushResultFromResponse(status: number, json: unknown): PushResult {
   if (status === 200) return { ok: true }

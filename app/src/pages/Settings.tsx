@@ -12,7 +12,7 @@ import { toWholeHour, reminderStateFromRow, saveReminderChanges, NO_REMINDERS, t
 import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '../lib/deletionStatus'
 import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
 import { YOUR_DATA_COPY as YD, PLAN_LINE_INDEX, dialogLines } from '../lib/yourDataCopy'
-import { enablePush, disablePush, makePushPost } from '../lib/pushSubscribe'
+import { enablePush, disablePush, makePushPost, hasLivePushSubscription } from '../lib/pushSubscribe'
 import { PUSH_COPY, pushMessageFor } from '../lib/pushCopy'
 import { ADD_TO_CALENDAR_COPY as CAL, fetchCalendarIcs, saveIcsDownload } from '../lib/addToCalendar'
 import { PageHeader } from '../components/PageHeader'
@@ -140,7 +140,10 @@ export function Settings() {
   const [retestReminders, setRetestReminders] = useState(false)
   const [weeklyDigest, setWeeklyDigest] = useState(false)
   const [emailReminders, setEmailReminders] = useState(false)
+  // P1-14 r10: pushReminders is what the toggle shows on THIS device: ON only when the account has push_reminders = true AND this
+  // browser has a live subscription (read-only check, no prompt). pushPref is the account value the form saves (off stays account-wide).
   const [pushReminders, setPushReminders] = useState(false)
+  const [pushPref, setPushPref] = useState(false)
   const [pushMsg, setPushMsg] = useState<string | null>(null)
   const [calendarMsg, setCalendarMsg] = useState<string | null>(null)
   const [calendarBusy, setCalendarBusy] = useState(false)
@@ -220,7 +223,10 @@ export function Settings() {
           const shown = reminderStateFromRow(data)
           reminderBaseline.current = shown
           setEmailReminders(shown.protocol)
-          setPushReminders(!!data.push_reminders)
+          const savedPush = !!data.push_reminders
+          setPushPref(savedPush)
+          setPushReminders(false) // a saved true alone renders OFF
+          if (SHOW_PUSH && savedPush) void hasLivePushSubscription().then(live => setPushReminders(live))
           setReminderTime(toWholeHour((data.reminder_time ?? '07:00').slice(0, 5)))
           setRetestReminders(shown.retest)
           setWeeklyDigest(shown.digest)
@@ -320,7 +326,7 @@ export function Settings() {
 
     const { error: nErr } = await supabase.from('notification_preferences').upsert({
       user_id: user.id,
-      push_reminders: pushReminders,
+      push_reminders: pushPref, // account value: a device that never subscribed does not turn push off for the account
       reminder_time: toWholeHour(reminderTime), // hour only: the sender ignores minutes (Stacy note 3b)
       timezone: browserTimezone,
       updated_at: new Date().toISOString(),
@@ -385,9 +391,9 @@ export function Settings() {
       anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
       getAccessToken: () => session?.access_token ?? null,
     })
-    if (!on) { setPushReminders(false); void disablePush({ post }); return }
+    if (!on) { setPushReminders(false); setPushPref(false); void disablePush({ post }); return }
     const res = await enablePush({ post, vapidPublicKey: import.meta.env.VITE_VAPID_PUBLIC_KEY })
-    if (res.ok) setPushReminders(true)
+    if (res.ok) { setPushReminders(true); setPushPref(true) }
     else { setPushReminders(false); setPushMsg(pushMessageFor(res.reason)) }
   }
 
