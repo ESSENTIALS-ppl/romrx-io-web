@@ -56,11 +56,11 @@ describe('P1-01 wiring', () => {
     expect(src('pages/ResultsPreview.tsx')).toMatch(/\{user && <ReminderOptIn userId=\{user\.id\} placement="results"/)
     expect(src('pages/MyProtocol.tsx')).toMatch(/completedToday && dbSessionCount === 1 && \(/)
   })
-  it('Settings shows the reminder toggles, keeps push and product updates hidden', () => {
+  it('Settings shows the reminder toggles and the push toggle (P1-14 r10, SHOW_PUSH on), keeps product updates hidden', () => {
     const s = src('pages/Settings.tsx')
     expect(s).toContain('const SHOW_REMINDER_TOGGLES = true')
     expect(s).toContain('const SHOW_NOTIFICATIONS = true')
-    expect(s).toContain('const SHOW_PUSH = false')
+    expect(s).toMatch(/^const SHOW_PUSH = true$/m) // P1-14 r10 flag on (Grant, Nov 17)
     expect(s).toMatch(/\{SHOW_MARKETING_TOGGLE && \(\s*<ToggleRow\s*title="Email product updates"/)
     expect(s).toContain('title={R.offAllTitle}')
     expect(s).not.toMatch(/\{\{P1-01/)
