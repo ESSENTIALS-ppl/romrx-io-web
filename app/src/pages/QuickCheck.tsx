@@ -81,6 +81,7 @@ function QuickCheckInner() {
         accessToken: session.access_token,
         apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         body: quickSubmitBody(values, schedule.check_joints),
+        userId: session.user?.id ?? user?.id ?? null,
       })
       setLoading(false)
       if (result.queued) { setError(result.error ?? GENERIC_ERROR); return }

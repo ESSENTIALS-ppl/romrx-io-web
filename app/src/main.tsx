@@ -18,6 +18,11 @@ void startOfflineCache({
     const { data } = await supabase.auth.getSession()
     return data.session?.access_token ?? null
   },
+  getUserId: async () => {
+    const { supabase } = await import('./lib/supabase')
+    const { data } = await supabase.auth.getSession()
+    return data.session?.user?.id ?? null
+  },
   apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
 })
 

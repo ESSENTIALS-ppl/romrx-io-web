@@ -51,6 +51,7 @@ export async function startOfflineCache(opts?: {
   container?: ServiceWorkerLike | null
   cachesApi?: Pick<CacheStorage, 'keys' | 'delete'>
   getAccessToken?: () => Promise<string | null>
+  getUserId?: () => Promise<string | null>
   apikey?: string
 }): Promise<'registered' | 'unregistered' | 'unsupported'> {
   const env = opts?.env ?? ((import.meta as ImportMeta).env as Record<string, unknown>)
@@ -62,11 +63,11 @@ export async function startOfflineCache(opts?: {
   if (!container) return 'unsupported'
   await container.register(SW_URL, { scope: SW_SCOPE })
   if (opts?.getAccessToken && opts.apikey) {
-    void flushSubmitQueue({ getAccessToken: opts.getAccessToken, apikey: opts.apikey, flagOn: true })
+    void flushSubmitQueue({ getAccessToken: opts.getAccessToken, getUserId: opts.getUserId, apikey: opts.apikey, flagOn: true })
   }
   if (typeof window !== 'undefined' && opts?.getAccessToken && opts.apikey) {
     window.addEventListener('online', () => {
-      void flushSubmitQueue({ getAccessToken: opts.getAccessToken!, apikey: opts.apikey!, flagOn: true })
+      void flushSubmitQueue({ getAccessToken: opts.getAccessToken!, getUserId: opts.getUserId, apikey: opts.apikey!, flagOn: true })
     })
   }
   return 'registered'

@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
-  PENDING_MESSAGE, flushSubmitQueue, isNetworkFailure, memoryQueueStore, postSubmitAssessment,
+  PENDING_MESSAGE, flushSubmitQueue, isNetworkFailure, memoryQueueStore, postSubmitAssessment, clearSubmitQueue, userIdFromToken,
 } from './offlineSubmitQueue'
+
+// Fake Supabase-style access tokens (header.payload.sig); only the payload sub is read.
+const jwt = (sub: string) => `h.${Buffer.from(JSON.stringify({ sub })).toString('base64url')}.s`
+const TOK_A = jwt('user-a'), TOK_B = jwt('user-b')
 
 const URL_ = 'https://example.supabase.co/functions/v1/submit-assessment'
 const body = { hip_er_l: 40 }
@@ -52,13 +56,13 @@ describe('P1-26 offline submit queue', () => {
   })
 
   it('flush replays with a fresh token and drops a sent item', async () => {
-    const store = memoryQueueStore([{ id: '1', url: URL_, body: JSON.stringify(body), createdAt: 1 }])
+    const store = memoryQueueStore([{ id: '1', url: URL_, body: JSON.stringify(body), createdAt: 1, userId: 'user-a' }])
     const fetchImpl = vi.fn(async (_url, init) => {
-      expect((init as RequestInit).headers).toMatchObject({ Authorization: 'Bearer fresh' })
+      expect((init as RequestInit).headers).toMatchObject({ Authorization: `Bearer ${TOK_A}` })
       return new Response(JSON.stringify({ ok: true }), { status: 200 })
     })
     const r = await flushSubmitQueue({
-      getAccessToken: async () => 'fresh', apikey: 'k', fetchImpl, store, flagOn: true,
+      getAccessToken: async () => TOK_A, apikey: 'k', fetchImpl, store, flagOn: true,
     })
     expect(r).toEqual({ sent: 1, remaining: 0 })
     expect(await store.getAll()).toHaveLength(0)
@@ -79,5 +83,74 @@ describe('P1-26 offline submit queue', () => {
     expect(isNetworkFailure(new TypeError('Failed to fetch'), true)).toBe(true)
     expect(isNetworkFailure(new Error('boom'), true)).toBe(false)
     expect(isNetworkFailure(new Error('boom'), false)).toBe(true)
+  })
+
+  it('R2: an item stores the enqueuing user (from the token, or the explicit userId), never the token', async () => {
+    const store = memoryQueueStore()
+    const fetchImpl = vi.fn(async () => { throw new TypeError('Failed to fetch') })
+    await postSubmitAssessment({ url: URL_, accessToken: TOK_A, apikey: 'k', body, fetchImpl, store, flagOn: true, online: false })
+    await postSubmitAssessment({ url: URL_, accessToken: 'opaque', apikey: 'k', body, fetchImpl, store, flagOn: true, online: false, userId: 'user-c' })
+    const rows = await store.getAll()
+    expect(rows.map(r => r.userId)).toEqual(['user-a', 'user-c'])
+    expect(JSON.stringify(rows)).not.toContain(TOK_A)
+    expect(userIdFromToken(TOK_B)).toBe('user-b')
+    expect(userIdFromToken('garbage')).toBeNull()
+  })
+
+  it('R2: user A enqueues, user B signs in: nothing of A is ever submitted for B, and A\'s item stays in place', async () => {
+    const store = memoryQueueStore()
+    const down = vi.fn(async () => { throw new TypeError('Failed to fetch') })
+    await postSubmitAssessment({ url: URL_, accessToken: TOK_A, apikey: 'k', body, fetchImpl: down, store, flagOn: true, online: false })
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }))
+    const r = await flushSubmitQueue({ getAccessToken: async () => TOK_B, getUserId: async () => 'user-b', apikey: 'k', fetchImpl, store, flagOn: true })
+    expect(fetchImpl).not.toHaveBeenCalled()
+    expect(r).toEqual({ sent: 0, remaining: 1 })
+    expect((await store.getAll())[0].userId).toBe('user-a')
+    // Without getUserId the token's own user is used: still B, still nothing sent.
+    await flushSubmitQueue({ getAccessToken: async () => TOK_B, apikey: 'k', fetchImpl, store, flagOn: true })
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it('R2: items with no owner are never replayed', async () => {
+    const store = memoryQueueStore([{ id: 'x', url: URL_, body: '{}', createdAt: 1 }])
+    const fetchImpl = vi.fn()
+    await flushSubmitQueue({ getAccessToken: async () => TOK_A, apikey: 'k', fetchImpl, store, flagOn: true })
+    expect(fetchImpl).not.toHaveBeenCalled()
+    expect(await store.getAll()).toHaveLength(1)
+  })
+
+  it('R2: the same user flushes normally, and only their own items', async () => {
+    const store = memoryQueueStore([
+      { id: '1', url: URL_, body: '{"a":1}', createdAt: 1, userId: 'user-a' },
+      { id: '2', url: URL_, body: '{"b":1}', createdAt: 2, userId: 'user-b' },
+    ])
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }))
+    const r = await flushSubmitQueue({ getAccessToken: async () => TOK_A, apikey: 'k', fetchImpl, store, flagOn: true })
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect((fetchImpl.mock.calls[0] as unknown[])[1]).toMatchObject({ body: '{"a":1}' })
+    expect(r).toEqual({ sent: 1, remaining: 1 })
+    expect((await store.getAll()).map(i => i.userId)).toEqual(['user-b'])
+  })
+
+  it('R2: sign-out clears the queue (all items), or only one user\'s items when given', async () => {
+    const store = memoryQueueStore([
+      { id: '1', url: URL_, body: '{}', createdAt: 1, userId: 'user-a' },
+      { id: '2', url: URL_, body: '{}', createdAt: 2, userId: 'user-b' },
+      { id: '3', url: URL_, body: '{}', createdAt: 3, userId: 'user-a' },
+    ])
+    expect(await clearSubmitQueue({ store, userId: 'user-a' })).toBe(2)
+    expect((await store.getAll()).map(i => i.id)).toEqual(['2'])
+    expect(await clearSubmitQueue({ store })).toBe(1)
+    expect(await store.getAll()).toHaveLength(0)
+  })
+
+  it('R2: the app sign-out path (useAuth signOut and the SIGNED_OUT event) calls clearSubmitQueue', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    const src = readFileSync(resolve(process.cwd(), 'src/hooks/useAuth.ts'), 'utf8')
+    expect(src).toContain("import { clearSubmitQueue } from '../lib/offlineSubmitQueue'")
+    expect(src).toMatch(/const clearDraftMirrors = \(\) => \{[^\n]*void clearSubmitQueue\(\) \}/)
+    expect(src).toContain("if (event === 'SIGNED_OUT') clearDraftMirrors()")
+    expect(src).toContain('const signOut = () => { clearDraftMirrors(); return supabase.auth.signOut() }')
   })
 })

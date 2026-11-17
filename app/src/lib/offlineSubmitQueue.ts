@@ -11,6 +11,21 @@ export interface QueuedSubmit {
   url: string
   body: string
   createdAt: number
+  /** R2: the signed-in user at enqueue time. Items are only ever replayed for this same user. */
+  userId?: string | null
+}
+
+/** The user id (JWT sub) inside a Supabase access token, or null. Read only; the token is never stored. */
+export function userIdFromToken(token: string | null | undefined): string | null {
+  if (!token) return null
+  try {
+    const part = token.split('.')[1]
+    if (!part) return null
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '=')
+    const json = typeof atob === 'function' ? atob(b64) : Buffer.from(b64, 'base64').toString('binary')
+    const sub = (JSON.parse(json) as { sub?: unknown }).sub
+    return typeof sub === 'string' && sub ? sub : null
+  } catch { return null }
 }
 
 export interface QueueStore {
@@ -91,8 +106,9 @@ export async function enqueueSubmit(
   store: QueueStore,
   now: number = Date.now(),
   id: string = `${now}-${Math.random().toString(36).slice(2, 10)}`,
+  userId: string | null = null,
 ): Promise<QueuedSubmit> {
-  const item: QueuedSubmit = { id, url, body: typeof body === 'string' ? body : JSON.stringify(body), createdAt: now }
+  const item: QueuedSubmit = { id, url, body: typeof body === 'string' ? body : JSON.stringify(body), createdAt: now, userId }
   await store.put(item)
   return item
 }
@@ -110,6 +126,8 @@ export async function postSubmitAssessment(opts: {
   store?: QueueStore
   flagOn?: boolean
   online?: boolean
+  /** R2: owner of the submit; defaults to the access token's user (sub). */
+  userId?: string | null
 }): Promise<SubmitResult> {
   const flagOn = opts.flagOn ?? offlineCacheOn()
   const fetchImpl = opts.fetchImpl ?? fetch
@@ -131,7 +149,7 @@ export async function postSubmitAssessment(opts: {
   } catch (err) {
     if (flagOn && isNetworkFailure(err, opts.online)) {
       const store = opts.store ?? defaultQueueStore()
-      await enqueueSubmit(opts.url, opts.body, store)
+      await enqueueSubmit(opts.url, opts.body, store, undefined, undefined, opts.userId ?? userIdFromToken(opts.accessToken))
       return { ok: false, queued: true, error: PENDING_MESSAGE }
     }
     return { ok: false, queued: false, error: 'Something went wrong. Please try again.' }
@@ -144,6 +162,8 @@ export async function flushSubmitQueue(opts: {
   fetchImpl?: typeof fetch
   store?: QueueStore
   flagOn?: boolean
+  /** R2: current session user; defaults to the fresh token's user (sub). */
+  getUserId?: () => Promise<string | null>
 }): Promise<{ sent: number; remaining: number }> {
   if (!(opts.flagOn ?? offlineCacheOn())) return { sent: 0, remaining: 0 }
   const store = opts.store ?? defaultQueueStore()
@@ -153,6 +173,9 @@ export async function flushSubmitQueue(opts: {
   for (const item of items) {
     const token = await opts.getAccessToken()
     if (!token) break
+    // R2: only replay this user's own items. Anything queued by another account (or with no owner) stays in place.
+    const uid = (opts.getUserId ? await opts.getUserId() : null) ?? userIdFromToken(token)
+    if (!uid || item.userId !== uid) continue
     try {
       const res = await fetchImpl(item.url, {
         method: 'POST',
@@ -182,4 +205,18 @@ export async function flushSubmitQueue(opts: {
   }
   const remaining = (await store.getAll()).length
   return { sent, remaining }
+}
+
+/** R2: on sign-out, drop queued submits so nothing is replayed under the next account. With userId, only that user's items. */
+export async function clearSubmitQueue(opts: { store?: QueueStore; userId?: string | null } = {}): Promise<number> {
+  try {
+    const store = opts.store ?? defaultQueueStore()
+    const items = await store.getAll()
+    let n = 0
+    for (const it of items) {
+      if (opts.userId && it.userId !== opts.userId) continue
+      await store.delete(it.id); n++
+    }
+    return n
+  } catch { return 0 }
 }

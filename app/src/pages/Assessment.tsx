@@ -236,6 +236,7 @@ export function Assessment() {
           accessToken: session.access_token,
           apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
           body: assessment_data,
+          userId: session.user?.id ?? null,
         })
         setLoading(false)
         if (!result.ok) {

@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { clearAllMirrors } from '../lib/assessmentDraft'
+import { clearSubmitQueue } from '../lib/offlineSubmitQueue'
 
 // Sign out removes every saved-progress copy on this device (Stacy Oct 28: per-user key, cleared on sign out).
-const clearDraftMirrors = () => { try { clearAllMirrors(window.localStorage) } catch { /* no storage */ } }
+// P1-26 R2: sign out also clears the offline submit queue, so nothing queued is replayed under the next account.
+const clearDraftMirrors = () => { try { clearAllMirrors(window.localStorage) } catch { /* no storage */ } void clearSubmitQueue() }
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
