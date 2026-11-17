@@ -7,6 +7,9 @@ import { RecentChats } from '../components/RecentChats'
 import { Send, Loader2, Trash2 } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { supabase } from '../lib/supabase'
+import { track } from '../lib/track'
+import { CHECKIN_LOAD_ERROR, isCheckinUnread, loadLatestCheckin, markCheckinRead, type Checkin } from '../lib/rombotCheckin'
+import { RombotCheckinButton } from '../components/RombotCheckin'
 
 // Working shell for Phase 1: simple chat UI backed by the ai-chat edge
 // function and ai_conversations table. Sport-specific game-plan handoffs
@@ -34,32 +37,46 @@ export function ROMBot() {
   // FG-06/FG-38: reopen the last chat after a reload, one account-wide history shared with BJJ and BB (no new screen copy). Reads the user's own rows (RLS: user_id = auth.uid()).
   const [restoreDone, setRestoreDone] = useState(false)
   const freshKey = user ? `romrx_rombot_fresh_${user.id}` : ''
+  // P1-17: the day 3 check-in (server note + its button). An unread note opens first; opening it marks it read.
+  const [checkin, setCheckin] = useState<Checkin | null>(null)
 
   useEffect(() => {
     if (!user) return
     let cancelled = false
     ;(async () => {
       try {
-        const { data: convo } = await supabase
-          .from('ai_conversations')
-          .select('id, updated_at')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
+        const ck = await loadLatestCheckin(user.id)
+        const c = ck.ok ? ck.checkin : null
+        const ckUnread = isCheckinUnread(user.id, c)
+        if (!cancelled) setCheckin(c)
+        const { data: latest } = c && ckUnread
+          ? { data: null }
+          : await supabase
+            .from('ai_conversations')
+            .select('id, updated_at')
+            .eq('user_id', user.id)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        const convo = c && ckUnread ? { id: c.conversationId, updated_at: '' } : latest
         const clearedAt = Number(localStorage.getItem(freshKey) || 0)
-        if (convo && new Date(convo.updated_at).getTime() > clearedAt) {
-          const { data: rows } = await supabase
+        if (convo && (convo.id === c?.conversationId && ckUnread || new Date(convo.updated_at).getTime() > clearedAt)) {
+          const { data: rows, error: rowsErr } = await supabase
             .from('ai_messages')
             .select('role, content, created_at')
             .eq('conversation_id', convo.id)
             .order('created_at', { ascending: false })
             .limit(50)
+          if (!cancelled && rowsErr && c && convo.id === c.conversationId) setError(CHECKIN_LOAD_ERROR)
           if (!cancelled && rows && rows.length > 0) {
             setConvId(convo.id)
             setMessages(rows.reverse()
               .filter(r => r.role === 'user' || r.role === 'assistant')
               .map(r => ({ role: r.role as 'user' | 'assistant', content: r.content as string })))
+            if (c && ckUnread && convo.id === c.conversationId) {
+              markCheckinRead(user.id, c.conversationId)
+              track('rombot_checkin_opened', { branch: c.branch })
+            }
           }
         }
       } catch { /* fall back to a fresh chat */ }
@@ -107,6 +124,11 @@ export function ROMBot() {
     }
   }
 
+  // P1-17: the button sits under the check-in note, only while that chat is open.
+  const noteIdx = checkin && convId === checkin.conversationId
+    ? messages.findIndex(m => m.role === 'assistant' && m.content === checkin.content)
+    : -1
+
   if (profileLoading) return <Spinner />
 
   return (
@@ -145,6 +167,9 @@ export function ROMBot() {
               {formatLines(m.content).map((line, j) => (
                 <p key={j} dangerouslySetInnerHTML={{ __html: line }} className={j > 0 ? 'mt-1' : ''} />
               ))}
+              {i === noteIdx && checkin && user && (
+                <RombotCheckinButton checkin={checkin} onRead={() => markCheckinRead(user.id, checkin.conversationId)} />
+              )}
             </div>
           </div>
         ))}
