@@ -67,7 +67,7 @@ describe('P1-18b flag', () => {
     expect(src.match(/<ResultsSurvey/g)!.length).toBe(1)
     expect(src).toContain('{SHOW_RESULTS_SURVEY && user && <ResultsSurvey userId={user.id} assessment={assessment as { id?: unknown; check_kind?: unknown }} />}')
     const at = src.indexOf('<ResultsSurvey')
-    for (const before of ['Your Results Are In', 'Top Asymmetry Flags', 'Unlock My Dashboard', '<ReminderOptIn', 'You pay nothing before January 1, 2027']) {
+    for (const before of ['Your Results Are In', 'Top Asymmetry Flags', 'Unlock My Dashboard', '<ReminderOptIn', '{CARD_LINE_SHORT_NODATE} ROMRx Base is $60 a year']) {
       expect(src.indexOf(before)).toBeGreaterThan(-1)
       expect(src.indexOf(before)).toBeLessThan(at)
     }

@@ -1,14 +1,19 @@
 {
-  "_note": "Card 21 (Jim YES 2026-10-20, Stacy+Grant text 11:08 AM). ONE source for the card line. To swap: move a string's current value into previous.<key>, set the new value, run `node scripts/card-line.mjs`. `npm test` runs --check so pages and app cannot drift. short = spots that already show 'Free through' / $60 next to it (all current body spots). meta = meta/og descriptions (whole price segment replaced, max 110). body = full line for any new spot with no price text nearby (unused today). short_nodate = ResultsPreview.tsx line with 'You pay nothing before January 1, 2027.' right after it (Stacy ruling 11:13 AM, avoids repeating the date). meta = the ENTIRE content of description, og:description and twitter:description on all 7 pages (21 tags, Vera 11:19 AM).",
-  "body": "Free through Dec 31, 2026. No card needed to start. You add one when you unlock Base, with no charge until January 1, 2027. Then $60 a year unless you cancel.",
-  "short": "No card needed to start. You add one when you unlock Base, with no charge until January 1, 2027.",
-  "meta": "Free through Dec 31, 2026. No card needed to start. Then $60 a year for Base unless you cancel.",
+  "_note": "Card 21 (Jim YES 2026-10-20, Stacy+Grant text 11:08 AM). ONE source for the card line. To swap: move a string's current value into previous.<key>, set the new value, run `node scripts/card-line.mjs`. `npm test` runs --check so pages and app cannot drift. short = spots that already show the price sentence next to it (all current body spots). meta = meta/og descriptions (whole price segment replaced, max 110). body = full line for any new spot with no price text nearby (unused today). short_nodate = ResultsPreview.tsx small print line under the CTA (Stacy ruling 11:13 AM). meta = the ENTIRE content of description, og:description and twitter:description on bjj, bodybuilding and universe (9 tags, Vera 11:19 AM); about, beta, faq and index keep their P1-31 metas (P1-33, Stacy 0708 call 3).",
+  "body": "Your first assessment and its results are free. No card needed to start. You add one when you unlock Base. ROMRx Base is $60 a year and renews each year until you cancel.",
+  "short": "No card needed to start. You add one when you unlock Base.",
+  "meta": "ROMRx Base is $60 a year and renews until you cancel. Check your range of motion at 10 joints in 15 minutes.",
   "previous": {
     "short": [
-      "Add a card to start."
+      "Add a card to start.",
+      "No card needed to start. You add one when you unlock Base, with no charge until January 1, 2027."
     ],
     "meta": [
-      "Free through Dec 31, 2026. Add a card to start. Then $60 a year unless you cancel."
+      "Free through Dec 31, 2026. Add a card to start. Then $60 a year unless you cancel.",
+      "Free through Dec 31, 2026. No card needed to start. Then $60 a year for Base unless you cancel."
+    ],
+    "body": [
+      "Free through Dec 31, 2026. No card needed to start. You add one when you unlock Base, with no charge until January 1, 2027. Then $60 a year unless you cancel."
     ]
   },
   "short_nodate": "No card needed to start. You add one when you unlock Base."
