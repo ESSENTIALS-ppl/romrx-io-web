@@ -87,7 +87,7 @@ const SHOW_NOTIFICATIONS = true
 // FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
 const SHOW_PUSH = false
 // FG-13: "Export my data" stays hidden until the export-my-data function flag is on and Jim approves the wording.
-const SHOW_EXPORT_MY_DATA = false
+const SHOW_EXPORT_MY_DATA = true // P1-23 unhide (Grant, Nov 16 r3). SHOW_DELETION_STATUS stays false.
 // FG-21: show the deletion request status (new copy, NEEDS JIM WORDING). Off: nothing is read or shown.
 const SHOW_DELETION_STATUS = false
 
