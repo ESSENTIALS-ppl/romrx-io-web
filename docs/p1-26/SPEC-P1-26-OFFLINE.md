@@ -1,4 +1,4 @@
-# SPEC-P1-26-OFFLINE — offline assessment and media caching (Base web app)
+# SPEC-P1-26-OFFLINE: offline assessment and media caching (Base web app)
 
 Avery, Mon Nov 16, 2026, evening ET (America/New_York). Web app only; no native. Build sits behind a flag that defaults off. Nothing in this item is for deploy until gated.
 
@@ -22,8 +22,8 @@ A signed-in member can keep moving through the Base assessment and protocol medi
 
 Two versioned caches:
 
-- `romrx-p1-26-shell-v1` — app shell: `/app/` navigations (`index.html`) and hashed `/app/assets/*` static files (js, css, fonts served by the app, icons). HTML is network-first, falling back to cache when offline. Hashed assets are cache-first.
-- `romrx-p1-26-media-v1` — same-origin `/videos/*` (mp4 and poster jpg) for assessment and protocol screens. Cache-first, LRU cap of 24 files (about 12 videos plus posters). A miss while offline returns a network error the existing video slot already hides.
+- `romrx-p1-26-shell-v1` is the app shell: `/app/` navigations (`index.html`) and hashed `/app/assets/*` static files (js, css, fonts served by the app, icons). HTML is network-first, falling back to cache when offline. Hashed assets are cache-first.
+- `romrx-p1-26-media-v1` holds same-origin `/videos/*` (mp4 and poster jpg) for assessment and protocol screens. Cache-first, LRU cap of 24 files (about 12 videos plus posters). A miss while offline returns a network error the existing video slot already hides.
 
 Cache names are versioned. On activate, any `romrx-p1-26-*` cache that is not a current name is deleted.
 
