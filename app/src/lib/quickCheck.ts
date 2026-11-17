@@ -203,10 +203,18 @@ export function quickCheckPageGate(s: Schedule | null, now: Date = new Date(), c
 export type SubmitOutcome = { kind: 'result' } | { kind: 'today' } | { kind: 'error'; message: string }
 
 /** What the page does with a submit response. The window 400 goes to Today (no loop); other failures show the generic line. */
-export function quickSubmitOutcome(status: number, data: { ok?: boolean; error?: string } | null | undefined): SubmitOutcome {
+export function quickSubmitOutcome(status: number, data: { ok?: boolean; error?: string; disabled?: boolean } | null | undefined): SubmitOutcome {
   if (status >= 200 && status < 300 && data?.ok) return { kind: 'result' }
   if (status === 400 && data?.error === QUICK_NOT_SCHEDULED_ERROR) return { kind: 'today' }
+  if (quickServerOff(status, data)) return { kind: 'today' }
   return { kind: 'error', message: GENERIC_ERROR }
+}
+
+/** Server side off (quick path missing or switched off): 404, or a body that says disabled. Goes to Today quietly, no error line. */
+export function quickServerOff(status: number, data: { error?: string; disabled?: boolean } | null | undefined): boolean {
+  if (status === 404) return true
+  if (data?.disabled === true) return true
+  return typeof data?.error === 'string' && /\b(disabled|not enabled)\b/i.test(data.error)
 }
 
 export const quickCheckDismissKey = (userId: string, nextCheckAt: string) => `romrx_hq_quickcheck_later_${userId}_${nextCheckAt.slice(0, 10)}`
