@@ -161,24 +161,24 @@ describe('P1-18 prompt (flag forced on)', () => {
     await click('sf-hard'); await click('sf-send')
     expect(calls.find(c => c.op === 'insert')!.row).toMatchObject({ feel: 'hard', clear: null, length_fit: null, note: null })
   })
-  it('error path: a failed send shows only the generic line, keeps the answers, and can be retried or skipped', async () => {
+  it('error path: a failed send (missing table, RLS) hides the card quietly, shows no error, and is not marked done', async () => {
     const { client, calls } = fakeClient({ insertError: { code: '42501', message: 'rls' } })
     await mount({ enabled: true, client })
     await click('sf-hard'); await click('sf-send')
-    expect($('session-feel-error')!.textContent).toBe('Something went wrong. Please try again.')
+    expect(calls.filter(c => c.op === 'insert').length).toBe(1)
+    expect($('session-feel-error')).toBeNull()
+    expect(host.textContent).not.toContain(P1_18_WORDS.error)
     expect(host.textContent).not.toContain('rls')
-    expect($('sf-hard')!.getAttribute('aria-checked')).toBe('true')
-    expect(localStorage.getItem(feelDoneKey(UID, DAY))).toBeNull()
-    await click('sf-send')
-    expect(calls.filter(c => c.op === 'insert').length).toBe(2)
-    await click('sf-skip')
     expect(host.innerHTML).toBe('')
+    expect(localStorage.getItem(feelDoneKey(UID, DAY))).toBeNull()
   })
-  it('error path: a thrown send shows the generic line', async () => {
+  it('error path: a thrown send hides the card quietly with no error text', async () => {
     const { client } = fakeClient({ insertThrows: true })
     await mount({ enabled: true, client })
     await click('sf-easy'); await click('sf-send')
-    expect($('session-feel-error')!.textContent).toBe(P1_18_WORDS.error)
+    expect($('session-feel-error')).toBeNull()
+    expect(host.innerHTML).toBe('')
+    expect(localStorage.getItem(feelDoneKey(UID, DAY))).toBeNull()
   })
   it('error path: 23505 (already sent for this session) counts as sent, no error line', async () => {
     const { client } = fakeClient({ insertError: { code: '23505', message: 'dup' } })

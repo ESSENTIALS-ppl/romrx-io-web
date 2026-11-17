@@ -1,7 +1,7 @@
 // P1-18: "How did that feel?" under "Completed today", with a short optional survey.
 // Gated by SHOW_SESSION_FEEDBACK (false): when off this renders nothing and makes no Supabase call.
 // Never blocks finishing a session (it only shows after the session is saved), shows once per session,
-// can be skipped, and fails quietly: a failed read hides it; a failed send shows the existing generic line.
+// can be skipped, and fails quietly: a failed read hides it; a failed send hides it too (no error shown, not marked done).
 import { useEffect, useState } from 'react'
 import { Loader2, CheckCircle2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -64,7 +64,7 @@ function SessionFeelInner({ userId, sessionDate, refreshKey = 0, client = supaba
   const [note, setNote] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
-  const [err, setErr] = useState('')
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => { setDone(readFeelDone(userId, sessionDate)); setSent(false) }, [userId, sessionDate])
 
@@ -95,20 +95,20 @@ function SessionFeelInner({ userId, sessionDate, refreshKey = 0, client = supaba
       </div>
     )
   }
-  if (done || !sessionId) return null
+  if (done || failed || !sessionId) return null
 
   const skip = () => { markFeelDone(userId, sessionDate, 'skipped'); setDone(true) }
 
   const send = async () => {
     if (!feel || sending) return
-    setSending(true); setErr('')
+    setSending(true)
     try {
       const row = buildFeedbackRow(userId, sessionId, sessionDate, feel, { clear, length_fit: lengthFit, note })
       const { error } = await client.from(SESSION_FEEDBACK_TABLE).insert(row)
-      if (error && !isAlreadySent(error)) { setErr(W.error); return }
+      if (error && !isAlreadySent(error)) { setFailed(true); return } // quiet: hide, no error text
       markFeelDone(userId, sessionDate, 'sent'); setSent(true)
     } catch {
-      setErr(W.error)
+      setFailed(true) // quiet: hide, no error text
     } finally {
       setSending(false)
     }
@@ -148,7 +148,6 @@ function SessionFeelInner({ userId, sessionDate, refreshKey = 0, client = supaba
           {W.more}
         </button>
       )}
-      {err && <p data-testid="session-feel-error" role="alert" className="text-xs font-medium text-red-700">{err}</p>}
       <div className="flex items-center gap-3">
         <button
           type="button"
