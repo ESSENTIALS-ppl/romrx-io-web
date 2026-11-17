@@ -153,23 +153,23 @@ describe('P1-18b survey (flag forced on)', () => {
     await click('rs-clear-no')
     expect(inserts(calls)[0].row).toMatchObject({ ease: 'hard', results_clear: 'no', check_again: 'yes' })
   })
-  it('error path: a failed send shows only the generic line, keeps the answers, and a tap tries again', async () => {
+  it('error path: a failed send (missing table, RLS) hides the card quietly, shows no error, and is not marked done', async () => {
     const { client, calls } = fakeClient({ insertError: { code: '42501', message: 'rls' } })
     await mount({ enabled: true, client })
     await click('rs-ease-easy'); await click('rs-clear-yes'); await click('rs-again-yes')
-    expect($('results-survey-error')!.textContent).toBe('Something went wrong. Please try again.')
+    expect(inserts(calls).length).toBe(1)
+    expect($('results-survey-error')).toBeNull()
+    expect(host.textContent).not.toContain(P1_18B_WORDS.error)
     expect(host.textContent).not.toContain('rls')
-    expect($('rs-ease-easy')!.getAttribute('aria-checked')).toBe('true')
-    expect(localStorage.getItem(surveyDoneKey(UID, AID))).toBeNull()
-    await click('rs-again-maybe')
-    expect(inserts(calls).length).toBe(2)
-    await click('rs-skip')
     expect(host.innerHTML).toBe('')
+    expect(localStorage.getItem(surveyDoneKey(UID, AID))).toBeNull()
   })
-  it('error path: a thrown send shows the generic line', async () => {
+  it('error path: a thrown send hides the card quietly with no error text', async () => {
     await mount({ enabled: true, client: fakeClient({ insertThrows: true }).client })
     await click('rs-ease-easy'); await click('rs-clear-yes'); await click('rs-again-yes')
-    expect($('results-survey-error')!.textContent).toBe(P1_18B_WORDS.error)
+    expect($('results-survey-error')).toBeNull()
+    expect(host.innerHTML).toBe('')
+    expect(localStorage.getItem(surveyDoneKey(UID, AID))).toBeNull()
   })
   it('error path: 23505 (already answered) counts as sent, no error line', async () => {
     await mount({ enabled: true, client: fakeClient({ insertError: { code: '23505', message: 'dup' } }).client })

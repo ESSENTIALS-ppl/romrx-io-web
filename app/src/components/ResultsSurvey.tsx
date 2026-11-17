@@ -1,8 +1,8 @@
 // P1-18b: short optional survey at the bottom of the results screen (after the results and the Unlock button).
 // Gated by SHOW_RESULTS_SURVEY (false): when off this renders nothing and makes no Supabase call.
 // Never blocks the results or navigation (it sits below everything, nothing waits on it), shows once per assessment,
-// never for a quick re-check, can be skipped, and fails quietly: a failed read hides it; a failed send shows the
-// existing generic line and a tap on any answer tries again.
+// never for a quick re-check, can be skipped, and fails quietly: a failed read hides it; a failed send hides it too
+// (no error shown, not marked done).
 import { useEffect, useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -60,7 +60,7 @@ function ResultsSurveyInner({ userId, assessmentId, client = supabase as unknown
   const [answers, setAnswers] = useState<ResultsAnswers>({ ease: null, results_clear: null, check_again: null })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
-  const [err, setErr] = useState('')
+  const [failed, setFailed] = useState(false)
 
   // Hide if this assessment already has an answer (another device). Any read error keeps it hidden (quiet).
   useEffect(() => {
@@ -86,17 +86,17 @@ function ResultsSurveyInner({ userId, assessmentId, client = supabase as unknown
       </div>
     )
   }
-  if (done || !ready) return null
+  if (done || failed || !ready) return null
 
   const send = async (a: ResultsAnswers) => {
     if (!answersComplete(a) || sending) return
-    setSending(true); setErr('')
+    setSending(true)
     try {
       const { error } = await client.from(ASSESSMENT_FEEDBACK_TABLE).insert(buildAssessmentFeedbackRow(userId, assessmentId, a))
-      if (error && error.code !== '23505') { setErr(W.error); return } // 23505 = this assessment already answered
+      if (error && error.code !== '23505') { setFailed(true); return } // quiet: hide, no error text. 23505 = already answered
       markSurveyDone(userId, assessmentId, 'sent'); setSent(true)
     } catch {
-      setErr(W.error)
+      setFailed(true) // quiet: hide, no error text
     } finally {
       setSending(false)
     }
@@ -114,7 +114,6 @@ function ResultsSurveyInner({ userId, assessmentId, client = supabase as unknown
       <Row id="ease" q={W.qEase} value={answers.ease} options={EASES} labels={EASE_LABEL} onPick={pick('ease')} />
       <Row id="clear" q={W.qClear} value={answers.results_clear} options={RESULTS_CLEARS} labels={RESULTS_CLEAR_LABEL} onPick={pick('results_clear')} />
       <Row id="again" q={W.qAgain} value={answers.check_again} options={CHECK_AGAINS} labels={CHECK_AGAIN_LABEL} onPick={pick('check_again')} />
-      {err && <p data-testid="results-survey-error" role="alert" className="text-xs font-medium text-red-300">{err}</p>}
       <button type="button" data-testid="rs-skip" onClick={skip} className="text-xs font-semibold text-white/60 hover:text-white">
         {W.skip}
       </button>
