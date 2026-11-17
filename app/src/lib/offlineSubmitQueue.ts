@@ -4,7 +4,8 @@ import { offlineCacheOn } from './offlineCachePolicy'
 
 export const QUEUE_DB = 'romrx-p1-26-offline'
 export const QUEUE_STORE = 'submit-queue'
-export const PENDING_MESSAGE = 'You appear to be offline. Your assessment is saved on this device and will submit when you are back online.'
+// Stacy STACY-P1-26-WORDS-20261116-2013.md (sha256 b98b8370), item 1, exact.
+export const PENDING_MESSAGE = "You appear to be offline. Your assessment is saved on this device and will send when you're back online with ROMRx open. Stay signed in until it sends."
 
 export interface QueuedSubmit {
   id: string

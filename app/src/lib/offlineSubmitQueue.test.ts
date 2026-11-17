@@ -11,6 +11,15 @@ const URL_ = 'https://example.supabase.co/functions/v1/submit-assessment'
 const body = { hip_er_l: 40 }
 
 describe('P1-26 offline submit queue', () => {
+  it('PENDING_MESSAGE is Stacy b98b8370 item 1, exact', () => {
+    expect(PENDING_MESSAGE).toBe("You appear to be offline. Your assessment is saved on this device and will send when you're back online with ROMRx open. Stay signed in until it sends.")
+  })
+  it('legal.html carries Stacy b98b8370 item 3 in the Assessment and progress data paragraph', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    const html = readFileSync(resolve(process.cwd(), '..', 'legal.html'), 'utf8')
+    expect(html).toContain('48 hours after your last saved step. If you submit an assessment while you are offline, we hold it in your browser on that device until it sends. It is removed from the device once it sends, or when you sign out.</p>')
+  })
   it('success path does not queue', async () => {
     const store = memoryQueueStore()
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }))
