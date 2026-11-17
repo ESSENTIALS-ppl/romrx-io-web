@@ -237,6 +237,11 @@ export async function clearSubmitQueue(opts: { store?: QueueStore; userId?: stri
       if (opts.userId && it.userId !== opts.userId) continue
       await store.delete(it.id); n++
     }
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (k.startsWith(SUBMIT_FAILED_KEY_PREFIX) && (!opts.userId || k === SUBMIT_FAILED_KEY_PREFIX + opts.userId)) localStorage.removeItem(k)
+      }
+    } catch { /* no storage */ }
     return n
   } catch { return 0 }
 }

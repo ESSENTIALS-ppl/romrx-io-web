@@ -21,7 +21,7 @@ type Status = 'idle' | 'checking' | 'needed' | 'ok'
  * person's own tap checks it. Saved through public.record_terms_reaccept (server timestamp, no IP).
  */
 export function TermsReacceptGate() {
-  const { user, loading } = useAuth()
+  const { user, loading, signOut } = useAuth()
   const { pathname, search } = useLocation()
   const [status, setStatus] = useState<Status>('idle')
   const [agreed, setAgreed] = useState(false)
@@ -105,7 +105,7 @@ export function TermsReacceptGate() {
           Continue
         </button>
         <p className="text-center">
-          <button type="button" onClick={() => { void supabase.auth.signOut() }} className="text-xs text-slate-500 underline">
+          <button type="button" onClick={() => { void signOut() }} className="text-xs text-slate-500 underline">
             Sign out
           </button>
         </p>

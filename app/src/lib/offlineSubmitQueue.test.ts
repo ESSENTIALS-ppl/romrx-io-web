@@ -159,9 +159,9 @@ describe('P1-26 offline submit queue', () => {
     const { resolve } = await import('node:path')
     const src = readFileSync(resolve(process.cwd(), 'src/hooks/useAuth.ts'), 'utf8')
     expect(src).toContain("import { clearSubmitQueue } from '../lib/offlineSubmitQueue'")
-    expect(src).toMatch(/const clearDraftMirrors = \(\) => \{[^\n]*void clearSubmitQueue\(\) \}/)
-    expect(src).toContain("if (event === 'SIGNED_OUT') clearDraftMirrors()")
-    expect(src).toContain('const signOut = () => { clearDraftMirrors(); return supabase.auth.signOut() }')
+    expect(src).toContain('const clearOfflineQueue = () => clearSubmitQueue()')
+    expect(src).toContain("if (event === 'SIGNED_OUT') { clearDraftMirrors(); void clearOfflineQueue() }")
+    expect(src).toContain('const signOut = async () => { clearDraftMirrors(); await clearOfflineQueue(); return supabase.auth.signOut() }')
   })
 
   it('a refused queued submit (4xx, not 401/429) is dropped and leaves a one-time notice for that user only', async () => {
