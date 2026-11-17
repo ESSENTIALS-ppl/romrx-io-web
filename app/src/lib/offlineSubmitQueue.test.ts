@@ -1,6 +1,7 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import {
-  PENDING_MESSAGE, flushSubmitQueue, isNetworkFailure, memoryQueueStore, postSubmitAssessment, clearSubmitQueue, userIdFromToken,
+  PENDING_MESSAGE, flushSubmitQueue, isNetworkFailure, memoryQueueStore, postSubmitAssessment, clearSubmitQueue, userIdFromToken, takeSubmitFailedNotice, SUBMIT_FAILED_KEY_PREFIX,
 } from './offlineSubmitQueue'
 
 // Fake Supabase-style access tokens (header.payload.sig); only the payload sub is read.
@@ -161,5 +162,38 @@ describe('P1-26 offline submit queue', () => {
     expect(src).toMatch(/const clearDraftMirrors = \(\) => \{[^\n]*void clearSubmitQueue\(\) \}/)
     expect(src).toContain("if (event === 'SIGNED_OUT') clearDraftMirrors()")
     expect(src).toContain('const signOut = () => { clearDraftMirrors(); return supabase.auth.signOut() }')
+  })
+
+  it('a refused queued submit (4xx, not 401/429) is dropped and leaves a one-time notice for that user only', async () => {
+    const store = memoryQueueStore([
+      { id: '1', url: URL_, body: '{}', createdAt: 1, userId: 'user-a' },
+      { id: '2', url: URL_, body: '{}', createdAt: 2, userId: 'user-a' },
+    ])
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, error: 'bad' }), { status: 400 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+    const r = await flushSubmitQueue({ getAccessToken: async () => TOK_A, apikey: 'k', fetchImpl, store, flagOn: true })
+    expect(r).toEqual({ sent: 1, remaining: 0 })
+    expect(localStorage.getItem(SUBMIT_FAILED_KEY_PREFIX + 'user-a')).toBe('1')
+    expect(takeSubmitFailedNotice('user-b')).toBe(false)
+    expect(takeSubmitFailedNotice('user-a')).toBe(true)
+    expect(takeSubmitFailedNotice('user-a')).toBe(false)
+  })
+  it('401 / 429 / 5xx keep the item and leave no notice', async () => {
+    for (const status of [401, 429, 503]) {
+      localStorage.clear()
+      const store = memoryQueueStore([{ id: '1', url: URL_, body: '{}', createdAt: 1, userId: 'user-a' }])
+      const fetchImpl = vi.fn(async () => new Response('{}', { status }))
+      await flushSubmitQueue({ getAccessToken: async () => TOK_A, apikey: 'k', fetchImpl, store, flagOn: true })
+      expect(await store.getAll()).toHaveLength(1)
+      expect(takeSubmitFailedNotice('user-a')).toBe(false)
+    }
+  })
+  it('Assessment shows the existing failure line from the notice (no new string)', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    const src = readFileSync(resolve(process.cwd(), 'src/pages/Assessment.tsx'), 'utf8')
+    expect(src).toContain("useEffect(() => { if (userId && takeSubmitFailedNotice(userId)) setError('Submission failed. Please try again.') }, [userId])")
+    expect(src.split("'Submission failed. Please try again.'").length - 1).toBeGreaterThanOrEqual(3)
   })
 })

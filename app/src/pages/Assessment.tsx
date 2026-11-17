@@ -15,7 +15,7 @@ import {
   type Draft, type DraftSaver, type SaveStatus,
 } from '../lib/assessmentDraft'
 import { supabaseDraftStore } from '../lib/assessmentDraftStore'
-import { postSubmitAssessment } from '../lib/offlineSubmitQueue'
+import { postSubmitAssessment, takeSubmitFailedNotice } from '../lib/offlineSubmitQueue'
 
 // localStorage for the per-member progress copy. Signed-in members only (Stacy Oct 28): no copy for signed-out visitors.
 const draftStorage = () => { try { return window.localStorage } catch { return null } }
@@ -47,6 +47,9 @@ export function Assessment() {
 
   // ---- Progress drafts (signed in only). See lib/assessmentDraft.ts for the rules. ----
   const userId = session?.user?.id ?? null
+  // P1-26: a queued offline submit the server later refused shows the existing failure line here (red box on the
+  // measure / lead screen) the next time this member opens the assessment. Shown once.
+  useEffect(() => { if (userId && takeSubmitFailedNotice(userId)) setError('Submission failed. Please try again.') }, [userId])
   const [draftChecked, setDraftChecked] = useState(false)
   const [resumeDraft, setResumeDraft] = useState<Draft | null>(null)
   const [startOverArmed, setStartOverArmed] = useState(false)

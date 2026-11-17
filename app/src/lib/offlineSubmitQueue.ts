@@ -157,6 +157,23 @@ export async function postSubmitAssessment(opts: {
   }
 }
 
+/** A queued submit the server refused (a 4xx other than 401/429) is dropped. Remember that per user, so the next time
+ *  they open the assessment it shows the existing "Submission failed. Please try again." line (no new words). */
+export const SUBMIT_FAILED_KEY_PREFIX = 'romrx_p1_26_submit_failed_'
+function noteSubmitFailed(userId: string): void {
+  try { localStorage.setItem(SUBMIT_FAILED_KEY_PREFIX + userId, '1') } catch { /* no storage */ }
+}
+/** Read and clear the notice for this user. */
+export function takeSubmitFailedNotice(userId: string | null | undefined): boolean {
+  if (!userId) return false
+  try {
+    const k = SUBMIT_FAILED_KEY_PREFIX + userId
+    const v = localStorage.getItem(k)
+    if (v) localStorage.removeItem(k)
+    return !!v
+  } catch { return false }
+}
+
 export async function flushSubmitQueue(opts: {
   getAccessToken: () => Promise<string | null>
   apikey: string
@@ -192,6 +209,7 @@ export async function flushSubmitQueue(opts: {
         if (data.ok === false) {
           if (res.status >= 500 || res.status === 401 || res.status === 429) break
           await store.delete(item.id)
+          noteSubmitFailed(uid)
           continue
         }
         await store.delete(item.id)
@@ -200,6 +218,7 @@ export async function flushSubmitQueue(opts: {
       }
       if (res.status >= 500 || res.status === 401 || res.status === 429) break
       await store.delete(item.id)
+      noteSubmitFailed(uid)
     } catch {
       break
     }
