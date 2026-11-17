@@ -6,7 +6,7 @@
 // JULES-P1-18-PROPOSED-WORDS-20261116.md 801b1a05). noteHelp is her recommended addition, verbatim (Grant's call).
 // Every new customer-facing string lives in P1_18_WORDS; reused strings are marked with their source.
 
-export const SHOW_SESSION_FEEDBACK = false
+export const SHOW_SESSION_FEEDBACK = true
 
 export const P1_18_WORDS = {
   title: 'How did that feel?',

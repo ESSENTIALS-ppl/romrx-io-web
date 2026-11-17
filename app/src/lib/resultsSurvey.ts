@@ -8,7 +8,7 @@
 // Quick re-checks (check_kind = 'quick') never get the survey.
 import { isFullAssessment } from './assessmentReads'
 
-export const SHOW_RESULTS_SURVEY = false
+export const SHOW_RESULTS_SURVEY = true
 
 export const P1_18B_WORDS = {
   title: 'Quick question', // Stacy Card 1 (Oct 19)

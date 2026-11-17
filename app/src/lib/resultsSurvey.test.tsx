@@ -55,10 +55,10 @@ beforeEach(() => localStorage.clear())
 afterEach(unmount)
 
 describe('P1-18b flag', () => {
-  it('SHOW_RESULTS_SURVEY is false by default', () => { expect(SHOW_RESULTS_SURVEY).toBe(false) })
+  it('SHOW_RESULTS_SURVEY is on in the combined flags-on build', () => { expect(SHOW_RESULTS_SURVEY).toBe(true) })
   it('flag off: renders nothing and makes no Supabase call', async () => {
     const { client, calls } = fakeClient()
-    await mount({ client })
+    await mount({ enabled: false, client }) // flag is on by default in this build; off is passed explicitly
     expect(host.innerHTML).toBe('')
     expect(calls).toEqual([])
   })

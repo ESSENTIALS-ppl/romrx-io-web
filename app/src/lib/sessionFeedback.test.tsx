@@ -63,10 +63,10 @@ beforeEach(() => localStorage.clear())
 afterEach(unmount)
 
 describe('P1-18 flag', () => {
-  it('SHOW_SESSION_FEEDBACK is false by default', () => { expect(SHOW_SESSION_FEEDBACK).toBe(false) })
+  it('SHOW_SESSION_FEEDBACK is on in the combined flags-on build', () => { expect(SHOW_SESSION_FEEDBACK).toBe(true) })
   it('flag off: renders nothing and makes no Supabase call (read or write)', async () => {
     const { client, calls } = fakeClient()
-    await mount({ client })
+    await mount({ enabled: false, client }) // flag is on by default in this build; off is passed explicitly
     expect(host.innerHTML).toBe('')
     expect(calls).toEqual([])
   })
