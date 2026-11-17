@@ -16,6 +16,7 @@ import {
   nextCheckLineInCycle, quickSubmitBody, dayOneAssessment, SCHEDULE_COLUMNS, quickCheckPageGate, quickSubmitOutcome, GENERIC_ERROR,
   type QuickContext, type Schedule,
 } from '../lib/quickCheck'
+import { postSubmitAssessment } from '../lib/offlineSubmitQueue'
 
 const SUBMIT_ASSESSMENT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-assessment`
 const TODAY = '/dashboard/my-protocol'
@@ -74,20 +75,26 @@ function QuickCheckInner() {
     if (!schedule?.check_joints) return
     setLoading(true); setError('')
     try {
-      const res = await fetch(SUBMIT_ASSESSMENT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify(quickSubmitBody(values, schedule.check_joints)),
+      // P1-26: same signed-in submit helper as Assessment. Queues only when the flag is on and the network is down.
+      const result = await postSubmitAssessment({
+        url: SUBMIT_ASSESSMENT_URL,
+        accessToken: session.access_token,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        body: quickSubmitBody(values, schedule.check_joints),
       })
-      const data = await res.json().catch(() => ({ ok: false }))
       setLoading(false)
+      if (result.queued) { setError(result.error ?? GENERIC_ERROR); return }
+      if (!result.ok) {
+        const outcome = quickSubmitOutcome(result.status ?? 0, result.data ?? { ok: false })
+        if (outcome.kind === 'today') { navigate(TODAY, { replace: true }); return }
+        if (outcome.kind === 'error') { setError(outcome.message); return }
+        setError(GENERIC_ERROR)
+        return
+      }
+      const data = result.data ?? { ok: true }
       // 47aad435: 200 { ok: true, check_kind: 'quick', ... }. The window 400 'No quick re-check is scheduled'
       // goes to Today (no retry loop); any other failure shows the existing generic line.
-      const outcome = quickSubmitOutcome(res.status, data)
+      const outcome = quickSubmitOutcome(result.status ?? 200, data)
       if (outcome.kind === 'today') { navigate(TODAY, { replace: true }); return }
       if (outcome.kind === 'error') { setError(outcome.message); return }
       track('quick_check_completed', { joints: schedule.check_joints.length })
