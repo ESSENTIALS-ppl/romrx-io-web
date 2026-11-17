@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Grant 11:29 Oct 20 2026: beta title names the price. Page title and og:title must match exactly.
-const TITLE = 'ROMRx Beta · Free through Dec 31, 2026, then $60 a year'
+const TITLE = 'ROMRx Base Beta: Range of Motion Check, $60/Year'
 const html = readFileSync(join(__dirname, '../../../beta.html'), 'utf8')
 
 describe('beta page title', () => {
