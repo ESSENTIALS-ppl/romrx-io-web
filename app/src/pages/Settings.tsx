@@ -91,8 +91,8 @@ const SHOW_PUSH = false
 const SHOW_EXPORT_MY_DATA = true // P1-23 unhide (Grant, Nov 16 r3). SHOW_DELETION_STATUS stays false.
 // FG-21: show the deletion request status (new copy, NEEDS JIM WORDING). Off: nothing is read or shown.
 const SHOW_DELETION_STATUS = false
-// P1-12: "Add to my calendar" (.ics download) stays hidden until calendar-ics is deployed and the release is approved.
-const SHOW_CALENDAR_ICS = false
+// P1-12: "Add to my calendar" (.ics download). r9 turns it on (Grant, Nov 16). Settings.calendarFlag.test.tsx fails if this is false.
+const SHOW_CALENDAR_ICS = true
 
 export function Settings() {
   const { user, session, signOut } = useAuth()
