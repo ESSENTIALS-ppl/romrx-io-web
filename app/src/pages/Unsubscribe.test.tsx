@@ -17,8 +17,9 @@ vi.mock('../lib/marketingToggle', () => ({ get SHOW_MARKETING_TOGGLE() { return 
 let root: Root, host: HTMLDivElement
 const fetchMock = vi.fn()
 const reply = (status: number, body: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
-const SECOND_SENTENCE = "You will no longer receive follow-up or renewal reminder emails."
-const WITH_NAME_TEXT = "a@b.co has been removed from ROMRx marketing emails. You will no longer receive follow-up or renewal reminder emails."
+const SECOND_SENTENCE = "Your email preferences have been updated. You may still receive account and billing notices."
+const WITH_NAME_TEXT = "a@b.co has been removed from ROMRx marketing emails. Your email preferences have been updated. You may still receive account and billing notices."
+const EMAIL_LINE = "has been removed from ROMRx marketing emails."
 
 async function mount(search: string) {
   window.history.pushState({}, '', `/app/unsubscribe${search}`)
@@ -71,13 +72,16 @@ describe('Unsubscribe link handling', () => {
     expect(String(fetchMock.mock.calls[0][0]).endsWith('?t=a%2Bb%3Dc')).toBe(true)
   })
 
-  it('both t and email: the token request is sent once (no email body) and the email is shown', async () => {
+  it('both t and email: the token request is sent once (no email body) and the email line is NOT shown (token path)', async () => {
     await mount('?t=tok123&email=Jim%40Example.com')
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const [url, init] = fetchMock.mock.calls[0]
     expect(String(url)).toContain('?t=tok123')
     expect(init.body).toBe('List-Unsubscribe=One-Click')
-    expect(host.textContent).toContain('jim@example.com')
+    expect(host.textContent).not.toContain('jim@example.com')
+    expect(host.textContent).not.toContain(EMAIL_LINE)
+    expect(host.querySelector('strong')).toBeNull()
+    expect(host.querySelectorAll('p')[0].textContent!.replace(/\s+/g, ' ').trim()).toBe(SECOND_SENTENCE)
     expect(host.textContent).toContain("You're unsubscribed.")
   })
 
@@ -212,5 +216,37 @@ describe('Unsubscribe link handling', () => {
     const { readFileSync } = await import('node:fs')
     const { resolve } = await import('node:path')
     expect(readFileSync(resolve(process.cwd(), 'src/lib/marketingToggle.ts'), 'utf8')).toMatch(/^export const SHOW_MARKETING_TOGGLE = false$/m)
+  })
+})
+
+describe('Vera FIX 1: success wording per path', () => {
+  it('token path: heading, new body, no email line', async () => {
+    await mount('?t=goodtoken')
+    expect(host.querySelector('h1')!.textContent).toBe("You're unsubscribed.")
+    expect(host.querySelectorAll('p')[0].textContent!.replace(/\s+/g, ' ').trim()).toBe("Your email preferences have been updated. You may still receive account and billing notices.")
+    expect(host.textContent).not.toContain(EMAIL_LINE)
+    expect(host.textContent).not.toContain('You will no longer receive follow-up or renewal reminder emails.')
+  })
+  it('?email= path: heading, email line, then the new body', async () => {
+    await mount('?email=a%40b.co')
+    expect(host.querySelector('h1')!.textContent).toBe("You're unsubscribed.")
+    expect(host.querySelector('strong')!.textContent).toBe('a@b.co')
+    expect(host.querySelectorAll('p')[0].textContent!.replace(/\s+/g, ' ').trim()).toBe("a@b.co has been removed from ROMRx marketing emails. Your email preferences have been updated. You may still receive account and billing notices.")
+    expect(host.textContent).not.toContain('You will no longer receive follow-up or renewal reminder emails.')
+  })
+  it("token path (Stacy aa53702d): no 'all emails' wording anywhere on the page", async () => {
+    await mount('?t=goodtoken')
+    expect(host.textContent!.toLowerCase()).not.toContain('all emails')
+    expect(host.textContent!.toLowerCase()).not.toContain('all romrx emails')
+  })
+  it("token plus email path: no 'all emails' wording either", async () => {
+    await mount('?t=goodtoken&email=a%40b.co')
+    expect(host.textContent!.toLowerCase()).not.toContain('all emails')
+  })
+  it('token plus email: heading, new body, no email line', async () => {
+    await mount('?t=goodtoken&email=a%40b.co')
+    expect(host.querySelector('h1')!.textContent).toBe("You're unsubscribed.")
+    expect(host.querySelectorAll('p')[0].textContent!.replace(/\s+/g, ' ').trim()).toBe("Your email preferences have been updated. You may still receive account and billing notices.")
+    expect(host.textContent).not.toContain(EMAIL_LINE)
   })
 })

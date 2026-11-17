@@ -10,6 +10,8 @@ const UNSUBSCRIBE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/unsub
 export function Unsubscribe() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'missing' | 'invalid'>('loading')
   const [email, setEmail] = useState<string | null>(null)
+  // Vera FIX 1 (Nov 16): the marketing-only email sentence shows on the legacy ?email= path only, never after a token.
+  const [viaToken, setViaToken] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -24,6 +26,7 @@ export function Unsubscribe() {
     // ?email= works exactly as before. ?t= is the signed lifecycle-email token (unsubscribe v9):
     // the token goes in the query string and the body is the RFC 8058 one-click form body.
     // When both are present the token is used and the email is only shown.
+    if (token) setViaToken(true)
     let decoded = ''
     if (raw) {
       decoded = decodeURIComponent(raw).trim().toLowerCase()
@@ -89,8 +92,8 @@ export function Unsubscribe() {
           <>
             <h1 style={styles.heading}>You're unsubscribed.</h1>
             <p style={styles.body}>
-              {email ? <><strong>{email}</strong> has been removed from ROMRx marketing emails.{' '}</> : null}
-              You will no longer receive follow-up or renewal reminder emails.
+              {email && !viaToken ? <><strong>{email}</strong> has been removed from ROMRx marketing emails.{' '}</> : null}
+              Your email preferences have been updated. You may still receive account and billing notices.
             </p>
             {SHOW_MARKETING_TOGGLE && (
               <p style={styles.note}>
