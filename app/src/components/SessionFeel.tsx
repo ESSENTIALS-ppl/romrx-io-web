@@ -133,12 +133,14 @@ function SessionFeelInner({ userId, sessionDate, refreshKey = 0, client = supaba
             <textarea
               id="session-feel-note"
               data-testid="sf-note"
+              aria-describedby="session-feel-note-help"
               value={note}
               onChange={e => setNote(e.target.value.slice(0, NOTE_MAX))}
               maxLength={NOTE_MAX}
               rows={2}
               className="input resize-y"
             />
+            <p id="session-feel-note-help" data-testid="sf-note-help" className="text-xs text-slate-600">{W.noteHelp}</p>
           </div>
         </div>
       ) : (

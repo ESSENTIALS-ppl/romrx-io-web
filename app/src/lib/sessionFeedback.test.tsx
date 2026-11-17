@@ -2,7 +2,8 @@
 /** P1-18: "How did that feel?" after a finished session, plus a short optional survey. Flag OFF by default. */
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('./track', () => ({ track: () => {}, trackPageView: () => {} }))
@@ -199,9 +200,10 @@ describe('P1-18 prompt (flag forced on)', () => {
 
 describe('P1-18 words and payload helpers', () => {
   it('every string is plain: no em or en dashes, no medical words', () => {
-    for (const v of Object.values(P1_18_WORDS)) {
+    for (const [k, v] of Object.entries(P1_18_WORDS)) {
       expect(v).not.toMatch(/[\u2014\u2013]/)
-      expect(v.toLowerCase()).not.toMatch(/pain|injur|heal|medical|treat|cure|diagnos|therap/)
+      if (k === 'noteHelp') continue // Stacy's safety pointer (stop and check with a doctor or physical therapist), not a claim
+      expect(v.toLowerCase()).not.toMatch(/pain|injur|heal|medical|treat|cure|diagnos|therap|hurt|doctor/)
     }
   })
   it('reused strings match the existing repo strings', () => {
@@ -223,5 +225,51 @@ describe('P1-18 words and payload helpers', () => {
     expect(isAlreadySent({ code: '23505' })).toBe(true)
     expect(isAlreadySent({ code: '42501' })).toBe(false)
     expect(isAlreadySent(null)).toBe(false)
+  })
+})
+
+// Stacy cleared strings 1 to 19 as written in the proposed file (801b1a05) and added noteHelp (STACY-P1-18-WORDS-20261116-1908.md, 97e2d251).
+const CLEARED: Record<string, string> = {
+  title: 'How did that feel?', feelEasy: 'Easy', feelRight: 'About right', feelHard: 'Hard', more: 'Tell us more (optional)',
+  qClear: 'Were the moves clear?', aYes: 'Yes', aSomewhat: 'Somewhat', aNo: 'No', qLength: 'How was the length?',
+  aTooShort: 'Too short', aLengthRight: 'About right', aTooLong: 'Too long', noteLabel: 'Anything else?',
+  noteHelp: 'If a move hurts, stop it and check with a doctor or physical therapist.',
+  send: 'Send feedback', sending: 'Sending...', notNow: 'Not now', thanks: 'Thanks. We got it.', error: 'Something went wrong. Please try again.',
+}
+const EVID = '/workspace/process/evidence'
+const STACY = `${EVID}/STACY-P1-18-WORDS-20261116-1908.md`
+const PROPOSED = `${EVID}/JULES-P1-18-PROPOSED-WORDS-20261116.md`
+const sha = (p: string) => createHash('sha256').update(readFileSync(p)).digest('hex')
+
+describe('P1-18 v2: Stacy-cleared words and noteHelp', () => {
+  it('P1_18_WORDS is exactly the cleared set (19 plus noteHelp), character for character', () => {
+    expect(P1_18_WORDS).toEqual(CLEARED)
+  })
+  it('noteHelp renders directly under the "Anything else?" field with the exact text', async () => {
+    const { client } = fakeClient()
+    await mount({ enabled: true, client })
+    await click('sf-more')
+    const note = $('sf-note')!, help = $('sf-note-help')!
+    expect(help.textContent).toBe('If a move hurts, stop it and check with a doctor or physical therapist.')
+    expect(note.nextElementSibling).toBe(help)
+    expect(note.previousElementSibling!.textContent).toBe('Anything else?')
+    expect(note.getAttribute('aria-describedby')).toBe(help.id)
+  })
+  it('noteHelp is not shown before the survey is opened', async () => {
+    const { client } = fakeClient()
+    await mount({ enabled: true, client })
+    expect($('sf-note-help')).toBeNull()
+  })
+  it.skipIf(!existsSync(STACY) || !existsSync(PROPOSED))('words match Stacy\'s cleared files on the box (skipped where the evidence files are absent)', () => {
+    expect(sha(STACY).startsWith('97e2d251')).toBe(true)
+    expect(sha(PROPOSED).startsWith('801b1a05')).toBe(true)
+    const stacy = readFileSync(STACY, 'utf8')
+    expect(stacy).toContain('strings 1 to 19 are CLEAR as written')
+    expect(stacy).toContain(`"${P1_18_WORDS.noteHelp}"`)
+    const proposed = Object.fromEntries([...readFileSync(PROPOSED, 'utf8').matchAll(/^\d+\. (\w+) = "([^"]*)"/gm)].map(m => [m[1], m[2]]))
+    expect(Object.keys(proposed).length).toBe(19)
+    const { noteHelp: _n, ...nineteen } = P1_18_WORDS
+    void _n
+    expect(nineteen).toEqual(proposed)
   })
 })

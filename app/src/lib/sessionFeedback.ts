@@ -2,7 +2,8 @@
 // OFF by default. SHOW_SESSION_FEEDBACK stays false until Avery's public.session_feedback table is live
 // (spec: process/evidence/JULES-P1-18-SESSION-FEEDBACK-SPEC-20261116.md). While it is false the prompt never
 // renders, never reads and never writes, so shipping this before the migration changes nothing for users.
-// Words: NOT final. Proposed for Stacy in process/evidence/JULES-P1-18-PROPOSED-WORDS-20261116.md.
+// Words: Stacy CLEARED 1 to 19 as written (STACY-P1-18-WORDS-20261116-1908.md, sha256 97e2d251, reviewing
+// JULES-P1-18-PROPOSED-WORDS-20261116.md 801b1a05). noteHelp is her recommended addition, verbatim (Grant's call).
 // Every new customer-facing string lives in P1_18_WORDS; reused strings are marked with their source.
 
 export const SHOW_SESSION_FEEDBACK = false
@@ -22,6 +23,7 @@ export const P1_18_WORDS = {
   aLengthRight: 'About right',
   aTooLong: 'Too long',
   noteLabel: 'Anything else?',
+  noteHelp: 'If a move hurts, stop it and check with a doctor or physical therapist.', // Stacy 1908 recommended line, under the note box
   send: 'Send feedback', // existing: FeedbackWidget.tsx
   sending: 'Sending...', // existing: FeedbackWidget.tsx
   notNow: 'Not now', // existing: reminderCopy.ts, quickCheck.ts, addToHomeScreen.ts
