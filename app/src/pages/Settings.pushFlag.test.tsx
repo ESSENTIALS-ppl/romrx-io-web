@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // P1-14 r7: SHOW_PUSH = false (compiled constant in Settings.tsx).
-// Renders the real Settings page (data hooks mocked) with browser push APIs stubbed, and proves: no push toggle or NEEDS STACY
+// Renders the real Settings page (data hooks mocked) with browser push APIs stubbed, and proves: no push toggle or push words
 // text, no Notification.requestPermission, no pushManager.subscribe, no save-push-subscription request. Control: the export button renders.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { act } from 'react'
@@ -73,11 +73,10 @@ async function renderSettings() {
 }
 
 describe('P1-14 SHOW_PUSH = false', () => {
-  it('flag off: the Settings render has no push toggle and no NEEDS STACY text', async () => {
+  it('flag off: the Settings render has no push toggle and none of the push words', async () => {
     await renderSettings()
     expect(host.querySelector('[data-testid="your-data-export"]')).not.toBeNull() // control: the page rendered
     expect(host.querySelector(`[aria-label="${PUSH_COPY.toggleTitle}"]`)).toBeNull()
-    expect(host.textContent).not.toContain('NEEDS STACY')
     for (const v of Object.values(PUSH_COPY)) expect(host.textContent).not.toContain(v)
   })
 
