@@ -10,8 +10,8 @@ import {
 } from './quickCheck'
 
 describe('P1-06 quick check', () => {
-  it('is OFF until Avery\'s server set (tip 47aad435) ships; route matches the emails', () => {
-    expect(QUICK_CHECK_ON).toBe(false)
+  it('is ON in the Nov 16 combined build; route matches the emails', () => {
+    expect(QUICK_CHECK_ON).toBe(true)
     expect(QUICK_CHECK_PATH).toBe('/dashboard/quick-check')
     const app = readFileSync(join(process.cwd(), 'src', 'App.tsx'), 'utf8')
     expect(app).toContain('<Route path="/dashboard/quick-check" element={<QuickCheck />} />')

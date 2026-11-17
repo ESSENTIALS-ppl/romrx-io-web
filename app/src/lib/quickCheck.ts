@@ -19,7 +19,8 @@
 //    So next_check_at === next_retest_at means no quick check is pending (only the full retest).
 import type { Field, Step } from '../pages/assessmentMeta'
 
-export const QUICK_CHECK_ON = false
+// Nov 16 combined build (Grant): ON. Ship gate above still applies: Vera precheck must confirm live submit-assessment honors check_kind='quick'.
+export const QUICK_CHECK_ON = true
 export const QUICK_CHECK_PATH = '/dashboard/quick-check' // the day 7 and day 14 emails link here (Avery note)
 
 // Words: Stacy, /workspace/process/evidence/STACY-P1-06-WORDS-20261115-2055.md, character for character. Jim yes needed.

@@ -23,7 +23,7 @@ const day14late = at('2026-11-16T04:30:00Z')  // Sun Nov 15, 11:30 PM ET
 const day15early = at('2026-11-16T05:30:00Z') // Mon Nov 16, 12:30 AM ET, before the hourly roll runs
 
 describe('P1-06 quick check window (c9bf74ed and 832056dd rules)', () => {
-  it('feature stays off', () => { expect(QUICK_CHECK_ON).toBe(false) })
+  it('feature is on in the Nov 16 combined build', () => { expect(QUICK_CHECK_ON).toBe(true) })
 
   it('day numbers: day 0 is the local date of last_assessed_at, in New York when no zone is stored', () => {
     expect(localDayNumber(row.last_assessed_at, day6late, resolveTz(null))).toBe(6)
