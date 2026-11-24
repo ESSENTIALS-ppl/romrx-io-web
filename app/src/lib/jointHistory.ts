@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
-import { radarSideRowsForAssessment, ASSESSMENT_JOINTS } from './mobilityBands'
+import { radarSideRowsForAssessment, jointDisplayRowsForAssessment, mobilityRawScoreForAssessment, ASSESSMENT_JOINTS, type JointScoreRow } from './mobilityBands'
 import { gateJointScores } from './hipFlexGate'
+import { loadHipScoredIds } from './hipFlexCutover'
+import { assessedAtMs, skipQuick, sortByAssessedAtNewestFirst } from './assessmentReads'
 
 // FG-08: per-joint trend data from Avery's read-only rpcs (my_joint_history, my_joint_start_vs_now). Signed-in user only.
 // If an rpc is missing or errors, the hook returns null for it and the page keeps its own on-device trend (silent fallback, no new text).
@@ -52,7 +54,8 @@ export function buildJointTrends(rows: HistoryRow[]): TrendSeries[] {
     e.rows.push(r)
     byAssessment.set(r.assessment_id, e)
   }
-  const timeline = [...byAssessment.values()].sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+  // FG-08: oldest first by assessed_at (the rpc's assessed_at column), never created_at.
+  const timeline = sortByAssessedAtNewestFirst([...byAssessment.values()].map(v => ({ ...v, assessed_at: v.at }))).reverse()
   const n = timeline.length
   const series = new Map<string, TrendPoint[]>()
   timeline.forEach((t, i) => {
@@ -99,4 +102,101 @@ export function useJointHistory(): { history: HistoryRow[] | null; startNow: Sta
     return () => { live = false }
   }, [])
   return { history, startNow }
+}
+
+type AssessmentLike = { id: string; assessed_at: string }
+
+/**
+ * FG-08: the on-device trend (used when the rpcs are missing). Same values as the Joint Breakdown bars: the worse-side %
+ * from radarSideRowsForAssessment, with the latest assessment's joint_scores. The time axis is oldest first by
+ * assessed_at whatever order the rows arrive in. Each point carries its assessed_at date and its % value.
+ */
+export function buildLocalTrends<A extends AssessmentLike>(assessments: readonly A[], latestId: string, latestScores: JointScoreRow[] | null, jointKeys: readonly string[]): TrendSeries[] {
+  const timeline = sortByAssessedAtNewestFirst(assessments).reverse()
+  if (timeline.length < 2) return []
+  const rowsByAssessment = timeline.map(a => ({ date: a.assessed_at, rows: radarSideRowsForAssessment(a, a.id === latestId ? latestScores : null) }))
+  return jointKeys.map(key => ({
+    key,
+    n: timeline.length,
+    points: rowsByAssessment
+      .map((t, i) => { const r = t.rows.find(x => x.key === key); return r && r.measured && !r.unscored ? { date: t.date, pct: r.worse, i } : null })
+      .filter((x): x is TrendPoint => x !== null),
+  }))
+}
+
+/**
+ * Score-fix + FG-08: the Body score change between two assessments, on the unclamped /100 average
+ * (mobilityRawScoreForAssessment). The ONE source for the My Body "vs <date>" chip AND the Where you started /
+ * Where you are now totals, so the two always agree. The dial keeps the band-clamped mobilityScoreForAssessment.
+ */
+export function bodyScoreChange(earlier: object, later: object): { before: number; now: number; delta: number } {
+  const before = mobilityRawScoreForAssessment(earlier)
+  const now = mobilityRawScoreForAssessment(later)
+  return { before, now, delta: now - before }
+}
+
+export type StartedVsNowJoint = { key: string; label: string; started: number | null; now: number | null }
+export type StartedVsNow = {
+  started: { date: string; total: number }
+  now: { date: string; total: number }
+  /** now.total - started.total, from bodyScoreChange (same as the chip's math). */
+  delta: number
+  joints: StartedVsNowJoint[]
+}
+
+/**
+ * FG-08: "Where you started" (the first full assessment by assessed_at) vs "Where you are now" (the latest).
+ * Total = bodyScoreChange (unclamped /100 average, Avery 4:30 PM ET), the same function as the "vs <date>" chip, so the
+ * started-to-now change and the chip always agree. Per joint = the Joint Breakdown bar % (jointDisplayRowsForAssessment).
+ * Returns null when there is no earlier assessment (one assessment on file): no comparison is shown.
+ * jointKeys = the joints on the Joint Breakdown, in its order (lumbar and pre-cutover hip flexion already filtered there).
+ */
+export function buildStartedVsNow<A extends AssessmentLike>(first: A | null | undefined, latest: A, latestScores: JointScoreRow[] | null, jointKeys: readonly string[]): StartedVsNow | null {
+  if (!first || first.id === latest.id) return null
+  const ft = assessedAtMs(first), lt = assessedAtMs(latest)
+  if (ft == null || lt == null || ft >= lt) return null
+  const before = new Map(jointDisplayRowsForAssessment(first, null).map(r => [r.key, r]))
+  const now = new Map(jointDisplayRowsForAssessment(latest, latestScores).map(r => [r.key, r]))
+  const joints: StartedVsNowJoint[] = []
+  for (const key of jointKeys) {
+    const n = now.get(key)
+    if (!n) continue
+    joints.push({ key, label: n.label, started: before.get(key)?.pct ?? null, now: n.pct ?? null })
+  }
+  const total = bodyScoreChange(first, latest)
+  return {
+    started: { date: first.assessed_at, total: total.before },
+    now: { date: latest.assessed_at, total: total.now },
+    delta: total.delta,
+    joints,
+  }
+}
+
+/**
+ * FG-08: the user's first full assessment, by assessed_at ascending (get_my_profile only returns the newest 4), plus
+ * whether it has a hip flexion score (L937, for gateAssessment). Read-only, RLS (assessments: user_id = auth.uid()),
+ * quick checks skipped. first is null until loaded or on any error; the page then uses the oldest assessment it already has.
+ */
+export function useFirstAssessment<A>(userId: string | undefined): { first: A | null; hipScoredIds: ReadonlySet<string> } {
+  const [state, setState] = useState<{ first: A | null; hipScoredIds: ReadonlySet<string> }>({ first: null, hipScoredIds: new Set() })
+  useEffect(() => {
+    if (!userId) return
+    let live = true
+    void (async () => {
+      try {
+        const { data, error } = await skipQuick(supabase.from('assessments')
+          .select('*')
+          .eq('user_id', userId))
+          .order('assessed_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+        if (error || !data) return
+        const id = (data as { id?: unknown }).id
+        const hipScoredIds = typeof id === 'string' ? await loadHipScoredIds([id]) : new Set<string>()
+        if (live) setState({ first: data as A, hipScoredIds })
+      } catch { /* keep the oldest loaded assessment */ }
+    })()
+    return () => { live = false }
+  }, [userId])
+  return state
 }
