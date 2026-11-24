@@ -1,6 +1,6 @@
 -- ============================================================================================
--- PROPOSED. NOT APPLIED. Run only after 20261026220000, 20261026230000 and 20261026233000,
--- Stacy's check, Vera's verify, and Jim's go. Revert: supabase/reverts/20261027000000_romood_daily_cap.revert.sql
+-- APPLIED to prod Oct 27 2026 (supabase_migrations version 20261027151747). Kept here as the source file.
+-- Revert: supabase/reverts/20261027000000_romood_daily_cap.revert.sql
 --
 --  * Daily cap: a BEFORE INSERT trigger rejects the 5th mood_entries row per user per America/New_York
 --    calendar day. Error: SQLSTATE 'RM429', message 'romood_daily_cap'. The app shows a friendly message.

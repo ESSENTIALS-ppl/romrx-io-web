@@ -59,8 +59,8 @@ describe('consent version (re-consent rule)', () => {
     expect(hasCurrentConsent({ savingOn: false, optedInAt: current.opted_in_at, consentVersion: ROMOOD_CONSENT_VERSION })).toBe(false)
     expect(hasCurrentConsent({ savingOn: true, optedInAt: 'x', consentVersion: ROMOOD_CONSENT_VERSION })).toBe(false)
   })
-  it('opt-in text names the results email (Stacy, verbatim)', () => {
-    expect(ROMOOD_COPY.optInBefore + ROMOOD_COPY.optInLink + ROMOOD_COPY.optInAfter).toBe('Save my mood check-ins so ROMRx can show me how my mood changes over time, in the app and in my results email. I can turn this off or delete them anytime. See the Privacy Policy.')
+  it('opt-in text names the app, emails and ROMBot (AI) (Stacy v3, Jim final, verbatim)', () => {
+    expect(ROMOOD_COPY.optInBefore + ROMOOD_COPY.optInLink + ROMOOD_COPY.optInAfter).toBe('Save my mood check-ins for the app, emails and ROMBot (AI). I can turn this off or delete them anytime. See the Privacy Policy.')
   })
 })
 
@@ -106,6 +106,18 @@ describe('QuickMood screen /dashboard/mood', () => {
     settingsRow = { saving_on: true, opted_in_at: current.opted_in_at, consent_version: null }
     await mount(true)
     expect(q('quick-mood-optin')).not.toBeNull()
+  })
+  it('flag ON, v2 opt-in (email-only text): shows the v3 text unticked, nothing saves until ticked, then writes v3 and the entry', async () => {
+    settingsRow = { saving_on: true, opted_in_at: current.opted_in_at, consent_version: 'v2-email-20261026' }
+    await mount(true)
+    expect(q('quick-mood-optin')).not.toBeNull()
+    expect((q('quick-mood-optin') as HTMLInputElement).checked).toBe(false)
+    expect(host.textContent).toContain('Save my mood check-ins for the app, emails and ROMBot (AI).')
+    expect((q('quick-mood-save') as HTMLButtonElement).disabled).toBe(true)
+    await click(q('quick-mood-save')); expect(upsert).not.toHaveBeenCalled(); expect(insert).not.toHaveBeenCalled()
+    await click(q('quick-mood-optin')); await click(q('quick-mood-save'))
+    expect(upsert.mock.calls[0][0]).toMatchObject({ user_id: 'u1', saving_on: true, consent_version: 'v3-rombot-20261028' })
+    expect(insert).toHaveBeenCalledTimes(1)
   })
   it('flag ON, current opt-in: no checkbox, saves with the stored tick time', async () => {
     settingsRow = current
@@ -158,8 +170,43 @@ describe('wiring and copy rules', () => {
   })
   it('legal 7A: Stacy paragraph and deletion line word for word', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
-    expect(html).toContain("<p>Mood check-ins: if you turn on saving, we save the mood check-ins you enter, whether during an assessment or as a quick check-in from My Body, so we can show you how your mood changes over time in the app and in your results email. If you don't turn on saving, we don't keep them. We don't use them in your scores, share them with advertisers, or use them for ads or analytics. You can turn saving off or delete your check-ins anytime in Settings.</p>")
+    expect(html).toContain("<p>Mood check-ins: if you turn on saving, we save the mood check-ins you enter, whether during an assessment or as a quick check-in from My Body, so we can show you how your mood changes over time in the app and in your results email, and, if you turn it on, so ROMBot can answer your questions about them. If you don't turn on saving, we don't keep them. We don't use them in your scores, share them with advertisers, or use them for ads or analytics. You can turn saving off or delete your check-ins anytime in Settings.</p>")
     expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider keeps a copy of sent emails for up to 30 days.</p>')
+  })
+  it('legal 7A: Stacy ROMBot line verbatim, after the mood paragraph, with the OpenAI disclosure; no "only to answer you", no old training line', () => {
+    const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
+    const line = '<p>If you turn it on, ROMBot reads your ROMood check-ins to answer your questions. To do this, they are sent to our AI provider, OpenAI. OpenAI does not use them to train its models and may keep them for up to 30 days to check for abuse.</p>'
+    expect(html.split(line)).toHaveLength(2)
+    const sec = html.slice(html.indexOf('id="consumer-health-data">7A.'), html.indexOf('<h3 class="rx-h3">8. Contact'))
+    expect(sec.indexOf('<p>Mood check-ins: if you turn on saving')).toBeLessThan(sec.indexOf(line))
+    expect(sec.indexOf(line)).toBeLessThan(sec.indexOf('<p>When you delete your check-ins'))
+    expect(html).not.toContain('only to answer you')
+    expect(html).not.toContain('are not used to train AI models')
+  })
+  it('legal.html keeps the 19b965a Terms fixes (crisis line under 3, readiness bands in 3A); r9 Terms and Privacy dates kept; TERMS_VERSION unchanged', () => {
+    const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
+    expect(html).toContain('<p>ROMRx is not a crisis service. We do not monitor what you enter in the app and cannot respond to emergencies.</p>')
+    expect(html).toContain('Readiness bands (Needs focus, Building, Steady), scores, colors, and labels are not medical clearance')
+    expect(html).toContain('Last updated October 28, 2026')
+    expect(html).toContain('Last updated November 16, 2026')
+    expect(html).not.toContain('Last updated October 20, 2026')
+    expect(html).not.toContain('Last updated November 1, 2026')
+  })
+  it('TERMS_VERSION stays 2026-10-19 (Stacy: the v3 tick is the consent, no re-accept)', () => {
+    expect(readFileSync(resolve(__dirname, 'termsConsent.ts'), 'utf8')).toContain("export const TERMS_VERSION = '2026-10-19'")
+  })
+  it('migration 7: cap error detail reworded without the word limited; behavior unchanged; revert is a no-op', () => {
+    const dir = resolve(__dirname, '../../../supabase')
+    const m = readFileSync(resolve(dir, 'migrations/20261028110000_romood_cap_detail_wording.sql'), 'utf8')
+    expect(m).not.toMatch(/limited/i)
+    expect(m).toContain("detail = 'Mood check-ins are capped at 4 per day (America/New_York).'")
+    const old = readFileSync(resolve(dir, 'migrations/20261027000000_romood_daily_cap.sql'), 'utf8')
+    const body = (x: string) => x.slice(x.indexOf('create or replace function public.romood_enforce_daily_cap()'), x.indexOf('revoke all on function public.romood_enforce_daily_cap()')).replace(/detail = '[^']*'/, 'detail = X').trim()
+    expect(body(m)).toBe(body(old))
+    expect(m).toMatch(/errcode = 'RM429', message = 'romood_daily_cap'/)
+    expect(m).not.toMatch(/[\u2013\u2014]/)
+    const r = readFileSync(resolve(dir, 'reverts/20261028110000_romood_cap_detail_wording.revert.sql'), 'utf8')
+    expect(r.replace(/--.*$/gm, '').trim()).toBe('select 1;')
   })
   it('cap migration: trigger, 4 per America/New_York day, RM429, quick context, consent_version; revert exists', () => {
     const m = readFileSync(resolve(__dirname, '../../../supabase/migrations/20261027000000_romood_daily_cap.sql'), 'utf8')
@@ -217,6 +264,23 @@ describe('Settings > ROMood check-ins: re-consent display (Vera GAP B)', () => {
     expect(q('mood-saving-state')!.textContent).toBe(ROMOOD_SETTINGS_COPY.savingOn)
     expect(q('mood-optin-panel')).toBeNull()
   })
+  it('v2 opt-in (email-only): Settings shows saving OFF and the v3 panel unticked; confirming writes v3 with the real tick time; cancel writes nothing', async () => {
+    settingsRow = { saving_on: true, opted_in_at: '2026-10-26T12:00:00.000Z', consent_version: 'v2-email-20261026' }
+    await mountS()
+    expect(q('mood-saving-state')!.textContent).toBe(ROMOOD_SETTINGS_COPY.savingOff)
+    expect(q('mood-optin-panel')!.textContent).toContain('Save my mood check-ins for the app, emails and ROMBot (AI).')
+    expect((q('mood-settings-optin') as HTMLInputElement).checked).toBe(false)
+    expect((q('mood-optin-confirm') as HTMLButtonElement).disabled).toBe(true)
+    expect(upsert).not.toHaveBeenCalled()
+    await click(q('mood-settings-optin')); await click(q('mood-optin-confirm'))
+    expect(upsert.mock.calls[0][0]).toMatchObject({ saving_on: true, consent_version: 'v3-rombot-20261028' })
+    expect(q('mood-saving-state')!.textContent).toBe(ROMOOD_SETTINGS_COPY.savingOn)
+  })
+  it('hasCurrentConsent is false for v2 and true only for v3 (this is the same test ai-chat applies)', () => {
+    const base = { savingOn: true, optedInAt: '2026-10-26T12:00:00.000Z' }
+    expect(hasCurrentConsent({ ...base, consentVersion: 'v2-email-20261026' })).toBe(false)
+    expect(hasCurrentConsent({ ...base, consentVersion: 'v3-rombot-20261028' })).toBe(true)
+  })
   it('current consent: shows saving ON and no prompt', async () => {
     settingsRow = { ...current }
     await mountS()
@@ -259,7 +323,6 @@ describe('migration 5: mood_entries insert requires v2 consent (Vera GAP A)', ()
   it('sorts after the cap migration (it reads consent_version, which that migration adds)', () => {
     const names = readdirSync(resolve(dir, 'migrations')).filter(n => n.endsWith('.sql')).sort()
     expect(names.indexOf(`${file}.sql`)).toBeGreaterThan(names.indexOf('20261027000000_romood_daily_cap.sql'))
-    expect(names[names.length - 1]).toBe(`${file}.sql`)
   })
   it('is a RESTRICTIVE INSERT policy for authenticated on mood_entries, and drops any old copy first', () => {
     expect(code).toMatch(/drop policy if exists mood_entries_insert_requires_v2_consent on public\.mood_entries;/)
@@ -269,9 +332,10 @@ describe('migration 5: mood_entries insert requires v2 consent (Vera GAP A)', ()
   it('requires the user\'s own mood_settings row with the v2 consent version and a non-null tick time', () => {
     expect(code).toMatch(/exists \(\s*select 1 from public\.mood_settings s\s+where s\.user_id = mood_entries\.user_id\s+and s\.consent_version = 'v2-email-20261026'\s+and s\.opted_in_at is not null\s*\)/)
   })
-  it('uses the same consent version string as the app', () => {
-    expect(ROMOOD_CONSENT_VERSION).toBe('v2-email-20261026')
-    expect(sql).toContain(`'${ROMOOD_CONSENT_VERSION}'`)
+  it('names the v2 version string; the app constant moved to v3 (see migration 6)', () => {
+    // Migration 5 is the v2 policy; migration 6 (20261028100000) replaces it with v3. The app constant is v3 now.
+    expect(sql).toContain("'v2-email-20261026'")
+    expect(ROMOOD_CONSENT_VERSION).toBe('v3-rombot-20261028')
   })
   it('does not depend on the cap trigger or context (quick and onboarding behave the same), and adds no function, grant or service-role rule', () => {
     expect(code).not.toMatch(/created_at|context|romood_enforce_daily_cap|create (or replace )?function|create trigger|security definer|grant |revoke |service_role/i)
@@ -307,5 +371,37 @@ describe('migration 5: mood_entries insert requires v2 consent (Vera GAP A)', ()
   it('no em dashes in the new SQL files', () => {
     expect(sql).not.toMatch(/\u2014/)
     expect(readFileSync(resolve(dir, `reverts/${file}.revert.sql`), 'utf8')).not.toMatch(/\u2014/)
+  })
+})
+
+describe('migration 6: consent v3 (ROMBot) replaces the v2 insert policy', () => {
+  const dir = resolve(__dirname, '../../../supabase')
+  const file = '20261028100000_romood_consent_v3_rombot'
+  const sql = readFileSync(resolve(dir, `migrations/${file}.sql`), 'utf8')
+  const code = sql.replace(/--.*$/gm, '')
+  it('sorts after migration 5 and before the cap wording migration (migration 7)', () => {
+    const names = readdirSync(resolve(dir, 'migrations')).filter(n => n.endsWith('.sql')).sort()
+    expect(names[names.length - 2]).toBe(`${file}.sql`)
+    expect(names[names.length - 1]).toBe('20261028110000_romood_cap_detail_wording.sql')
+    expect(names.indexOf(`${file}.sql`)).toBeGreaterThan(names.indexOf('20261027010000_romood_insert_requires_v2_consent.sql'))
+  })
+  it('drops the v2 policy and creates one restrictive insert policy that requires the app constant and a tick time', () => {
+    expect(code).toMatch(/drop policy if exists mood_entries_insert_requires_v2_consent on public\.mood_entries;/)
+    expect(code.match(/create policy/g)).toHaveLength(1)
+    expect(code).toMatch(/as restrictive\s+for insert to authenticated/)
+    expect(code).toMatch(/s\.consent_version = 'v3-rombot-20261028'\s+and s\.opted_in_at is not null/)
+    expect(code).toContain(`'${ROMOOD_CONSENT_VERSION}'`)
+    expect(code).not.toContain('v2-email')
+  })
+  it('adds no table, column, function, grant or looser policy, and no em dashes', () => {
+    expect(code).not.toMatch(/create table|add column|create (or replace )?function|create trigger|security definer|grant |revoke |as permissive|for update|for delete|for all|disable row level/i)
+    expect(sql).not.toMatch(/[\u2013\u2014]/)
+  })
+  it('revert puts the v2 policy back, runs first, and is manual only', () => {
+    const r = readFileSync(resolve(dir, `reverts/${file}.revert.sql`), 'utf8')
+    expect(r).toMatch(/Runs FIRST of all/)
+    expect(r).toContain("create policy mood_entries_insert_requires_v2_consent")
+    expect(r).toContain("'v2-email-20261026'")
+    expect(r).not.toMatch(/[\u2013\u2014]/)
   })
 })
