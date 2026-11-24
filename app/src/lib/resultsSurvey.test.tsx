@@ -62,12 +62,21 @@ describe('P1-18b flag', () => {
     expect(host.innerHTML).toBe('')
     expect(calls).toEqual([])
   })
+  // T06 (Stacy 1518 C5): the fine print under the unlock is CARD_LINE_SHORT, the A1 trial short text exactly; 'Unlock My Dashboard' stays.
+  it('T06: results fine print is the A1 trial short line', async () => {
+    const { CARD_LINE_SHORT } = await import('./cardLine')
+    expect(CARD_LINE_SHORT).toBe("You add a card when you unlock ROMRx Base. ROMRx Base is free until March 1, 2027, our beta launch trial period. Then $60 a year, charged to your card on March 1, 2027 and every year after until you cancel. Cancel online anytime in Settings.")
+    const src = readFileSync(resolve(__dirname, '../pages/ResultsPreview.tsx'), 'utf8')
+    expect(src).toContain('<Unlock size={18} /> Unlock My Dashboard ($60/yr)')
+    expect(src).toMatch(/\n\s+\{CARD_LINE_SHORT\}\n/)
+    expect(src).not.toMatch(/CARD_LINE_SHORT_NODATE|free through Dec|January 1, 2027/)
+  })
   it('ResultsPreview mounts it once, under the flag, after the results, the Unlock button and the fine print', () => {
     const src = readFileSync(resolve(__dirname, '../pages/ResultsPreview.tsx'), 'utf8')
     expect(src.match(/<ResultsSurvey/g)!.length).toBe(1)
     expect(src).toContain('{SHOW_RESULTS_SURVEY && user && <ResultsSurvey userId={user.id} assessment={assessment as { id?: unknown; check_kind?: unknown }} />}')
     const at = src.indexOf('<ResultsSurvey')
-    for (const before of ['Your Results Are In', 'Top Asymmetry Flags', 'Unlock My Dashboard', '<ReminderOptIn', 'You pay nothing before January 1, 2027']) {
+    for (const before of ['Your Results Are In', 'Top Asymmetry Flags', 'Unlock My Dashboard', '<ReminderOptIn', '{CARD_LINE_SHORT}']) {
       expect(src.indexOf(before)).toBeGreaterThan(-1)
       expect(src.indexOf(before)).toBeLessThan(at)
     }
