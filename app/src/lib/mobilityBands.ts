@@ -618,6 +618,25 @@ export function mobilityScoreForAssessment(
 }
 
 /**
+ * Score-fix (Nov 24 2026): the same /100 average BEFORE the band clamp (0..100). Used only for the
+ * "vs <date>" change chip, so progress inside a band is not shown as 0 (two Needs focus assessments both clamp to 89).
+ */
+export function mobilityRawScoreForAssessment(assessment: object | null | undefined): number {
+  const rec = (assessment ?? {}) as Record<string, unknown>
+  let sum = 0
+  let n = 0
+  for (const j of ASSESSMENT_JOINTS) {
+    if (isUnscoredJoint(j.key)) continue
+    if (isLumbarKey(j.key)) continue
+    const p = cappedRatioPct(worseSideValue(measuredFor(rec, j)), JOINT_SCORE_TARGETS[j.key])
+    if (p == null) continue
+    sum += p
+    n += 1
+  }
+  return n === 0 ? 100 : Math.floor(sum / n)
+}
+
+/**
  * Rank badge (#1/#2/#3 Problem area on My Protocol) is coloured by THAT joint's
  * band (Grant's call 2026-09-24): a solid badge in the band colour. Unmeasured
  * joints fall back to neutral slate.
