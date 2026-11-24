@@ -97,6 +97,10 @@ const SHOW_EXPORT_MY_DATA = true // P1-23 unhide (Grant, Nov 16 r3). SHOW_DELETI
 const SHOW_DELETION_STATUS = false
 // P1-12: "Add to my calendar" (.ics download). r9 turns it on (Grant, Nov 16). Settings.calendarFlag.test.tsx fails if this is false.
 const SHOW_CALENDAR_ICS = true
+// FG-22: gender, height and weight are saved but unused. Hide the fields. The data model and saved values stay.
+const SHOW_GENDER_HEIGHT_WEIGHT = false
+// FG-23: no metric/imperial control exists in Base Settings (values are in degrees). Off so one is not added un-gated. No new copy.
+const SHOW_UNITS = false
 
 export function Settings() {
   const { user, session, signOut } = useAuth()
@@ -433,6 +437,8 @@ export function Settings() {
               <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="input" />
             </div>
 
+            {/* FG-22: hidden. Restore by setting SHOW_GENDER_HEIGHT_WEIGHT = true. No new copy. */}
+            {SHOW_GENDER_HEIGHT_WEIGHT && (
             <div>
               <p className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Gender <span className="normal-case font-normal text-slate-400">(optional)</span></p>
               <div className="flex gap-2 flex-wrap">
@@ -453,8 +459,9 @@ export function Settings() {
                 ))}
               </div>
             </div>
+            )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className={SHOW_GENDER_HEIGHT_WEIGHT ? 'grid grid-cols-1 sm:grid-cols-3 gap-4' : undefined}>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Age group</label>
                 <select value={ageBucket} onChange={e => setAgeBucket(e.target.value)} className="input">
@@ -462,6 +469,8 @@ export function Settings() {
                   {AGE_BUCKETS.map(b => (<option key={b.v} value={b.v}>{b.l}</option>))}
                 </select>
               </div>
+              {SHOW_GENDER_HEIGHT_WEIGHT && (
+              <>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Height</label>
                 <select value={heightBucket} onChange={e => setHeightBucket(e.target.value)} className="input">
@@ -476,7 +485,11 @@ export function Settings() {
                   {WEIGHT_BUCKETS.map(b => (<option key={b.v} value={b.v}>{b.l}</option>))}
                 </select>
               </div>
+              </>
+              )}
             </div>
+            {/* FG-23: no units control exists. This flag is referenced so a form cannot be added un-gated. No new copy. */}
+            {SHOW_UNITS && null}
 
             {profileErr && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{profileErr}</p>}
             <button onClick={handleSaveProfile} disabled={profileSaving} className="btn-primary text-sm flex items-center gap-1.5">
