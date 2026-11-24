@@ -25,10 +25,10 @@ function memStorage() {
 }
 
 describe('versions (Stacy)', () => {
-  it('terms and waiver versions stay 2026-10-19; /legal header is Effective December 31, 2026.', () => {
+  it('terms and waiver versions stay 2026-10-19; /legal header is Last updated November 24, 2026. Effective December 31, 2026.', () => {
     expect(TERMS_VERSION).toBe('2026-10-19')
     expect(MEDICAL_WAIVER_VERSION).toBe('2026-10-19')
-    expect(read(join(ROOT, 'legal.html'))).toContain('Effective December 31, 2026.')
+    expect(read(join(ROOT, 'legal.html'))).toContain('Last updated November 24, 2026. Effective December 31, 2026.')
     expect(SIGNUP_CONSENT_TEXT_VERSION).toBe('signup-checkbox-2026-10-05')
     expect(SIGNUP_CONSENT_SOURCE).toBe('romrx.io/app/signup')
     expect(REACCEPT_CONSENT_SOURCE).toBe('romrx.io/app/reaccept')
