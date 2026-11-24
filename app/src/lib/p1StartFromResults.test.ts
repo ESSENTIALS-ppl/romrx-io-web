@@ -12,7 +12,8 @@ describe('P1-03 start session 1 from the results', () => {
     const s = read('pages', 'ResultsPreview.tsx')
     expect(s).toMatch(/export const TODAY_PATH = '\/dashboard\/my-protocol'/)
     // Integration with P1-11: the active-user path goes to What changed right after a retest, otherwise the Today card
-    expect(s.match(/navigate\(TODAY_PATH, \{ replace: true \}\)/g)?.length).toBe(1)
+    // J5: the free-unlock navigate(TODAY_PATH) is gone; Unlock now goes to card checkout, and the active-user path below is the only route
+    expect(s.match(/navigate\(TODAY_PATH, \{ replace: true \}\)/g)).toBeNull()
     expect(s).toContain('navigate(WHAT_CHANGED_COPY && justAssessed ? WHAT_CHANGED_PATH : TODAY_PATH, { replace: true })')
     expect(s).not.toMatch(/navigate\('\/dashboard\/my-body'/)
   })
