@@ -1,6 +1,6 @@
 // CA auto-renewal (ARL) disclosure shown next to the signup button.
-// Copy is Legal's locked section 3b text (ca-arl-plan-20260929.md). Static is fine here because it matches
-// the locked beta terms; the Stripe Checkout page pulls live prices at runtime.
+// S2 from STACY-BASE-MARCH1-TRIAL-STRINGSET-20261124-1459.md (sha256 55c49a8c...), S1 word for word with $${base}.
+// This module is not imported by the app today (Stacy 1518 A6). Do not wire it in here.
 // Keep all prices in this one constant.
 export const SIGNUP_PRICES_USD = { base: 60, pack: 149 } as const
 
@@ -14,15 +14,10 @@ export function sportPackName(add: string | null | undefined): string | null {
   return SPORT_PACK_NAMES[(add ?? '').trim().toLowerCase()] ?? null
 }
 
-/** Section 3b disclosure: Base-only line, or the Base plus sport pack line when the signup carries a pack. */
-export function signupDisclosure(add: string | null | undefined): string {
-  const pack = sportPackName(add)
-  const { base, pack: packPrice } = SIGNUP_PRICES_USD
-  // Packs are not charged Jan 1, 2027. Pack date line is Jim's exact 'Coming Spring 2027' (L879/L1001, L1019).
-  const charge = pack
-    ? `$${base} per year for Base, charged to your card on January 1, 2027 and every year after until you cancel. ${pack} is $${packPrice} per year. Coming Spring 2027.`
-    : `$${base} per year, charged to your card on January 1, 2027 and every year after until you cancel.`
-  return `Free through December 31, 2026. Then ${charge} Cancel online anytime in Settings. Canceling ends your access right away. Cancel before January 1, 2027 and you pay nothing.`
+/** S2 (1459): Base trial disclosure. Always Base only; the combo case is retired (Stacy 1518 C9). */
+export function signupDisclosure(_add?: string | null): string {
+  const { base } = SIGNUP_PRICES_USD
+  return `ROMRx Base is free until March 1, 2027, our beta launch trial period. Then $${base} per year, charged to your card on March 1, 2027 and on March 1 every year after until you cancel. Your plan renews automatically for one year at a time. Cancel online anytime in Settings at https://romrx.io/app/dashboard/settings, or email hello@romrx.io. Cancel before March 1, 2027 and you pay nothing. Canceling ends your access right away and stops future charges. All sales are final. We do not refund charges already made, except where the law requires a refund. We will email you before your first charge and before each yearly renewal.`
 }
 
 /** Last sentence(s) of the signup terms checkbox label (Legal ruling, Sep 29, 2026; updated for Jim decision (c): cancel ends access immediately). One constant so it changes in one place. */

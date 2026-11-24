@@ -24,7 +24,7 @@ import { loadHipScoredIds, useHipFlexCutover } from '../lib/hipFlexCutover'
 import { gateAssessment } from '../lib/hipFlexGate'
 import { withStripeTestFlag } from '../lib/stripeTestMode'
 import { checkoutErrorMessage } from '../lib/checkoutErrors'
-import { CARD_LINE_SHORT, CARD_LINE_SHORT_NODATE } from '../lib/cardLine'
+import { CARD_LINE_SHORT } from '../lib/cardLine'
 import { ReminderOptIn } from '../components/ReminderOptIn'
 import { WHAT_CHANGED_COPY, WHAT_CHANGED_PATH, takeJustAssessed } from '../lib/whatChanged'
 import { skipQuick } from '../lib/assessmentReads'
@@ -340,7 +340,7 @@ export function ResultsPreview() {
               className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {paying ? 'Unlocking…' : <>
-                <Unlock size={18} /> Unlock Base + {sportCopy.short} (free through Dec 31, 2026)
+                <Unlock size={18} /> Unlock Base ($60/yr)
               </>}
             </button>
             <button
@@ -348,11 +348,10 @@ export function ResultsPreview() {
               disabled={paying}
               className="w-full py-3 bg-transparent border border-white/25 text-white font-display font-semibold text-sm rounded-card hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              Unlock Base only (free through Dec 31, 2026)
+              Unlock Base only ($60/yr)
             </button>
             <p className="text-center text-xs text-white/40">
-              Free through Dec 31, 2026. {CARD_LINE_SHORT} Then $60 a year unless you cancel. Cancel online anytime. {sportCopy.wordmark} is an add-on after Base.
-              Combo checkout starts Base and carries your sport intent for the next step.
+              {sportCopy.wordmark} is coming Spring 2027 for $149/year, as an add-on after Base. Checkout starts Base only. You are not charged for {sportCopy.wordmark}.
             </p>
           </div>
         ) : (
@@ -362,7 +361,7 @@ export function ResultsPreview() {
             className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {paying ? 'Unlocking…' : <>
-              <Unlock size={18} /> Unlock My Dashboard (free through Dec 31, 2026)
+              <Unlock size={18} /> Unlock My Dashboard ($60/yr)
             </>}
           </button>
         )}
@@ -371,7 +370,7 @@ export function ResultsPreview() {
         {user && <ReminderOptIn userId={user.id} placement="results" dark />}
 
         <p className="text-center text-xs text-white/30">
-          Free through December 31, 2026. {CARD_LINE_SHORT_NODATE} You pay nothing before January 1, 2027. Then $60 a year, renewing until you cancel. Cancel online anytime.
+          {CARD_LINE_SHORT}
         </p>
 
         {/* P1-18b: short optional survey, last on the screen; renders nothing while SHOW_RESULTS_SURVEY is false; never for a quick re-check */}
