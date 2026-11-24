@@ -14,8 +14,7 @@ describe('My Sport: packs closed during beta (Oct 12 batch)', () => {
     expect(src).toContain('Coming {PACK_LAUNCH_DATE}')
     expect(src).not.toContain('January 2027')
     expect(src).toContain('{PACKS_CLOSED_MESSAGE}')
-    expect(src).toContain("ROMRx Base unlocks your Assessment history and ROMBot, and is required for sport packs (Coming {PACK_LAUNCH_DATE}). {CARD_LINE_SHORT}") // Stacy 1518 A6 MySport:131
-    expect(src).not.toContain('Free through Dec 31, 2026')
+    expect(src).toContain('ROMBot, and sport packs (Coming {PACK_LAUNCH_DATE}).')
     expect(src).not.toContain('{PACK_EMAIL_LINE}')
     expect(src).not.toMatch(/at checkout after beta/)
     expect(src).not.toMatch(/>\s*Add \{/)

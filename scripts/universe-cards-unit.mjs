@@ -39,7 +39,7 @@ ok((C.footnote.match(/18 and older/g) || []).length === 1, 'one "18 and older" i
 const uni = readFileSync(join(root, 'universe.html'), 'utf8');
 ok(!/Readiness Profile/.test(uni), '/universe says Protocol, never Profile');
 for (const f of ['bjj.html', 'bodybuilding.html']) {
-  ok(readFileSync(join(root, f), 'utf8').includes('<span class="rx-beta">Coming Spring 2027</span>'), f + ': pack chip reads exactly Coming Spring 2027 (Stacy 1518 A10, no standalone Beta)');
+  ok(readFileSync(join(root, f), 'utf8').includes('<span class="rx-beta">Beta · Coming Spring 2027</span>'), f + ': beta badge is Jim\'s exact Coming Spring 2027 (L1019)');
 }
 ok(C.betaStatus === 'Coming Spring 2027', "betaStatus is Jim's exact 'Coming Spring 2027' (L1019)");
 if (fails) { console.error(`\n${fails} failed`); process.exit(1); }
