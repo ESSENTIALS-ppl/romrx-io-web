@@ -47,7 +47,16 @@ export function JointTrend({ label, points, n }: { label: string; points: TrendP
 
 const pctText = (v: number | null) => (v == null ? '-' : `${v}%`)
 
-/** First full assessment vs the latest: Body score and each Joint Breakdown joint. Only rendered with 2+ assessments. */
+/** Signed change, the same way the My Body "vs <date>" chip writes its number: "+4", "-3", "0". */
+export function signedChange(delta: number): string {
+  return `${delta > 0 ? '+' : ''}${delta}`
+}
+
+/**
+ * First full assessment vs the latest: each Joint Breakdown joint with its values, and the Body score as its CHANGE only
+ * (Grant 4:36 PM ET, option c: the dial is the only place a Body score number appears). The change cell spans both
+ * columns, so it reads as start to now under both headings; it is signed text, never colour only. Only with 2+ assessments.
+ */
 export function StartedVsNowTable({ data }: { data: StartedVsNow }) {
   return (
     <div className="mt-3 border-t border-cobalt/10 pt-3" data-started-vs-now>
@@ -69,8 +78,7 @@ export function StartedVsNowTable({ data }: { data: StartedVsNow }) {
         <tbody className="divide-y divide-cobalt/10">
           <tr data-compare-total>
             <th scope="row" className="text-left font-semibold text-cobalt-ink py-1.5">Body score</th>
-            <td className="text-right font-bold text-slate-800 py-1.5 pl-2">{data.started.total}/100</td>
-            <td className="text-right font-bold text-slate-800 py-1.5 pl-2">{data.now.total}/100</td>
+            <td colSpan={2} className="text-center font-bold text-slate-800 py-1.5 pl-2" data-compare-total-change>{signedChange(data.delta)}</td>
           </tr>
           {data.joints.map(j => (
             <tr key={j.key} data-compare-joint={j.key}>

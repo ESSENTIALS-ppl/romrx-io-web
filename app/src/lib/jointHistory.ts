@@ -137,17 +137,17 @@ export function bodyScoreChange(earlier: object, later: object): { before: numbe
 
 export type StartedVsNowJoint = { key: string; label: string; started: number | null; now: number | null }
 export type StartedVsNow = {
-  started: { date: string; total: number }
-  now: { date: string; total: number }
-  /** now.total - started.total, from bodyScoreChange (same as the chip's math). */
+  started: { date: string }
+  now: { date: string }
+  /** Body score change first to latest, from bodyScoreChange (the chip's function). No absolute score is carried (Grant 4:36 PM ET). */
   delta: number
   joints: StartedVsNowJoint[]
 }
 
 /**
  * FG-08: "Where you started" (the first full assessment by assessed_at) vs "Where you are now" (the latest).
- * Total = bodyScoreChange (unclamped /100 average, Avery 4:30 PM ET), the same function as the "vs <date>" chip, so the
- * started-to-now change and the chip always agree. Per joint = the Joint Breakdown bar % (jointDisplayRowsForAssessment).
+ * Body score = the CHANGE only, from bodyScoreChange (unclamped /100 average, Avery 4:30 PM ET), the same function as the
+ * "vs <date>" chip, so the two always agree. No absolute score (Grant 4:36 PM ET: the dial is the only Body score number). Per joint = the Joint Breakdown bar % (jointDisplayRowsForAssessment).
  * Returns null when there is no earlier assessment (one assessment on file): no comparison is shown.
  * jointKeys = the joints on the Joint Breakdown, in its order (lumbar and pre-cutover hip flexion already filtered there).
  */
@@ -165,8 +165,8 @@ export function buildStartedVsNow<A extends AssessmentLike>(first: A | null | un
   }
   const total = bodyScoreChange(first, latest)
   return {
-    started: { date: first.assessed_at, total: total.before },
-    now: { date: latest.assessed_at, total: total.now },
+    started: { date: first.assessed_at },
+    now: { date: latest.assessed_at },
     delta: total.delta,
     joints,
   }
