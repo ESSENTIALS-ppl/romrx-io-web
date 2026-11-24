@@ -168,22 +168,17 @@ describe('wiring and copy rules', () => {
     expect(all).not.toMatch(/\u2014/)
     expect(all).not.toMatch(/depress|anxiety|disorder|diagnos|symptom|therap|clinical|mental health|coach/i)
   })
-  it('legal 7A: Stacy paragraph and deletion line word for word', () => {
+  it('legal 7A: mood paragraph and ROMBot/OpenAI line cut (Grant 4:11 PM ET Nov 24); deletion line kept word for word; one mood paragraph (Privacy s3)', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
-    expect(html).toContain("<p>Mood check-ins: if you turn on saving, we save the mood check-ins you enter, whether during an assessment or as a quick check-in from My Body, so we can show you how your mood changes over time in the app and in your results email, and, if you turn it on, so ROMBot can answer your questions about them. If you don't turn on saving, we don't keep them. We don't use them in your scores, share them with advertisers, or use them for ads or analytics. You can turn saving off or delete your check-ins anytime in Settings.</p>")
+    expect(html).not.toContain('<p>Mood check-ins: if you turn on saving')
+    expect(html).not.toContain('If you turn it on, ROMBot reads your ROMood check-ins to answer your questions.')
+    expect(html).not.toContain('may keep them for up to 30 days to check for abuse')
     expect(html).toContain('<p>When you delete your check-ins or your account, we delete them from our database right away. ROMRx does not keep separate backup copies of them. Results emails we already sent you stay in your inbox, and our email provider keeps a copy of sent emails for up to 30 days.</p>')
-  })
-  it('legal 7A: Stacy ROMBot line verbatim, after the mood paragraph, with the OpenAI disclosure; no "only to answer you", no old training line', () => {
-    const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
-    const line = '<p>If you turn it on, ROMBot reads your ROMood check-ins to answer your questions. To do this, they are sent to our AI provider, OpenAI. OpenAI does not use them to train its models and may keep them for up to 30 days to check for abuse.</p>'
-    expect(html.split(line)).toHaveLength(2)
-    const sec = html.slice(html.indexOf('id="consumer-health-data">7A.'), html.indexOf('<h3 class="rx-h3">8. Contact'))
-    expect(sec.indexOf('<p>Mood check-ins: if you turn on saving')).toBeLessThan(sec.indexOf(line))
-    expect(sec.indexOf(line)).toBeLessThan(sec.indexOf('<p>When you delete your check-ins'))
+    expect(html.split('<p>Mood check-ins and ROMBot. If you turn on saving for ROMood check-ins in Settings,').length - 1).toBe(1)
     expect(html).not.toContain('only to answer you')
     expect(html).not.toContain('are not used to train AI models')
   })
-  it('legal.html keeps the 19b965a Terms fixes (crisis line under 3, readiness bands in 3A); Terms/privacy header (Grant/Sable, Nov 24) wins over the r9 dates; TERMS_VERSION unchanged', () => {
+  it('legal.html keeps the 19b965a Terms fixes (crisis line under 3, readiness bands in 3A); Terms/privacy header (Grant/Sable, Nov 24) wins over the r9 dates', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
     expect(html).toContain('<p>ROMRx is not a crisis service. We do not monitor what you enter in the app and cannot respond to emergencies.</p>')
     expect(html).toContain('Readiness bands (Needs focus, Building, Steady), scores, colors, and labels are not medical clearance')
@@ -194,8 +189,8 @@ describe('wiring and copy rules', () => {
     expect(html).not.toContain('Last updated October 20, 2026')
     expect(html).not.toContain('Last updated November 1, 2026')
   })
-  it('TERMS_VERSION stays 2026-10-19 (Stacy: the v3 tick is the consent, no re-accept)', () => {
-    expect(readFileSync(resolve(__dirname, 'termsConsent.ts'), 'utf8')).toContain("export const TERMS_VERSION = '2026-10-19'")
+  it('TERMS_VERSION is terms-2026-12-31-v1 (Grant 4:11 PM ET Nov 24)', () => {
+    expect(readFileSync(resolve(__dirname, 'termsConsent.ts'), 'utf8')).toContain("export const TERMS_VERSION = 'terms-2026-12-31-v1'")
   })
   it('migration 7: cap error detail reworded without the word limited; behavior unchanged; revert is a no-op', () => {
     const dir = resolve(__dirname, '../../../supabase')

@@ -164,8 +164,8 @@ describe('hide combo: ResultsPreview', () => {
     expect(checkout, JSON.stringify(fetchCalls)).toHaveLength(1)
     expect(checkout[0].body).toEqual({ mode: 'base', user_id: 'u1', email: 'user@example.com' })
     const activate = fetchCalls.filter((c) => c.url.includes('activate-beta-base'))
-    expect(activate).toHaveLength(1)
-    expect(activate[0].body).toEqual({})
+    // J5 (merged in this branch) removed the activate-beta-base call: checkout is the only unlock path.
+    expect(activate).toHaveLength(0)
   })
 })
 

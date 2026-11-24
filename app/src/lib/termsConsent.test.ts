@@ -25,9 +25,10 @@ function memStorage() {
 }
 
 describe('versions (Stacy)', () => {
-  it('terms and waiver versions stay 2026-10-19; /legal header is Last updated November 24, 2026. Effective December 31, 2026.', () => {
-    expect(TERMS_VERSION).toBe('2026-10-19')
-    expect(MEDICAL_WAIVER_VERSION).toBe('2026-10-19')
+  it('terms and waiver versions are terms-2026-12-31-v1 (Grant 4:11 PM ET Nov 24; waiver is defined as TERMS_VERSION); /legal header is Last updated November 24, 2026. Effective December 31, 2026.', () => {
+    expect(TERMS_VERSION).toBe('terms-2026-12-31-v1')
+    expect(MEDICAL_WAIVER_VERSION).toBe(TERMS_VERSION)
+    expect(read(join(ROOT, 'legal.html'))).toContain('data-terms-version="terms-2026-12-31-v1"')
     expect(read(join(ROOT, 'legal.html'))).toContain('Last updated November 24, 2026. Effective December 31, 2026.')
     expect(SIGNUP_CONSENT_TEXT_VERSION).toBe('signup-checkbox-2026-10-05')
     expect(SIGNUP_CONSENT_SOURCE).toBe('romrx.io/app/signup')
@@ -35,7 +36,9 @@ describe('versions (Stacy)', () => {
   })
 
   it('the SQL constants match the app constants', () => {
-    expect(read(join(ROOT, 'supabase/migrations/20261019180000_terms_version_20261019.sql'))).toContain(`select '${TERMS_VERSION}'::text`)
+    // Server current_terms_version() bump to terms-2026-12-31-v1 is Avery's (not in this repo yet). The repo SQL still says 2026-10-19.
+    expect(read(join(ROOT, 'supabase/migrations/20261019180000_terms_version_20261019.sql'))).toContain(`select '2026-10-19'::text`)
+    expect(TERMS_VERSION).toBe('terms-2026-12-31-v1')
     expect(migration).toContain(`select p in ('${SIGNUP_CONSENT_TEXT_VERSION}', 'bb-coach-signup-checkbox-2026-10-05')`)
     expect(migration).toContain(`('${SIGNUP_CONSENT_SOURCE}', '${SIGNUP_CONSENT_TEXT_VERSION}')`)
     expect(migration).toContain("('romrxbodybuilding.com/coach-signup', 'bb-coach-signup-checkbox-2026-10-05')")
@@ -52,7 +55,7 @@ describe('signup sends the record in signUp metadata', () => {
     expect(signupConsentMetadata(false, 'UA')).toEqual({})
     expect(signupConsentMetadata(true, 'Mozilla/5.0')).toEqual({
       terms_accepted: true,
-      terms_version: '2026-10-19',
+      terms_version: 'terms-2026-12-31-v1',
       consent_text_version: 'signup-checkbox-2026-10-05',
       consent_source: 'romrx.io/app/signup',
       consent_user_agent: 'Mozilla/5.0',
