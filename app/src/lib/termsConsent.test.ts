@@ -127,7 +127,9 @@ describe('re-accept gate', () => {
   })
 
   it('checks the CURRENT version and records through the server RPC', () => {
-    expect(gate).toContain(".eq('terms_version', TERMS_VERSION)")
+    // Avery/Grant 4:17 PM ET Nov 24: Terms bump with no re-consent. 2026-10-19 or terms-2026-12-31-v1 consent both pass the gate.
+    expect(gate).toContain(".in('terms_version', ['2026-10-19','terms-2026-12-31-v1'])")
+    expect(gate).not.toContain(".eq('terms_version', TERMS_VERSION)")
     expect(gate).toContain("supabase.rpc('record_terms_reaccept'")
     expect(app).toContain('<TermsReacceptGate />')
   })

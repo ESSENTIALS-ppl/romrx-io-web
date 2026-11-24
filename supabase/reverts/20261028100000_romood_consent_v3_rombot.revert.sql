@@ -1,3 +1,4 @@
+-- SUPERSEDED by 20261124210022 (live 2026-11-24). DO NOT APPLY.
 -- MANUAL REVERT for 20261028100000_romood_consent_v3_rombot.sql. Not auto-run. Runs FIRST of all
 -- (order 6, 5, 4, 3, 2, 1). Puts back the v2 insert policy. Run it only together with reverting the app to the v2 opt-in
 -- text, otherwise new check-ins saved under v3 would be rejected.
