@@ -42,7 +42,7 @@ export function TermsReacceptGate() {
       .from('consents')
       .select('id')
       .eq('user_id', user.id)
-      .eq('terms_version', TERMS_VERSION)
+      .in('terms_version', ['2026-10-19','terms-2026-12-31-v1'])
       .limit(1)
       .then(({ data, error: err }) => {
         if (!alive) return
