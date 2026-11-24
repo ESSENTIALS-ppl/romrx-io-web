@@ -95,6 +95,8 @@ const SHOW_DELETION_STATUS = false
 const SHOW_CALENDAR_ICS = true
 // FG-22: gender, height and weight are saved but unused. Hide the fields. The data model and saved values stay.
 const SHOW_GENDER_HEIGHT_WEIGHT = false
+// FG-23: no metric/imperial control exists in Base Settings (values are in degrees). Off so one is not added un-gated. No new copy.
+const SHOW_UNITS = false
 
 export function Settings() {
   const { user, session, signOut } = useAuth()
@@ -469,6 +471,8 @@ export function Settings() {
               </>
               )}
             </div>
+            {/* FG-23: no units control exists. This flag is referenced so a form cannot be added un-gated. No new copy. */}
+            {SHOW_UNITS && null}
 
             {profileErr && <p className="text-xs text-red-700 bg-red-50 rounded-card px-3 py-2">{profileErr}</p>}
             <button onClick={handleSaveProfile} disabled={profileSaving} className="btn-primary text-sm flex items-center gap-1.5">
