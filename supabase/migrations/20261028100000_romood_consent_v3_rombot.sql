@@ -1,3 +1,4 @@
+-- SUPERSEDED by 20261124210022 (live 2026-11-24). DO NOT APPLY.
 -- ============================================================================================
 -- PROPOSED. NOT APPLIED to prod. Run only after 20261027010000_romood_insert_requires_v2_consent.sql, Stacy's check,
 -- Vera's verify, and Jim's go. Revert: supabase/reverts/20261028100000_romood_consent_v3_rombot.revert.sql
