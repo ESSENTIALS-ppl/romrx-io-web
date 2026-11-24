@@ -173,10 +173,30 @@
   to = "/about.html"
   status = 200
 
+# Jan 1 2027: send /beta to the home page. This branch is merged and published
+# on Jan 1 through the normal gate. Netlify has no date-gated redirects, so the
+# rule has zero effect until then. force = true so the existing beta.html file
+# in the publish directory cannot shadow the 301 (Pretty URLs would otherwise
+# keep serving it). /beta/ and /beta/* are included so trailing-slash and any
+# leftover subpaths also go home in one hop. December beta sign-up copy in
+# beta.html is unchanged.
 [[redirects]]
   from = "/beta"
-  to = "/beta.html"
-  status = 200
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/beta/"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/beta/*"
+  to = "/"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/faq"
