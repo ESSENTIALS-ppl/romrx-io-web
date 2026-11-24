@@ -32,23 +32,30 @@ describe('FG-08 JointTrend', () => {
 
 describe('FG-08 StartedVsNowTable', () => {
   const data = {
-    started: { date: '2026-10-04T15:00:00Z', total: 50 },
-    now: { date: '2026-11-17T15:00:00Z', total: 94 },
-    delta: 44,
+    started: { date: '2026-10-04T15:00:00Z' },
+    now: { date: '2026-11-17T15:00:00Z' },
+    delta: 13,
     joints: [
       { key: 'hip_er', label: 'Hip ER', started: 50, now: 95 },
       { key: 'hip_flex', label: 'Hip Flexion', started: null, now: 92 },
     ],
   }
-  it('shows both headings with their dates, Body score and each joint as text', () => {
+  it('shows both headings with their dates, the Body score change only, and each joint as text', () => {
     const d = host(renderToStaticMarkup(createElement(StartedVsNowTable, { data })))
     const ths = [...d.querySelectorAll('thead th')]
     expect(ths.map(t => t.getAttribute('scope'))).toEqual(['col', 'col'])
     expect(ths[0].textContent).toBe(`Where you started${assessmentDate(data.started.date)}`)
     expect(ths[1].textContent).toBe(`Where you are now${assessmentDate(data.now.date)}`)
     const rows = [...d.querySelectorAll('tbody tr')].map(r => [...r.children].map(c => c.textContent))
-    expect(rows).toEqual([['Body score', '50/100', '94/100'], ['Hip ER', '50%', '95%'], ['Hip Flexion', '-', '92%']])
+    expect(rows).toEqual([['Body score', '+13'], ['Hip ER', '50%', '95%'], ['Hip Flexion', '-', '92%']])
+    const change = d.querySelector('[data-compare-total-change]')!
+    expect(change.getAttribute('colspan')).toBe('2')
+    expect(d.querySelector('[data-compare-total]')!.textContent).not.toMatch(/\/100/)
     expect(d.innerHTML).not.toContain('\u2014')
+  })
+  it('signed change matches the chip style', async () => {
+    const { signedChange } = await import('./MyBodyProgress')
+    expect([signedChange(4), signedChange(-3), signedChange(0)]).toEqual(['+4', '-3', '0'])
   })
   it('dates use the radar legend format', () => {
     expect(assessmentDate('2026-11-17T15:00:00Z')).toBe('Nov 17, 2026')

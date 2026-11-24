@@ -74,18 +74,18 @@ describe('FG-08 assessed_at ordering (never created_at)', () => {
 })
 
 describe('FG-08 Where you started vs Where you are now', () => {
-  it('first vs latest per joint uses the Joint Breakdown %, and total is the unclamped Body score (same as the chip)', () => {
+  it('first vs latest per joint uses the Joint Breakdown %, and the Body score is a change only (the chip function)', () => {
     setHipFlexScoredAtMs(Date.parse('2026-10-01T00:00:00Z')) // every fixture is after the hip flexion cutover
     try {
       const c = buildStartedVsNow(oct4, nov17, null, KEYS)!
       expect(c).not.toBeNull()
       expect(c.started.date).toBe(oct4.assessed_at)
       expect(c.now.date).toBe(nov17.assessed_at)
-      expect(c.started.total).toBe(mobilityRawScoreForAssessment(oct4))
-      expect(c.now.total).toBe(mobilityRawScoreForAssessment(nov17))
-      expect(c.delta).toBe(c.now.total - c.started.total)
-      expect(c).toMatchObject({ started: { total: bodyScoreChange(oct4, nov17).before }, now: { total: bodyScoreChange(oct4, nov17).now }, delta: bodyScoreChange(oct4, nov17).delta })
-      expect(c.started.total).toBeLessThan(c.now.total)
+      expect(c.delta).toBe(mobilityRawScoreForAssessment(nov17) - mobilityRawScoreForAssessment(oct4))
+      expect(c.delta).toBe(bodyScoreChange(oct4, nov17).delta)
+      expect(c.started).toEqual({ date: oct4.assessed_at }) // no absolute score carried
+      expect(c.now).toEqual({ date: nov17.assessed_at })
+      expect(c.delta).toBeGreaterThan(0)
       expect(c.joints.map(j => j.key)).toEqual(KEYS)
       expect(c.joints).toHaveLength(10)
       const before = new Map(jointDisplayRowsForAssessment(oct4).map(r => [r.key, r.pct]))

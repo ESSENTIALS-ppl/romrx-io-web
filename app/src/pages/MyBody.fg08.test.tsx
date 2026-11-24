@@ -27,7 +27,7 @@ vi.mock('../components/ProgressCalendar', () => ({ ProgressCalendar: () => null 
 
 import { MyBody } from './MyBody'
 import { setHipFlexScoredAtMs } from '../lib/hipFlexCutoverState'
-import { mobilityRawScoreForAssessment, mobilityScoreForAssessment } from '../lib/mobilityBands'
+import { jointDisplayRowsForAssessment, mobilityRawScoreForAssessment, mobilityScoreForAssessment } from '../lib/mobilityBands'
 import * as jh from '../lib/jointHistory'
 
 function mk(id: string, assessed_at: string, created_at: string, f: number) {
@@ -66,9 +66,12 @@ describe('FG-08 My Body page', () => {
     expect(t.querySelector('[data-started-date]')!.textContent).toBe('Oct 4, 2026')
     expect(t.querySelector('[data-now-date]')!.textContent).toBe('Nov 17, 2026')
     const total = [...t.querySelector('[data-compare-total]')!.children].map(c => c.textContent)
-    expect(total[0]).toBe('Body score')
-    expect(total[1]).toBe(`${mobilityRawScoreForAssessment(oct4)}/100`)
-    expect(total[2]).toBe(`${mobilityRawScoreForAssessment(nov17)}/100`)
+    const d = mobilityRawScoreForAssessment(nov17) - mobilityRawScoreForAssessment(oct4)
+    expect(total).toEqual(['Body score', `${d > 0 ? '+' : ''}${d}`]) // change only, no absolute score
+    expect(t.textContent).not.toMatch(/\/100/)
+    // Joint rows unchanged: real start and now values.
+    const hipRow = [...t.querySelector('[data-compare-joint="hip_er"]')!.children].map(c => c.textContent)
+    expect(hipRow).toEqual(['Hip ER', '50%', `${jointDisplayRowsForAssessment(nov17).find(r => r.key === 'hip_er')!.pct}%`])
     expect(t.querySelectorAll('[data-compare-joint]')).toHaveLength(10)
     expect(host.textContent).toContain('vs Nov 10')
     const hip = host.querySelector('[data-trend="Hip ER"]')!
@@ -128,12 +131,14 @@ describe('FG-08 My Body page', () => {
     expect(body).not.toMatch(/mobility(Raw)?ScoreForAssessment/)
     expect(page).toContain('bodyScoreChange(previousAssessment, assessment).delta')
     expect(page).not.toContain('mobilityRawScoreForAssessment')
-    // Same function, same values: the table's now total equals the chip's now; the chip delta is now minus Nov 10.
-    const cells = [...host.querySelector('[data-compare-total]')!.children].map(c => c.textContent)
+    // Same function: the chip shows bodyScoreChange(Nov 10, latest).delta and the table shows bodyScoreChange(first, latest).delta.
     const chip = jh.bodyScoreChange(e10, e17), total = jh.bodyScoreChange(e04, e17)
-    expect(cells[2]).toBe(`${chip.now}/100`)
-    expect(cells[1]).toBe(`${total.before}/100`)
     expect(host.textContent).toContain(`+${chip.delta} vs Nov 10`)
+    expect(host.querySelector('[data-compare-total-change]')!.textContent).toBe(`${total.delta > 0 ? '+' : ''}${total.delta}`)
+    expect(total.now).toBe(chip.now) // both measured from the same latest score
+    // The dial is the only Body score number on the page.
+    expect(host.querySelector('[data-started-vs-now]')!.textContent).not.toMatch(/\/100/)
+    expect((host.textContent!.match(/\d+\/100/g) ?? [])).toEqual(['89/100'])
     spy.mockRestore()
   })
 })
