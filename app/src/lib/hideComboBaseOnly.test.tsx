@@ -76,8 +76,6 @@ import { Unlock } from '../pages/Unlock'
 
 const TEST_URL = 'https://test-project.supabase.co'
 const TEST_ANON = 'test-anon-key'
-const CHECKOUT = `${TEST_URL}/functions/v1/create-checkout-session`
-const ACTIVATE = `${TEST_URL}/functions/v1/activate-beta-base`
 
 type FetchCall = { url: string; body: Record<string, unknown> | null }
 const fetchCalls: FetchCall[] = []
