@@ -183,12 +183,14 @@ describe('wiring and copy rules', () => {
     expect(html).not.toContain('only to answer you')
     expect(html).not.toContain('are not used to train AI models')
   })
-  it('legal.html keeps the 19b965a Terms fixes (crisis line under 3, readiness bands in 3A); r9 Terms and Privacy dates kept; TERMS_VERSION unchanged', () => {
+  it('legal.html keeps the 19b965a Terms fixes (crisis line under 3, readiness bands in 3A); Terms/privacy header (Grant/Sable, Nov 24) wins over the r9 dates; TERMS_VERSION unchanged', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
     expect(html).toContain('<p>ROMRx is not a crisis service. We do not monitor what you enter in the app and cannot respond to emergencies.</p>')
     expect(html).toContain('Readiness bands (Needs focus, Building, Steady), scores, colors, and labels are not medical clearance')
-    expect(html).toContain('Last updated October 28, 2026')
-    expect(html).toContain('Last updated November 16, 2026')
+    expect(html.split('Last updated November 24, 2026. Effective December 31, 2026.').length - 1).toBe(1)
+    expect(html).toContain('data-terms-version="terms-2026-12-31-v1"')
+    expect(html).not.toContain('Last updated October 28, 2026')
+    expect(html).not.toContain('Last updated November 16, 2026')
     expect(html).not.toContain('Last updated October 20, 2026')
     expect(html).not.toContain('Last updated November 1, 2026')
   })
