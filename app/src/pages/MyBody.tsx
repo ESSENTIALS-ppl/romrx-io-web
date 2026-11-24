@@ -19,6 +19,7 @@ import {
   formatMeasure,
   formatScoreBand,
   mobilityScoreForAssessment,
+  mobilityRawScoreForAssessment,
   overallBandForAssessment,
   topProblemAreasForAssessment,
   BAND_TONE,
@@ -169,8 +170,9 @@ export function MyBody() {
 
   // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
   const previousAssessment = assessments.length > 1 ? assessments[1] : null
-  const previousPrs = previousAssessment ? mobilityScoreForAssessment(previousAssessment) : null
-  const prsDelta = previousPrs != null ? prs - previousPrs : null
+  // Score-fix: the chip compares the unclamped averages, so a gain inside a band shows (the dial keeps the clamped /100).
+  const previousRaw = previousAssessment ? mobilityRawScoreForAssessment(previousAssessment) : null
+  const prsDelta = previousRaw != null ? mobilityRawScoreForAssessment(assessment) - previousRaw : null
   const previousDateStr = previousAssessment
     ? new Date(previousAssessment.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : null
