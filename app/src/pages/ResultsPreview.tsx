@@ -161,9 +161,9 @@ export function ResultsPreview() {
     })()
   }, [user, authLoading, navigate, justAssessed])
 
-  const handleUnlock = async (includePendingSport: boolean) => {
+  const handleUnlock = async () => {
     track('results_unlock_clicked', {
-      include_pending_sport: includePendingSport,
+      include_pending_sport: false,
       pending_sport: pendingSport ?? null,
     })
     if (!session || !user) return
@@ -205,12 +205,6 @@ export function ResultsPreview() {
         mode: 'base',
         user_id: user.id,
         email: user.email ?? '',
-      }
-      // create-checkout-session v22+ accepts pending_sport / add on Base mode.
-      // Carries sport intent into Stripe metadata + success URL ?add=.
-      if (includePendingSport && pendingSport) {
-        body.pending_sport = pendingSport
-        body.add = pendingSport
       }
 
       const res = await fetch(CHECKOUT_URL, {
@@ -332,40 +326,15 @@ export function ResultsPreview() {
         {/* CTA */}
         {error && <p className="text-xs text-center text-red-400 bg-red-500/10 rounded-xl px-3 py-2">{error}</p>}
 
-        {pendingSport && sportCopy ? (
-          <div className="space-y-3">
-            <button
-              onClick={() => handleUnlock(true)}
-              disabled={paying}
-              className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {paying ? 'Unlocking…' : <>
-                <Unlock size={18} /> Unlock Base + {sportCopy.short} (free through Dec 31, 2026)
-              </>}
-            </button>
-            <button
-              onClick={() => handleUnlock(false)}
-              disabled={paying}
-              className="w-full py-3 bg-transparent border border-white/25 text-white font-display font-semibold text-sm rounded-card hover:bg-white/5 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              Unlock Base only (free through Dec 31, 2026)
-            </button>
-            <p className="text-center text-xs text-white/40">
-              Free through Dec 31, 2026. {CARD_LINE_SHORT} Then $60 a year unless you cancel. Cancel online anytime. {sportCopy.wordmark} is an add-on after Base.
-              Combo checkout starts Base and carries your sport intent for the next step.
-            </p>
-          </div>
-        ) : (
-          <button
-            onClick={() => handleUnlock(false)}
-            disabled={paying}
-            className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {paying ? 'Unlocking…' : <>
-              <Unlock size={18} /> Unlock My Dashboard (free through Dec 31, 2026)
-            </>}
-          </button>
-        )}
+        <button
+          onClick={() => handleUnlock()}
+          disabled={paying}
+          className="w-full py-4 bg-white text-cobalt-ink font-display font-bold text-base rounded-card hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          {paying ? 'Unlocking…' : <>
+            <Unlock size={18} /> Unlock My Dashboard (free through Dec 31, 2026)
+          </>}
+        </button>
 
         {/* P1-01: one-tap reminder opt-in on the results screen (signed-in only) */}
         {user && <ReminderOptIn userId={user.id} placement="results" dark />}
