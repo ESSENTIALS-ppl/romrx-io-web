@@ -100,3 +100,45 @@ self.addEventListener('fetch', (event) => {
   }
   event.respondWith(networkFirst(SHELL_CACHE, event.request))
 })
+
+/* P1-14 web push (client contract P1-14-CLIENT-CONTRACT-20261116.md, d4f72a35). Same worker, no second path.
+ * The sender sends {"title","body"} only. No new words here: a missing or bad payload shows Stacy's cleared title
+ * "ROMRx Base" (STACY-P1-14-PUSH-AND-P1-31-TITLES-20261116-2029.md, 219378b5) with an empty body.
+ * Inert while the client flag SHOW_PUSH is false (no subscription is ever made) and the sender's WEB_PUSH_SEND is not "on".
+ */
+const PUSH_FALLBACK_TITLE = 'ROMRx Base'
+const PUSH_OPEN_URL = '/app/'
+
+function readPushPayload(event) {
+  let title = PUSH_FALLBACK_TITLE
+  let body = ''
+  try {
+    const data = event && event.data ? event.data.json() : null
+    if (data && typeof data === 'object') {
+      if (typeof data.title === 'string' && data.title.trim()) title = data.title
+      if (typeof data.body === 'string') body = data.body
+    }
+  } catch {
+    // Not JSON: keep the fallback.
+  }
+  return { title, body }
+}
+
+self.addEventListener('push', (event) => {
+  const { title, body } = readPushPayload(event)
+  event.waitUntil(self.registration.showNotification(title, { body }))
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    for (const client of windows) {
+      let path = ''
+      try { path = new URL(client.url).pathname } catch { path = '' }
+      if (isShellPath(path) && typeof client.focus === 'function') return client.focus()
+    }
+    if (self.clients.openWindow) return self.clients.openWindow(PUSH_OPEN_URL)
+    return undefined
+  })())
+})

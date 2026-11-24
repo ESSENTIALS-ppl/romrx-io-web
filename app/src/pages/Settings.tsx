@@ -12,7 +12,8 @@ import { toWholeHour, reminderStateFromRow, saveReminderChanges, NO_REMINDERS, t
 import { loadDeletionStatus, DELETION_STATUS_COPY, type DeletionStatus } from '../lib/deletionStatus'
 import { requestMyDataExport, saveJsonDownload, exportErrorCopy, EXPORT_BUTTON_LABEL } from '../lib/exportMyData'
 import { YOUR_DATA_COPY as YD, PLAN_LINE_INDEX, dialogLines } from '../lib/yourDataCopy'
-import { enablePush } from '../lib/pushSubscribe'
+import { enablePush, disablePush, makePushPost, hasLivePushSubscription } from '../lib/pushSubscribe'
+import { PUSH_COPY, pushMessageFor } from '../lib/pushCopy'
 import { ADD_TO_CALENDAR_COPY as CAL, fetchCalendarIcs, saveIcsDownload } from '../lib/addToCalendar'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
@@ -85,8 +86,11 @@ type ExtProfile = {
 // unless the database holds toggle AND server-set opt-in marker (reminderStateFromRow); nothing here opts anyone in.
 const SHOW_REMINDER_TOGGLES = true
 const SHOW_NOTIFICATIONS = true
-// FG-12: push toggle stays hidden until a push sender exists and VITE_VAPID_PUBLIC_KEY is set.
-const SHOW_PUSH = false
+// FG-12 / P1-14: push toggle shown (r10, Grant Nov 17). Words: PUSH_COPY (Stacy 666e6603; deviceLimit Stacy 3f9a069f).
+// Opt-in only: the toggle starts OFF, and nothing prompts or subscribes on load. Notification.requestPermission and
+// pushManager.subscribe run only inside enablePush, which is called only from handlePushToggle(true) after a tap.
+// Needs VITE_VAPID_PUBLIC_KEY at build time; without it a tap fails quietly (no_key). Settings.pushFlag.test.tsx fails if this is false.
+const SHOW_PUSH = true
 // FG-13: "Export my data". Jim's "go on all 31" (ledger L1229); Stacy cleared the words (007f8638, 2529bbfa).
 const SHOW_EXPORT_MY_DATA = true // P1-23 unhide (Grant, Nov 16 r3). SHOW_DELETION_STATUS stays false.
 // FG-21: show the deletion request status (new copy, NEEDS JIM WORDING). Off: nothing is read or shown.
@@ -140,7 +144,10 @@ export function Settings() {
   const [retestReminders, setRetestReminders] = useState(false)
   const [weeklyDigest, setWeeklyDigest] = useState(false)
   const [emailReminders, setEmailReminders] = useState(false)
+  // P1-14 r10: pushReminders is what the toggle shows on THIS device: ON only when the account has push_reminders = true AND this
+  // browser has a live subscription (read-only check, no prompt). pushPref is the account value the form saves (off stays account-wide).
   const [pushReminders, setPushReminders] = useState(false)
+  const [pushPref, setPushPref] = useState(false)
   const [pushMsg, setPushMsg] = useState<string | null>(null)
   const [calendarMsg, setCalendarMsg] = useState<string | null>(null)
   const [calendarBusy, setCalendarBusy] = useState(false)
@@ -220,7 +227,10 @@ export function Settings() {
           const shown = reminderStateFromRow(data)
           reminderBaseline.current = shown
           setEmailReminders(shown.protocol)
-          setPushReminders(!!data.push_reminders)
+          const savedPush = !!data.push_reminders
+          setPushPref(savedPush)
+          setPushReminders(false) // a saved true alone renders OFF
+          if (SHOW_PUSH && savedPush) void hasLivePushSubscription().then(live => setPushReminders(live))
           setReminderTime(toWholeHour((data.reminder_time ?? '07:00').slice(0, 5)))
           setRetestReminders(shown.retest)
           setWeeklyDigest(shown.digest)
@@ -320,7 +330,7 @@ export function Settings() {
 
     const { error: nErr } = await supabase.from('notification_preferences').upsert({
       user_id: user.id,
-      push_reminders: pushReminders,
+      push_reminders: pushPref, // account value: a device that never subscribed does not turn push off for the account
       reminder_time: toWholeHour(reminderTime), // hour only: the sender ignores minutes (Stacy note 3b)
       timezone: browserTimezone,
       updated_at: new Date().toISOString(),
@@ -375,13 +385,20 @@ export function Settings() {
     setExportBusy(false)
   }
 
-  // ── Push on/off (FG-12, hidden behind SHOW_PUSH). On = subscribe + save; off = just clear the flag (saved with the form). ──
+  // ── Push on/off (FG-12 / P1-14, hidden behind SHOW_PUSH). On = tap -> permission -> subscribe -> save-push-subscription.
+  // Off = browser unsubscribe + {unsubscribe, endpoint} to the same function, and push_reminders = false saved with the form (as before). ──
   const handlePushToggle = async (on: boolean) => {
+    if (!SHOW_PUSH) return // P1-14 flag off: no prompt, no subscribe, no request
     setPushMsg(null)
-    if (!on) { setPushReminders(false); return }
-    const res = await enablePush((name, opts) => supabase.functions.invoke(name, opts), import.meta.env.VITE_VAPID_PUBLIC_KEY)
-    if (res.ok) setPushReminders(true)
-    else { setPushReminders(false); setPushMsg('Push notifications could not be turned on.') }
+    const post = makePushPost({
+      supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      getAccessToken: () => session?.access_token ?? null,
+    })
+    if (!on) { setPushReminders(false); setPushPref(false); void disablePush({ post }); return }
+    const res = await enablePush({ post, vapidPublicKey: import.meta.env.VITE_VAPID_PUBLIC_KEY })
+    if (res.ok) { setPushReminders(true); setPushPref(true) }
+    else { setPushReminders(false); setPushMsg(pushMessageFor(res.reason)) }
   }
 
   // ── Request account deletion ───────────────────────────────────────────
@@ -725,8 +742,8 @@ export function Settings() {
 
                 {SHOW_PUSH && (
                   <ToggleRow
-                    title="Push notifications"
-                    subtitle="Browser push alerts (must allow in your browser)"
+                    title={PUSH_COPY.toggleTitle}
+                    subtitle={PUSH_COPY.toggleHelp}
                     checked={pushReminders}
                     onChange={handlePushToggle}
                     icon={<Bell size={14} className="text-slate-500" />}
