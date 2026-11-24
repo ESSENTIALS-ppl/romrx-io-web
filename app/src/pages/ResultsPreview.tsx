@@ -34,7 +34,6 @@ import { SHOW_RESULTS_SURVEY } from '../lib/resultsSurvey'
 // P1-03: after the results (unlock, or an active user finishing an assessment) the next screen is today's session.
 export const TODAY_PATH = '/dashboard/my-protocol'
 const CHECKOUT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`
-const BETA_ACTIVATE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activate-beta-base`
 type PendingSport = 'bjj' | 'bodybuilding'
 
 const SPORT_LABELS: Record<PendingSport, { short: string; wordmark: string }> = {
@@ -170,37 +169,6 @@ export function ResultsPreview() {
     setPaying(true)
     setError('')
     try {
-      // TEMP free Unlock (ops.feature_flags.free_unlock / FREE_UNLOCK_ENABLED):
-      // server sets base_status=active via service_role. Never client-side (incident 2026-06-10).
-      // Flag OFF → 402 checkout_required → Stripe fallthrough (paywall restored).
-      // Sport packs are NOT invented here — Base only.
-      {
-        const res = await fetch(BETA_ACTIVATE_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({}),
-        })
-        const data = await res.json().catch(() => ({} as Record<string, unknown>))
-        if (res.ok && (data as { ok?: boolean; base_status?: string }).ok) {
-          navigate(TODAY_PATH, { replace: true }) // P1-03: start session 1 from the results
-          return
-        }
-        // free_unlock_disabled / checkout_required → fall through to Stripe
-        const checkoutRequired = (data as { checkout_required?: boolean }).checkout_required === true
-          || (data as { error?: string }).error === 'free_unlock_disabled'
-          || (data as { error?: string }).error === 'beta_ended'
-        if (!checkoutRequired && res.status !== 402) {
-          setError((data as { message?: string; error?: string }).message
-            ?? (data as { error?: string }).error
-            ?? 'Unlock failed. Please try again.')
-          return
-        }
-      }
-
       const body: Record<string, string> = {
         mode: 'base',
         user_id: user.id,
