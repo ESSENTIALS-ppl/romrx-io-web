@@ -2,7 +2,7 @@ import { LOW_BACK_NOT_MEASURED, baseLumbarRemoved, isLumbarKey } from '../lib/lu
 import { Link } from 'react-router-dom'
 import { ROMOOD_QUICK_COPY } from '../lib/romoodCopy'
 import { useAuth } from '../hooks/useAuth'
-import { useProfile } from '../hooks/useProfile'
+import { useProfile, type Assessment } from '../hooks/useProfile'
 import { PageHeader } from '../components/PageHeader'
 import { SectionCard } from '../components/SectionCard'
 import { EmptyState } from '../components/EmptyState'
@@ -19,7 +19,6 @@ import {
   formatMeasure,
   formatScoreBand,
   mobilityScoreForAssessment,
-  mobilityRawScoreForAssessment,
   overallBandForAssessment,
   topProblemAreasForAssessment,
   BAND_TONE,
@@ -27,7 +26,10 @@ import {
   type BandScore,
   type JointDisplayRow,
 } from '../lib/mobilityBands'
-import { buildJointTrends, buildStartVsNowTrends, useJointHistory, type TrendPoint, type TrendSeries } from '../lib/jointHistory'
+import { buildJointTrends, buildLocalTrends, buildStartVsNowTrends, buildStartedVsNow, bodyScoreChange, useFirstAssessment, useJointHistory, type TrendSeries } from '../lib/jointHistory'
+import { assessedAtMs as assessedAtOf, sortByAssessedAtNewestFirst } from '../lib/assessmentReads'
+import { gateAssessment } from '../lib/hipFlexGate'
+import { JointTrend, StartedVsNowTable, assessmentDate } from '../components/MyBodyProgress'
 import { AlertTriangle, Activity, TrendingUp, Flame, CheckCircle2, Clock, Calendar } from 'lucide-react'
 import { computeStreak } from '../lib/localDate'
 import { ProgressCalendar } from '../components/ProgressCalendar'
@@ -114,8 +116,9 @@ function JointBar({ row }: { row: JointDisplayRow }) {
 
 export function MyBody() {
   const { user } = useAuth()
-  const { assessment, assessments, jointScores, sessionDates, loading } = useProfile(user?.id)
+  const { assessment, assessments: loadedAssessments, jointScores, sessionDates, loading } = useProfile(user?.id)
   const { history: rpcHistory, startNow: rpcStartNow } = useJointHistory() // FG-08: my_joint_history / my_joint_start_vs_now
+  const { first: firstLoaded, hipScoredIds: firstHipScoredIds } = useFirstAssessment<Assessment>(user?.id) // FG-08: first full assessment by assessed_at (Where you started)
 
   if (loading) return <Spinner />
 
@@ -132,9 +135,13 @@ export function MyBody() {
   const lumbarOff = baseLumbarRemoved()
   const radarRows = radarSideRowsForAssessment(assessment, jointScores).filter(r => r.key !== 'hip_flex' || r.measured) // FG-36: hip flexion only where it was measured and counts (not on older assessments)
     .filter(r => !(lumbarOff && isLumbarKey(r.key))) // Grant Oct 21 2026 7:10 PM: no lumbar axis for anyone
-  // FG-07: up to 3 earlier assessments on the radar (assessments are newest first; legend is dates only).
-  const radarDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  const earlierShapes: EarlierShape[] = assessments.slice(1, 4).map(a => ({
+  // FG-08: all history is ordered by assessed_at here (newest first), never by created_at or by the server's array order.
+  const assessments = sortByAssessedAtNewestFirst(loadedAssessments)
+  const latestMs = assessedAtOf(assessment)
+  const earlier = assessments.filter(a => a.id !== assessment.id && (latestMs == null || (assessedAtOf(a) ?? -Infinity) <= latestMs))
+  // FG-07: up to 3 earlier assessments on the radar (newest first by assessed_at; legend is dates only).
+  const radarDate = assessmentDate
+  const earlierShapes: EarlierShape[] = earlier.slice(0, 3).map(a => ({
     label: radarDate(a.assessed_at),
     rows: radarSideRowsForAssessment(a, null),
   }))
@@ -145,19 +152,9 @@ export function MyBody() {
   const hideLumbar = lumbarOff
   const jointRows = (hideLumbar ? allJointRows.filter(r => !isLumbarKey(r.key)) : allJointRows)
     .filter(r => r.key !== 'hip_flex' || r.left != null || r.right != null) // FG-36: the Hip Flexion bar is hidden on assessments before the cutover
-  // FG-08: worse-side % per joint for every loaded assessment, oldest first. Only joints with 2+ measured points get a chart.
-  const trendAssessments = assessments.length > 0 ? [...assessments].reverse() : []
-  const trendRowsByAssessment = trendAssessments.map(a => ({
-    date: a.assessed_at,
-    rows: radarSideRowsForAssessment(a, a.id === assessment.id ? jointScores : null),
-  }))
-  const localTrends: TrendSeries[] = trendAssessments.length < 2 ? [] : jointRows.map(jr => ({
-    key: jr.key,
-    n: trendAssessments.length,
-    points: trendRowsByAssessment
-      .map((t, i) => { const r = t.rows.find(x => x.key === jr.key); return r && r.measured && !r.unscored ? { date: t.date, pct: r.worse, i } : null })
-      .filter((x): x is TrendPoint => x !== null),
-  }))
+  // FG-08: worse-side % per joint for every loaded assessment, oldest first by assessed_at. Only joints with 2+ measured points get a chart.
+  const trendAssessments = [assessment, ...earlier]
+  const localTrends: TrendSeries[] = buildLocalTrends(trendAssessments, assessment.id, jointScores, jointRows.map(r => r.key))
   // Source order: the signed-in history rpc, then first-vs-latest, then the assessments already on this page (silent fallback).
   const rpcTrends: TrendSeries[] | null = rpcHistory && rpcHistory.length > 0 ? buildJointTrends(rpcHistory)
     : rpcStartNow && rpcStartNow.length > 0 ? buildStartVsNowTrends(rpcStartNow) : null
@@ -168,11 +165,16 @@ export function MyBody() {
   const overallBand: BandScore = overallBandForAssessment(assessment, jointScores) ?? 3
   const problemAreas = topProblemAreasForAssessment(assessment)
 
-  // Delta vs previous assessment (index 1 = second-newest, since assessments are DESC)
-  const previousAssessment = assessments.length > 1 ? assessments[1] : null
+  // FG-08: "Where you started" = the first full assessment by assessed_at (falls back to the oldest one loaded), vs the latest.
+  // Hidden with one assessment on file (the "one assessment on file" card shows instead).
+  const firstAssessment = (firstLoaded && earlier.find(a => a.id === firstLoaded.id)) ?? gateAssessment(firstLoaded, firstHipScoredIds) ?? earlier[earlier.length - 1] ?? null
+  const startedVsNow = buildStartedVsNow(firstAssessment, assessment, jointScores, jointRows.map(r => r.key))
+
+  // Delta vs previous assessment: the newest earlier assessment by assessed_at.
   // Score-fix: the chip compares the unclamped averages, so a gain inside a band shows (the dial keeps the clamped /100).
-  const previousRaw = previousAssessment ? mobilityRawScoreForAssessment(previousAssessment) : null
-  const prsDelta = previousRaw != null ? mobilityRawScoreForAssessment(assessment) - previousRaw : null
+  // FG-08: bodyScoreChange is the ONE function for the chip and the Where you started / Where you are now totals.
+  const previousAssessment = earlier[0] ?? null
+  const prsDelta = previousAssessment ? bodyScoreChange(previousAssessment, assessment).delta : null
   const previousDateStr = previousAssessment
     ? new Date(previousAssessment.assessed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : null
@@ -389,43 +391,15 @@ export function MyBody() {
           {jointRows.map(row => <JointBar key={row.key} row={row} />)}
           {hideLumbar && <p className="py-2 text-xs text-slate-500" data-low-back-not-measured>{LOW_BACK_NOT_MEASURED}</p>}
         </div>
-        {/* FG-08: per-joint trend across assessments. Headings are the existing joint names; no axis text; each point's native tooltip is its date and %. */}
+        {/* FG-08: Where you started (first assessment) vs Where you are now (latest), Body score and each joint. Only with 2+ assessments. */}
+        {startedVsNow && <StartedVsNowTable data={startedVsNow} />}
+        {/* FG-08: per-joint trend across assessments. Headings are the existing joint names; each point's date and % is listed under its line. */}
         {trendRows.length > 0 && (
           <div className="mt-3 border-t border-cobalt/10 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3" data-joint-trends>
             {trendRows.map(t => <JointTrend key={t.key} label={t.label} points={t.series.points} n={t.series.n} />)}
           </div>
         )}
       </SectionCard>
-    </div>
-  )
-}
-
-/** FG-08: tiny trend line for one joint (no axis text). Heading is the existing joint name. */
-function JointTrend({ label, points, n }: { label: string; points: TrendPoint[]; n: number }) {
-  const W = 120, H = 32, pad = 3
-  const xs = (i: number) => pad + (i * (W - 2 * pad)) / Math.max(1, n - 1)
-  const ys = (v: number) => H - pad - (Math.max(0, Math.min(100, v)) * (H - 2 * pad)) / 100
-  // A missing assessment is a gap in the line (never a zero): split into runs of neighbouring assessments.
-  const runs: TrendPoint[][] = []
-  for (const p of points) {
-    const last = runs[runs.length - 1]
-    if (last && last[last.length - 1].i === p.i - 1) last.push(p)
-    else runs.push([p])
-  }
-  return (
-    <div data-trend={label}>
-      <p className="text-xs font-semibold text-slate-600 mb-0.5">{label}</p>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-8" role="img" aria-label={label}>
-        <line x1={pad} x2={W - pad} y1={ys(90)} y2={ys(90)} stroke="#cbd5e1" strokeWidth={0.75} strokeDasharray="2 2" />
-        {runs.filter(r => r.length > 1).map(r => (
-          <polyline key={r[0].i} points={r.map(p => `${xs(p.i).toFixed(1)},${ys(p.pct).toFixed(1)}`).join(' ')} fill="none" stroke="#1D4ED8" strokeWidth={1.5} strokeLinejoin="round" />
-        ))}
-        {points.map(p => (
-          <circle key={p.date} cx={xs(p.i)} cy={ys(p.pct)} r={2.2} fill="#1D4ED8">
-            <title>{new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}: {p.pct}%</title>
-          </circle>
-        ))}
-      </svg>
     </div>
   )
 }
