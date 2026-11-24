@@ -1,7 +1,6 @@
 -- ============================================================================================
--- PROPOSED. NOT APPLIED. Run only after 20261026220000, 20261026230000, 20261026233000 and
--- 20261027000000 (it reads mood_settings.consent_version, added by the daily cap migration),
--- Stacy's check, Vera's verify, and Jim's go. Revert: supabase/reverts/20261027010000_romood_insert_requires_v2_consent.revert.sql
+-- APPLIED to prod Oct 27 2026 (supabase_migrations version 20261027151753). Kept here as the source file.
+-- Revert: supabase/reverts/20261027010000_romood_insert_requires_v2_consent.revert.sql
 --
 -- Closes Vera GAP A (5af19bf verdict, item 5): re-consent was enforced on the app screens and at the email
 -- send, but not in the database, so a user with an older opt-in could still insert mood entries by calling

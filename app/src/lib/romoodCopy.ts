@@ -60,8 +60,8 @@ export const ROMOOD_COPY = {
   pleasantness: { label: 'Pleasantness', low: 'Unpleasant', high: 'Pleasant', readout: ['Leaning unpleasant', 'In the middle', 'Leaning pleasant'] },
   gridLabel: 'Feeling words',
   encouragement: "No matter where you're starting today, we're in this together.",
-  /** Opt-in text (Stacy daily/email copy, Oct 26 8:36 PM; was pass 5b007ed). Opt-ins under this text carry ROMOOD_CONSENT_VERSION. Single source for the ROMood screen and the Settings re-enable flow. No Dailee purpose until linking exists and gets its own consent. */
-  optInBefore: 'Save my mood check-ins so ROMRx can show me how my mood changes over time, in the app and in my results email. I can turn this off or delete them anytime. See the ',
+  /** Opt-in text, v3 (Stacy Oct 28 2026, STACY-OPTIN-V3-ROMBOT-20261028.md, final revision per Jim). It now covers ROMBot (AI) as well as the app and emails; the v2 email-only text was 'Save my mood check-ins so ROMRx can show me how my mood changes over time, in the app and in my results email. I can turn this off or delete them anytime. See the '. Opt-ins under this text carry ROMOOD_CONSENT_VERSION. People on v2 are shown saving OFF and must tick this text again (hasCurrentConsent). Single source for the ROMood screen and the Settings re-enable flow. No Dailee purpose until linking exists and gets its own consent. */
+  optInBefore: 'Save my mood check-ins for the app, emails and ROMBot (AI). I can turn this off or delete them anytime. See the ',
   optInLink: 'Privacy Policy',
   optInAfter: '.',
   back: P.Q4_buttons.back,
@@ -143,9 +143,11 @@ export const ROMOOD_MYBODY_COPY = {
 /** DECIDED (Jim, Oct 26): turning saving off OFFERS to delete past check-ins. No longer a placeholder. */
 export const ROMOOD_TURN_OFF_BEHAVIOR: 'offer' | 'auto' = 'offer'
 
-/** Opt-in text version. Only opt-ins under the current text (Stacy, Oct 26 8:36 PM) get mood in the results email.
- * Older opt-ins (no version) get none until they tick the new text again (RCW 19.373.030(1)(a), (c)). */
-export const ROMOOD_CONSENT_VERSION = 'v2-email-20261026'
+/** Opt-in text version. v3 (Oct 28 2026): the single ROMood opt-in now also covers ROMBot (AI). ROMBot (ai-chat) reads mood
+ * rows only for opt-ins under this version; the app saves and shows only under it too (hasCurrentConsent), so a v2 user sees
+ * saving OFF and ticks the v3 text again. Older opt-ins (v2 email-only, or no version) are never read by ROMBot
+ * (RCW 19.373.030(1)(a), (c)). The results-email gate in submit-assessment still accepts v2 as well, because the v2 text named the email. */
+export const ROMOOD_CONSENT_VERSION = 'v3-rombot-20261028'
 
 /** Quick check-in from My Body (/dashboard/mood). Copy is Stacy-final (Oct 26 2026, 8:45 PM ET). */
 export const ROMOOD_QUICK_COPY = {

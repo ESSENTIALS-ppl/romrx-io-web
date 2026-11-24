@@ -78,13 +78,15 @@ describe('single source', () => {
     const src = readFileSync(resolve(__dirname, 'CrisisLine.tsx'), 'utf8')
     for (const w of ['Having a really hard time', 'Samaritans', 'not a crisis service', 'emergency number', 'Need to talk']) expect(src).not.toContain(w)
   })
-  it('legal: no 30-day or encrypted-backups claim about our own database (Free plan); the only 30-day lines are the email provider and the OpenAI chat-content line', () => {
+  it('legal: no 30-day or encrypted-backups claim about our own database (Free plan); the only 30-day lines are the email provider, the OpenAI chat-content line, and the OpenAI ROMood clause (Stacy 7A ROMBot line)', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
     const emailLine = 'our email provider keeps a copy of sent emails for up to 30 days'
     const openaiLine = 'which may keep chat content for up to 30 days'
     expect(html).toContain(emailLine)
     expect(html).toContain(openaiLine)
-    expect(html.replace(emailLine, '').replace(openaiLine, '')).not.toMatch(/encrypted backups|up to 30 days|30-day/)
+    const openAiClause = 'OpenAI does not use them to train its models and may keep them for up to 30 days to check for abuse'
+    expect(html).toContain(openAiClause)
+    expect(html.replace(emailLine, '').replace(openaiLine, '').replace(openAiClause, '')).not.toMatch(/encrypted backups|up to 30 days|30-day/)
   })
   it('legal: backup line sits right before the 7A crisis line', () => {
     const html = readFileSync(resolve(__dirname, '../../../legal.html'), 'utf8')
