@@ -59,8 +59,6 @@ export function Unlock() {
                 mode: 'base',
                 user_id: user.id,
                 email: user.email,
-                pending_sport: token,
-                add: token,
               })),
             })
             const baseData = await baseRes.json()
@@ -116,11 +114,6 @@ export function Unlock() {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
 
-        // If this account signed up with sport intent, keep it on Base checkout.
-        const meta = (user.user_metadata ?? {}) as Record<string, unknown>
-        const pendingRaw = String(meta.add_sport ?? meta.active_sport ?? '').toLowerCase()
-        const pendingSport = (pendingRaw === 'bjj' || pendingRaw === 'bodybuilding') ? pendingRaw : null
-
         const res = await fetch(CHECKOUT_URL, {
           method: 'POST',
           headers,
@@ -129,7 +122,6 @@ export function Unlock() {
             user_id: user.id,
             email: user.email,
             lead_token: token,
-            ...(pendingSport ? { pending_sport: pendingSport, add: pendingSport } : {}),
           })),
         })
 
