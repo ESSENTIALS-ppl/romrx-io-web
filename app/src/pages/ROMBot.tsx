@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabase'
 import { track } from '../lib/track'
 import { CHECKIN_LOAD_ERROR, isCheckinUnread, loadLatestCheckin, markCheckinRead, type Checkin } from '../lib/rombotCheckin'
 import { RombotCheckinButton } from '../components/RombotCheckin'
+import { useFitToViewport } from '../hooks/useFitToViewport'
 
 // Working shell for Phase 1: simple chat UI backed by the ai-chat edge
 // function and ai_conversations table. Sport-specific game-plan handoffs
@@ -34,6 +35,9 @@ export function ROMBot() {
   const [convId, setConvId] = useState<string | undefined>()
   const [error, setError] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+  const chatRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+  useFitToViewport(chatRef, !profileLoading)
   // FG-06/FG-38: reopen the last chat after a reload, one account-wide history shared with BJJ and BB (no new screen copy). Reads the user's own rows (RLS: user_id = auth.uid()).
   const [restoreDone, setRestoreDone] = useState(false)
   const freshKey = user ? `romrx_rombot_fresh_${user.id}` : ''
@@ -95,7 +99,11 @@ export function ROMBot() {
     }
   }, [user, profile, profileLoading, messages.length, restoreDone])
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+  // Scroll only the messages list (scrollIntoView would also move the page, which must not scroll on this tab).
+  useEffect(() => {
+    const list = listRef.current
+    if (list) list.scrollTo?.({ top: list.scrollHeight, behavior: 'smooth' })
+  }, [messages])
 
   const send = async () => {
     if (!input.trim() || busy || !session) return
@@ -132,7 +140,7 @@ export function ROMBot() {
   if (profileLoading) return <Spinner />
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 7rem)' }}>
+    <div ref={chatRef} className="rombot-chat flex flex-col">
       <PageHeader
         title="ROMBot"
         subtitle="Your mobility intelligence assistant"
@@ -155,7 +163,7 @@ export function ROMBot() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 pb-3 min-h-0">
+      <div ref={listRef} data-testid="rombot-messages" className="flex-1 overflow-y-auto overscroll-contain space-y-3 pb-3 min-h-0">
         {messages.map((m, i) => (
           <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div className={cn(
@@ -190,7 +198,7 @@ export function ROMBot() {
       </div>
 
       {/* Input */}
-      <div className="pt-3 border-t border-cobalt/10 mt-2">
+      <div data-testid="rombot-input" className="shrink-0 pt-3 border-t border-cobalt/10 mt-2">
         <p className="text-[11px] text-slate-500 mb-1.5">AI · ROMRx plan only</p>
         <div className="flex gap-2">
           <textarea

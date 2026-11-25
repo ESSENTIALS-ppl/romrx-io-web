@@ -40,3 +40,24 @@
            focus:outline-none focus:ring-2 focus:ring-cobalt focus:border-cobalt;
   }
 }
+
+/* ROMBot iPhone layout (Grant, Nov 24 2026): the chat column fits the visible screen; see useFitToViewport. */
+.rombot-chat {
+  height: calc(100vh - var(--rombot-top, 7rem));
+  height: calc(100dvh - var(--rombot-top, 7rem));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+}
+.rombot-chat[data-vv] {
+  height: var(--rombot-h);
+}
+/* Short screen with the keyboard open: the chat covers the visible area so the input stays above the keyboard. */
+.rombot-chat[data-overlay] {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--rombot-vv-top, 0px);
+  z-index: 20;
+  padding: 0.5rem 1rem env(safe-area-inset-bottom, 0px);
+  background-color: #F8FAFC;
+}
