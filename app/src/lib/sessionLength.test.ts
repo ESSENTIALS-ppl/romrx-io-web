@@ -18,7 +18,7 @@ describe('P1-19 session length', () => {
     expect(readSessionLength('u1', null)).toBe('standard')
     const page = readFileSync(join(process.cwd(), 'src', 'pages', 'MyProtocol.tsx'), 'utf8')
     expect(page).toContain('{SESSION_LENGTH_COPY && (')
-    expect(page).toContain('pickMovements<Rx>(rx, sessionLength)')
+    expect(page).toContain('pickMovements<Rx>(rx, sessionLength, rxArea)')
     expect(page).toContain('{labels[index] ?? `Movement ${index + 1}`}')
   })
   it('integration: the player gets the same movements as the card, with slots', () => {
@@ -29,6 +29,6 @@ describe('P1-19 session length', () => {
     expect(pickWithSlots(rx, 'full').map(x => x.slot)).toEqual(['exercise', 'exercise', 'stretch', 'stretch', 'foam'])
     expect(pickWithSlots({ exercises: [], stretches: ['s1'], foam: [] }, 'standard')).toEqual([{ item: 's1', slot: 'stretch' }])
     const page = readFileSync(join(process.cwd(), 'src', 'pages', 'MyProtocol.tsx'), 'utf8')
-    expect(page).toContain('pickWithSlots<Rx>(rx, sessionLength)')
+    expect(page).toContain('pickWithSlots<Rx>(rx, sessionLength, rxArea)')
   })
 })

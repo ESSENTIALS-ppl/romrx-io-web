@@ -14,7 +14,7 @@ import { ReminderOptIn } from '../components/ReminderOptIn'
 import { localDateIso, localDateOfTimestamp, isCompletedToday, isUnexpectedSaveError, withoutDay } from '../lib/localDate'
 import { WEEK1_GOAL, WEEK1_COPY, week1Window, isInWeek1, week1Done, week1LocalDate, week1StartFrom, week1CountEnd } from '../lib/week1Goal'
 import { AddToHomeScreenTip } from '../components/AddToHomeScreenTip'
-import { SESSION_LENGTH_COPY, SESSION_LENGTHS, pickMovements, pickWithSlots, readSessionLength, sessionLengthKey, type SessionLength } from '../lib/sessionLength'
+import { SESSION_LENGTH_COPY, SESSION_LENGTHS, FULL_ROUNDS_LABEL, pickMovements, pickWithSlots, planSession, readSessionLength, sessionLengthKey, type SessionLength } from '../lib/sessionLength'
 import { WeeklyGoal } from '../components/WeeklyGoal'
 import { WEEKLY_GOAL_COPY } from '../lib/weeklyGoal'
 import { GuidedPlayer } from '../components/GuidedPlayer'
@@ -94,7 +94,7 @@ interface SessionLog {
 }
 
 // ---- Rotation --------------------------------------------------------------
-const ROTATION: Record<number, number> = {
+export const ROTATION: Record<number, number> = {
   1: 0, 2: 1, 3: 2, 4: 0, 5: 1, 6: 2, 0: 0,
 }
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -241,7 +241,7 @@ function scoreJoints(assessment: Assessment, bands: Map<string, BandScore>): Sco
 // ---- DB drill loader -------------------------------------------------------
 // Some joints have both short (`hip_flex`) and long (`hip_flexion`) rows.
 // We accept both, prefer short-form rows, and always fall back to long-form.
-const JOINT_KEY_ALIASES: Record<string, string[]> = {
+export const JOINT_KEY_ALIASES: Record<string, string[]> = {
   hip_er:        ['hip_er'],
   hip_ir:        ['hip_ir'],
   hip_abd:       ['hip_abd', 'hip_abduction'],
@@ -292,7 +292,7 @@ function dedupeExercises(scoped: DbExercise[]): DbExercise[] {
   return Array.from(byKey.values())
 }
 
-function groupByJoint(rows: DbExercise[]): Record<string, Prescription> {
+export function groupByJoint(rows: DbExercise[]): Record<string, Prescription> {
   const out: Record<string, Prescription> = {}
   for (const rxKey of Object.keys(JOINT_KEY_ALIASES)) {
     const aliases = JOINT_KEY_ALIASES[rxKey]
@@ -469,11 +469,13 @@ function TodayMovementCard({ rx, index }: { rx: Rx; index: number }) {
 interface TodayCardProps {
   ranked: ScoredJoint[]
   rxLibrary: Record<string, Prescription>
+  /** Length tiers: the area's whole Base library (sports 'general'), used only to add movements to Full. */
+  areaLibrary?: Record<string, Prescription>
   assessedAt: string
   userId: string
   assessmentId?: string | null
 }
-function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: TodayCardProps) {
+function TodayCard({ ranked, rxLibrary, areaLibrary, assessedAt, userId, assessmentId }: TodayCardProps) {
   const todayDow = new Date().getDay()
   const todayPriorityIndex = ROTATION[todayDow]
   const todayPriority = ranked[Math.min(todayPriorityIndex, ranked.length - 1)]
@@ -574,7 +576,8 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
     // P1-22: write protocol_completions (one row per Today-card movement).
     const joint = todayPriority?.def.key ?? todayPriority?.def.rxKey ?? null
     const rxToday = todayPriority ? rxLibrary[todayPriority.def.rxKey] : null
-    const movements: Rx[] = pickMovements<Rx>(rxToday, sessionLength) // P1-19: the movements of the chosen length (standard = the 3 as before)
+    const rxAreaToday = todayPriority ? areaLibrary?.[todayPriority.def.rxKey] ?? null : null
+    const movements: Rx[] = pickMovements<Rx>(rxToday, sessionLength, rxAreaToday) // P1-19: the movements of the chosen length (standard = the 3 as before)
     const hadTodayCached = log.sessions.includes(todayIso) // was already saved before this tap
     setLog(prev => {
       const sessions = prev.sessions.includes(todayIso)
@@ -619,7 +622,7 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
         console.error('protocol_completions insert threw:', e)
       }
     })
-  }, [storageKey, userId, todayPriorityIndex, refreshCount, refreshWeek1, assessmentId, todayPriority, rxLibrary, log.sessions, sessionLength])
+  }, [storageKey, userId, todayPriorityIndex, refreshCount, refreshWeek1, assessmentId, todayPriority, rxLibrary, areaLibrary, log.sessions, sessionLength])
 
   const week1 = week1Window(week1StartFrom(assessedAt))
   const showWeek1 = isInWeek1(week1LocalDate(), week1) // P1-04: the user's local day
@@ -634,13 +637,17 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
   const retestDateStr = retestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   const rx = todayPriority ? rxLibrary[todayPriority.def.rxKey] : null
+  const rxArea = todayPriority ? areaLibrary?.[todayPriority.def.rxKey] ?? null : null // length tiers: Full's extra movements
   // P1-19: standard is today's card unchanged; quick and full only once the chooser has words (SESSION_LENGTH_COPY).
-  const todayMovements: Rx[] = pickMovements<Rx>(rx, sessionLength)
-  // P1-20 + P1-19: the player plays the movements of the chosen session length, each with its slot (timed vs reps)
-  const playerMovements = useMemo(
-    () => pickWithSlots<Rx>(rx, sessionLength).map(({ item, slot }) => ({ name: item.name, dose: item.dose, slot })),
-    [rx, sessionLength],
-  )
+  const todayMovements: Rx[] = pickMovements<Rx>(rx, sessionLength, rxArea)
+  // Length tiers (small pool): Full = the Standard set done 2 rounds; the card shows FULL_ROUNDS_LABEL.
+  const todayRounds = planSession<Rx>(rx, sessionLength, rxArea).rounds
+  // P1-20 + P1-19: the player plays the movements of the chosen session length, each with its slot (timed vs reps).
+  // With 2 rounds the player plays the same set twice (same names and doses).
+  const playerMovements = useMemo(() => {
+    const one = pickWithSlots<Rx>(rx, sessionLength, rxArea).map(({ item, slot }) => ({ name: item.name, dose: item.dose, slot }))
+    return planSession<Rx>(rx, sessionLength, rxArea).rounds === 2 ? [...one, ...one] : one
+  }, [rx, rxArea, sessionLength])
   const [playerOpen, setPlayerOpen] = useState(false)
 
   return (
@@ -726,7 +733,12 @@ function TodayCard({ ranked, rxLibrary, assessedAt, userId, assessmentId }: Toda
 
       {todayMovements.length > 0 && (
         <div className="px-5 pb-4 space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Today's movements</p>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Today's movements</p>
+            {todayRounds === 2 && (
+              <span className="text-xs bg-cobalt-light text-cobalt font-semibold px-2.5 py-0.5 rounded-full" data-rounds="2">{FULL_ROUNDS_LABEL}</span>
+            )}
+          </div>
           {todayMovements.map((m, i) => (
             <TodayMovementCard key={m.id} rx={m} index={i} />
           ))}
@@ -1003,6 +1015,9 @@ export function MyProtocol() {
   const { assessment, jointScores, loading } = useProfile(user?.id)
   const [tab, setTab] = useState<'daily' | 'full'>('daily')
   const [rxLibrary, setRxLibrary] = useState<Record<string, Prescription>>({})
+  // Length tiers (Nov 24 2026): the saved protocol has exactly 1 exercise, 1 stretch and 1 foam roll per joint, so Full
+  // built from it alone equals Standard. Full adds the area's other movements from this read of the Base library.
+  const [areaLibrary, setAreaLibrary] = useState<Record<string, Prescription>>({})
   const [rxLoading, setRxLoading]  = useState(true)
   // FG-17: the saved protocol (public.protocols, one row per exercise, written by the server when the assessment is scored)
   // is the single source of truth, the same rows ROMBot reads. undefined = still loading, null = none saved (fall back to the old local pick).
@@ -1052,6 +1067,23 @@ export function MyProtocol() {
     }
     return localRanked
   }, [scored, problemOrder, assessment, savedProtocol])
+
+  // Length tiers: the Base library for the ranked joints (read only, same query as the no-saved-protocol path below).
+  useEffect(() => {
+    const aliases = ranked.flatMap(r => JOINT_KEY_ALIASES[r.def.rxKey] ?? [r.def.rxKey])
+    if (aliases.length === 0) { setAreaLibrary({}); return }
+    let cancelled = false
+    supabase
+      .from('exercises')
+      .select('id, joint_key, exercise_type, name, sets, reps, coaching_cue, video_url, sports')
+      .in('joint_key', aliases)
+      .contains('sports', ['general'])
+      .then(({ data, error }) => {
+        if (cancelled) return
+        setAreaLibrary(error ? {} : groupByJoint((data ?? []) as DbExercise[]))
+      })
+    return () => { cancelled = true }
+  }, [ranked])
 
   // Fetch drills for the top-3 priority joints from Supabase.
   useEffect(() => {
@@ -1151,6 +1183,7 @@ export function MyProtocol() {
               <TodayCard
                 ranked={ranked}
                 rxLibrary={rxLibrary}
+                areaLibrary={areaLibrary}
                 assessedAt={assessedAt}
                 userId={user.id}
                 assessmentId={assessmentId}
